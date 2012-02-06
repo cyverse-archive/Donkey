@@ -18,6 +18,9 @@
       wrap-keyword-params
       wrap-nested-params))
 
+(def app
+  (site-handler donkey-routes))
+
 (defn -main
   [& args]
   (def zkprops (cc-props/parse-properties prop-file))
