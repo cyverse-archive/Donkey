@@ -5,12 +5,13 @@
                  [compojure "1.0.1"]
                  [swank-clojure "1.4.0-SNAPSHOT"]
                  [org.iplantc/clojure-commons "1.1.0-SNAPSHOT"]
+                 [org.iplantc.core/metadactyl "dev-SNAPSHOT"]
                  [ring/ring-jetty-adapter "1.0.1"]]
   :dev-dependencies [[lein-ring "0.4.5"]
                      [swank-clojure "1.2.1"]]
   :extra-classpath-dirs ["conf"]
   :aot [donkey.core]
   :main donkey.core
-  :ring {:handler donkey.core/app}
+  :ring {:handler donkey.core/app :init donkey.core/load-configuration}
   :repositories {"iplantCollaborative"
                  "http://projects.iplantcollaborative.org/archiva/repository/internal/"})

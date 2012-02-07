@@ -6,7 +6,6 @@
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
-            [clojure-commons.props :as cc-props]
             [clojure-commons.clavin-client :as cl]
             [ring.adapter.jetty :as jetty]))
 
@@ -18,24 +17,23 @@
       wrap-keyword-params
       wrap-nested-params))
 
-(def app
-  (site-handler donkey-routes))
-
-(defn -main
-  [& args]
-  (def zkprops (cc-props/parse-properties prop-file))
-  (def zkurl (get zkprops "zookeeper"))
-
-  ;; Load the configuration from zookeeper.
+(defn load-configuration
+  "Loads the configuration properties from Zookeeper."
+  []
   (cl/with-zk
-    zkurl
+    zk-url
     (when (not (cl/can-run?))
       (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
       (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
       (System/exit 1))
     (reset! props (cl/properties "donkey")))
+  (log/warn @props))
 
-  ;; Start the server.
-  (log/warn @props)
+(def app
+  (site-handler donkey-routes))
+
+(defn -main
+  [& args]
+  (load-configuration)
   (log/warn "Listening on" (listen-port))
-  (jetty/run-jetty (site-handler donkey-routes) {:port (listen-port)}))
+  (jetty/run-jetty app {:port (listen-port)}))
