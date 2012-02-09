@@ -177,3 +177,7 @@
 (defn get-only-analysis-groups
   [workspace-id]
   (.listAnalysisGroups (analysis-listing-service) workspace-id))
+
+(defn export-template
+  [template-id]
+  (.exportTemplate (workflow-export-service) template-id))

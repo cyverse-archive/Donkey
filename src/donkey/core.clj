@@ -59,8 +59,8 @@
   ;      (trap #(preview-template body)))
   ;(POST "/preview-workflow" [:as {body :body}]
   ;      (trap #(preview-workflow body)))
-  ;(GET "/export-template/:template-id" [template-id]
-  ;     (trap #(export-template template-id)))
+  (GET "/export-template/:template-id" [template-id]
+       (trap #(export-template template-id)))
   ;(GET "/export-workflow/:app-id" [app-id]
   ;     (trap #(export-workflow app-id)))
   ;(POST "/update-template" [:as {body :body}]
