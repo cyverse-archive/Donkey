@@ -45,12 +45,14 @@
         (trap #(add-app-to-group body)))
   (GET "/get-analysis/:app-id" [app-id]
        (trap #(get-app app-id)))
-  
-  ;John started
   (GET "/get-public-analyses" []
        (trap #(get-public-analyses)))
   (GET "/get-only-analysis-groups/:workspace-id" [workspace-id]
        (trap #(get-only-analysis-groups workspace-id)))
+  (GET "/export-template/:template-id" [template-id]
+       (trap #(export-template template-id)))
+  (GET "/export-workflow/:app-id" [app-id]
+       (trap #(export-workflow app-id)))
   ;(POST "/permanently-delete-workflow" [:as {body :body}]
   ;      (trap #(permanently-delete-workflow body)))
   ;(POST "/delete-workflow" [:as {body :body}]
@@ -59,10 +61,6 @@
   ;      (trap #(preview-template body)))
   ;(POST "/preview-workflow" [:as {body :body}]
   ;      (trap #(preview-workflow body)))
-  (GET "/export-template/:template-id" [template-id]
-       (trap #(export-template template-id)))
-  (GET "/export-workflow/:app-id" [app-id]
-       (trap #(export-workflow app-id)))
   ;(POST "/update-template" [:as {body :body}]
   ;      (trap #(update-template body)))
   ;(POST "/force-update-workflow" [:as {body :body}]
