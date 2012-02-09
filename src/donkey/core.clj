@@ -59,8 +59,8 @@
   ;      (trap #(delete-workflow body)))
   (POST "/preview-template" [:as {body :body}]
         (trap #(preview-template body)))
-  ;(POST "/preview-workflow" [:as {body :body}]
-  ;      (trap #(preview-workflow body)))
+  (POST "/preview-workflow" [:as {body :body}]
+        (trap #(preview-workflow body)))
   ;(POST "/update-template" [:as {body :body}]
   ;      (trap #(update-template body)))
   ;(POST "/force-update-workflow" [:as {body :body}]

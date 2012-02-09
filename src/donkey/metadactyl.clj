@@ -203,3 +203,8 @@
   [body]
   (.previewTemplate (workflow-preview-service) (slurp body)))
 
+(defn preview-workflow
+  [body]
+  (.previewWorkflow (workflow-preview-service) (slurp body)))
+
+
