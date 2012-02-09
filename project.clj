@@ -2,6 +2,7 @@
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojure/tools.logging "0.2.3"]
+                 [org.clojure/data.json "0.1.1"]
                  [c3p0/c3p0 "0.9.1.2"]
                  [compojure "1.0.1"]
                  [swank-clojure "1.4.0-SNAPSHOT"]

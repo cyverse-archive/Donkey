@@ -3,13 +3,15 @@
         [donkey.config])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]
            [org.iplantc.workflow.client ZoidbergClient]
+           [org.iplantc.files.types ReferenceGenomeHandler]
            [org.iplantc.workflow.service
             AnalysisCategorizationService CategoryService ExportService
             InjectableWorkspaceInitializer PipelineService TemplateGroupService
             UserService WorkflowElementRetrievalService WorkflowExportService
-            AnalysisListingService]
+            AnalysisListingService WorkflowPreviewService]
            [org.springframework.orm.hibernate3.annotation
-            AnnotationSessionFactoryBean]))
+            AnnotationSessionFactoryBean])
+  (:require [clojure.tools.logging :as log]))
 
 (register-bean
   (defbean db-url
@@ -118,6 +120,17 @@
       ;; TODO: replace UserSessionService with something that will work.
       (.setUserSessionService nil))))
 
+(register-bean
+  (defbean reference-genome-handler
+    "I don't know why this even needs to exist."
+    (doto (ReferenceGenomeHandler.)
+      (.setReferenceGenomeUrlMap (reference-genomes)))))
+
+(register-bean
+  (defbean workflow-preview-service
+    "Handles workflow/metadactyl related previews."
+    (WorkflowPreviewService. (session-factory) (reference-genome-handler))))
+
 (defn get-workflow-elements
   "A service to get information about workflow elements."
   [element-type]
@@ -185,3 +198,8 @@
 (defn export-workflow
   [app-id]
   (.exportAnalysis (workflow-export-service) app-id))
+
+(defn preview-template
+  [body]
+  (.previewTemplate (workflow-preview-service) (slurp body)))
+
