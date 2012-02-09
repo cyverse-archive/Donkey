@@ -181,3 +181,7 @@
 (defn export-template
   [template-id]
   (.exportTemplate (workflow-export-service) template-id))
+
+(defn export-workflow
+  [app-id]
+  (.exportAnalysis (workflow-export-service) app-id))
