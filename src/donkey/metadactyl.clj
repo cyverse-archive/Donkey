@@ -6,7 +6,8 @@
            [org.iplantc.workflow.service
             AnalysisCategorizationService CategoryService ExportService
             InjectableWorkspaceInitializer PipelineService TemplateGroupService
-            UserService WorkflowElementRetrievalService WorkflowExportService]
+            UserService WorkflowElementRetrievalService WorkflowExportService
+            AnalysisListingService]
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean]))
 
@@ -101,6 +102,14 @@
       (.setWorkspaceInitializer (workspace-initializer)))))
 
 (register-bean
+  (defbean analysis-listing-service
+    "Services used to list analyses."
+    (doto (AnalysisListingService.)
+      (.setSessionFactory (session-factory))
+      (.setFavoritesAnalysisGroupIndex (workspace-favorites-app-group-index))
+      (.setWorkspaceInitializer (workspace-initializer)))))
+
+(register-bean
   (defbean template-group-service
     "Services used to place apps in app groups."
     (doto (TemplateGroupService.)
@@ -159,3 +168,8 @@
   "A service used to get an app in the format required by the DE."
   [app-id]
   )
+
+(defn get-public-analyses
+  "Retrieves the list of public analyses."
+  []
+  (.listPublicAnalyses (analysis-listing-service)))

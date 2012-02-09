@@ -45,6 +45,36 @@
         (trap #(add-app-to-group body)))
   (GET "/get-analysis/:app-id" [app-id]
        (trap #(get-app app-id)))
+  
+  ;John started
+  (GET "/get-public-analyses" []
+       (trap #(get-public-analyses)))
+  
+  ;(GET "/get-only-analysis-groups" [:as {body :body}]
+  ;     (trap #(get-only-analysis-groups body)))
+  ;(POST "/permanently-delete-workflow" [:as {body :body}]
+  ;      (trap #(permanently-delete-workflow body)))
+  ;(POST "/delete-workflow" [:as {body :body}]
+  ;      (trap #(delete-workflow body)))
+  ;(POST "/preview-template" [:as {body :body}]
+  ;      (trap #(preview-template body)))
+  ;(POST "/preview-workflow" [:as {body :body}]
+  ;      (trap #(preview-workflow body)))
+  ;(GET "/export-template/:template-id" [template-id]
+  ;     (trap #(export-template template-id)))
+  ;(GET "/export-workflow/:app-id" [app-id]
+  ;     (trap #(export-workflow app-id)))
+  ;(POST "/update-template" [:as {body :body}]
+  ;      (trap #(update-template body)))
+  ;(POST "/force-update-workflow" [:as {body :body}]
+  ;      (trap #(update-workflow body true)))
+  ;(POST "/update-workflow" [:as {body :body}]
+  ;      (trap #(update-workflow body false)))
+  ;(POST "/import-template" [:as {body :body}]
+  ;      (trap #(import-template body)))
+  ;(POST "/import-workflow" [:as {body :body}]
+  ;      (trap #(import-workflow body)))
+  
   (route/not-found (unrecognized-path-response)))
 
 (defn site-handler [routes]
