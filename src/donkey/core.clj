@@ -49,9 +49,8 @@
   ;John started
   (GET "/get-public-analyses" []
        (trap #(get-public-analyses)))
-  
-  ;(GET "/get-only-analysis-groups" [:as {body :body}]
-  ;     (trap #(get-only-analysis-groups body)))
+  (GET "/get-only-analysis-groups/:workspace-id" [workspace-id]
+       (trap #(get-only-analysis-groups workspace-id)))
   ;(POST "/permanently-delete-workflow" [:as {body :body}]
   ;      (trap #(permanently-delete-workflow body)))
   ;(POST "/delete-workflow" [:as {body :body}]

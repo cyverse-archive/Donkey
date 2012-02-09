@@ -173,3 +173,7 @@
   "Retrieves the list of public analyses."
   []
   (.listPublicAnalyses (analysis-listing-service)))
+
+(defn get-only-analysis-groups
+  [workspace-id]
+  (.listAnalysisGroups (analysis-listing-service) workspace-id))
