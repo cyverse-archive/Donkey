@@ -69,7 +69,7 @@
   (try
     (Integer/parseInt value)
     (catch NumberFormatException e
-      (do (record-invalid-prop prop-name e)))))
+      (do (record-invalid-prop prop-name e) 0))))
 
 (defn- get-required-integer-prop
   "Gets a required integer property from the properties that wer loaded from
@@ -77,7 +77,7 @@
   [prop-name]
   (let [value (get-required-prop prop-name)]
     (if (blank? value)
-      nil
+      0
       (string-to-int prop-name value))))
 
 (defmacro STR
@@ -157,6 +157,24 @@
 (STR zoidberg-encoding
   "The character encoding to use when communicating with Zoidberg."
   "donkey.zoidberg.encoding")
+
+(STR workspace-root-app-group
+  "The name of the root app group in each user's workspace."
+  "donkey.workspace.root-app-group")
+
+(STR workspace-default-app-groups
+  "The names of the app groups that appear immediately beneath the root app
+   group in each user's workspace."
+  "donkey.workspace.default-app-groups")
+
+(INT workspace-dev-app-group-index
+  "The index of the category within a user's workspace for apps under
+   development."
+  "donkey.workspace.dev-app-group-index")
+
+(INT workspace-favorites-app-group-index
+  "The index of the category within a user's workspace for favorite apps."
+  "donkey.workspace.favorites-app-group-index")
 
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should

@@ -23,9 +23,28 @@
     (catch Throwable t (error-response t))))
 
 (defroutes donkey-routes
-  (GET "/" [] "Welcome to Donkey!  I've mastered the stairs!\n")
+  (GET "/" []
+       "Welcome to Donkey!  I've mastered the stairs!\n")
   (GET "/get-workflow-elements/:element-type" [element-type]
        (trap #(get-workflow-elements element-type)))
+  (GET "/get-all-analysis-ids" []
+       (trap #(get-all-app-ids)))
+  (POST "/delete-categories" [:as {body :body}]
+        (trap #(delete-categories body)))
+  (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
+       (trap #(validate-app-for-pipelines app-id)))
+  (GET "/analysis-data-objects/:app-id" [app-id]
+       (trap #(get-data-objects-for-app app-id)))
+  (POST "/categorize-analyses" [:as {body :body}]
+        (trap #(categorize-apps body)))
+  (GET "/get-analysis-categories/:category-set" [category-set]
+       (trap #(get-app-categories category-set)))
+  (POST "/can-export-app" [:as {body :body}]
+        (trap #(can-export-app body)))
+  (POST "/add-analysis-to-group" [:as {body :body}]
+        (trap #(add-app-to-group body)))
+  (GET "/get-analysis/:app-id" [app-id]
+       (trap #(get-app app-id)))
   (route/not-found (unrecognized-path-response)))
 
 (defn site-handler [routes]
