@@ -21,7 +21,7 @@
 
 (def
   ^{:doc "True if the configuration is valid."}
-   configuration-valid (atom true))
+   configuration-is-valid (atom true))
 
 (defn- record-missing-prop
   "Records a property that is missing.  Instead of failing on the first
@@ -29,17 +29,27 @@
    as invalid and keep going so that we can log as many configuration errors
    as possible in one run."
   [prop-name]
-  (log/error "required configuration setting," prop-name ", is empty or"
+  (log/error "required configuration setting" prop-name "is empty or"
              "undefined")
-  (reset! configuration-valid false))
+  (reset! configuration-is-valid false))
+
+(defn- record-invalid-prop
+  "Records a property that has an invalid value.  Instead of failing on the
+   first missing parameter, we log the missing parameter, mark the
+   configuration as invalid and keep going so that we can log as many
+   configuration errors as possible in one run."
+  [prop-name t]
+  (log/error "invalid configuration setting for" prop-name ":" t)
+  (reset! configuration-is-valid false))
 
 (defn- get-required-prop
   "Gets a required property from the properties that were loaded from
    Zookeeper."
   [prop-name]
-  (let [value (get @props prop-name)]
+  (let [value (get @props prop-name "")]
     (when (blank? value)
-      (record-missing-prop prop-name))))
+      (record-missing-prop prop-name))
+    value))
 
 (defn- vector-from-prop
   "Derives a list of values from a single comma-delimited value."
@@ -47,10 +57,28 @@
   (split value #", *"))
 
 (defn- get-required-vector-prop
-  "Gets a required vector property the properties that were loaded from
+  "Gets a required vector property from the properties that were loaded from
    Zookeeper."
   [prop-name]
   (vector-from-prop (get-required-prop prop-name)))
+
+(defn- string-to-int
+  "Attempts to convert a String property to an integer property.  Returns nil
+   if the property can't be converted."
+  [prop-name value]
+  (try
+    (Integer/parseInt value)
+    (catch NumberFormatException e
+      (do (record-invalid-prop prop-name e)))))
+
+(defn- get-required-integer-prop
+  "Gets a required integer property from the properties that wer loaded from
+   Zookeeper."
+  [prop-name]
+  (let [value (get-required-prop prop-name)]
+    (if (blank? value)
+      nil
+      (string-to-int prop-name value))))
 
 (defmacro STR
   "defines a required string property."
@@ -63,6 +91,12 @@
   {:private true}
   [fname desc pname]
   `(defn ~fname ~desc [] (get-required-vector-prop ~pname)))
+
+(defmacro INT
+  "Defines a required integer property."
+  {:private true}
+  [fname desc pname]
+  `(defn ~fname ~desc [] (get-required-integer-prop ~pname)))
 
 (STR listen-port 
   "The port that donkey listens to."
@@ -111,3 +145,21 @@
 (STR hibernate-dialect
   "The dialect that Hibernate should use when generating SQL."
   "donkey.hibernate.dialect")
+
+(STR zoidberg-base-url
+  "The base URL to use when connecting to Zoidberg."
+  "donkey.zoidberg.base-url")
+
+(INT zoidberg-connection-timeout
+  "The maximum number of milliseconds to wait for a connection to Zoidberg."
+  "donkey.zoidberg.connection-timeout")
+
+(STR zoidberg-encoding
+  "The character encoding to use when communicating with Zoidberg."
+  "donkey.zoidberg.encoding")
+
+(defn configuration-valid
+  "Returns the value of the configuration validity flag.  This function should
+   only be called after Donkey has been initialized."
+  []
+  @configuration-is-valid)

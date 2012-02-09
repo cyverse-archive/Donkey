@@ -1,7 +1,10 @@
 (ns donkey.core
   (:gen-class)
   (:use [compojure.core]
+        [donkey.beans]
         [donkey.config]
+        [donkey.metadactyl]
+        [donkey.service]
         [ring.middleware keyword-params nested-params])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
@@ -9,8 +12,21 @@
             [clojure-commons.clavin-client :as cl]
             [ring.adapter.jetty :as jetty]))
 
+(defn- trap
+  "Traps any exception thrown by a service and returns an appropriate
+   repsonse."
+  [f]
+  (try
+    (f)
+    (catch IllegalArgumentException e (failure-response e))
+    (catch IllegalStateException e (failure-response e))
+    (catch Throwable t (error-response t))))
+
 (defroutes donkey-routes
-  (GET "/" [] "Welcome to Donkey!  I've mastered the stairs!\n"))
+  (GET "/" [] "Welcome to Donkey!  I've mastered the stairs!\n")
+  (GET "/get-workflow-elements/:element-type" [element-type]
+       (trap #(get-workflow-elements element-type)))
+  (route/not-found (unrecognized-path-response)))
 
 (defn site-handler [routes]
   (-> routes
@@ -27,7 +43,11 @@
       (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
       (System/exit 1))
     (reset! props (cl/properties "donkey")))
-  (log/warn @props))
+  (log/warn @props)
+  (init-registered-beans)
+  (when (not (configuration-valid))
+    (log/warn "THE CONFIGURATION IS INVALID - EXITING NOW")
+    (System/exit 1)))
 
 (def app
   (site-handler donkey-routes))
