@@ -203,49 +203,64 @@
   (.listPublicAnalyses (analysis-listing-service)))
 
 (defn get-only-analysis-groups
+  "Retrieves the list of public analyses."
   [workspace-id]
   (.listAnalysisGroups (analysis-listing-service) workspace-id))
 
 (defn export-template
+  "This service will export the template with the given identifier."
   [template-id]
   (.exportTemplate (workflow-export-service) template-id))
 
 (defn export-workflow
+  "This service will export a workflow with the given identifier."
   [app-id]
   (.exportAnalysis (workflow-export-service) app-id))
 
 (defn preview-template
+  "This service will convert a JSON document in the format consumed by 
+   the import service into the format required by the DE."
   [body]
   (.previewTemplate (workflow-preview-service) (slurp body)))
 
 (defn preview-workflow
+  "This service will convert a JSON document in the format consumed by 
+   the import service into the format required by the DE."
   [body]
   (.previewWorkflow (workflow-preview-service) (slurp body)))
 
 (defn import-template
+  "This service will import a template into the DE."
   [body]
   (.importTemplate (workflow-import-service) (slurp body)))
 
 (defn import-workflow
+  "This service will import a workflow into the DE."
   [body]
   (.importWorkflow (workflow-import-service) (slurp body)))
 
 (defn update-template
+  "This service will either update an existing template or import a new template."
   [body]
   (.updateTemplate (workflow-import-service) (slurp body)))
 
 (defn update-workflow
+  "This service will either update an existing workflow or import a new workflow."
   [body]
   (.updateWorkflow (workflow-import-service) (slurp body)))
 
 (defn force-update-workflow
+  "This service will either update an existing workflow or import a new workflow.  
+   Vetted workflows may be updated."
   [body]
   (.forceUpdateWorkflow (workflow-import-service) (slurp body)))
 
 (defn delete-workflow
+  "This service will logically remove a workflow from the DE."
   [body]
   (.deleteAnalysis (analysis-deletion-service) (slurp body)))
 
 (defn permanently-delete-workflow
+  "This service will physically remove a workflow from the DE."
   [body]
   (.physicallyDeleteAnalysis (analysis-deletion-service) (slurp body)))
