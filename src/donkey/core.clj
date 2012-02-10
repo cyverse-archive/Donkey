@@ -65,8 +65,8 @@
         (trap #(update-template body)))
   ;(POST "/force-update-workflow" [:as {body :body}]
   ;      (trap #(update-workflow body true)))
-  ;(POST "/update-workflow" [:as {body :body}]
-  ;      (trap #(update-workflow body false)))
+  (POST "/update-workflow" [:as {body :body}]
+        (trap #(update-workflow body)))
   (POST "/import-template" [:as {body :body}]
         (trap #(import-template body)))
   (POST "/import-workflow" [:as {body :body}]

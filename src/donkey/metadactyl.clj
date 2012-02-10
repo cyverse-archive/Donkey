@@ -228,4 +228,8 @@
   [body]
   (.updateTemplate (workflow-import-service) (slurp body)))
 
+(defn update-workflow
+  [body]
+  (.updateWorkflow (workflow-import-service) (slurp body)))
+
 
