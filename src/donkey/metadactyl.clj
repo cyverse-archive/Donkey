@@ -4,12 +4,14 @@
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]
            [org.iplantc.workflow.client ZoidbergClient]
            [org.iplantc.files.types ReferenceGenomeHandler]
+           [org.iplantc.workflow HibernateTemplateFetcher]
            [org.iplantc.workflow.service
             AnalysisCategorizationService CategoryService ExportService
             InjectableWorkspaceInitializer PipelineService TemplateGroupService
             UserService WorkflowElementRetrievalService WorkflowExportService
             AnalysisListingService WorkflowPreviewService WorkflowImportService
             AnalysisDeletionService]
+           [org.iplantc.workflow.template.notifications NotificationAppender]
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
   (:require [clojure.tools.logging :as log]))
@@ -146,6 +148,19 @@
     "Handles workflow/metadactyl deletion actions."
     (AnalysisDeletionService. (session-factory))))
 
+(register-bean
+  (defbean app-fetcher
+    "Retrieves apps from the database."
+    (doto (HibernateTemplateFetcher.)
+      (.setSessionFactory (session-factory))
+      (.setRefGenomeHandler (reference-genome-handler)))))
+
+(register-bean
+  (defbean notification-appender
+    "Appends UI notifications to an app."
+    (doto (NotificationAppender.)
+      (.setSessionFactory (session-factory)))))
+
 (defn get-workflow-elements
   "A service to get information about workflow elements."
   [element-type]
@@ -195,7 +210,8 @@
 (defn get-app
   "A service used to get an app in the format required by the DE."
   [app-id]
-  )
+  (.appendNotificationToTemplate (notification-appender)
+    (.fetchTemplateByName (app-fetcher) app-id)))
 
 (defn get-public-analyses
   "Retrieves the list of public analyses."
