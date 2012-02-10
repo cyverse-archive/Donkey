@@ -69,8 +69,8 @@
   ;      (trap #(update-workflow body false)))
   (POST "/import-template" [:as {body :body}]
         (trap #(import-template body)))
-  ;(POST "/import-workflow" [:as {body :body}]
-  ;      (trap #(import-workflow body)))
+  (POST "/import-workflow" [:as {body :body}]
+        (trap #(import-workflow body)))
   
   (route/not-found (unrecognized-path-response)))
 
