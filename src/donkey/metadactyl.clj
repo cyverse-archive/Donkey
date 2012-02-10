@@ -8,7 +8,8 @@
             AnalysisCategorizationService CategoryService ExportService
             InjectableWorkspaceInitializer PipelineService TemplateGroupService
             UserService WorkflowElementRetrievalService WorkflowExportService
-            AnalysisListingService WorkflowPreviewService WorkflowImportService]
+            AnalysisListingService WorkflowPreviewService WorkflowImportService
+            AnalysisDeletionService]
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
   (:require [clojure.tools.logging :as log]))
@@ -140,6 +141,11 @@
       (Integer/toString (workspace-favorites-app-group-index)) 
       (workspace-initializer))))
 
+(register-bean
+  (defbean analysis-deletion-service
+    "Handles workflow/metadactyl deletion actions."
+    (AnalysisDeletionService. (session-factory))))
+
 (defn get-workflow-elements
   "A service to get information about workflow elements."
   [element-type]
@@ -236,4 +242,7 @@
   [body]
   (.forceUpdateWorkflow (workflow-import-service) (slurp body)))
 
+(defn delete-workflow
+  [body]
+  (.deleteAnalysis (analysis-deletion-service) (slurp body)))
 

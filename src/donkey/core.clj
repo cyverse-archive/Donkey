@@ -55,8 +55,8 @@
        (trap #(export-workflow app-id)))
   ;(POST "/permanently-delete-workflow" [:as {body :body}]
   ;      (trap #(permanently-delete-workflow body)))
-  ;(POST "/delete-workflow" [:as {body :body}]
-  ;      (trap #(delete-workflow body)))
+  (POST "/delete-workflow" [:as {body :body}]
+        (trap #(delete-workflow body)))
   (POST "/preview-template" [:as {body :body}]
         (trap #(preview-template body)))
   (POST "/preview-workflow" [:as {body :body}]
