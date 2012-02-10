@@ -8,7 +8,7 @@
             AnalysisCategorizationService CategoryService ExportService
             InjectableWorkspaceInitializer PipelineService TemplateGroupService
             UserService WorkflowElementRetrievalService WorkflowExportService
-            AnalysisListingService WorkflowPreviewService]
+            AnalysisListingService WorkflowPreviewService WorkflowImportService]
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
   (:require [clojure.tools.logging :as log]))
@@ -131,6 +131,15 @@
     "Handles workflow/metadactyl related previews."
     (WorkflowPreviewService. (session-factory) (reference-genome-handler))))
 
+(register-bean
+  (defbean workflow-import-service
+    "Handles workflow/metadactyl import actions."
+    (WorkflowImportService. 
+      (session-factory) 
+      (Integer/toString (workspace-dev-app-group-index)) 
+      (Integer/toString (workspace-favorites-app-group-index)) 
+      (workspace-initializer))))
+
 (defn get-workflow-elements
   "A service to get information about workflow elements."
   [element-type]
@@ -207,4 +216,7 @@
   [body]
   (.previewWorkflow (workflow-preview-service) (slurp body)))
 
+(defn import-template
+  [body]
+  (.importTemplate (workflow-import-service) (slurp body)))
 

@@ -67,8 +67,8 @@
   ;      (trap #(update-workflow body true)))
   ;(POST "/update-workflow" [:as {body :body}]
   ;      (trap #(update-workflow body false)))
-  ;(POST "/import-template" [:as {body :body}]
-  ;      (trap #(import-template body)))
+  (POST "/import-template" [:as {body :body}]
+        (trap #(import-template body)))
   ;(POST "/import-workflow" [:as {body :body}]
   ;      (trap #(import-workflow body)))
   
