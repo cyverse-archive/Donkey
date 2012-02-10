@@ -246,3 +246,6 @@
   [body]
   (.deleteAnalysis (analysis-deletion-service) (slurp body)))
 
+(defn permanently-delete-workflow
+  [body]
+  (.physicallyDeleteAnalysis (analysis-deletion-service) (slurp body)))
