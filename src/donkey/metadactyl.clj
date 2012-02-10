@@ -232,4 +232,8 @@
   [body]
   (.updateWorkflow (workflow-import-service) (slurp body)))
 
+(defn force-update-workflow
+  [body]
+  (.forceUpdateWorkflow (workflow-import-service) (slurp body)))
+
 
