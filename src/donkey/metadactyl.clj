@@ -224,4 +224,8 @@
   [body]
   (.importWorkflow (workflow-import-service) (slurp body)))
 
+(defn update-template
+  [body]
+  (.updateTemplate (workflow-import-service) (slurp body)))
+
 
