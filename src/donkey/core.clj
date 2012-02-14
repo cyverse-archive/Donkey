@@ -4,6 +4,7 @@
         [donkey.beans]
         [donkey.config]
         [donkey.metadactyl]
+        [donkey.notifications]
         [donkey.service]
         [ring.middleware keyword-params nested-params])
   (:require [compojure.route :as route]
@@ -25,6 +26,54 @@
 (defroutes donkey-routes
   (GET "/" []
        "Welcome to Donkey!  I've mastered the stairs!\n")
+  
+  ;Authed APIs
+  (POST "/notifications/get-messages" [:as {body :body}] ;getNotifications
+        (trap #(get-messages body)))
+  
+;  (POST "/notifications/get-unseen-messages" [:as {body :body}] ;getUnseenNotifications
+;        (trap #(get-unseen-messages body)))
+;  
+;  (POST "/notifications/:params" [params :as {body :body}] ;deleteNotifications
+;        (trap #(delete-notifications params body)))
+;  
+;  (GET "/template/:analysis-id" [analysis-id] ;fetchTemplateAndNotification
+;       (trap #(get-template analysis-id)))
+;  
+;  (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}] ;runExperiment
+;       (trap #(run-experiment workspace-id body)))
+;  
+;  (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as {body :body}] ;retrieveExperiments
+;       (trap #(get-experiments workspace-id body)))
+;  
+;  (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}] ;deleteExecutions
+;       (trap #(delete-experiments workspace-id body)))
+;  
+;  (POST "/rate-analysis" [:as {body :body}] ;rateAnalysis
+;        (trap #(rate-analysis body)))
+;  
+;  (POST "/delete-rating" [:as {body :body}] ;deleteRating
+;        (trap #(delete-rating body)))
+;  
+;  (GET "/get-analyses-in-group/:template-group-id" [template-group-id] ;listAnalysesInGroup
+;       (trap #(get-analyses-in-group template-group-id)))
+;  
+;  (GET "/list-analyses-for-pipeline/:analysis-id" [analysis-id] ;listAnalysesForPipeline
+;       (trap #(list-analyses-for-pipeline analysis-id)))
+;  
+;  (POST "/update-favorites" [:as {body :body}] ;updateFavorites
+;        (trap #(update-favorites body)))
+;  
+;  (GET "/edit-template/:analysis-id" [analysis-id] ;editTemplate
+;       (trap #(edit-template analysis-id)))
+;  
+;  (GET "/copy-template/:analysis-id" [analysis-id] ;copyTemplate
+;       (trap #(copy-template analysis-id)))
+;  
+;  (POST "/make-analysis-public" [:as {body :body}] ;makeAnalysisPublic
+;        (trap #(make-analysis-public body)))
+  
+  ;Unauthed APIs
   (GET "/get-workflow-elements/:element-type" [element-type]
        (trap #(get-workflow-elements element-type)))
   (GET "/get-all-analysis-ids" []
