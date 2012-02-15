@@ -6,6 +6,7 @@
         [donkey.config]
         [donkey.filters]
         [donkey.metadactyl]
+        [donkey.notifications]
         [donkey.service]
         [ring.middleware keyword-params nested-params])
   (:require [compojure.route :as route]
@@ -30,50 +31,73 @@
   '(defroutes donkey-routes
      (GET "/" []
           "Welcome to Donkey!  I've mastered the stairs!\n")
+
      (GET "/get-workflow-elements/:element-type" [element-type]
           (trap #(get-workflow-elements element-type)))
+
      (GET "/get-all-analysis-ids" []
           (trap #(get-all-app-ids)))
+
      (POST "/delete-categories" [:as {body :body}]
            (trap #(delete-categories body)))
+
      (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
           (trap #(validate-app-for-pipelines app-id)))
+
      (GET "/analysis-data-objects/:app-id" [app-id]
           (trap #(get-data-objects-for-app app-id)))
+
      (POST "/categorize-analyses" [:as {body :body}]
            (trap #(categorize-apps body)))
+
      (GET "/get-analysis-categories/:category-set" [category-set]
           (trap #(get-app-categories category-set)))
+
      (POST "/can-export-app" [:as {body :body}]
            (trap #(can-export-app body)))
+
      (POST "/add-analysis-to-group" [:as {body :body}]
            (trap #(add-app-to-group body)))
+
      (GET "/get-analysis/:app-id" [app-id]
           (trap #(get-app app-id)))
+
      (GET "/get-public-analyses" []
           (trap #(get-public-analyses)))
+
      (GET "/get-only-analysis-groups/:workspace-id" [workspace-id]
           (trap #(get-only-analysis-groups workspace-id)))
+
      (GET "/export-template/:template-id" [template-id]
           (trap #(export-template template-id)))
+
      (GET "/export-workflow/:app-id" [app-id]
           (trap #(export-workflow app-id)))
+
      (POST "/permanently-delete-workflow" [:as {body :body}]
            (trap #(permanently-delete-workflow body)))
+
      (POST "/delete-workflow" [:as {body :body}]
            (trap #(delete-workflow body)))
+
      (POST "/preview-template" [:as {body :body}]
            (trap #(preview-template body)))
+
      (POST "/preview-workflow" [:as {body :body}]
            (trap #(preview-workflow body)))
+
      (POST "/update-template" [:as {body :body}]
            (trap #(update-template body)))
+
      (POST "/force-update-workflow" [:as {body :body}]
            (trap #(force-update-workflow body)))
+
      (POST "/update-workflow" [:as {body :body}]
            (trap #(update-workflow body)))
+
      (POST "/import-template" [:as {body :body}]
            (trap #(import-template body)))
+
      (POST "/import-workflow" [:as {body :body}]
            (trap #(import-workflow body)))
 
@@ -81,6 +105,53 @@
        "/bootstrap" []
        [store-current-user (cas-server) (server-name)]
        (trap #(bootstrap)))
+
+     (FILTERED-POST
+       "/notifications/get-messages" [:as {body :body}]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(get-messages body)))
+
+;  (POST "/notifications/get-unseen-messages" [:as {body :body}] ;getUnseenNotifications
+;        (trap #(get-unseen-messages body)))
+;  
+;  (POST "/notifications/:params" [params :as {body :body}] ;deleteNotifications
+;        (trap #(delete-notifications params body)))
+;  
+;  (GET "/template/:analysis-id" [analysis-id] ;fetchTemplateAndNotification
+;       (trap #(get-template analysis-id)))
+;  
+;  (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}] ;runExperiment
+;       (trap #(run-experiment workspace-id body)))
+;  
+;  (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as {body :body}] ;retrieveExperiments
+;       (trap #(get-experiments workspace-id body)))
+;  
+;  (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}] ;deleteExecutions
+;       (trap #(delete-experiments workspace-id body)))
+;  
+;  (POST "/rate-analysis" [:as {body :body}] ;rateAnalysis
+;        (trap #(rate-analysis body)))
+;  
+;  (POST "/delete-rating" [:as {body :body}] ;deleteRating
+;        (trap #(delete-rating body)))
+;  
+;  (GET "/get-analyses-in-group/:template-group-id" [template-group-id] ;listAnalysesInGroup
+;       (trap #(get-analyses-in-group template-group-id)))
+;  
+;  (GET "/list-analyses-for-pipeline/:analysis-id" [analysis-id] ;listAnalysesForPipeline
+;       (trap #(list-analyses-for-pipeline analysis-id)))
+;  
+;  (POST "/update-favorites" [:as {body :body}] ;updateFavorites
+;        (trap #(update-favorites body)))
+;  
+;  (GET "/edit-template/:analysis-id" [analysis-id] ;editTemplate
+;       (trap #(edit-template analysis-id)))
+;  
+;  (GET "/copy-template/:analysis-id" [analysis-id] ;copyTemplate
+;       (trap #(copy-template analysis-id)))
+;  
+;  (POST "/make-analysis-public" [:as {body :body}] ;makeAnalysisPublic
+;         (trap #(make-analysis-public body)))
 
      (route/not-found (unrecognized-path-response))))
 
