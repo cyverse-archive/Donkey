@@ -106,53 +106,81 @@
        [store-current-user (cas-server) (server-name)]
        (trap #(bootstrap)))
 
-     (FILTERED-POST
-       "/notifications/get-messages" [:as {body :body}]
-       [store-current-user (cas-server) (server-name)]
-       (trap #(get-messages body)))
-
-;  (POST "/notifications/get-unseen-messages" [:as {body :body}] ;getUnseenNotifications
-;        (trap #(get-unseen-messages body)))
-;  
-;  (POST "/notifications/:params" [params :as {body :body}] ;deleteNotifications
-;        (trap #(delete-notifications params body)))
-;  
-;  (GET "/template/:analysis-id" [analysis-id] ;fetchTemplateAndNotification
+;     (FILTERED-POST
+;       "/notifications/get-messages" [:as {body :body}]
+;       [store-current-user (cas-server) (server-name)]
+;       (trap #(get-messages body)))
+;
+;     (FILTERED-POST 
+;       "/notifications/get-unseen-messages" [:as {body :body}] ;getUnseenNotifications
+;       [store-current-user (cas-server) (server-name)]
+;       (trap #(get-unseen-messages body)))
+;     
+;     (FILTERED-POST 
+;       "/notifications/:params" [params :as {body :body}] ;deleteNotifications
+;       [store-current-user (cas-server) (server-name)]
+;       (trap #(delete-notifications params body)))
+;     
+;     (FILTERED-GET 
+;       "/template/:analysis-id" [analysis-id] ;fetchTemplateAndNotification
+;       [store-current-user (cas-server) (server-name)]
 ;       (trap #(get-template analysis-id)))
-;  
-;  (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}] ;runExperiment
+;     
+;     (FILTERED-PUT 
+;       "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}] ;runExperiment
+;       [store-current-user (cas-server) (server-name)]
 ;       (trap #(run-experiment workspace-id body)))
-;  
-;  (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as {body :body}] ;retrieveExperiments
+;      
+;     (FILTERED-GET 
+;       "/workspaces/:workspace-id/executions/list" [workspace-id :as {body :body}] ;retrieveExperiments
+;       [store-current-user (cas-server) (server-name)]
 ;       (trap #(get-experiments workspace-id body)))
-;  
-;  (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}] ;deleteExecutions
+;     
+;     (FILTERED-PUT 
+;       "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}] ;deleteExecutions
+;       [store-current-user (cas-server) (server-name)]
 ;       (trap #(delete-experiments workspace-id body)))
-;  
-;  (POST "/rate-analysis" [:as {body :body}] ;rateAnalysis
-;        (trap #(rate-analysis body)))
-;  
-;  (POST "/delete-rating" [:as {body :body}] ;deleteRating
-;        (trap #(delete-rating body)))
-;  
-;  (GET "/get-analyses-in-group/:template-group-id" [template-group-id] ;listAnalysesInGroup
+;     
+;     (FILTERED-POST 
+;       "/rate-analysis" [:as {body :body}] ;rateAnalysis
+;       [store-current-user (cas-server) (server-name)]
+;       (trap #(rate-analysis body)))
+;     
+;     (FILTERED-POST 
+;       "/delete-rating" [:as {body :body}] ;deleteRating
+;       [store-current-user (cas-server) (server-name)]
+;       (trap #(delete-rating body)))
+;     
+;     (FILTERED-GET 
+;       "/get-analyses-in-group/:template-group-id" [template-group-id] ;listAnalysesInGroup
+;       [store-current-user (cas-server) (server-name)]
 ;       (trap #(get-analyses-in-group template-group-id)))
-;  
-;  (GET "/list-analyses-for-pipeline/:analysis-id" [analysis-id] ;listAnalysesForPipeline
+;     
+;     (FILTERED-GET 
+;       "/list-analyses-for-pipeline/:analysis-id" [analysis-id] ;listAnalysesForPipeline
+;       [store-current-user (cas-server) (server-name)]
 ;       (trap #(list-analyses-for-pipeline analysis-id)))
-;  
-;  (POST "/update-favorites" [:as {body :body}] ;updateFavorites
-;        (trap #(update-favorites body)))
-;  
-;  (GET "/edit-template/:analysis-id" [analysis-id] ;editTemplate
+;     
+;     (FILTERED-POST 
+;       "/update-favorites" [:as {body :body}] ;updateFavorites
+;       [store-current-user (cas-server) (server-name)]
+;       (trap #(update-favorites body)))
+;     
+;     (FILTERED-GET 
+;       "/edit-template/:analysis-id" [analysis-id] ;editTemplate
+;       [store-current-user (cas-server) (server-name)]
 ;       (trap #(edit-template analysis-id)))
-;  
-;  (GET "/copy-template/:analysis-id" [analysis-id] ;copyTemplate
+;     
+;     (FILTERED-GET 
+;       "/copy-template/:analysis-id" [analysis-id] ;copyTemplate
+;       [store-current-user (cas-server) (server-name)]
 ;       (trap #(copy-template analysis-id)))
-;  
-;  (POST "/make-analysis-public" [:as {body :body}] ;makeAnalysisPublic
-;         (trap #(make-analysis-public body)))
-
+;     
+;     (FILTERED-POST 
+;       "/make-analysis-public" [:as {body :body}] ;makeAnalysisPublic
+;       [store-current-user (cas-server) (server-name)]
+;       (trap #(make-analysis-public body)))
+     
      (route/not-found (unrecognized-path-response))))
 
 (defn load-configuration
