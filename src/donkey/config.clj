@@ -191,6 +191,19 @@
   "The index of the category within a user's workspace for favorite apps."
   "donkey.workspace.favorites-app-group-index")
 
+(STR cas-server
+  "The base URL used to connect to the CAS server."
+  "donkey.cas.cas-server")
+
+(STR server-name
+  "The name of the local server."
+  "donkey.cas.server-name")
+
+(STR uid-domain
+  "The domain name to append to the user identifier to get the fully qualified
+   user identifier."
+  "donkey.uid.domain")
+
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should
    only be called after Donkey has been initialized."

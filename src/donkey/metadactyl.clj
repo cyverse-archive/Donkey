@@ -1,7 +1,11 @@
 (ns donkey.metadactyl
-  (:use [donkey.beans]
-        [donkey.config])
+  (:use [clojure-commons.cas-proxy-auth :only (validate-cas-proxy-ticket)]
+        [donkey.beans]
+        [donkey.config]
+        [donkey.transformers])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]
+           [org.iplantc.authn.service UserSessionService]
+           [org.iplantc.authn.user User]
            [org.iplantc.workflow.client ZoidbergClient]
            [org.iplantc.files.types ReferenceGenomeHandler]
            [org.iplantc.workflow HibernateTemplateFetcher]
@@ -15,6 +19,38 @@
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
   (:require [clojure.tools.logging :as log]))
+
+(def
+  ^{:doc "The authenticated user or nil if the service is unsecured."
+    :dynamic true}
+   current-user nil)
+
+(def
+  ^{:doc "The service used to get information about the authenticated user."}
+   user-session-service (proxy [UserSessionService] []
+                          (getUser [] current-user)))
+
+(defn- user-from-attributes
+  "Creates an instance of org.iplantc.authn.user.User from user attributes
+   stored in the request by validate-cas-proxy-ticket."
+  [{:keys [user-attributes]}]
+  (doto (User.)
+    (.setUsername (str (:uid user-attributes) "@" (uid-domain)))
+    (.setPassword (:password user-attributes))
+    (.setEmail (:email user-attributes))
+    (.setShortUsername (:uid user-attributes))))
+
+(defn store-current-user
+  "Authenticates the user using validate-cas-proxy-ticket and binds
+   current-user to a new instance of org.iplantc.authn.user.User that is built
+   from the user attributes that validate-cas-proxy-ticket stores in the
+   request."
+  [handler cas-server server-name]
+  (validate-cas-proxy-ticket
+    (fn [request]
+      (binding [current-user (user-from-attributes request)]
+        (handler request)))
+    cas-server server-name))
 
 (register-bean
   (defbean db-url
@@ -87,7 +123,7 @@
     "Services used to obtain information about a user."
     (doto (UserService.)
       (.setSessionFactory (session-factory))
-      ;; TODO: replace UserSessionService with something that will work.
+      (.setUserSessionService user-session-service)
       (.setRootAnalysisGroup (workspace-root-app-group))
       (.setDefaultAnalysisGroups (workspace-default-app-groups)))))
 
@@ -120,8 +156,7 @@
     (doto (TemplateGroupService.)
       (.setSessionFactory (session-factory))
       (.setZoidbergClient (zoidberg-client))
-      ;; TODO: replace UserSessionService with something that will work.
-      (.setUserSessionService nil))))
+      (.setUserSessionService user-session-service))))
 
 (register-bean
   (defbean reference-genome-handler
@@ -280,3 +315,9 @@
   "This service will physically remove a workflow from the DE."
   [body]
   (.physicallyDeleteAnalysis (analysis-deletion-service) (slurp body)))
+
+(defn bootstrap
+  "This obtains information about and initializes the workspace for the
+   authenticated user."
+  []
+  (object->json (.getCurrentUserInfo (user-service))))

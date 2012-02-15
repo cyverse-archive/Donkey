@@ -1,8 +1,10 @@
 (ns donkey.core
   (:gen-class)
-  (:use [compojure.core]
+  (:use [clojure-commons.query-params :only (wrap-query-params)]
+        [compojure.core]
         [donkey.beans]
         [donkey.config]
+        [donkey.filters]
         [donkey.metadactyl]
         [donkey.service]
         [ring.middleware keyword-params nested-params])
@@ -22,62 +24,65 @@
     (catch IllegalStateException e (failure-response e))
     (catch Throwable t (error-response t))))
 
-(defroutes donkey-routes
-  (GET "/" []
-       "Welcome to Donkey!  I've mastered the stairs!\n")
-  (GET "/get-workflow-elements/:element-type" [element-type]
-       (trap #(get-workflow-elements element-type)))
-  (GET "/get-all-analysis-ids" []
-       (trap #(get-all-app-ids)))
-  (POST "/delete-categories" [:as {body :body}]
-        (trap #(delete-categories body)))
-  (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
-       (trap #(validate-app-for-pipelines app-id)))
-  (GET "/analysis-data-objects/:app-id" [app-id]
-       (trap #(get-data-objects-for-app app-id)))
-  (POST "/categorize-analyses" [:as {body :body}]
-        (trap #(categorize-apps body)))
-  (GET "/get-analysis-categories/:category-set" [category-set]
-       (trap #(get-app-categories category-set)))
-  (POST "/can-export-app" [:as {body :body}]
-        (trap #(can-export-app body)))
-  (POST "/add-analysis-to-group" [:as {body :body}]
-        (trap #(add-app-to-group body)))
-  (GET "/get-analysis/:app-id" [app-id]
-       (trap #(get-app app-id)))
-  (GET "/get-public-analyses" []
-       (trap #(get-public-analyses)))
-  (GET "/get-only-analysis-groups/:workspace-id" [workspace-id]
-       (trap #(get-only-analysis-groups workspace-id)))
-  (GET "/export-template/:template-id" [template-id]
-       (trap #(export-template template-id)))
-  (GET "/export-workflow/:app-id" [app-id]
-       (trap #(export-workflow app-id)))
-  (POST "/permanently-delete-workflow" [:as {body :body}]
-        (trap #(permanently-delete-workflow body)))
-  (POST "/delete-workflow" [:as {body :body}]
-        (trap #(delete-workflow body)))
-  (POST "/preview-template" [:as {body :body}]
-        (trap #(preview-template body)))
-  (POST "/preview-workflow" [:as {body :body}]
-        (trap #(preview-workflow body)))
-  (POST "/update-template" [:as {body :body}]
-        (trap #(update-template body)))
-  (POST "/force-update-workflow" [:as {body :body}]
-        (trap #(force-update-workflow body)))
-  (POST "/update-workflow" [:as {body :body}]
-        (trap #(update-workflow body)))
-  (POST "/import-template" [:as {body :body}]
-        (trap #(import-template body)))
-  (POST "/import-workflow" [:as {body :body}]
-        (trap #(import-workflow body)))
-  
-  (route/not-found (unrecognized-path-response)))
+(defn get-route-definitions
+  "Builds the code required to build the route definitions."
+   []
+  '(defroutes donkey-routes
+     (GET "/" []
+          "Welcome to Donkey!  I've mastered the stairs!\n")
+     (GET "/get-workflow-elements/:element-type" [element-type]
+          (trap #(get-workflow-elements element-type)))
+     (GET "/get-all-analysis-ids" []
+          (trap #(get-all-app-ids)))
+     (POST "/delete-categories" [:as {body :body}]
+           (trap #(delete-categories body)))
+     (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
+          (trap #(validate-app-for-pipelines app-id)))
+     (GET "/analysis-data-objects/:app-id" [app-id]
+          (trap #(get-data-objects-for-app app-id)))
+     (POST "/categorize-analyses" [:as {body :body}]
+           (trap #(categorize-apps body)))
+     (GET "/get-analysis-categories/:category-set" [category-set]
+          (trap #(get-app-categories category-set)))
+     (POST "/can-export-app" [:as {body :body}]
+           (trap #(can-export-app body)))
+     (POST "/add-analysis-to-group" [:as {body :body}]
+           (trap #(add-app-to-group body)))
+     (GET "/get-analysis/:app-id" [app-id]
+          (trap #(get-app app-id)))
+     (GET "/get-public-analyses" []
+          (trap #(get-public-analyses)))
+     (GET "/get-only-analysis-groups/:workspace-id" [workspace-id]
+          (trap #(get-only-analysis-groups workspace-id)))
+     (GET "/export-template/:template-id" [template-id]
+          (trap #(export-template template-id)))
+     (GET "/export-workflow/:app-id" [app-id]
+          (trap #(export-workflow app-id)))
+     (POST "/permanently-delete-workflow" [:as {body :body}]
+           (trap #(permanently-delete-workflow body)))
+     (POST "/delete-workflow" [:as {body :body}]
+           (trap #(delete-workflow body)))
+     (POST "/preview-template" [:as {body :body}]
+           (trap #(preview-template body)))
+     (POST "/preview-workflow" [:as {body :body}]
+           (trap #(preview-workflow body)))
+     (POST "/update-template" [:as {body :body}]
+           (trap #(update-template body)))
+     (POST "/force-update-workflow" [:as {body :body}]
+           (trap #(force-update-workflow body)))
+     (POST "/update-workflow" [:as {body :body}]
+           (trap #(update-workflow body)))
+     (POST "/import-template" [:as {body :body}]
+           (trap #(import-template body)))
+     (POST "/import-workflow" [:as {body :body}]
+           (trap #(import-workflow body)))
 
-(defn site-handler [routes]
-  (-> routes
-      wrap-keyword-params
-      wrap-nested-params))
+     (FILTERED-GET
+       "/bootstrap" []
+       [store-current-user (cas-server) (server-name)]
+       (trap #(bootstrap)))
+
+     (route/not-found (unrecognized-path-response))))
 
 (defn load-configuration
   "Loads the configuration properties from Zookeeper."
@@ -93,13 +98,19 @@
   (init-registered-beans)
   (when (not (configuration-valid))
     (log/warn "THE CONFIGURATION IS INVALID - EXITING NOW")
-    (System/exit 1)))
+    (System/exit 1))
+  (eval (get-route-definitions)))
 
-(def app
-  (site-handler donkey-routes))
+(defn site-handler [routes]
+  (-> routes
+      wrap-keyword-params
+      wrap-nested-params
+      wrap-query-params))
+
+(def app 
+  (site-handler (load-configuration)))
 
 (defn -main
   [& args]
-  (load-configuration)
   (log/warn "Listening on" (listen-port))
-  (jetty/run-jetty app {:port (listen-port)}))
+  (jetty/run-jetty (load-configuration) {:port (listen-port)}))
