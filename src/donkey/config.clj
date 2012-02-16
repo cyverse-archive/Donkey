@@ -173,6 +173,31 @@
   "The character encoding to use when communicating with Zoidberg."
   "donkey.zoidberg.encoding")
 
+(STR osm-base-url
+  "The base URL to use when connecting to the OSM."
+  "donkey.osm.base-url")
+
+(INT osm-connection-timeout
+  "The maximum number of milliseconds to wait for a connection to the OSM."
+  "donkey.osm.connection-timeout")
+
+(STR osm-encoding
+  "The character encoding to use when communicating with the OSM."
+  "donkey.osm.encoding")
+
+(STR osm-jobs-bucket
+  "The OSM bucket containing information about jobs that the user has
+   submitted."
+  "donkey.osm.jobs-bucket")
+
+(STR jex-base-url
+  "The base URL to use when connecting to the JEX."
+  "donkey.jex.base-url")
+
+(STR notificationagent-base-url
+  "The base URL to use when connecting to the notification agent."
+  "donkey.notificationagent.base-url")
+
 (STR workspace-root-app-group
   "The name of the root app group in each user's workspace."
   "donkey.workspace.root-app-group")

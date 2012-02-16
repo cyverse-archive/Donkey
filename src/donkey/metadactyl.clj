@@ -2,19 +2,28 @@
   (:use [clojure-commons.cas-proxy-auth :only (validate-cas-proxy-ticket)]
         [donkey.beans]
         [donkey.config]
+        [donkey.notifications]
+        [donkey.service]
         [donkey.transformers])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]
+           [java.util HashMap]
            [org.iplantc.authn.service UserSessionService]
            [org.iplantc.authn.user User]
-           [org.iplantc.workflow.client ZoidbergClient]
-           [org.iplantc.files.types ReferenceGenomeHandler]
+           [org.iplantc.workflow.client OsmClient ZoidbergClient]
+           [org.iplantc.files.service FileInfoService]
+           [org.iplantc.files.types
+            FileTypeHandler ReferenceAnnotationHandler ReferenceGenomeHandler
+            ReferenceSequenceHandler]
            [org.iplantc.workflow HibernateTemplateFetcher]
+           [org.iplantc.workflow.experiment
+            AnalysisRetriever AnalysisService ExperimentRunner
+            IrodsUrlAssembler]
            [org.iplantc.workflow.service
-            AnalysisCategorizationService CategoryService ExportService
-            InjectableWorkspaceInitializer PipelineService TemplateGroupService
-            UserService WorkflowElementRetrievalService WorkflowExportService
-            AnalysisListingService WorkflowPreviewService WorkflowImportService
-            AnalysisDeletionService]
+            AnalysisCategorizationService AnalysisEditService CategoryService
+            ExportService InjectableWorkspaceInitializer PipelineService
+            TemplateGroupService UserService WorkflowElementRetrievalService
+            WorkflowExportService AnalysisListingService WorkflowPreviewService
+            WorkflowImportService AnalysisDeletionService RatingService]
            [org.iplantc.workflow.template.notifications NotificationAppender]
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
@@ -119,6 +128,15 @@
       (.setEncoding (zoidberg-encoding)))))
 
 (register-bean
+  (defbean osm-client
+    "The client used to communicate with OSM services."
+    (doto (OsmClient.)
+      (.setBaseUrl (osm-base-url))
+      (.setBucket (osm-jobs-bucket))
+      (.setConnectionTimeout (osm-connection-timeout))
+      (.setEncoding (osm-encoding)))))
+
+(register-bean
   (defbean user-service
     "Services used to obtain information about a user."
     (doto (UserService.)
@@ -160,9 +178,39 @@
 
 (register-bean
   (defbean reference-genome-handler
-    "I don't know why this even needs to exist."
+    "Resolves paths to named reference genomes."
     (doto (ReferenceGenomeHandler.)
       (.setReferenceGenomeUrlMap (reference-genomes)))))
+
+(register-bean
+  (defbean reference-sequence-handler
+    "Resolves paths to named reference sequences."
+    (doto (ReferenceSequenceHandler.)
+      (.setReferenceGenomeUrlMap (reference-genomes)))))
+
+(register-bean
+  (defbean reference-annotation-handler
+    "Resolves paths to named reference annotations."
+    (doto (ReferenceAnnotationHandler.)
+      (.setReferenceGenomeUrlMap (reference-genomes)))))
+
+(def
+  ^{:doc "A placeholder service used to clearly indicate that automatically
+          saved barcode files are no longer supported."}
+   barcode-file-handler
+  (proxy [FileTypeHandler] []
+    (getFileAccessUrl [file-id]
+      (let [msg "barcode selectors are no longer supported"]
+        (throw (IllegalArgumentException. msg))))))
+
+(register-bean
+  (defbean file-type-handlers
+    "Maps property types to file type handlers."
+    (doto (HashMap.)
+      (.put "ReferenceGenome" (reference-genome-handler))
+      (.put "ReferenceAnnotation" (reference-annotation-handler))
+      (.put "ReferenceSequence" (reference-sequence-handler))
+      (.put "BarcodeSelector" barcode-file-handler))))
 
 (register-bean
   (defbean workflow-preview-service
@@ -195,6 +243,67 @@
     "Appends UI notifications to an app."
     (doto (NotificationAppender.)
       (.setSessionFactory (session-factory)))))
+
+(register-bean
+  (defbean analysis-edit-service
+    "Services to make apps available for editing in Tito."
+    (doto (AnalysisEditService.)
+      (.setSessionFactory (session-factory))
+      (.setZoidbergClient (zoidberg-client))
+      (.setUserService (user-service))
+      (.setWorkflowExportService (workflow-export-service)))))
+
+(register-bean
+  (defbean analysis-retriever
+    "Used by several services to retrieve apps from the daatabase."
+    (doto (AnalysisRetriever.)
+      (.setSessionFactory (session-factory)))))
+
+(register-bean
+  (defbean rating-service
+    "Services to associate user ratings with or remove user ratings from
+     apps."
+    (doto (RatingService.)
+      (.setSessionFactory (session-factory))
+      (.setUserSessionService user-session-service)
+      (.setAnalysisRetriever (analysis-retriever)))))
+
+(register-bean
+  (defbean analysis-service
+    "Services to retrieve information about analyses that a user has
+     submitted."
+    (doto (AnalysisService.)
+      (.setSessionFactory (session-factory))
+      (.setOsmBaseUrl (osm-base-url))
+      (.setOsmBucket (osm-jobs-bucket))
+      (.setConnectionTimeout (osm-connection-timeout)))))
+
+(register-bean
+  (defbean file-info-service
+    "Services used to resolve paths to named files."
+    (doto (FileInfoService.)
+      (.setFileTypeHandlerMap (file-type-handlers)))))
+
+(register-bean
+  (defbean url-assembler
+    "Used to assemble URLs."
+    (IrodsUrlAssembler.)))
+
+(register-bean
+  (defbean experiment-runner
+    "Services to submit jobs to the JEX for execution."
+    (doto (ExperimentRunner.)
+      (.setSessionFactory (session-factory))
+      (.setFileInfo (file-info-service))
+      (.setUserService (user-service))
+      (.setExecutionUrl (jex-base-url))
+      (.setUrlAssembler (url-assembler))
+      (.setOsmClient (osm-client)))))
+
+(defn- notificationagent-url
+  "Builds a URL that can be used to connect to the notification agent."
+  [relative-url]
+  (build-url (notificationagent-base-url) relative-url))
 
 (defn get-workflow-elements
   "A service to get information about workflow elements."
@@ -283,41 +392,129 @@
 (defn import-template
   "This service will import a template into the DE."
   [body]
-  (.importTemplate (workflow-import-service) (slurp body)))
+  (.importTemplate (workflow-import-service) (slurp body))
+  (empty-response))
 
 (defn import-workflow
   "This service will import a workflow into the DE."
   [body]
-  (.importWorkflow (workflow-import-service) (slurp body)))
+  (.importWorkflow (workflow-import-service) (slurp body))
+  (empty-response))
 
 (defn update-template
   "This service will either update an existing template or import a new template."
   [body]
-  (.updateTemplate (workflow-import-service) (slurp body)))
+  (.updateTemplate (workflow-import-service) (slurp body))
+  (empty-response))
 
 (defn update-workflow
   "This service will either update an existing workflow or import a new workflow."
   [body]
-  (.updateWorkflow (workflow-import-service) (slurp body)))
+  (.updateWorkflow (workflow-import-service) (slurp body))
+  (empty-response))
 
 (defn force-update-workflow
   "This service will either update an existing workflow or import a new workflow.  
    Vetted workflows may be updated."
   [body]
-  (.forceUpdateWorkflow (workflow-import-service) (slurp body)))
+  (.forceUpdateWorkflow (workflow-import-service) (slurp body))
+  (empty-response))
 
 (defn delete-workflow
   "This service will logically remove a workflow from the DE."
   [body]
-  (.deleteAnalysis (analysis-deletion-service) (slurp body)))
+  (.deleteAnalysis (analysis-deletion-service) (slurp body))
+  (empty-response))
 
 (defn permanently-delete-workflow
   "This service will physically remove a workflow from the DE."
   [body]
-  (.physicallyDeleteAnalysis (analysis-deletion-service) (slurp body)))
+  (.physicallyDeleteAnalysis (analysis-deletion-service) (slurp body))
+  (empty-response))
 
 (defn bootstrap
-  "This obtains information about and initializes the workspace for the
-   authenticated user."
+  "This service obtains information about and initializes the workspace for
+   the authenticated user."
   []
   (object->json (.getCurrentUserInfo (user-service))))
+
+(defn get-messages
+  "This service forwards requests to the notification agent in order to
+   retrieve notifications that the user may or may not have seen yet."
+  [req]
+  (let [url (notificationagent-url "get-messages")]
+    (add-app-details
+      (forward-post url req (add-username-to-json req))
+      (analysis-retriever))))
+
+(defn get-unseen-messages
+  "This service forwards requests to the notification agent in order to
+   retrieve notifications that the user hasn't seen yet."
+  [req]
+  (let [url (notificationagent-url "get-unseen-messages")]
+    (add-app-details
+      (forward-post url req (add-username-to-json req))
+      (analysis-retriever))))
+
+(defn delete-notifications
+  "This service forwards requests to the notification agent in order to delete
+   existing notifications."
+  [req]
+  (let [url (notificationagent-url "delete")]
+    (forward-post url req (add-username-to-json req))))
+
+(defn run-experiment
+  "This service accepts a job submission from a user then reformats it and
+   submits it to the JEX."
+  [body]
+  (.runExperiment (experiment-runner) (object->json (slurp body))))
+
+(defn get-experiments
+  "This service retrieves information about jobs that a user has submitted."
+  [workspace-id]
+  (.retrieveExperimentsByWorkspaceId
+    (analysis-service) (string->long workspace-id)))
+
+(defn delete-experiments
+  "This service marks experiments as deleted so that they no longer show up
+   in the Analyses window."
+  [body]
+  (.deleteExecutionSet (analysis-service) (slurp body))
+  (empty-response))
+
+(defn rate-app
+  "This service adds a user's rating to an app."
+  [body]
+  (.rateAnalysis (rating-service) (slurp body)))
+
+(defn delete-rating
+  "This service removes a user's rating from an app."
+  [body]
+  (.deleteRating (rating-service) (slurp body)))
+
+(defn list-apps-in-group
+  "This service lists all of the apps in an app group and all of its
+   descendents."
+  [app-group-id]
+  (.listAnalysesInGroup (analysis-listing-service) app-group-id))
+
+(defn update-favorites
+  "This service adds apps to or removes apps from a user's favorites list."
+  [body]
+  (.updateFavorite (analysis-categorization-service) (slurp body)))
+
+(defn edit-app
+  "This service makes an app available in Tito for editing."
+  [app-id]
+  (.prepareAnalysisForEditing (analysis-edit-service) app-id))
+
+(defn copy-app
+  "This service makes a copy of an app available in Tito for editing."
+  [app-id]
+  (.copyAnalysis (analysis-edit-service) app-id))
+
+(defn make-app-public
+  "This service copies an app from a user's private workspace to the public
+   workspace."
+  [body]
+  (.makeAnalysisPublic (template-group-service) (slurp body)))

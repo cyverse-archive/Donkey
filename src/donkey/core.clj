@@ -106,81 +106,81 @@
        [store-current-user (cas-server) (server-name)]
        (trap #(bootstrap)))
 
-;     (FILTERED-POST
-;       "/notifications/get-messages" [:as {body :body}]
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(get-messages body)))
-;
-;     (FILTERED-POST 
-;       "/notifications/get-unseen-messages" [:as {body :body}] ;getUnseenNotifications
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(get-unseen-messages body)))
-;     
-;     (FILTERED-POST 
-;       "/notifications/:params" [params :as {body :body}] ;deleteNotifications
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(delete-notifications params body)))
-;     
-;     (FILTERED-GET 
-;       "/template/:analysis-id" [analysis-id] ;fetchTemplateAndNotification
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(get-template analysis-id)))
-;     
-;     (FILTERED-PUT 
-;       "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}] ;runExperiment
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(run-experiment workspace-id body)))
-;      
-;     (FILTERED-GET 
-;       "/workspaces/:workspace-id/executions/list" [workspace-id :as {body :body}] ;retrieveExperiments
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(get-experiments workspace-id body)))
-;     
-;     (FILTERED-PUT 
-;       "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}] ;deleteExecutions
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(delete-experiments workspace-id body)))
-;     
-;     (FILTERED-POST 
-;       "/rate-analysis" [:as {body :body}] ;rateAnalysis
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(rate-analysis body)))
-;     
-;     (FILTERED-POST 
-;       "/delete-rating" [:as {body :body}] ;deleteRating
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(delete-rating body)))
-;     
-;     (FILTERED-GET 
-;       "/get-analyses-in-group/:template-group-id" [template-group-id] ;listAnalysesInGroup
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(get-analyses-in-group template-group-id)))
-;     
-;     (FILTERED-GET 
-;       "/list-analyses-for-pipeline/:analysis-id" [analysis-id] ;listAnalysesForPipeline
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(list-analyses-for-pipeline analysis-id)))
-;     
-;     (FILTERED-POST 
-;       "/update-favorites" [:as {body :body}] ;updateFavorites
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(update-favorites body)))
-;     
-;     (FILTERED-GET 
-;       "/edit-template/:analysis-id" [analysis-id] ;editTemplate
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(edit-template analysis-id)))
-;     
-;     (FILTERED-GET 
-;       "/copy-template/:analysis-id" [analysis-id] ;copyTemplate
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(copy-template analysis-id)))
-;     
-;     (FILTERED-POST 
-;       "/make-analysis-public" [:as {body :body}] ;makeAnalysisPublic
-;       [store-current-user (cas-server) (server-name)]
-;       (trap #(make-analysis-public body)))
-     
+     (FILTERED-POST
+       "/notifications/get-messages" [:as {body :body}]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(get-messages body)))
+
+     (FILTERED-POST 
+       "/notifications/get-unseen-messages" [:as req]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(get-unseen-messages req)))
+
+     (FILTERED-POST 
+       "/notifications/:params" [params :as req]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(delete-notifications req)))
+
+     (FILTERED-GET 
+       "/template/:app-id" [app-id]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(get-app app-id)))
+
+     (FILTERED-PUT 
+       "/workspaces/:workspace-id/newexperiment" [:as {body :body}]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(run-experiment body)))
+
+     (FILTERED-GET 
+       "/workspaces/:workspace-id/executions/list" [workspace-id]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(get-experiments workspace-id)))
+
+     (FILTERED-PUT 
+       "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(delete-experiments body)))
+
+     (FILTERED-POST 
+       "/rate-analysis" [:as {body :body}]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(rate-app body)))
+
+     (FILTERED-POST 
+       "/delete-rating" [:as {body :body}]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(delete-rating body)))
+
+     (FILTERED-GET 
+       "/get-analyses-in-group/:app-group-id" [app-group-id]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(list-apps-in-group app-group-id)))
+
+     (FILTERED-GET 
+       "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(list-apps-in-group app-group-id)))
+
+     (FILTERED-POST 
+       "/update-favorites" [:as {body :body}]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(update-favorites body)))
+
+     (FILTERED-GET 
+       "/edit-template/:app-id" [app-id]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(edit-app app-id)))
+
+     (FILTERED-GET 
+       "/copy-template/:app-id" [app-id]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(copy-app app-id)))
+
+     (FILTERED-POST 
+       "/make-analysis-public" [:as {body :body}]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(make-app-public body)))
+
      (route/not-found (unrecognized-path-response))))
 
 (defn load-configuration
