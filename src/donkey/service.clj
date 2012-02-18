@@ -37,24 +37,29 @@
   (join "/" (map #(.replaceAll % "^/|/$" "")
                  (cons base components))))
 
+(defn prepare-forwarded-request
+  "Prepares a request to be forwarded to a remote service."
+  [request body]
+  {:content-type (get-in request [:headers :content-type])
+   :headers (dissoc (:headers request) "content-length" "content-type")
+   :body body})
+
 (defn forward-get
   "Forwards a GET request to a remote service."
   [url request]
-  (client/get url {:headers (:headers request)}))
+  (client/get url (prepare-forwarded-request request)))
 
 (defn forward-post
   "Forwards a POST request to a remote service."
   [url request body]
-  (client/post url {:headers (:headers request)
-                    :body body}))
+  (client/post url (prepare-forwarded-request request body)))
 
 (defn forward-put
   "Forwards a PUT request to a remote service."
   [url request body]
-  (client/put url {:headers (:headers request)
-                   :body body}))
+  (client/put url (prepare-forwarded-request request body)))
 
 (defn forward-delete
   "Forwards a DELETE request to a remote service."
   [url request]
-  (client/delete url {:headers (:headers request)}))
+  (client/delete url (prepare-forwarded-request request)))

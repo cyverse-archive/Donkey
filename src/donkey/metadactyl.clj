@@ -43,11 +43,12 @@
   "Creates an instance of org.iplantc.authn.user.User from user attributes
    stored in the request by validate-cas-proxy-ticket."
   [{:keys [user-attributes]}]
+  (log/warn user-attributes)
   (doto (User.)
-    (.setUsername (str (:uid user-attributes) "@" (uid-domain)))
-    (.setPassword (:password user-attributes))
-    (.setEmail (:email user-attributes))
-    (.setShortUsername (:uid user-attributes))))
+    (.setUsername (str (get user-attributes "uid") "@" (uid-domain)))
+    (.setPassword (get user-attributes "password"))
+    (.setEmail (get user-attributes "email"))
+    (.setShortUsername (get user-attributes "uid"))))
 
 (defn store-current-user
   "Authenticates the user using validate-cas-proxy-ticket and binds
@@ -436,7 +437,7 @@
   "This service obtains information about and initializes the workspace for
    the authenticated user."
   []
-  (object->json (.getCurrentUserInfo (user-service))))
+  (object->json-str (.getCurrentUserInfo (user-service))))
 
 (defn get-messages
   "This service forwards requests to the notification agent in order to
@@ -466,8 +467,11 @@
 (defn run-experiment
   "This service accepts a job submission from a user then reformats it and
    submits it to the JEX."
-  [body]
-  (.runExperiment (experiment-runner) (object->json (slurp body))))
+  [body workspace-id]
+  (let [json-str (add-workspace-id (slurp body) workspace-id)
+        json-obj (object->json-obj json-str)]
+    (.runExperiment (experiment-runner) json-obj))
+  (empty-response))
 
 (defn get-experiments
   "This service retrieves information about jobs that a user has submitted."
@@ -478,8 +482,9 @@
 (defn delete-experiments
   "This service marks experiments as deleted so that they no longer show up
    in the Analyses window."
-  [body]
-  (.deleteExecutionSet (analysis-service) (slurp body))
+  [body workspace-id]
+  (let [json-str (add-workspace-id (slurp body) workspace-id)]
+    (.deleteExecutionSet (analysis-service json-str)))
   (empty-response))
 
 (defn rate-app
@@ -491,6 +496,11 @@
   "This service removes a user's rating from an app."
   [body]
   (.deleteRating (rating-service) (slurp body)))
+
+(defn search-apps
+  "This service searches for apps based on a search term."
+  [search-term]
+  (.searchAnalyses (analysis-listing-service) search-term))
 
 (defn list-apps-in-group
   "This service lists all of the apps in an app group and all of its

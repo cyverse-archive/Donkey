@@ -1,16 +1,20 @@
 (ns donkey.notifications
-  (:use [clojure.data.json :only (json-str read-json)]))
+  (:use [clojure.data.json :only (json-str read-json)])
+  (:require [clojure.tools.logging :as log]))
 
 (defn- get-app
   "Gets an app from the database."
   [app-id app-retriever]
   (if (nil? app-id)
     nil
-    (.getTransformationActivity app-retriever app-id)))
+    (try 
+      (.getTransformationActivity app-retriever app-id)
+      (catch Exception e nil))))
 
 (defn- get-app-description
   "Gets an app description from the database."
   [app-id app-retriever]
+  (log/debug "looking up the description for app" app-id)
   (let [app (get-app app-id app-retriever)]
     (if (nil? app) "" (.getDescription app))))
 
@@ -36,4 +40,5 @@
    notification agent."
   [res app-retriever]
   (let [m (read-json (:body res))]
+    (log/debug "adding app details to notifications:" m)
     (assoc res :body (json-str (add-app-details-to-map m app-retriever)))))

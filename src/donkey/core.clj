@@ -53,7 +53,7 @@
      (GET "/get-analysis-categories/:category-set" [category-set]
           (trap #(get-app-categories category-set)))
 
-     (POST "/can-export-app" [:as {body :body}]
+     (POST "/can-export-analysis" [:as {body :body}]
            (trap #(can-export-app body)))
 
      (POST "/add-analysis-to-group" [:as {body :body}]
@@ -107,9 +107,9 @@
        (trap #(bootstrap)))
 
      (FILTERED-POST
-       "/notifications/get-messages" [:as {body :body}]
+       "/notifications/get-messages" [:as req]
        [store-current-user (cas-server) (server-name)]
-       (trap #(get-messages body)))
+       (trap #(get-messages req)))
 
      (FILTERED-POST 
        "/notifications/get-unseen-messages" [:as req]
@@ -117,7 +117,7 @@
        (trap #(get-unseen-messages req)))
 
      (FILTERED-POST 
-       "/notifications/:params" [params :as req]
+       "/notifications/:params" [:as req]
        [store-current-user (cas-server) (server-name)]
        (trap #(delete-notifications req)))
 
@@ -127,9 +127,9 @@
        (trap #(get-app app-id)))
 
      (FILTERED-PUT 
-       "/workspaces/:workspace-id/newexperiment" [:as {body :body}]
+       "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
        [store-current-user (cas-server) (server-name)]
-       (trap #(run-experiment body)))
+       (trap #(run-experiment body workspace-id)))
 
      (FILTERED-GET 
        "/workspaces/:workspace-id/executions/list" [workspace-id]
@@ -139,7 +139,7 @@
      (FILTERED-PUT 
        "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}]
        [store-current-user (cas-server) (server-name)]
-       (trap #(delete-experiments body)))
+       (trap #(delete-experiments body workspace-id)))
 
      (FILTERED-POST 
        "/rate-analysis" [:as {body :body}]
@@ -150,6 +150,11 @@
        "/delete-rating" [:as {body :body}]
        [store-current-user (cas-server) (server-name)]
        (trap #(delete-rating body)))
+
+     (FILTERED-GET
+       "/search-analyses/:search-term" [search-term]
+       [store-current-user (cas-server) (server-name)]
+       (trap #(search-apps search-term)))
 
      (FILTERED-GET 
        "/get-analyses-in-group/:app-group-id" [app-group-id]
