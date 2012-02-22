@@ -6,7 +6,7 @@
 Summary: donkey
 Name: donkey
 Version: 1.0.0
-Release: 5
+Release: 1
 Epoch: 0
 BuildArchitectures: noarch
 Group: Applications
@@ -71,7 +71,6 @@ rm -r $RPM_BUILD_ROOT
 %attr(-,iplant,iplant) /etc/donkey/
 
 %config %attr(0644,iplant,iplant) /etc/donkey/log4j.properties
-%config %attr(0644,iplant,iplant) /etc/donkey/donkey.properties
 
 %attr(0755,root,root) /etc/init.d/donkey
 %attr(0644,iplant,iplant) /usr/local/lib/donkey/donkey-1.0.0-SNAPSHOT-standalone.jar
