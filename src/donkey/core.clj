@@ -212,7 +212,7 @@
       wrap-query-params))
 
 (def app 
-  (site-handler (load-configuration)))
+  (delay (site-handler (load-configuration))))
 
 (defn -main
   [& args]

@@ -4,13 +4,23 @@
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]))
 
+(defn- file-exists-on-classpath
+  "Determines if a file exists somewhere on the classpath."
+  [filename]
+  (not (nil? (cc-props/find-properties-file filename))))
+
+(defn- find-first-existing-file
+  "Finds the first file in a list of files that exists on the classpath."
+  [files]
+  (first (filter file-exists-on-classpath files)))
+
 (def
-  ^{:doc "The name of the properties file."}
-  prop-file "donkey.properties")
+  ^{:doc "The names of the properties files."}
+  prop-files ["zkhosts.properties" "donkey.properties"])
 
 (def
   ^{:doc "The properties loaded from the properties file."}
-   zk-props (cc-props/parse-properties prop-file))
+   zk-props (cc-props/parse-properties (find-first-existing-file prop-files)))
 
 (def
   ^{:doc "The URL used to connect to zookeeper."}
