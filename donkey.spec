@@ -6,7 +6,7 @@
 Summary: donkey
 Name: donkey
 Version: 1.0.0
-Release: 1
+Release: 2
 Epoch: 0
 BuildArchitectures: noarch
 Group: Applications
@@ -43,6 +43,7 @@ install -d $RPM_BUILD_ROOT/etc/donkey/
 install donkey $RPM_BUILD_ROOT/etc/init.d/
 install donkey-1.0.0-SNAPSHOT-standalone.jar $RPM_BUILD_ROOT/usr/local/lib/donkey/
 install conf/log4j.properties $RPM_BUILD_ROOT/etc/donkey/
+install conf/reference_genomes.json $RPM_BUILD_ROOT/etc/donkey/
 
 %post
 /sbin/chkconfig --add donkey
@@ -71,6 +72,7 @@ rm -r $RPM_BUILD_ROOT
 %attr(-,iplant,iplant) /etc/donkey/
 
 %config %attr(0644,iplant,iplant) /etc/donkey/log4j.properties
+%config %attr(0644,iplant,iplant) /etc/donkey/reference_genomes.json
 
 %attr(0755,root,root) /etc/init.d/donkey
 %attr(0644,iplant,iplant) /usr/local/lib/donkey/donkey-1.0.0-SNAPSHOT-standalone.jar
