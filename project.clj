@@ -20,5 +20,6 @@
   :aot [donkey.core]
   :main donkey.core
   :ring {:handler donkey.core/app}
+  :uberjar-exclusions [#"BCKEY.SF"]
   :repositories {"iplantCollaborative"
                  "http://projects.iplantcollaborative.org/archiva/repository/internal/"})

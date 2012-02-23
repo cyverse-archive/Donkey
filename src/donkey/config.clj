@@ -19,8 +19,12 @@
   prop-files ["zkhosts.properties" "donkey.properties"])
 
 (def
+  ^{:doc "The name of the properties files that is being used."}
+   prop-file (find-first-existing-file prop-files))
+
+(def
   ^{:doc "The properties loaded from the properties file."}
-   zk-props (cc-props/parse-properties (find-first-existing-file prop-files)))
+   zk-props (cc-props/parse-properties prop-file))
 
 (def
   ^{:doc "The URL used to connect to zookeeper."}

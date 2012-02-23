@@ -212,9 +212,10 @@
       wrap-query-params))
 
 (def app 
-  (delay (site-handler (load-configuration))))
+  (site-handler (load-configuration)))
 
 (defn -main
   [& args]
-  (log/warn "Listening on" (listen-port))
-  (jetty/run-jetty (load-configuration) {:port (listen-port)}))
+  (let [route-definitions (load-configuration)]
+    (log/warn "Listening on" (listen-port))
+    (jetty/run-jetty route-definitions {:port (listen-port)})))
