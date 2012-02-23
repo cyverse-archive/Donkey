@@ -25,10 +25,7 @@
     (catch IllegalStateException e (failure-response e))
     (catch Throwable t (error-response t))))
 
-(defn get-route-definitions
-  "Builds the code required to build the route definitions."
-   []
-  '(defroutes donkey-routes
+(defroutes donkey-routes
      (GET "/" []
           "Welcome to Donkey!  I've mastered the stairs!\n")
 
@@ -103,90 +100,90 @@
 
      (FILTERED-GET
        "/bootstrap" []
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(bootstrap)))
 
      (FILTERED-POST
        "/notifications/get-messages" [:as req]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(get-messages req)))
 
      (FILTERED-POST 
        "/notifications/get-unseen-messages" [:as req]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(get-unseen-messages req)))
 
      (FILTERED-POST 
        "/notifications/:params" [:as req]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(delete-notifications req)))
 
      (FILTERED-GET 
        "/template/:app-id" [app-id]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(get-app app-id)))
 
      (FILTERED-PUT 
        "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(run-experiment body workspace-id)))
 
      (FILTERED-GET 
        "/workspaces/:workspace-id/executions/list" [workspace-id]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(get-experiments workspace-id)))
 
      (FILTERED-PUT 
        "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(delete-experiments body workspace-id)))
 
      (FILTERED-POST 
        "/rate-analysis" [:as {body :body}]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(rate-app body)))
 
      (FILTERED-POST 
        "/delete-rating" [:as {body :body}]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(delete-rating body)))
 
      (FILTERED-GET
        "/search-analyses/:search-term" [search-term]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(search-apps search-term)))
 
      (FILTERED-GET 
        "/get-analyses-in-group/:app-group-id" [app-group-id]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(list-apps-in-group app-group-id)))
 
      (FILTERED-GET 
        "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(list-apps-in-group app-group-id)))
 
      (FILTERED-POST 
        "/update-favorites" [:as {body :body}]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(update-favorites body)))
 
      (FILTERED-GET 
        "/edit-template/:app-id" [app-id]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(edit-app app-id)))
 
      (FILTERED-GET 
        "/copy-template/:app-id" [app-id]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(copy-app app-id)))
 
      (FILTERED-POST 
        "/make-analysis-public" [:as {body :body}]
-       [store-current-user (cas-server) (server-name)]
+       [store-current-user #(cas-server) #(server-name)]
        (trap #(make-app-public body)))
 
-     (route/not-found (unrecognized-path-response))))
+     (route/not-found (unrecognized-path-response)))
 
 (defn load-configuration
   "Loads the configuration properties from Zookeeper."
@@ -202,8 +199,7 @@
   (init-registered-beans)
   (when (not (configuration-valid))
     (log/warn "THE CONFIGURATION IS INVALID - EXITING NOW")
-    (System/exit 1))
-  (eval (get-route-definitions)))
+    (System/exit 1)))
 
 (defn site-handler [routes]
   (-> routes
@@ -212,7 +208,7 @@
       wrap-query-params))
 
 (def app 
-  (site-handler (load-configuration)))
+  (site-handler donkey-routes))
 
 (defn -main
   [& args]

@@ -55,12 +55,12 @@
    current-user to a new instance of org.iplantc.authn.user.User that is built
    from the user attributes that validate-cas-proxy-ticket stores in the
    request."
-  [handler cas-server server-name]
+  [handler cas-server-fn server-name-fn]
   (validate-cas-proxy-ticket
     (fn [request]
       (binding [current-user (user-from-attributes request)]
         (handler request)))
-    cas-server server-name))
+    cas-server-fn server-name-fn))
 
 (register-bean
   (defbean db-url

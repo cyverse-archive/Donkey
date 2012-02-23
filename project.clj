@@ -19,7 +19,7 @@
   :extra-classpath-dirs ["conf"]
   :aot [donkey.core]
   :main donkey.core
-  :ring {:handler donkey.core/app}
+  :ring {:handler donkey.core/app :init donkey.core/load-configuration}
   :uberjar-exclusions [#"BCKEY.SF"]
   :repositories {"iplantCollaborative"
                  "http://projects.iplantcollaborative.org/archiva/repository/internal/"})
