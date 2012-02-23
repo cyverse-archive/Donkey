@@ -127,7 +127,7 @@
                 false)))
     @refgens))
 
-(STR listen-port 
+(INT listen-port 
   "The port that donkey listens to."
   "donkey.app.listen-port")
 

@@ -212,6 +212,6 @@
 
 (defn -main
   [& args]
-  (let [route-definitions (load-configuration)]
-    (log/warn "Listening on" (listen-port))
-    (jetty/run-jetty route-definitions {:port (listen-port)})))
+  (load-configuration)
+  (log/warn "Listening on" (listen-port))
+  (jetty/run-jetty app {:port (listen-port)}))
