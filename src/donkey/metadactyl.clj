@@ -129,11 +129,11 @@
       (.setEncoding (zoidberg-encoding)))))
 
 (register-bean
-  (defbean osm-client
+  (defbean osm-job-request-client
     "The client used to communicate with OSM services."
     (doto (OsmClient.)
       (.setBaseUrl (osm-base-url))
-      (.setBucket (osm-jobs-bucket))
+      (.setBucket (osm-job-request-bucket))
       (.setConnectionTimeout (osm-connection-timeout))
       (.setEncoding (osm-encoding)))))
 
@@ -299,7 +299,7 @@
       (.setUserService (user-service))
       (.setExecutionUrl (jex-base-url))
       (.setUrlAssembler (url-assembler))
-      (.setOsmClient (osm-client)))))
+      (.setJobRequestOsmClient (osm-job-request-client)))))
 
 (defn- notificationagent-url
   "Builds a URL that can be used to connect to the notification agent."

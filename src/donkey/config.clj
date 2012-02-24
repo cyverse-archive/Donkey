@@ -204,6 +204,11 @@
    submitted."
   "donkey.osm.jobs-bucket")
 
+(STR osm-job-request-bucket
+  "The OSM bucket containing job submission requests that were sent from the
+   UI to metadactyl."
+  "donkey.osm.job-request-bucket")
+
 (STR jex-base-url
   "The base URL to use when connecting to the JEX."
   "donkey.jex.base-url")
