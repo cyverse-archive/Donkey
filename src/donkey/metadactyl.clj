@@ -23,7 +23,8 @@
             ExportService InjectableWorkspaceInitializer PipelineService
             TemplateGroupService UserService WorkflowElementRetrievalService
             WorkflowExportService AnalysisListingService WorkflowPreviewService
-            WorkflowImportService AnalysisDeletionService RatingService]
+            WorkflowImportService AnalysisDeletionService RatingService
+            PropertyValueService]
            [org.iplantc.workflow.template.notifications NotificationAppender]
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
@@ -301,6 +302,14 @@
       (.setUrlAssembler (url-assembler))
       (.setJobRequestOsmClient (osm-job-request-client)))))
 
+(register-bean
+  (defbean property-value-service
+    "Services to retrieve property values for jobs that have previously been
+     submitted."
+    (doto (PropertyValueService.)
+      (.setSessionFactory (session-factory))
+      (.setOsmClient (osm-job-request-client)))))
+
 (defn- notificationagent-url
   "Builds a URL that can be used to connect to the notification agent."
   [relative-url]
@@ -528,3 +537,8 @@
    workspace."
   [body]
   (.makeAnalysisPublic (template-group-service) (slurp body)))
+
+(defn get-property-values
+  "Gets the property values for a previously submitted job."
+  [job-id]
+  (.getPropertyValues (property-value-service) job-id))

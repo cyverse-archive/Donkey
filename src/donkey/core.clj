@@ -98,6 +98,9 @@
      (POST "/import-workflow" [:as {body :body}]
            (trap #(import-workflow body)))
 
+     (GET "/get-property-values/:job-id" [job-id]
+          (trap #(get-property-values job-id)))
+
      (FILTERED-GET
        "/bootstrap" []
        [store-current-user #(cas-server) #(server-name)]
