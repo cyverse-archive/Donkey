@@ -493,7 +493,7 @@
    in the Analyses window."
   [body workspace-id]
   (let [json-str (add-workspace-id (slurp body) workspace-id)]
-    (.deleteExecutionSet (analysis-service json-str)))
+    (.deleteExecutionSet (analysis-service) (object->json-obj json-str)))
   (empty-response))
 
 (defn rate-app
