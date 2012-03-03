@@ -31,7 +31,7 @@ donkey.db.driver      = org.postgresql.Driver
 donkey.db.subprotocol = postgresql
 donkey.db.host        = hostname.iplantcollaborative.org
 donkey.db.port        = 5432
-donkey.db.name        = databse
+donkey.db.name        = database
 donkey.db.user        = user
 donkey.db.password    = password
 
@@ -172,7 +172,7 @@ the source code (or this document).  All endpoints are defined in the file,
 macros are not secured.  Endpoints defined with FILTERED-GET, FILTERED-POST,
 FILTERED-PUT, FILTERED-DELETE, FILTERED-HEAD and FILTERED-ANY macros are
 secured.  In the documentation below, services that are not secured will be
-labeled as unsecured endpoints and services thata re secured will be labeled
+labeled as unsecured endpoints and services that are secured will be labeled
 as secured endpoints.
 
 ### Verifying that Donkey is Running
