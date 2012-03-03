@@ -459,3 +459,57 @@ $ curl -s http://by-tor:8888/get-workflow-elements/all | python -mjson.tool
     ]
 }
 ```
+
+## Listing Analysis Identifiers
+
+Unsecured Endpoint: GET /get-all-analysis-ids
+
+The export script needs to have a way to obtain the identifiers of all of the
+analyses in the Discovery Environment, deleted or not.  This service provides
+that information.  Here's an example listing:
+
+```
+$ curl -s http://by-tor:8888/get-all-analysis-ids | python -mjson.tool
+{
+    "analysis_ids": [
+        "19F78CC1-7E14-481B-9D80-85EBCCBFFCAF", 
+        "C5FF73E8-157F-47F0-978C-D4FAA12C2D58",
+        ...
+    ]
+}
+```
+
+## Deleting Categories
+
+Unsecured Endpoint: POST /delete-categories
+
+Analysis categories can be deleted using the `/delete-categories` entpoint.
+This service accepts a list of analysis category identifiers and deletes all
+corresponding analysis categories.  The request body is in the following
+format:
+
+```json
+{
+    "category_ids": [
+        category-id-1,
+        category-id-2,
+        ...
+        category-id-n
+    ]
+}
+```
+
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "category_ids": [
+        "D901F356-D33E-4AE9-8F92-0A07CE9AD70E"
+    ]
+}
+' http://by-tor:8888/delete-categories | python -mjson.tool
+{
+    "failures": []
+}
+```
