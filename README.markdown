@@ -527,3 +527,31 @@ $ curl -sd '
     "failures": []
 }
 ```
+
+## Valiating Analyses for Pipelines
+
+Unsecured Endpoint: GET /validate-analysis-for-pipeline/{analysis-id}
+
+Multistep analyses and empty analyses can't currently be included in
+pipelines, so the UI needs a way to determine whether or not an analysis can
+be included in a pipeline.  This service provides that information.  The
+response body contains a flag indicating whether or not the analysis can be
+included in a pipeline along with the reason.  If the analysis can be included
+in a pipeline then the reason string will be empty.  The response format is:
+
+```json
+{
+    "is_valid": flag,
+    "reason", reason
+}
+```
+
+Here's an example:
+
+```
+$ curl -s http://by-tor:8888/validate-analysis-for-pipelines/9A39F7FA-4025-40E2-A720-489FA93C6A93 | python -mjson.tool
+{
+    "is_valid": true, 
+    "reason": ""
+}
+```
