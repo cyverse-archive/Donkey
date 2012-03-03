@@ -499,6 +499,20 @@ format:
 }
 ```
 
+The response contains a list of category ids for which the deletion failed in
+the following format:
+
+```json
+{
+    "failures": [
+        category-id-1,
+        category-id-2,
+        ...
+        category-id-n
+    ]
+}
+```
+
 Here's an example:
 
 ```
