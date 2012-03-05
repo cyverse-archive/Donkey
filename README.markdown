@@ -118,6 +118,19 @@ log4j.rootLogger=WARN, A
 # log4j.category.clojure-commons=DEBUG, A
 # log4j.additivity.clojure-commons=false
 
+# Either comment these lines out or change the appender to B when running
+# Donkey in the foreground.
+log4j.logger.JsonLogger=debug, JSON
+log4j.additivity.JsonLogger=false
+
+# Use this appender for logging JSON when running Donkey in the background.
+log4j.appender.JSON=org.apache.log4j.RollingFileAppender
+log4j.appender.JSON.File=/var/log/donkey/json.log
+log4j.appender.JSON.layout=org.apache.log4j.PatternLayout
+log4j.appender.JSON.layout.ConversionPattern=%d{MM-dd@HH:mm:ss} %-5p (%13F:%L) %3x - %m%n
+log4j.appender.JSON.MaxFileSize=10MB
+log4j.appender.JSON.MaxBackupIndex=1
+
 # Use this appender when running Donkey in the foreground.
 log4j.appender.B=org.apache.log4j.ConsoleAppender
 log4j.appender.B.layout=org.apache.log4j.PatternLayout
@@ -546,7 +559,7 @@ in a pipeline then the reason string will be empty.  The response format is:
 }
 ```
 
-Here's an example:
+Here are some examples:
 
 ```
 $ curl -s http://by-tor:8888/validate-analysis-for-pipelines/9A39F7FA-4025-40E2-A720-489FA93C6A93 | python -mjson.tool
@@ -554,4 +567,203 @@ $ curl -s http://by-tor:8888/validate-analysis-for-pipelines/9A39F7FA-4025-40E2-
     "is_valid": true, 
     "reason": ""
 }
+```
+
+```
+$ curl -s http://by-tor:8888/validate-analysis-for-pipelines/BDB011B6-1F6B-443E-B94E-400930619978 | python -mjson.tool
+{
+    "is_valid": false, 
+    "reason": "analysis, BDB011B6-1F6B-443E-B94E-400930619978, has too many steps for a pipeline"
+}
+```
+
+## Listing Data Objects in an Analysis
+
+Unsecured Endpoint: GET /analysis-data-objects/{analysis-id}
+
+When a pipeline is being created, the UI needs to know what types of files are
+consumed by and what types of files are produced by each analysis in the
+pipeline.  This service provides that information.  The response body contains
+the analysis identifier, the analysis name, a list of inputs (types of files
+consumed by the service) and a list of outputs (types of files produced by the
+service).  The response format is:
+
+```json
+{
+    "id": analysis-id,
+    "inputs": [
+        {
+            "data_object": {
+                "cmdSwitch": command-line-switch,
+                "description": description,
+                "file_info_type": info-type-name,
+                "format": data-format-name,
+                "id": data-object-id,
+                "multiplicity": multiplicity-name,
+                "name": data-object-name,
+                "required": required-data-object-flag,
+                "retain": retain-file-flag,
+            },
+            "description": property-description,
+            "id": property-id,
+            "isVisible": visibility-flag,
+            "label": property-label,
+            "name": property-name,
+            "type": "Input",
+            "value": default-property-value
+        },
+        ...
+    ]
+    "name": analysis-name,
+    "outputs": [
+        {
+            "data_object": {
+                "cmdSwitch": command-line-switch,
+                "description": description,
+                "file_info_type": info-type-name,
+                "format": data-format-name,
+                "id": data-object-id,
+                "multiplicity": multiplicity-name,
+                "name": data-object-name,
+                "required": required-data-object-flag,
+                "retain": retain-file-flag,
+            },
+            "description": property-description,
+            "id": property-id,
+            "isVisible": visibility-flag,
+            "label": property-label,
+            "name": property-name,
+            "type": "Output",
+            "value": default-property-value
+        },
+        ...
+    ]
+}
+```
+
+Here's an example:
+
+```
+$ curl -s http://by-tor:8888/analysis-data-objects/19F78CC1-7E14-481B-9D80-85EBCCBFFCAF | python -mjson.tool
+{
+    "id": "19F78CC1-7E14-481B-9D80-85EBCCBFFCAF", 
+    "inputs": [
+        {
+            "data_object": {
+                "cmdSwitch": "", 
+                "description": "", 
+                "file_info_type": "File", 
+                "format": "Unspecified", 
+                "id": "A6210636-E3EC-4CD3-97B4-CAD15CAC0913", 
+                "multiplicity": "One", 
+                "name": "Input File", 
+                "order": 1, 
+                "required": true, 
+                "retain": false
+            }, 
+            "description": "", 
+            "id": "A6210636-E3EC-4CD3-97B4-CAD15CAC0913", 
+            "isVisible": true, 
+            "label": "Input File", 
+            "name": "", 
+            "type": "Input", 
+            "value": ""
+        }
+    ], 
+    "name": "Jills Extract First Line", 
+    "outputs": [
+        {
+            "data_object": {
+                "cmdSwitch": "", 
+                "description": "", 
+                "file_info_type": "File", 
+                "format": "Unspecified", 
+                "id": "FE5ACC01-0B31-4611-B81E-26E532B459E3", 
+                "multiplicity": "One", 
+                "name": "head_output.txt", 
+                "order": 3, 
+                "required": true, 
+                "retain": true
+            }, 
+            "description": "", 
+            "id": "FE5ACC01-0B31-4611-B81E-26E532B459E3", 
+            "isVisible": false, 
+            "label": "head_output.txt", 
+            "name": "", 
+            "type": "Output", 
+            "value": ""
+        }
+    ]
+}
+```
+
+## Categorizing Analyses
+
+Unsecured Endpoint: POST /categorize_analyses
+
+When services are exported and re-imported, the analysis categorization
+information also needs to be exported and re-imported.  This service allows
+the categorization information to be imported.  Strictly speaking, this
+service can also be used to move analyses to new categories, but this service
+hasn't been used for that purpose since Belphegor and Conrad were created.
+This service is documented in detail in the Analysis Categorization Services
+section of the [tool integration services wiki
+page](https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services).
+
+The request body for this service is in this format:
+
+```json
+{
+    "categories": [
+        {
+            "category_path": {
+                "path": [
+                    root-category-name,
+                    first-subcategory-name,
+                    ...,
+                    nth-subcategory-name
+                ],
+                "username": username
+            }
+            "analysis": {
+                "name": analysis-name,
+                "id": analysis-id
+            }
+        },
+        ...
+    ]
+}
+```
+
+The response body format is identical to the request body format except that
+only failed categorizations are listed and each categorization contains the
+reason for the categorization failure.  Here's the format:
+
+```json
+{
+    "failed_categorizations": [
+        {
+            "reason": reason-for-failure,
+            "category_path": {
+                "path": [
+                    root-category-name,
+                    first-subcategory-name,
+                    ...,
+                    nth-subcategory-name
+                ],
+                "username": username
+            }
+            "analysis": {
+                "name": analysis-name,
+                "id": analysis-id
+            }
+        },
+        ...
+    ]
+}
+```
+
+Here's an example:
+
+```
 ```
