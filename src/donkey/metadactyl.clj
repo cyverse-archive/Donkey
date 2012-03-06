@@ -367,11 +367,6 @@
   (.appendNotificationToTemplate (notification-appender)
     (.fetchTemplateByName (app-fetcher) app-id)))
 
-(defn get-public-analyses
-  "Retrieves the list of public analyses."
-  []
-  (.listPublicAnalyses (analysis-listing-service)))
-
 (defn get-only-analysis-groups
   "Retrieves the list of public analyses."
   [workspace-id]

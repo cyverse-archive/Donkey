@@ -59,9 +59,6 @@
      (GET "/get-analysis/:app-id" [app-id]
           (trap #(get-app app-id)))
 
-     (GET "/get-public-analyses" []
-          (trap #(get-public-analyses)))
-
      (GET "/get-only-analysis-groups/:workspace-id" [workspace-id]
           (trap #(get-only-analysis-groups workspace-id)))
 

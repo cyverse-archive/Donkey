@@ -926,3 +926,469 @@ $ curl -sd '{"analysis_id": "19F78CC1-7E14-481B-9D80-85EBCCBFFCAF"}' http://by-t
     "can-export": true
 }
 ```
+
+## Adding Analyses to Analysis Groups
+
+Unsecured Endpoint: POST /add-analyses-to-group
+
+Users in the Discovery Environment can add analyses to an analysis groups in
+some cases.  The most common use case for this feature is when the user wants
+to add an existing analysis to his or her favorites.  The request body for
+this service is in this format:
+
+```json
+{
+    "analysis_id": analysis-id,
+    "groups": [
+        group-id-1,
+        group-id-2,
+        ...,
+        group-id-n
+    ]
+}
+```
+
+If the service succeeds then the response body is an empty JSON object.
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "analysis_id": "9BCCE2D3-8372-4BA5-A0CE-96E513B2693C",
+    "groups": [
+        "028fce65-2504-4497-a20c-45e3cf8583b8"
+    ]
+}
+' http://by-tor:8888/add-analysis-to-group | python -mjson.tool
+{}
+```
+
+## Getting Apps in the JSON Format Required by the DE
+
+Unsecured Endpoint: GET /get-analysis/{analysis-id}
+
+The purpose of this endpoint is to provide a way to determine what the JSON
+for an analysis will look like when it is obtained by the DE.  The DE itself
+uses a secured endpoint that performs the same task, but there was no reason
+to require a user to be authenticated in order to obtain this information.  We
+left this endpoint in place despite the fact that it's not used by the DE
+because it's convenient for debugging.
+
+The response body for this service is in the following format:
+
+```json
+{
+    "groups": [
+        {
+            "id": property-group-id,
+            "label": property-group-label,
+            "name": property-group-name,
+            "properties": [
+                {
+                    "description": property-description,
+                    "id": unique-property-id,
+                    "isVisible": visibility-flag,
+                    "label": property-label,
+                    "name": property-name,
+                    "type": property-type-name,
+                    "validator": {
+                        "id": validator-id,
+                        "label": validator-label,
+                        "name": validator-name,
+                        "required": required-flag,
+                        "rules": [
+                            {
+                                rule-type: [
+                                    rule-arg-1,
+                                    rule-arg-2,
+                                    ...,
+                                    rule-arg-n
+                                ],
+                            },
+                            ...
+                        ]
+                    },
+                    "value": default-property-value
+                },
+                ...
+            ],
+            "type": property-group-type
+        },
+        ...
+    ]
+    "id": analysis-id,
+    "label": analysis-label,
+    "name": analysis-name,
+    "type": analysis-type
+}
+```
+
+Here's an example:
+
+```
+$ curl -s http://by-tor:8888/get-analysis/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C | python -mjson.tool
+{
+    "groups": [
+        {
+            "id": "idPanelData1", 
+            "label": "Select FASTQ file", 
+            "name": "FASTX Trimmer - Select data:", 
+            "properties": [
+                {
+                    "description": "", 
+                    "id": "step_1_ta2eed78a0e924e6ba4fec03d929d905b_DE79E631-A10A-9C36-8764-506E3B2D59BD", 
+                    "isVisible": true, 
+                    "label": "Select FASTQ file:", 
+                    "name": "-i ", 
+                    "type": "FileInput", 
+                    "validator": {
+                        "label": "", 
+                        "name": "", 
+                        "required": true
+                    }
+                }
+            ], 
+            "type": "step"
+        },
+        ...
+    ], 
+    "id": "9BCCE2D3-8372-4BA5-A0CE-96E513B2693C", 
+    "label": "FASTX Workflow", 
+    "name": "FASTX Workflow", 
+    "type": ""
+}
+```
+
+## Listing Analysis Groups
+
+Unsecured Endpoint: GET /get-only-analysis-groups/{workspace-token}
+
+This service is used by the DE and (indirectly) by Tito to obtain the list of
+analysis groups that are visible to the user.  This list includes analysis
+groups that are in the user's workspace along with any analysis groups that
+are in a workspace that is marked as public in the database.  The
+`workspace-token` argument can either be the workspace ID or the user's fully
+qualified username.  (The DE sends the workspace ID; Tito sends the username.)
+The response is in the following format:
+
+```json
+{
+    "groups": [
+        {
+            "description": analysis-group-description,
+            "groups": [
+               ...
+            ],
+            "id": analysis-group-id,
+            "is_public": public-flag,
+            "name": analysis-group-name,
+            "template_count": template-count
+        }
+    ]
+}
+```
+
+Note that this data structure is recursive; each analysis group may contain
+zero or more other analysis groups.
+
+Here's an example using a workspace ID:
+
+```
+$ curl -s http://by-tor:8888/get-only-analysis-groups/4 | python -mjson.tool
+{
+    "groups": [
+        {
+            "description": "", 
+            "groups": [
+                {
+                    "description": "", 
+                    "id": "b9a1a3b8-fef6-4576-bbfe-9ad17eb4c2ab", 
+                    "is_public": false, 
+                    "name": "Applications Under Development", 
+                    "template_count": 0
+                }, 
+                {
+                    "description": "", 
+                    "id": "2948ed96-9564-489f-ad73-e099b171a9a5", 
+                    "is_public": false, 
+                    "name": "Favorite Applications", 
+                    "template_count": 0
+                }
+            ], 
+            "id": "57a39832-3577-4ee3-8ff4-3fc9d1cf9e34", 
+            "is_public": false, 
+            "name": "Workspace", 
+            "template_count": 0
+        },
+        ...
+    ]
+}
+```
+
+Here's an example using a username:
+
+```
+$ curl -s http://by-tor:8888/get-only-analysis-groups/ipctest@iplantcollaborative.org | python -mjson.tool
+{
+    "groups": [
+        {
+            "description": "", 
+            "groups": [
+                {
+                    "description": "", 
+                    "id": "b9a1a3b8-fef6-4576-bbfe-9ad17eb4c2ab", 
+                    "is_public": false, 
+                    "name": "Applications Under Development", 
+                    "template_count": 0
+                }, 
+                {
+                    "description": "", 
+                    "id": "2948ed96-9564-489f-ad73-e099b171a9a5", 
+                    "is_public": false, 
+                    "name": "Favorite Applications", 
+                    "template_count": 0
+                }
+            ], 
+            "id": "57a39832-3577-4ee3-8ff4-3fc9d1cf9e34", 
+            "is_public": false, 
+            "name": "Workspace", 
+            "template_count": 0
+        },
+        ...
+    ]
+}
+```
+
+## Exporting a Template
+
+Unsecured Endpoint: GET /export-template/{template-id}
+
+This service exports a template in a format similar to the format required by
+Tito.  This service is not used by the DE and has been superceded by the
+secured `/edit-template` and `/copy-template` endpoints.  The response body
+for this service is fairly large, so it will not be documented in this file.
+For all of the gory details, see the (Tool Integration Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Exporting an Analysis
+
+Unsecured Endpoint: GET /export-workflow/{analysis-id}
+
+This service exports an analysis in the format used to import multi-step
+analyses into the DE.  Note that this format will work for both single- and
+multi-step analyses.  This service is used by the export script to export
+analyses from the DE.  The response body for this service is fairly large, so
+it will not be documented in this file.  For all of the gory details, see the
+(Tool Integration Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Permanently Deleting an Analysis
+
+Unsecured Endpoint: POST /permanently-delete-workflow
+
+This service physically removes an analysis from the database, which allows
+administrators to completely remove analyses that are causing problems.  As
+far as I know, this service hasn't been used in quite a while, and it can
+probably be removed at some point in the near future.  The request body is in
+the following format for the deletion of a private analysis:
+
+```json
+{
+    "analysis_id": analysis-id,
+    "full_username": username
+}
+```
+
+This service also supports deleting analyses by name, but this practice isn't
+recommended because analysis names are not guaranteed to be unique.  When
+deletion by name is requested, the request body is in this format for the
+deletion of a private analysis:
+
+```json
+{
+    "analysis_name": analysis-name,
+    "full_username": username
+}
+```
+
+Public analyses may be deleted by this service as well, but the service has to
+be explicitly told that a public analysis is being deleted.  The request body
+for the deletion of a public analysis by ID is in this format:
+
+```json
+{
+    "analysis_id": analysis-id,
+    "root_deletion_request": true
+}
+```
+
+Similarly, the request body for the deletion of a public analysis by name is
+in this format:
+
+```json
+{
+    "analysis_name": analysis-name,
+    "root_deletion_request": true
+}
+```
+
+This service has no response body.
+
+For more information about this service, please see the (Tool Integration
+Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Logically Deleting an Analysis
+
+Unsecured Endpoint: POST /delete-workflow
+
+This service works in exactly the same way as the
+`/permanently-delete-workflow` service except that, instead of permanently
+deleting the analysis, it merely marks the analysis as deleted.  This prevents
+the analysis from being displayed in the DE, but retains its definition so
+that it can be restored later if necessary.  For more information about this
+service, please see the (Tool Integration Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Previewing Templates
+
+Unsecured Endpoint: POST /preview-template
+
+Tito uses this service (indirectly) to allow users to preview the UI for a
+template that is being edited.  The request body for this service is in the
+format required by the `/import-template` service.  The response body for this
+service is the in the format produced by the `/get-analysis` service.  For
+more information about this service, please see the (Tool Integration Services
+wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Previewing Analyses
+
+Unsecured Endpoint: POST /preview-workflow
+
+The purpose of this service is to preview the JSON that would be fed to the UI
+for an analysis.  The request body for this service is in the format required
+by the `/import-workflow` service.  The response body for this service is in
+the format produced by the `/get-analysis` service.  For more information
+about this service, please see the (Tool Integration Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Updating an Existing Template
+
+Unsecured Endpoint: POST /update-template
+
+This service either imports a new template or updates an existing template in
+the database.  For more information about this service, please see the (Tool
+Integration Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Updating an Analysis
+
+Unsecured Endpoint: POST /update-workflow
+
+This service either imports a new analysis or updates an existing analysis in
+the database (as long as the analysis has not been submitted for public use).
+The difference between this service and the `/update-template` service is that
+this service can support multi-step analyses.  For more information about this
+service, please see the (Tool Integration Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Forcing an Analysis to be Updated
+
+Unsecured Endpoint: POST /force-update-workflow
+
+The `/update-workflow` service only allows private analyses to be updated.
+Analyses that have been submitted for public use must be updated using this
+service.  The analysis import script uses this service to import analyses that
+have previously been exported.  For more information about this service,
+please see the (Tool Integration Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Importing a Template
+
+Unsecured Endpoint: POST /import-template
+
+This service imports a new template into the DE; it will not overwrite an
+existing template.  To overwrite an existing template, please use the
+`/update-template` service.  For more information about this service, please
+see the (Tool Integration Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Importing an Analysis
+
+Unsecured Endpoint: POST /import-workflow
+
+This service imports a new analysis into the DE; it will not overwrite an
+existing analysis.  To overwrite an existing analysis, please use the
+`/update-workflow` service.  For more information about this service, please
+see the (Tool Integration Services wiki
+page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
+
+## Obtaining Property Values for a Previously Executed Job
+
+Unsecured Endpoint: GET "/get-property-values/{job-id}"
+
+This service obtains the property values that were passed to a job that has
+already been executed so that the user can see which values were passed to the
+job.  The response body is in the following format:
+
+```json
+{
+    "parameters": [
+        {
+            "param_id": parameter-id,
+            "param_name": parameter-name,
+            "param_value": parameter-value,
+            "param_type": parameter-type,
+            "info_type": info-type-name,
+            "data_format": data-format-name
+        },
+        ...
+    ]
+}
+```
+
+Note that the information type and data format only apply to input files.  For
+other types of parameters, these fields will be blank.
+
+Here's an example:
+
+```
+$ curl -s http://by-tor:8888/get-property-values/j10abd1e2-5a13-4cfc-8092-b23632dd18c7 | python -mjson.tool
+{
+    "parameters": [
+        {
+            "data_format": "", 
+            "info_type": "", 
+            "param_id": "51B9AD98-B0EF-7FE4-74B9-7ADEBADE6024", 
+            "param_name": "Minimum quality score to keep", 
+            "param_type": "Number", 
+            "param_value": "20"
+        }, 
+        {
+            "data_format": "", 
+            "info_type": "", 
+            "param_id": "BCCB23E7-02A5-8F7A-A4FA-EE49249D6FC0", 
+            "param_name": "Minimum percent of bases that must have this quality", 
+            "param_type": "Number", 
+            "param_value": "50"
+        }, 
+        {
+            "data_format": "", 
+            "info_type": "", 
+            "param_id": "85BDEF8F-CD54-F5DB-4A86-51174790D1AD", 
+            "param_name": "FASTQ data is in Sanger (PHRED33) format", 
+            "param_type": "Flag", 
+            "param_value": ""
+        }, 
+        {
+            "data_format": "Unspecified", 
+            "info_type": "File", 
+            "param_id": "4654B648-676C-2B9E-A92B-6A9F22B64AE1", 
+            "param_name": "Select FASTQ file:", 
+            "param_type": "Input", 
+            "param_value": "/iplant/home/dennis/read1_10k.fq"
+        }
+    ]
+}
+```
