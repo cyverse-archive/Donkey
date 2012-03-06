@@ -766,4 +766,163 @@ reason for the categorization failure.  Here's the format:
 Here's an example:
 
 ```
+$ curl -sd '
+{
+    "categories": [
+        {
+            "analysis": {
+                "id": "Foo", 
+                "name": "Foo"
+            }, 
+            "category_path": {
+                "username": "nobody@iplantcollaborative.org", 
+                "path": [
+                    "Public Applications", 
+                    "Foo"
+                ]
+            }
+        }
+    ]
+}
+' http://by-tor:8888/categorize-analyses | python -mjson.tool
+{
+    "failed_categorizations": [
+        {
+            "categorization": {
+                "analysis": {
+                    "id": "Foo", 
+                    "name": "Foo"
+                }, 
+                "category_path": {
+                    "path": [
+                        "Public Applications", 
+                        "Foo"
+                    ], 
+                    "username": "nobody@iplantcollaborative.org"
+                }
+            }, 
+            "reason": "analysis Foo not found"
+        }
+    ]
+}
+```
+
+## Listing Analysis Categorizations
+
+Unsecured Endpoint: GET /get-analysis-categories/{category-set}
+
+This is the counterpart to the /categorize-analyses endpoint; it loads
+categorizations from the database and produces output in the format required
+by the /categorize-analyes endpoint.  The response body is in this format:
+
+```json
+{
+    "categories": [
+        {
+            "category_path": {
+                "path": [
+                    root-category-name,
+                    first-subcategory-name,
+                    ...,
+                    nth-subcategory-name
+                ],
+                "username": username
+            }
+            "analysis": {
+                "name": analysis-name,
+                "id": analysis-id
+            }
+        },
+        ...
+    ]
+}
+```
+
+This service can export the categorizations for two different sets of
+analyses as described in the following table:
+
+<table>
+    <tr><th>Category Set</th><th>Description</th></tr>
+    <tr><td>all</td><td>All analysis categorizations</td></tr>
+    <tr><td>public</td><td>Only public analysis categorizations</td></tr>
+</table>
+
+Note that when only public analysis categorizations are exported, private
+categorizations for public analyses are not included in the service output.
+This means that if an analysis happens to be both in the user's private
+workspace and in a public workspace then only the categorization in the public
+workspace will be included in the output from this service.  Here's an
+example:
+
+```
+$ curl -s http://by-tor:8888/get-analysis-categories/public | python -mjson.tool
+{
+    "categories": [
+        {
+            "analysis": {
+                "id": "839E7AFA-031E-4DB8-82A6-AEBD56E9E0B9", 
+                "name": "hariolf-test-12"
+            }, 
+            "category_path": {
+                "path": [
+                    "Public Applications", 
+                    "Beta"
+                ], 
+                "username": "<public>"
+            }
+        },
+        ...
+    ]
+}
+```
+
+## Determining if an Analysis Can be Exported
+
+Unsecured Endpoint: POST /can-export-analysis
+
+Some analyses can't be exported to Tito because they contain no steps, contain
+multiple steps or contain types of properties that have been deprecated and
+are no longer supported in Tito.  The UI uses this service to determine
+whether or not an analysis can be exported to Tito before attempting to do
+so.  The request body for this service is in this format:
+
+```json
+{
+    "analysis_id": analysis-id
+}
+```
+
+If the analysis can be exported then the response body will be in this format:
+
+```json
+{
+    "can-export": true
+}
+```
+
+If the analysis can't be exported then the response body will be in this
+format:
+
+```json
+{
+    "can-export": false,
+    "cause": reason
+}
+```
+
+Here are some examples:
+
+```
+$ curl -sd '{"analysis_id": "BDB011B6-1F6B-443E-B94E-400930619978"}' http://by-tor:8888/can-export-analysis | python -mjson.tool
+{
+    "can-export": false, 
+    "cause": "Multi-step applications cannot be copied or modified at this time."
+}
+```
+
+```
+$ curl -sd '{"analysis_id": "19F78CC1-7E14-481B-9D80-85EBCCBFFCAF"}' http://by-tor:8888/can-export-analysis | python -mjson.tool
+{
+    "can-export": true
+}
 ```
