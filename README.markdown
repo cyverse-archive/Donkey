@@ -1730,3 +1730,543 @@ $ curl -X PUT -sd '
 '
 "http://by-tor:8888/workspaces/4/newexperiment?proxyToken=$(cas-ticket)"
 ```
+
+## Listing Jobs
+
+Secured Endpoint: GET /workspaces/{workspace-id}/executions/list
+
+Information about the status of jobs that have previously been submitted for
+execution can be obtained using this service.  The DE uses this service to
+populate the _Analyses_ window.  The response body for this service is in the
+following format:
+
+```json
+{
+    "analyses": [
+        {
+            "analysis_details": analysis-description,
+            "analysis_id": analysis-id,
+            "analysis_name": analysis-name,
+            "description": job-description,
+            "enddate": end-date-as-milliseconds-since-epoch,
+            "id": job-id,
+            "name": job-name,
+            "resultfolderid": path-to-result-folder,
+            "startdate": start-date-as-milliseconds-since-epoch,
+            "status": job-status-code,
+            "wiki_url": analysis-documentation-link
+        },
+        ...
+    ]
+}
+```
+
+Here's an example:
+
+```
+$ curl -s http://by-tor:8888/workspaces/4/executions/list?proxyToken=$(cas-ticket) | python -mjson.tool
+{
+    "analyses": [
+        {
+            "analysis_details": "Find significant changes in transcript expression, splicing, and promoter use across RNAseq alignment data files", 
+            "analysis_id": "516ED301-E250-40BC-B2BC-31DD7B64D3BA", 
+            "analysis_name": "CuffDiff", 
+            "description": "Selecting a non-default file for output. ", 
+            "enddate": "1329252482000", 
+            "id": "BD421AF3-2C6E-4A92-A215-D380CD6FECC8", 
+            "name": "CuffDiffTest1", 
+            "resultfolderid": "/iplant/home/nobody/analyses/CuffDiff/", 
+            "startdate": "1329252412998", 
+            "status": "Failed", 
+            "wiki_url": "https://pods.iplantcollaborative.org/wiki/some/doc/link/CuffDiff"
+        }, 
+        ...
+    ]
+}
+```
+
+## Deleting Jobs
+
+Secured Endpoint: PUT /workspaces/{workspace-id}/executions/delete
+
+After a job has completed, a user may not want to view the job status
+information in the _Analyses_ window any longer.  This service provides a way
+to mark job status information as deleted so that it no longer shows up.  The
+request body for this service is in the following format:
+
+```json
+{
+    "workspace_id": workspace-id,
+    "executions": [
+        job-id-1,
+        job-id-2,
+        ...,
+        job-id-n
+    ]
+}
+```
+
+This service produces no response body.
+
+It should be noted that this service does not fail if any of the job
+identifiers refers to a non-existent or deleted job.  If the identifier refers
+to a deleted job then the update is essentially a no-op.  If a job with the
+identifier can't be found then a warning message is logged in Donkey's log
+file, but the service does not indicate that a failure has occurred.
+
+Here's an example:
+
+```
+$ curl -X PUT -sd '
+{
+    "workspace_id": 4,
+    "executions": [
+        "84DFCC0E-03B9-4DF4-8484-55BFBD6FE841",
+        "FOO"
+    ]
+}
+' "http://by-tor:8888/workspaces/4/executions/delete?proxyToken=$(cas-ticket)"
+```
+
+## Rating Analyses
+
+Secured Endpoint: POST /rate-analysis
+
+Users have the ability to rate an analysis for its usefulness, and this
+service provides the means to store the analysis rating.  This service accepts
+an analysis identifier a rating level between one and five, inclusive, and a
+comment identifier that refers to a comment in iPlant's Confluence wiki.  The
+rating is stored in the database and associated with the authenticated user.
+The request body for this service is in the following format:
+
+```json
+{
+    "analysis_id": analysis-id,
+    "rating": selected-rating,
+    "comment_id": comment-identifier
+}
+```
+
+The response body for this service contains only the average rating for the
+analysis, and is in this format:
+
+```json
+{
+    "avg": average-rating,
+}
+```
+
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "analysis_id": "72AA400D-6945-463E-A18D-09513C2381D7",
+    "rating": 4,
+    "comment_id": 27
+}
+' "http://by-tor:8888/rate-analysis?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "avg": 4
+}
+```
+
+## Deleting Analysis Ratings
+
+Secured Endpoint: POST /delete-rating
+
+The DE uses this service to remove a rating that a user has previously made.
+This service accepts an analysis identifier in a JSON request body and deletes
+the authenticated user's rating for the corresponding analysis.  The request
+body for this service is in the following format:
+
+```json
+{
+    "analysis_id": analysis-id,
+}
+```
+
+The response body for this service contains only the new average rating for
+the analysis and is in the following format:
+
+```json
+{
+    "avg": average-rating,
+}
+```
+
+Here's an example:
+
+```
+$ curl -sd '                       
+{
+    "analysis_id": "a65fa62bcebc0418cbb947485a63b30cd"
+}
+' "http://by-tor:8888/delete-rating?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "avg": 0
+}
+```
+
+## Searching for Analyses
+
+Secured Endpoint: GET /search-analyses/{search-term}
+
+This service allows users to search for analyses based on a part of the
+analysis name.  The response body is in the following format:
+
+```json
+{
+    "templates": [
+        {
+            "deleted": deleted-flag,
+            "description": analysis-description,
+            "disabled": disabled-flag,
+            "group_id": analysis-group-id,
+            "group_name": analysis-group-name,
+            "id": analysis-id,
+            "integrator_name": integrator-name,
+            "is_favorite": is-favorite-flag,
+            "is_public": is-public-flag,
+            "name": analysis-name,
+            "rating": {
+                "average": average-rating,
+            }
+        },
+        ...
+    ]
+}
+```
+
+Here's an example:
+
+```
+$ curl -s "http://by-tor:8888/search-analyses/ranger?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "templates": [
+        {
+            "deleted": false, 
+            "description": "Some Description", 
+            "disabled": false, 
+            "group_id": "99F2E2FE-9931-4154-ADDB-28386027B19F", 
+            "group_name": "Some Group Name", 
+            "id": "9D221848-1D12-4A31-8E93-FA069EEDC151", 
+            "integrator_name": "Nobody", 
+            "is_favorite": false, 
+            "is_public": false, 
+            "name": "Ranger", 
+            "rating": {
+                "average": 4
+            }
+        }
+    ]
+}
+```
+
+## Listing Analyses in an Analysis Group
+
+Secured Endpoint: GET /get-analyses-in-group/{group-id}
+
+This service lists all of the analyses within an analysis group or any of its
+descendents.  The DE uses this service to obtain the list of analyses when a
+user clicks on a group in the _Apps_ window.  The response body for this
+service is in the following format:
+
+```json
+{
+    "description": analysis-group-description,
+    "id": analysis-group-id,
+    "is_public": public-group-flag,
+    "name": analysis-group-name,
+    "template_count": number-of-analyses-in-group-and-descendents,
+    "templates": [
+        {
+            "deleted": analysis-deleted-flag,
+            "deployed_components": [
+                {
+                    "attribution": deployed-component-attribution,
+                    "description": deployed-component-description,
+                    "id": deployed-component-id,
+                    "location": deployed-component-location,
+                    "name": deployed-component-name,
+                    "type": deployed-component-type,
+                    "version": deployed-component-version
+                },
+                ...
+            ],
+            "description": analysis-description,
+            "disabled": analysis-disabled-flag,
+            "id": analysis-id,
+            "integrator_email": integrator-email-address,
+            "integrator_name": integrator-name,
+            "is_favorite": favorite-analysis-flag,
+            "is_public": public-analysis-flag,
+            "name": analysis-name,
+            "pipeline_eligibility": {
+                "is_valid": valid-for-pipelines-flag,
+                "reason": reason-for-exclusion-from-pipelines-if-applicable,
+            },
+            "rating": {
+                "average": average-rating,
+                "comment-id": comment-id,
+                "user": user-rating
+            },
+            "wiki_url": documentation-link
+        },
+        ...
+    ]
+}
+```
+
+Here's an example:
+
+```
+$ curl -s "http://by-tor:8888/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "description": "", 
+    "id": "C3DED4E2-EC99-4A54-B0D8-196112D1BB7B", 
+    "is_public": true, 
+    "name": "Some Group", 
+    "template_count": 1, 
+    "templates": [
+        {
+            "deleted": false, 
+            "deployed_components": [
+                {
+                    "attribution": "Some attribution.", 
+                    "description": "Some description.", 
+                    "id": "2B80C676-1F3B-4B46-A2E2-34014F22AD5C", 
+                    "location": "/some/path/", 
+                    "name": "sometool", 
+                    "type": "executable", 
+                    "version": "0.0.1"
+                }
+            ], 
+            "description": "Some app description.", 
+            "disabled": false, 
+            "id": "81C0CCEE-439C-4516-805F-3E260E336EE4", 
+            "integrator_email": "nobody@iplantcollaborative.org", 
+            "integrator_name": "Nobody", 
+            "is_favorite": false, 
+            "is_public": true, 
+            "name": "SomeAppName", 
+            "pipeline_eligibility": {
+                "is_valid": true, 
+                "reason": ""
+            }, 
+            "rating": {
+                "average": 4, 
+                "comment_id": 27, 
+                "user": 4
+            }, 
+            "wiki_url": "https://pods.iplantcollaborative.org/wiki/some/doc/link"
+        }
+    ]
+}
+```
+
+## Listing Analyses that may be Included in a Pipeline
+
+Secured Endpoint: GET /list-analyses-for-pipeline/{group-id}
+
+This service is an alias for the `/get-analyses-in-group/{group-id}` service.
+At one time, this was a different service that returned additional information
+that was normally omitted for the sake of efficiency.  Some recent efficiency
+improvements have eliminated the need to omit this information from the more
+commonly used endpoint, however.  This endpoint is currently being retained
+for backward compatibility.
+
+## Updating the Favorite Analyses List
+
+Secured Endpoint: POST /update-favorites
+
+Analyses can be marked as favorites in the DE, which allows users to access
+them without having to search.  This service is used to add or remove analyses
+from a user's favorites list.  The request body is in the following format:
+
+```json
+{
+    "workspace_id": workspace-id,
+    "analysis_id": analysis-id,
+    "user_favorite": favorite-flag
+}
+```
+
+The action performed by this service is controlled by the `user_favorite`
+field value.  If the field value is `false` then the analysis will be added to
+the user's favorites list.  If the field value is `true` then the analysis
+will be removed from the user's favorites list.  If this service fails then
+the response will be in the usual format for failed service calls.  If the
+service succeeds then the response conntains only a success flag:
+
+```json
+{
+    "success": true
+}
+```
+Here are some examples:
+
+```
+$ curl -sd '
+{
+    "workspace_id": 4,
+    "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
+    "user_favorite": true
+}
+' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "success": true
+}
+```
+
+```
+$ curl -sd '
+{
+    "workspace_id": 4,
+    "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
+    "user_favorite": true
+}
+' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "reason": "analysis, F99526B9-CC88-46DA-84B3-0743192DCB7B, is already a favorite", 
+    "success": false
+}
+```
+
+```
+$ curl -sd '
+{
+    "workspace_id": 4,
+    "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
+    "user_favorite": false
+}
+' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "success": true
+}
+```
+
+```
+$ curl -sd '
+{
+    "workspace_id": 4,
+    "analysis_id": "FOO",          
+    "user_favorite": false
+}
+' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "reason": "analysis, FOO not found", 
+    "success": false
+}
+```
+
+## Making an Analysis Available for Editing in Tito
+
+Secured Endpoint: GET /edit-template/{analysis-id}
+
+This service can be used to make an analysis available for editing in Tito.
+If the user already owns the analysis then this service merely makes ensures
+that it is not marked as deleted.  If the user does not own the analysis then
+this service makes a copy of the analysis available in Tito so that the user
+may edit the copy.  The response body contains only the analysis identifier,
+which may be different from the analysis identifier that was provided:
+
+```json
+{
+    "analysis_id": analysis-id
+}
+```
+
+Here are some examples:
+
+```
+$ curl -s "http://by-tor:8888/edit-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
+{
+    "analysis_id": "DED7E03E-B011-4F3E-8750-3F903FB28137"
+}
+```
+
+```
+$ curl -s "http://by-tor:8888/edit-template/DED7E03E-B011-4F3E-8750-3F903FB28137?proxyToken=$(cas-ticket)" | python -m json.tool
+{
+    "analysis_id": "DED7E03E-B011-4F3E-8750-3F903FB28137"
+}
+```
+
+## Making a Copy of an Analysis Available for Editing in Tito
+
+Secured Endpoint: GET /copy-template/{analysis-id}
+
+This service can be used to make a copy of an analysis available for editing
+in Tito.  The only difference between this service and the
+`/edit-template/{analysis-id}` service is that this service will always make a
+copy of an existing analysis, even if the user already owns the analysis.
+Here's an example:
+
+```
+$ curl -s "http://by-tor:8888/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
+{
+    "analysis_id": "13FF6D0C-F6F7-4ACE-A6C7-635A17826383"
+}
+```
+
+## Submitting an Analysis for Public Use
+
+Secured Endpoint: POST /make-analysis-public
+
+This service can be used to submit a private analysis for public use.  The
+user supplies basic information about the analysis and a suggested location
+for it.  The service records the information and suggested location then
+places the analysis in the Beta category.  A Tito administrator can
+subsequently move the analysis to the suggested location at a later time if
+it proves to be useful.  The request body is in the following format:
+
+```json
+{
+    "analysis_id": analysis-id,
+    "email": integrator-email-address,
+    "integrator": integrator-name,
+    "references": [
+        reference-link-1,
+        reference-link-2,
+        ...,
+        reference-link-n
+    ],
+    "groups": [
+        suggested-group-1,
+        suggested-group-2,
+        ...,
+        suggested-group-n
+    ],
+    "desc": analysis-description,
+    "wiki_url": documentation-link
+}
+```
+
+The response body is just an empty JSON object if the service call succeeds.
+
+Making an analysis public entails recording the additional inforamtion
+provided to the service, removing the analysis from all of its current
+analysis groups, adding the analysis to the _Beta_ group, and marking the
+analysis as public in Tito, which prevents future modification.
+
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "analysis_id": "F771A215-4809-4683-87C0-A899C0732AF3",
+    "email": "nobody@iplantcollaborative.org",
+    "integrator": "Nobody",
+    "references": [
+        "http://foo.bar.baz.org" 
+    ],
+    "groups": [
+        "0A687324-099B-4EEF-A82C-C1A60B970487"
+    ],
+    "desc": "The foo is in the bar.",
+    "wiki_url": "https://wiki.iplantcollaborative.org/docs/Foo+Foo"
+}
+' http://by-tor:8888/make-analysis-public?proxyToken=$(cas-ticket)
+{}
+```
