@@ -6,7 +6,7 @@
 Summary: donkey
 Name: donkey
 Version: 1.0.0
-Release: 5
+Release: 6
 Epoch: 0
 BuildArchitectures: noarch
 Group: Applications
