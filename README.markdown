@@ -963,7 +963,7 @@ $ curl -sd '
 {}
 ```
 
-## Getting Apps in the JSON Format Required by the DE
+## Getting Analyses in the JSON Format Required by the DE
 
 Unsecured Endpoint: GET /get-analysis/{analysis-id}
 
@@ -1128,7 +1128,7 @@ $ curl -s http://by-tor:8888/get-only-analysis-groups/4 | python -mjson.tool
 Here's an example using a username:
 
 ```
-$ curl -s http://by-tor:8888/get-only-analysis-groups/ipctest@iplantcollaborative.org | python -mjson.tool
+$ curl -s http://by-tor:8888/get-only-analysis-groups/nobody@iplantcollaborative.org | python -mjson.tool
 {
     "groups": [
         {
@@ -1391,4 +1391,342 @@ $ curl -s http://by-tor:8888/get-property-values/j10abd1e2-5a13-4cfc-8092-b23632
         }
     ]
 }
+```
+
+## Initializing a User's Workspace
+
+Secured Endpoint: GET /bootstrap
+
+The DE calls this service as soon as the user logs in.  If the user has never
+logged in before then the service initializes the user's workspace and returns
+the user's workspace ID.  If the user has logged in before then the service
+merely returns the user's workspace ID.  The response body for this service is
+in the following format:
+
+```json
+{
+    "workspaceId": workspace-id
+}
+```
+
+Here's an example:
+
+```
+$ curl -s "http://by-tor:8888/bootstrap?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "workspaceId": "4"
+}
+```
+
+Note that the `cas-ticket` command is an alias to a command that produces a
+CAS service ticket.  All secured services in Donkey require the CAS service
+ticket to be sent to the service in the `proxyToken` query-string parameter.
+
+## Obtaining Notifications
+
+Notifications in the DE are used to inform users when the status of a job has
+changed.  This service provides a way for the DE to retrieve notifications
+that the user may or may not have seen before.  The request body for this
+service is in the following format:
+
+```json
+{
+    "seen": seen-flag,
+    "limit": max-notifications
+}
+```
+
+Note that both elements in the request body are optional.  If the seen flag is
+not specified then both messages that have been seen and messages that have
+not been seen will be returned.  If the limit is not specified then all
+notifications for the user will be returned.
+
+The response body for this service is in the following format:
+
+```json
+{
+    "messages": [
+        {
+            "deleted": deleted-flag,
+            "message": {
+                "id": message-id,
+                "text": message-text,
+                "timestamp": milliseconds-since-epoch,
+            }
+            "outputDir": output-directory-path,
+            "outputManifest": list-of-output-files,
+            "payload": {
+                ...
+            }
+            "seen": seen-flag,
+            "type": notification-type-code,
+            "user": username,
+            "workspaceId": workspace-identifier-if-available
+        },
+        ...
+    ]
+}
+```
+
+The payload object in each message is a JSON object with a format that is
+specific to the notification type, and its format will vary.  There are
+currently two types of notifications that we support: `data` and `analysis`.
+Both of these notification types have the same payload format:
+
+```json
+{
+    "action": action-code,
+    "analysis-details": analysis-description,
+    "analysis_id": analysis-id,
+    "analyis_name": analysis-name,
+    "description": job-description,
+    "enddate": end-date-in-milliseconds-since-epoch,
+    "id": job-id,
+    "name": job-name,
+    "resultfolderid": result-folder-path,
+    "startdate": start-date-in-milliseconds-since-epoch,
+    "status": job-status-code,
+    "user": username
+}
+```
+
+Here's an example:
+
+```
+$ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "messages": [
+        {
+            "deleted": false, 
+            "message": {
+                "id": "C15763CF-A5C9-48F5-BE4F-9FB3CB1897EB", 
+                "text": "URL Import of somefile.txt from http://snow-dog.iplantcollaborative.org/somefile.txt completed", 
+                "timestamp": 1331068427000
+            }, 
+            "outputDir": "/iplant/home/nobody", 
+            "outputManifest": [], 
+            "payload": {
+                "action": "job_status_change", 
+                "analysis-details": "", 
+                "analysis_id": "", 
+                "analysis_name": "", 
+                "description": "URL Import of somefile.txt from http://snow-dog.iplantcollaborative.org/somefile.txt", 
+                "enddate": 1331068427000, 
+                "id": "40115C19-AFBC-4CAE-9738-324DD8B18FDC", 
+                "name": "URL Import of somefile.txt from http://snow-dog.iplantcollaborative.org/somefile.txt", 
+                "resultfolderid": "/iplant/home/nobody", 
+                "startdate": "1331068414712", 
+                "status": "Completed", 
+                "user": "nobody"
+            }, 
+            "seen": true, 
+            "type": "data", 
+            "user": "nobody", 
+            "workspaceId": null
+        }
+    ]
+}
+```
+
+## Obtaining Unseen Notifications
+
+Secured Endpoint: POST /notifications/get-unseen-messages
+
+This service is equivalent to calling the `/notifications/get-messages`
+service and specifying a `seen` flag of `false`.  If the user has already seen
+all notifications (that is, if any service call has ever returned the
+notification before) then no notifications will be returned.  Here's an
+example:
+
+```
+$ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-unseen-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "messages": []
+}
+```
+
+## Marking Notifications as Deleted
+
+Secured Endpoint: POST /notifications/delete
+
+Users may wish to dismiss notifications that they've already seen.  This
+service marks one or more notifications as deleted so that neither the
+`/notfications/get-messages` endpoint nor the
+`/notifications/get-unseen-messages` endpoint will return them.  The request
+body for this service is in the following format:
+
+```
+{
+    "uuids": [
+        uuid-1,
+        uuid-2,
+        ...,
+        uuid-n
+    ]
+}
+```
+
+This service has no response body.  Here's an example:
+
+```
+$ curl -sd '
+{
+    "uuids": [
+        "C15763CF-A5C9-48F5-BE4F-9FB3CB1897EB"
+    ]
+}
+' http://by-tor:8888/notifications/delete
+```
+
+Note that the UUIDs provided in the request body must be obtained from the
+`message` -> `id` element of the notification the user wishes to delete.
+
+## Getting Analyses in the JSON Format Required by the DE
+
+Secured Endpoint: GET /template/{analysis-id}
+
+This service is the secured version of the `/get-analyis` endpoint.  The
+response body for this service is in the following format:
+
+```json
+{
+    "groups": [
+        {
+            "id": property-group-id,
+            "label": property-group-label,
+            "name": property-group-name,
+            "properties": [
+                {
+                    "description": property-description,
+                    "id": unique-property-id,
+                    "isVisible": visibility-flag,
+                    "label": property-label,
+                    "name": property-name,
+                    "type": property-type-name,
+                    "validator": {
+                        "id": validator-id,
+                        "label": validator-label,
+                        "name": validator-name,
+                        "required": required-flag,
+                        "rules": [
+                            {
+                                rule-type: [
+                                    rule-arg-1,
+                                    rule-arg-2,
+                                    ...,
+                                    rule-arg-n
+                                ],
+                            },
+                            ...
+                        ]
+                    },
+                    "value": default-property-value
+                },
+                ...
+            ],
+            "type": property-group-type
+        },
+        ...
+    ]
+    "id": analysis-id,
+    "label": analysis-label,
+    "name": analysis-name,
+    "type": analysis-type
+}
+```
+
+Here's an example:
+
+```
+curl -s "http://by-tor:8888/template/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "groups": [
+        {
+            "id": "idPanelData1", 
+            "label": "Select FASTQ file", 
+            "name": "FASTX Trimmer - Select data:", 
+            "properties": [
+                {
+                    "description": "", 
+                    "id": "step_1_ta2eed78a0e924e6ba4fec03d929d905b_DE79E631-A10A-9C36-8764-506E3B2D59BD", 
+                    "isVisible": true, 
+                    "label": "Select FASTQ file:", 
+                    "name": "-i ", 
+                    "type": "FileInput", 
+                    "validator": {
+                        "label": "", 
+                        "name": "", 
+                        "required": true
+                    }
+                }
+            ], 
+            "type": "step"
+        },
+        ...
+    ], 
+    "id": "9BCCE2D3-8372-4BA5-A0CE-96E513B2693C", 
+    "label": "FASTX Workflow", 
+    "name": "FASTX Workflow", 
+    "type": ""
+}
+```
+
+## Submitting a Job for Execution
+
+Secured Endpoint: PUT /workspaces/{workspace-id}/newexperiment
+
+The DE uses this service to submit jobs for execution on behalf of the user.
+The request body is in the following format:
+
+```json
+{
+    "config": {
+        property-id-1: property-value-1,
+        property-id-2: property-value-2,
+        ...,
+        property-id-n: property-value-n
+    },
+    "analysis_id": analysis-id,
+    "name": job-name,
+    "type": job-type,
+    "debug": debug-flag,
+    "workspace_id": workspace-id,
+    "notify": email-notifications-enabled-flag,
+    "output_dir": output-directory-path,
+    "create_output_subdir": auto-create-subdir-flag,
+    "description": job-description
+}
+```
+
+The property identifiers deserve some special mention here because they're not
+obtained directly from the database.  If you examine the output from the
+`/get-analysis/{analysis-id}` endpoint or the `/template/{analysis-id}`
+endpoint then these property identifiers are the ones that show up in the
+service output.  If you're looking in the database (or in the output from the
+`/export-workflow/{analysis-id}` endpoint) then you can obtain the property ID
+used in this service by combining the step name, a literal underscore and the
+actual property identifier.
+
+This service produces no response body.  Here's an example:
+
+```
+$ curl -X PUT -sd '
+{
+    "config": {
+        "FastxQualityFilter_4654B648-676C-2B9E-A92B-6A9F22B64AE1": "/iplant/home/nobody/somefile.fq",
+        "FastxQualityFilter_51B9AD98-B0EF-7FE4-74B9-7ADEBADE6024": "20",
+        "FastxQualityFilter_BCCB23E7-02A5-8F7A-A4FA-EE49249D6FC0": "50"
+    },
+    "analysis_id": "a4ce6a7961e1f4aafabfce922fd00810f",
+    "name": "some_job",
+    "type": "",
+    "debug": false,
+    "workspace_id": "4",
+    "notify": true,
+    "output_dir": "/iplant/home/nobody/analyses",
+    "create_output_subdir": true,
+    "description": ""
+}
+'
+"http://by-tor:8888/workspaces/4/newexperiment?proxyToken=$(cas-ticket)"
 ```
