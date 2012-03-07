@@ -157,19 +157,15 @@ for additional logging configuration instructions.
 
 ## Services
 
-All URLs referenced below are listed as relative URLs with value names
-enclosed in braces.  For example, the service to get a list of workflow
-elements is accessed using the URL, `/get-workflow-elements/{element-type}`.
-Where `{element-type}` refers to the type of workflow element that is being
-retrieved.  For example, to get a list of known property types, you can access
-the URL, `/get-workflow-elements/property-types`.  On the other hand, all
-examples use fully qualified URLs.
+Of course, the primary reason for the existence of Donkey is to act as a
+platform for hosting services.  Donkey services are defined using Compojure, a
+framework for creating web services in Clojure.  Each service matches a
+specific HTTP method and URL pattern, which causes one or more function calls
+to be performed.  The services themselves are defined in the file `core.clj`
+and, in most cases, the functions that actually implement the services are
+defined in the file `metadactyl.clj`.
 
-Request and response bodies are in JSON format unless otherwise noted.  to
-avoid confusion between the braces used to denote JSON objects and the braces
-used to denote example values, example values in JSON bodies are not enclosed
-in braces, but instead listed as hyphen-separated names without enclosing
-quotes.
+### Security
 
 Several services in Donkey require user authentication, which is managed by
 CAS service tickets that are passed to the service in the `proxyToken` query
@@ -188,7 +184,46 @@ secured.  In the documentation below, services that are not secured will be
 labeled as unsecured endpoints and services that are secured will be labeled
 as secured endpoints.
 
-### Verifying that Donkey is Running
+If authentication or authorization fails for a secured service then an HTTP
+401 (unauthorized) status will result, and there will be no response body,
+even if the service normally has a response body.
+
+### Errors
+
+If a service call causes an exception that is not caught by the service itself
+then Donkey will respond with a standardized error message:
+
+```json
+{
+    "success": false,
+    "reason": reason-for-error
+}
+```
+
+The HTTP status code that is returned will either be a 400 or a 500, depending
+on which type of exception is caught.  In either case, the reason for the
+error should be examined.  If the logging level is set to _error_ or lower
+then the exception will be logged in Donkey's log file along with a stack
+trace.  This can be helpful in cases where the true cause of the error isn't
+obvious at first.
+
+### Endpoints
+
+All URLs referenced below are listed as relative URLs with value names
+enclosed in braces.  For example, the service to get a list of workflow
+elements is accessed using the URL, `/get-workflow-elements/{element-type}`.
+Where `{element-type}` refers to the type of workflow element that is being
+retrieved.  For example, to get a list of known property types, you can access
+the URL, `/get-workflow-elements/property-types`.  On the other hand, all
+examples use fully qualified URLs.
+
+Request and response bodies are in JSON format unless otherwise noted.  to
+avoid confusion between the braces used to denote JSON objects and the braces
+used to denote example values, example values in JSON bodies are not enclosed
+in braces, but instead listed as hyphen-separated names without enclosing
+quotes.
+
+#### Verifying that Donkey is Running
 
 Unsecured Endpoint: GET /
 
@@ -201,7 +236,7 @@ $ curl -s http://by-tor:8888/
 Welcome to Donkey!  I've mastered the stairs!
 ```
 
-### Listing Workflow Elements
+#### Listing Workflow Elements
 
 Unsecured Endpoint: GET /get-workflow-elements/{element-type}
 
@@ -473,7 +508,7 @@ $ curl -s http://by-tor:8888/get-workflow-elements/all | python -mjson.tool
 }
 ```
 
-## Listing Analysis Identifiers
+#### Listing Analysis Identifiers
 
 Unsecured Endpoint: GET /get-all-analysis-ids
 
@@ -492,7 +527,7 @@ $ curl -s http://by-tor:8888/get-all-analysis-ids | python -mjson.tool
 }
 ```
 
-## Deleting Categories
+#### Deleting Categories
 
 Unsecured Endpoint: POST /delete-categories
 
@@ -541,7 +576,7 @@ $ curl -sd '
 }
 ```
 
-## Valiating Analyses for Pipelines
+#### Valiating Analyses for Pipelines
 
 Unsecured Endpoint: GET /validate-analysis-for-pipeline/{analysis-id}
 
@@ -577,7 +612,7 @@ $ curl -s http://by-tor:8888/validate-analysis-for-pipelines/BDB011B6-1F6B-443E-
 }
 ```
 
-## Listing Data Objects in an Analysis
+#### Listing Data Objects in an Analysis
 
 Unsecured Endpoint: GET /analysis-data-objects/{analysis-id}
 
@@ -697,7 +732,7 @@ $ curl -s http://by-tor:8888/analysis-data-objects/19F78CC1-7E14-481B-9D80-85EBC
 }
 ```
 
-## Categorizing Analyses
+#### Categorizing Analyses
 
 Unsecured Endpoint: POST /categorize_analyses
 
@@ -807,7 +842,7 @@ $ curl -sd '
 }
 ```
 
-## Listing Analysis Categorizations
+#### Listing Analysis Categorizations
 
 Unsecured Endpoint: GET /get-analysis-categories/{category-set}
 
@@ -876,7 +911,7 @@ $ curl -s http://by-tor:8888/get-analysis-categories/public | python -mjson.tool
 }
 ```
 
-## Determining if an Analysis Can be Exported
+#### Determining if an Analysis Can be Exported
 
 Unsecured Endpoint: POST /can-export-analysis
 
@@ -927,7 +962,7 @@ $ curl -sd '{"analysis_id": "19F78CC1-7E14-481B-9D80-85EBCCBFFCAF"}' http://by-t
 }
 ```
 
-## Adding Analyses to Analysis Groups
+#### Adding Analyses to Analysis Groups
 
 Unsecured Endpoint: POST /add-analyses-to-group
 
@@ -963,7 +998,7 @@ $ curl -sd '
 {}
 ```
 
-## Getting Analyses in the JSON Format Required by the DE
+#### Getting Analyses in the JSON Format Required by the DE
 
 Unsecured Endpoint: GET /get-analysis/{analysis-id}
 
@@ -1059,7 +1094,7 @@ $ curl -s http://by-tor:8888/get-analysis/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C |
 }
 ```
 
-## Listing Analysis Groups
+#### Listing Analysis Groups
 
 Unsecured Endpoint: GET /get-only-analysis-groups/{workspace-token}
 
@@ -1159,7 +1194,7 @@ $ curl -s http://by-tor:8888/get-only-analysis-groups/nobody@iplantcollaborative
 }
 ```
 
-## Exporting a Template
+#### Exporting a Template
 
 Unsecured Endpoint: GET /export-template/{template-id}
 
@@ -1170,7 +1205,7 @@ for this service is fairly large, so it will not be documented in this file.
 For all of the gory details, see the (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Exporting an Analysis
+#### Exporting an Analysis
 
 Unsecured Endpoint: GET /export-workflow/{analysis-id}
 
@@ -1182,7 +1217,7 @@ it will not be documented in this file.  For all of the gory details, see the
 (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Permanently Deleting an Analysis
+#### Permanently Deleting an Analysis
 
 Unsecured Endpoint: POST /permanently-delete-workflow
 
@@ -1238,7 +1273,7 @@ For more information about this service, please see the (Tool Integration
 Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Logically Deleting an Analysis
+#### Logically Deleting an Analysis
 
 Unsecured Endpoint: POST /delete-workflow
 
@@ -1250,7 +1285,7 @@ that it can be restored later if necessary.  For more information about this
 service, please see the (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Previewing Templates
+#### Previewing Templates
 
 Unsecured Endpoint: POST /preview-template
 
@@ -1262,7 +1297,7 @@ more information about this service, please see the (Tool Integration Services
 wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Previewing Analyses
+#### Previewing Analyses
 
 Unsecured Endpoint: POST /preview-workflow
 
@@ -1273,7 +1308,7 @@ the format produced by the `/get-analysis` service.  For more information
 about this service, please see the (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Updating an Existing Template
+#### Updating an Existing Template
 
 Unsecured Endpoint: POST /update-template
 
@@ -1282,7 +1317,7 @@ the database.  For more information about this service, please see the (Tool
 Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Updating an Analysis
+#### Updating an Analysis
 
 Unsecured Endpoint: POST /update-workflow
 
@@ -1293,7 +1328,7 @@ this service can support multi-step analyses.  For more information about this
 service, please see the (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Forcing an Analysis to be Updated
+#### Forcing an Analysis to be Updated
 
 Unsecured Endpoint: POST /force-update-workflow
 
@@ -1304,7 +1339,7 @@ have previously been exported.  For more information about this service,
 please see the (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Importing a Template
+#### Importing a Template
 
 Unsecured Endpoint: POST /import-template
 
@@ -1314,7 +1349,7 @@ existing template.  To overwrite an existing template, please use the
 see the (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Importing an Analysis
+#### Importing an Analysis
 
 Unsecured Endpoint: POST /import-workflow
 
@@ -1324,7 +1359,7 @@ existing analysis.  To overwrite an existing analysis, please use the
 see the (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
-## Obtaining Property Values for a Previously Executed Job
+#### Obtaining Property Values for a Previously Executed Job
 
 Unsecured Endpoint: GET "/get-property-values/{job-id}"
 
@@ -1393,7 +1428,7 @@ $ curl -s http://by-tor:8888/get-property-values/j10abd1e2-5a13-4cfc-8092-b23632
 }
 ```
 
-## Initializing a User's Workspace
+#### Initializing a User's Workspace
 
 Secured Endpoint: GET /bootstrap
 
@@ -1422,7 +1457,7 @@ Note that the `cas-ticket` command is an alias to a command that produces a
 CAS service ticket.  All secured services in Donkey require the CAS service
 ticket to be sent to the service in the `proxyToken` query-string parameter.
 
-## Obtaining Notifications
+#### Obtaining Notifications
 
 Notifications in the DE are used to inform users when the status of a job has
 changed.  This service provides a way for the DE to retrieve notifications
@@ -1528,7 +1563,7 @@ $ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-messages?proxyTok
 }
 ```
 
-## Obtaining Unseen Notifications
+#### Obtaining Unseen Notifications
 
 Secured Endpoint: POST /notifications/get-unseen-messages
 
@@ -1545,7 +1580,7 @@ $ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-unseen-messages?p
 }
 ```
 
-## Marking Notifications as Deleted
+#### Marking Notifications as Deleted
 
 Secured Endpoint: POST /notifications/delete
 
@@ -1581,7 +1616,7 @@ $ curl -sd '
 Note that the UUIDs provided in the request body must be obtained from the
 `message` -> `id` element of the notification the user wishes to delete.
 
-## Getting Analyses in the JSON Format Required by the DE
+#### Getting Analyses in the JSON Format Required by the DE
 
 Secured Endpoint: GET /template/{analysis-id}
 
@@ -1671,7 +1706,7 @@ curl -s "http://by-tor:8888/template/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C?proxyT
 }
 ```
 
-## Submitting a Job for Execution
+#### Submitting a Job for Execution
 
 Secured Endpoint: PUT /workspaces/{workspace-id}/newexperiment
 
@@ -1731,7 +1766,7 @@ $ curl -X PUT -sd '
 "http://by-tor:8888/workspaces/4/newexperiment?proxyToken=$(cas-ticket)"
 ```
 
-## Listing Jobs
+#### Listing Jobs
 
 Secured Endpoint: GET /workspaces/{workspace-id}/executions/list
 
@@ -1785,7 +1820,7 @@ $ curl -s http://by-tor:8888/workspaces/4/executions/list?proxyToken=$(cas-ticke
 }
 ```
 
-## Deleting Jobs
+#### Deleting Jobs
 
 Secured Endpoint: PUT /workspaces/{workspace-id}/executions/delete
 
@@ -1828,7 +1863,7 @@ $ curl -X PUT -sd '
 ' "http://by-tor:8888/workspaces/4/executions/delete?proxyToken=$(cas-ticket)"
 ```
 
-## Rating Analyses
+#### Rating Analyses
 
 Secured Endpoint: POST /rate-analysis
 
@@ -1871,7 +1906,7 @@ $ curl -sd '
 }
 ```
 
-## Deleting Analysis Ratings
+#### Deleting Analysis Ratings
 
 Secured Endpoint: POST /delete-rating
 
@@ -1908,7 +1943,7 @@ $ curl -sd '
 }
 ```
 
-## Searching for Analyses
+#### Searching for Analyses
 
 Secured Endpoint: GET /search-analyses/{search-term}
 
@@ -1963,7 +1998,7 @@ $ curl -s "http://by-tor:8888/search-analyses/ranger?proxyToken=$(cas-ticket)" |
 }
 ```
 
-## Listing Analyses in an Analysis Group
+#### Listing Analyses in an Analysis Group
 
 Secured Endpoint: GET /get-analyses-in-group/{group-id}
 
@@ -2065,7 +2100,7 @@ $ curl -s "http://by-tor:8888/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12
 }
 ```
 
-## Listing Analyses that may be Included in a Pipeline
+#### Listing Analyses that may be Included in a Pipeline
 
 Secured Endpoint: GET /list-analyses-for-pipeline/{group-id}
 
@@ -2076,7 +2111,7 @@ improvements have eliminated the need to omit this information from the more
 commonly used endpoint, however.  This endpoint is currently being retained
 for backward compatibility.
 
-## Updating the Favorite Analyses List
+#### Updating the Favorite Analyses List
 
 Secured Endpoint: POST /update-favorites
 
@@ -2160,7 +2195,7 @@ $ curl -sd '
 }
 ```
 
-## Making an Analysis Available for Editing in Tito
+#### Making an Analysis Available for Editing in Tito
 
 Secured Endpoint: GET /edit-template/{analysis-id}
 
@@ -2193,7 +2228,7 @@ $ curl -s "http://by-tor:8888/edit-template/DED7E03E-B011-4F3E-8750-3F903FB28137
 }
 ```
 
-## Making a Copy of an Analysis Available for Editing in Tito
+#### Making a Copy of an Analysis Available for Editing in Tito
 
 Secured Endpoint: GET /copy-template/{analysis-id}
 
@@ -2210,7 +2245,7 @@ $ curl -s "http://by-tor:8888/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5
 }
 ```
 
-## Submitting an Analysis for Public Use
+#### Submitting an Analysis for Public Use
 
 Secured Endpoint: POST /make-analysis-public
 
