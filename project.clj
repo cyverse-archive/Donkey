@@ -16,7 +16,7 @@
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]]
   :dev-dependencies [[lein-ring "0.4.5"]
                      [swank-clojure "1.4.0-SNAPSHOT"]]
-  :extra-classpath-dirs ["conf"]
+  :extra-classpath-dirs ["conf/test"]
   :aot [donkey.core]
   :main donkey.core
   :ring {:handler donkey.core/app :init donkey.core/load-configuration}
