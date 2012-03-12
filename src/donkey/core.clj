@@ -1,10 +1,10 @@
 (ns donkey.core
   (:gen-class)
-  (:use [clojure-commons.query-params :only (wrap-query-params)]
+  (:use [clojure-commons.filtered-routes]
+        [clojure-commons.query-params :only (wrap-query-params)]
         [compojure.core]
         [donkey.beans]
         [donkey.config]
-        [donkey.filters]
         [donkey.metadactyl]
         [donkey.notifications]
         [donkey.service]
