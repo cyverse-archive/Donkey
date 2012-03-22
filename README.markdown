@@ -176,13 +176,11 @@ authentication.  This service can be accessed using the URL,
 refers to a service ticket string that has been obtained from CAS.
 
 Secured services can be distinguished from unsecured services by looking at
-the source code (or this document).  All endpoints are defined in the file,
-`core.clj`.  Endpoints defined with GET, POST, PUT, DELETE, HEAD and ANY
-macros are not secured.  Endpoints defined with FILTERED-GET, FILTERED-POST,
-FILTERED-PUT, FILTERED-DELETE, FILTERED-HEAD and FILTERED-ANY macros are
-secured.  In the documentation below, services that are not secured will be
-labeled as unsecured endpoints and services that are secured will be labeled
-as secured endpoints.
+the path in the URL.  The paths for all secured endpoints begin with
+`/secured` whereas the paths for all other endpoints do not.  In the
+documentation below, services that are not secured will be labeled as
+unsecured endpoints and services that are secured will be labeled as secured
+endpoints.
 
 If authentication or authorization fails for a secured service then an HTTP
 401 (unauthorized) status will result, and there will be no response body,
@@ -1430,7 +1428,7 @@ $ curl -s http://by-tor:8888/get-property-values/j10abd1e2-5a13-4cfc-8092-b23632
 
 #### Initializing a User's Workspace
 
-Secured Endpoint: GET /bootstrap
+Secured Endpoint: GET /secured/bootstrap
 
 The DE calls this service as soon as the user logs in.  If the user has never
 logged in before then the service initializes the user's workspace and returns
@@ -1565,7 +1563,7 @@ $ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-messages?proxyTok
 
 #### Obtaining Unseen Notifications
 
-Secured Endpoint: POST /notifications/get-unseen-messages
+Secured Endpoint: POST /secured/notifications/get-unseen-messages
 
 This service is equivalent to calling the `/notifications/get-messages`
 service and specifying a `seen` flag of `false`.  If the user has already seen
@@ -1582,7 +1580,7 @@ $ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-unseen-messages?p
 
 #### Marking Notifications as Deleted
 
-Secured Endpoint: POST /notifications/delete
+Secured Endpoint: POST /secured/notifications/delete
 
 Users may wish to dismiss notifications that they've already seen.  This
 service marks one or more notifications as deleted so that neither the
@@ -1618,7 +1616,7 @@ Note that the UUIDs provided in the request body must be obtained from the
 
 #### Getting Analyses in the JSON Format Required by the DE
 
-Secured Endpoint: GET /template/{analysis-id}
+Secured Endpoint: GET /secured/template/{analysis-id}
 
 This service is the secured version of the `/get-analyis` endpoint.  The
 response body for this service is in the following format:
@@ -1708,7 +1706,7 @@ curl -s "http://by-tor:8888/template/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C?proxyT
 
 #### Submitting a Job for Execution
 
-Secured Endpoint: PUT /workspaces/{workspace-id}/newexperiment
+Secured Endpoint: PUT /secured/workspaces/{workspace-id}/newexperiment
 
 The DE uses this service to submit jobs for execution on behalf of the user.
 The request body is in the following format:
@@ -1768,7 +1766,7 @@ $ curl -X PUT -sd '
 
 #### Listing Jobs
 
-Secured Endpoint: GET /workspaces/{workspace-id}/executions/list
+Secured Endpoint: GET /secured/workspaces/{workspace-id}/executions/list
 
 Information about the status of jobs that have previously been submitted for
 execution can be obtained using this service.  The DE uses this service to
@@ -1822,7 +1820,7 @@ $ curl -s http://by-tor:8888/workspaces/4/executions/list?proxyToken=$(cas-ticke
 
 #### Deleting Jobs
 
-Secured Endpoint: PUT /workspaces/{workspace-id}/executions/delete
+Secured Endpoint: PUT /secured/workspaces/{workspace-id}/executions/delete
 
 After a job has completed, a user may not want to view the job status
 information in the _Analyses_ window any longer.  This service provides a way
@@ -1865,7 +1863,7 @@ $ curl -X PUT -sd '
 
 #### Rating Analyses
 
-Secured Endpoint: POST /rate-analysis
+Secured Endpoint: POST /secured/rate-analysis
 
 Users have the ability to rate an analysis for its usefulness, and this
 service provides the means to store the analysis rating.  This service accepts
@@ -1908,7 +1906,7 @@ $ curl -sd '
 
 #### Deleting Analysis Ratings
 
-Secured Endpoint: POST /delete-rating
+Secured Endpoint: POST /secured/delete-rating
 
 The DE uses this service to remove a rating that a user has previously made.
 This service accepts an analysis identifier in a JSON request body and deletes
@@ -1945,7 +1943,7 @@ $ curl -sd '
 
 #### Searching for Analyses
 
-Secured Endpoint: GET /search-analyses/{search-term}
+Secured Endpoint: GET /secured/search-analyses/{search-term}
 
 This service allows users to search for analyses based on a part of the
 analysis name.  The response body is in the following format:
@@ -2000,7 +1998,7 @@ $ curl -s "http://by-tor:8888/search-analyses/ranger?proxyToken=$(cas-ticket)" |
 
 #### Listing Analyses in an Analysis Group
 
-Secured Endpoint: GET /get-analyses-in-group/{group-id}
+Secured Endpoint: GET /secured/get-analyses-in-group/{group-id}
 
 This service lists all of the analyses within an analysis group or any of its
 descendents.  The DE uses this service to obtain the list of analyses when a
@@ -2102,7 +2100,7 @@ $ curl -s "http://by-tor:8888/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12
 
 #### Listing Analyses that may be Included in a Pipeline
 
-Secured Endpoint: GET /list-analyses-for-pipeline/{group-id}
+Secured Endpoint: GET /secured/list-analyses-for-pipeline/{group-id}
 
 This service is an alias for the `/get-analyses-in-group/{group-id}` service.
 At one time, this was a different service that returned additional information
@@ -2113,7 +2111,7 @@ for backward compatibility.
 
 #### Updating the Favorite Analyses List
 
-Secured Endpoint: POST /update-favorites
+Secured Endpoint: POST /secured/update-favorites
 
 Analyses can be marked as favorites in the DE, which allows users to access
 them without having to search.  This service is used to add or remove analyses
@@ -2197,7 +2195,7 @@ $ curl -sd '
 
 #### Making an Analysis Available for Editing in Tito
 
-Secured Endpoint: GET /edit-template/{analysis-id}
+Secured Endpoint: GET /secured/edit-template/{analysis-id}
 
 This service can be used to make an analysis available for editing in Tito.
 If the user already owns the analysis then this service merely makes ensures
@@ -2230,7 +2228,7 @@ $ curl -s "http://by-tor:8888/edit-template/DED7E03E-B011-4F3E-8750-3F903FB28137
 
 #### Making a Copy of an Analysis Available for Editing in Tito
 
-Secured Endpoint: GET /copy-template/{analysis-id}
+Secured Endpoint: GET /secured/copy-template/{analysis-id}
 
 This service can be used to make a copy of an analysis available for editing
 in Tito.  The only difference between this service and the
@@ -2247,7 +2245,7 @@ $ curl -s "http://by-tor:8888/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5
 
 #### Submitting an Analysis for Public Use
 
-Secured Endpoint: POST /make-analysis-public
+Secured Endpoint: POST /secured/make-analysis-public
 
 This service can be used to submit a private analysis for public use.  The
 user supplies basic information about the analysis and a suggested location
