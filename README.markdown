@@ -1,4 +1,4 @@
-# Donkey
+Donkey# 
 
 Donkey is a platform for hosting Services written in Clojure; it's intended to
 be the replacement for the Mule instance that used to run inside the Discovery
@@ -1383,17 +1383,18 @@ job.  The response body is in the following format:
 }
 ```
 
-Note that the information type and data format only apply to input files.  For
-other types of parameters, these fields will be blank.  The
-{{is_default_value}} flag indicates whether or not the default value was used
-in the job submission.  The value of this flag is determined by comparing the
-actual property value listed in the job submission to the default property
-value in the application definition.  If the default value in the application
-definition is not blank and the actual value equals the default value then
-this flag will be set to {{true}}.  Otherwise, this flag will be set to
-{{false}}.  The {{is_visible}} flag indicates whether or not the property is
-visible in the user interface for the application.  This value is copied
-directly from the application definition.
+Note that the information type and data format only apply to input
+files.  For other types of parameters, these fields will be blank.
+The `is_default_value` flag indicates whether or not the default value
+was used in the job submission.  The value of this flag is determined
+by comparing the actual property value listed in the job submission to
+the default property value in the application definition.  If the
+default value in the application definition is not blank and the
+actual value equals the default value then this flag will be set to
+`true`.  Otherwise, this flag will be set to `false`.  The
+`is_visible` flag indicates whether or not the property is visible in
+the user interface for the application.  This value is copied directly
+from the application definition.
 
 Here's an example:
 
