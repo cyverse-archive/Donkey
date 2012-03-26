@@ -1374,7 +1374,9 @@ job.  The response body is in the following format:
             "param_value": parameter-value,
             "param_type": parameter-type,
             "info_type": info-type-name,
-            "data_format": data-format-name
+            "data_format": data-format-name,
+            "is_default_value": default-value-flag,
+            "is_visible": visibility-flag
         },
         ...
     ]
@@ -1382,45 +1384,82 @@ job.  The response body is in the following format:
 ```
 
 Note that the information type and data format only apply to input files.  For
-other types of parameters, these fields will be blank.
+other types of parameters, these fields will be blank.  The
+{{is_default_value}} flag indicates whether or not the default value was used
+in the job submission.  The value of this flag is determined by comparing the
+actual property value listed in the job submission to the default property
+value in the application definition.  If the default value in the application
+definition is not blank and the actual value equals the default value then
+this flag will be set to {{true}}.  Otherwise, this flag will be set to
+{{false}}.  The {{is_visible}} flag indicates whether or not the property is
+visible in the user interface for the application.  This value is copied
+directly from the application definition.
 
 Here's an example:
 
 ```
-$ curl -s http://by-tor:8888/get-property-values/j10abd1e2-5a13-4cfc-8092-b23632dd18c7 | python -mjson.tool
+$ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620f31553 | python -mjson.tool
 {
     "parameters": [
         {
-            "data_format": "", 
-            "info_type": "", 
-            "param_id": "51B9AD98-B0EF-7FE4-74B9-7ADEBADE6024", 
-            "param_name": "Minimum quality score to keep", 
-            "param_type": "Number", 
-            "param_value": "20"
+            "data_format": "Unspecified", 
+            "info_type": "File", 
+            "is_default_value": false, 
+            "is_visible": true, 
+            "param_id": "38950035-8F31-0A27-1BE1-8E55F5C30B54", 
+            "param_name": "Select an SRA or SRAlite file:", 
+            "param_type": "Input", 
+            "param_value": "/iplant/home/nobody/SRR001355.lite.sra"
         }, 
         {
             "data_format": "", 
             "info_type": "", 
-            "param_id": "BCCB23E7-02A5-8F7A-A4FA-EE49249D6FC0", 
-            "param_name": "Minimum percent of bases that must have this quality", 
-            "param_type": "Number", 
-            "param_value": "50"
-        }, 
-        {
-            "data_format": "", 
-            "info_type": "", 
-            "param_id": "85BDEF8F-CD54-F5DB-4A86-51174790D1AD", 
-            "param_name": "FASTQ data is in Sanger (PHRED33) format", 
-            "param_type": "Flag", 
+            "is_default_value": true, 
+            "is_visible": true, 
+            "param_id": "B962E548-4023-E40C-48E5-6484AF55E5DD", 
+            "param_name": "Optional accession override", 
+            "param_type": "Text", 
             "param_value": ""
         }, 
         {
-            "data_format": "Unspecified", 
-            "info_type": "File", 
-            "param_id": "4654B648-676C-2B9E-A92B-6A9F22B64AE1", 
-            "param_name": "Select FASTQ file:", 
-            "param_type": "Input", 
-            "param_value": "/iplant/home/dennis/read1_10k.fq"
+            "data_format": "", 
+            "info_type": "", 
+            "is_default_value": true, 
+            "is_visible": true, 
+            "param_id": "DCFC3CD9-FB31-E0F8-C4CB-78F66FF368D2", 
+            "param_name": "File contains paired-end data", 
+            "param_type": "Flag", 
+            "param_value": "true"
+        }, 
+        {
+            "data_format": "", 
+            "info_type": "", 
+            "is_default_value": true, 
+            "is_visible": true, 
+            "param_id": "0E21A202-EC8A-7BFD-913B-FA73FE86F58E", 
+            "param_name": "Offset to use for quality scale conversion", 
+            "param_type": "Number", 
+            "param_value": "33"
+        }, 
+        {
+            "data_format": "", 
+            "info_type": "", 
+            "is_default_value": true, 
+            "is_visible": true, 
+            "param_id": "F9AD602D-38E3-8C90-9DD7-E1BB4971CD70", 
+            "param_name": "Emit only FASTA records without quality scores", 
+            "param_type": "Flag", 
+            "param_value": "false"
+        }, 
+        {
+            "data_format": "", 
+            "info_type": "", 
+            "is_default_value": true, 
+            "is_visible": false, 
+            "param_id": "6BAD8D7F-3EE2-A52A-93D1-1329D1565E4F", 
+            "param_name": "Verbose", 
+            "param_type": "Flag", 
+            "param_value": "true"
         }
     ]
 }
