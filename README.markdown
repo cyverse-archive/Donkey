@@ -1,4 +1,4 @@
-Donkey# 
+# Donkey
 
 Donkey is a platform for hosting Services written in Clojure; it's intended to
 be the replacement for the Mule instance that used to run inside the Discovery
@@ -1359,7 +1359,7 @@ page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+
 
 #### Obtaining Property Values for a Previously Executed Job
 
-Unsecured Endpoint: GET "/get-property-values/{job-id}"
+Unsecured Endpoint: GET /get-property-values/{job-id}
 
 This service obtains the property values that were passed to a job that has
 already been executed so that the user can see which values were passed to the
@@ -1485,7 +1485,7 @@ in the following format:
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/bootstrap?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "workspaceId": "4"
 }
@@ -1496,6 +1496,8 @@ CAS service ticket.  All secured services in Donkey require the CAS service
 ticket to be sent to the service in the `proxyToken` query-string parameter.
 
 #### Obtaining Notifications
+
+Secured Endpoint: GET /secured/notifications/get-messages
 
 Notifications in the DE are used to inform users when the status of a job has
 changed.  This service provides a way for the DE to retrieve notifications
@@ -1566,7 +1568,7 @@ Both of these notification types have the same payload format:
 Here's an example:
 
 ```
-$ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -sd '{"limit":1}' "http://by-tor:8888/secured/notifications/get-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "messages": [
         {
@@ -1612,7 +1614,7 @@ notification before) then no notifications will be returned.  Here's an
 example:
 
 ```
-$ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-unseen-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -sd '{"limit":1}' "http://by-tor:8888/secured/notifications/get-unseen-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "messages": []
 }
@@ -1648,7 +1650,7 @@ $ curl -sd '
         "C15763CF-A5C9-48F5-BE4F-9FB3CB1897EB"
     ]
 }
-' http://by-tor:8888/notifications/delete
+' http://by-tor:8888/secured/notifications/delete
 ```
 
 Note that the UUIDs provided in the request body must be obtained from the
@@ -1711,7 +1713,7 @@ response body for this service is in the following format:
 Here's an example:
 
 ```
-curl -s "http://by-tor:8888/template/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C?proxyToken=$(cas-ticket)" | python -mjson.tool
+curl -s "http://by-tor:8888/secured/template/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "groups": [
         {
@@ -1801,7 +1803,7 @@ $ curl -X PUT -sd '
     "description": ""
 }
 '
-"http://by-tor:8888/workspaces/4/newexperiment?proxyToken=$(cas-ticket)"
+"http://by-tor:8888/secured/workspaces/4/newexperiment?proxyToken=$(cas-ticket)"
 ```
 
 #### Listing Jobs
@@ -1837,7 +1839,7 @@ following format:
 Here's an example:
 
 ```
-$ curl -s http://by-tor:8888/workspaces/4/executions/list?proxyToken=$(cas-ticket) | python -mjson.tool
+$ curl -s http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket) | python -mjson.tool
 {
     "analyses": [
         {
@@ -1898,7 +1900,7 @@ $ curl -X PUT -sd '
         "FOO"
     ]
 }
-' "http://by-tor:8888/workspaces/4/executions/delete?proxyToken=$(cas-ticket)"
+' "http://by-tor:8888/secured/workspaces/4/executions/delete?proxyToken=$(cas-ticket)"
 ```
 
 #### Rating Analyses
@@ -1938,7 +1940,7 @@ $ curl -sd '
     "rating": 4,
     "comment_id": 27
 }
-' "http://by-tor:8888/rate-analysis?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/rate-analysis?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "avg": 4
 }
@@ -1975,7 +1977,7 @@ $ curl -sd '
 {
     "analysis_id": "a65fa62bcebc0418cbb947485a63b30cd"
 }
-' "http://by-tor:8888/delete-rating?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/delete-rating?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "avg": 0
 }
@@ -2014,7 +2016,7 @@ analysis name.  The response body is in the following format:
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/search-analyses/ranger?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/search-analyses/ranger?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "templates": [
         {
@@ -2094,7 +2096,7 @@ service is in the following format:
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "description": "", 
     "id": "C3DED4E2-EC99-4A54-B0D8-196112D1BB7B", 
@@ -2186,7 +2188,7 @@ $ curl -sd '
     "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
     "user_favorite": true
 }
-' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
 }
@@ -2199,7 +2201,7 @@ $ curl -sd '
     "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
     "user_favorite": true
 }
-' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "reason": "analysis, F99526B9-CC88-46DA-84B3-0743192DCB7B, is already a favorite", 
     "success": false
@@ -2213,7 +2215,7 @@ $ curl -sd '
     "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
     "user_favorite": false
 }
-' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
 }
@@ -2226,7 +2228,7 @@ $ curl -sd '
     "analysis_id": "FOO",          
     "user_favorite": false
 }
-' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "reason": "analysis, FOO not found", 
     "success": false
@@ -2253,14 +2255,14 @@ which may be different from the analysis identifier that was provided:
 Here are some examples:
 
 ```
-$ curl -s "http://by-tor:8888/edit-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
+$ curl -s "http://by-tor:8888/secured/edit-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
 {
     "analysis_id": "DED7E03E-B011-4F3E-8750-3F903FB28137"
 }
 ```
 
 ```
-$ curl -s "http://by-tor:8888/edit-template/DED7E03E-B011-4F3E-8750-3F903FB28137?proxyToken=$(cas-ticket)" | python -m json.tool
+$ curl -s "http://by-tor:8888/secured/edit-template/DED7E03E-B011-4F3E-8750-3F903FB28137?proxyToken=$(cas-ticket)" | python -m json.tool
 {
     "analysis_id": "DED7E03E-B011-4F3E-8750-3F903FB28137"
 }
@@ -2277,7 +2279,7 @@ copy of an existing analysis, even if the user already owns the analysis.
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
+$ curl -s "http://by-tor:8888/secured/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
 {
     "analysis_id": "13FF6D0C-F6F7-4ACE-A6C7-635A17826383"
 }
@@ -2340,6 +2342,6 @@ $ curl -sd '
     "desc": "The foo is in the bar.",
     "wiki_url": "https://wiki.iplantcollaborative.org/docs/Foo+Foo"
 }
-' http://by-tor:8888/make-analysis-public?proxyToken=$(cas-ticket)
+' http://by-tor:8888/secured/make-analysis-public?proxyToken=$(cas-ticket)
 {}
 ```
