@@ -5,8 +5,8 @@
 %define __check_files /bin/true
 Summary: donkey
 Name: donkey
-Version: 1.0.0
-Release: 9
+Version: 1.1.0
+Release: 1
 Epoch: 0
 BuildArchitectures: noarch
 Group: Applications
