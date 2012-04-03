@@ -7,6 +7,7 @@
         [donkey.metadactyl]
         [donkey.notifications]
         [donkey.service]
+        [donkey.user-sessions]
         [ring.middleware keyword-params nested-params])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
@@ -75,6 +76,12 @@
 
   (POST "/make-analysis-public" [:as {body :body}]
         (trap #(make-app-public body)))
+  
+  (GET "/sessions/:user" [user]
+       (trap #(user-session user)))
+  
+  (POST "/sessions/:user" [user :as {body :body}]
+        (trap #(user-session user body)))
 
   (route/not-found (unrecognized-path-response)))
 

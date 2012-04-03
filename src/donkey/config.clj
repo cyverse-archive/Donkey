@@ -204,6 +204,10 @@
    submitted."
   "donkey.osm.jobs-bucket")
 
+(STR osm-session-bucket
+  "The OSM bucket containing information about the users' sessions."
+  "user_sessions")
+
 (STR osm-job-request-bucket
   "The OSM bucket containing job submission requests that were sent from the
    UI to metadactyl."
