@@ -252,6 +252,14 @@
    user identifier."
   "donkey.uid.domain")
 
+(STR riak-base-url
+  "The base URL for the Riak HTTP API. Used for user sessions."
+  "donkey.sessions.base-url")
+
+(STR riak-sessions-bucket
+  "The bucket in Riak to retrieve user sessions from."
+  "donkey.sessions.bucket")
+
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should
    only be called after Donkey has been initialized."
