@@ -382,6 +382,11 @@
   [app-id]
   (.exportAnalysis (workflow-export-service) app-id))
 
+(defn export-deployed-components
+  "This service will export all or selected deployed components."
+  [body]
+  (.getDeployedComponents (workflow-export-service) (slurp body)))
+
 (defn preview-template
   "This service will convert a JSON document in the format consumed by 
    the import service into the format required by the DE."

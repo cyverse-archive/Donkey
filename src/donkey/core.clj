@@ -121,6 +121,9 @@
   (GET "/export-workflow/:app-id" [app-id]
        (trap #(export-workflow app-id)))
 
+  (POST "/export-deployed-components" [:as {body :body}]
+        (trap #(export-deployed-components body)))
+
   (POST "/permanently-delete-workflow" [:as {body :body}]
         (trap #(permanently-delete-workflow body)))
 
