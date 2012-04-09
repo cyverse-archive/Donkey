@@ -8,7 +8,7 @@
                  [compojure "1.0.1"]
                  [swank-clojure "1.4.0-SNAPSHOT"]
                  [org.iplantc/clojure-commons "1.1.0-SNAPSHOT"]
-                 [org.iplantc.core/metadactyl "dev-SNAPSHOT"]
+                 [org.iplantc.core/metadactyl "1.2-SNAPSHOT"]
                  [org.springframework/spring-orm "3.1.0.RELEASE"]
                  [ring/ring-jetty-adapter "1.0.1"]
                  [org.slf4j/slf4j-api "1.5.8"]
