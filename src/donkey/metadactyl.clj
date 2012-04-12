@@ -253,6 +253,7 @@
       (.setSessionFactory (session-factory))
       (.setZoidbergClient (zoidberg-client))
       (.setUserService (user-service))
+      (.setWorkflowImportService (workflow-import-service))
       (.setWorkflowExportService (workflow-export-service)))))
 
 (register-bean
