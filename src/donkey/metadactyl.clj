@@ -231,7 +231,8 @@
 (register-bean
   (defbean analysis-deletion-service
     "Handles workflow/metadactyl deletion actions."
-    (AnalysisDeletionService. (session-factory))))
+    (doto (AnalysisDeletionService. (session-factory))
+      (.setZoidbergClient (zoidberg-client)))))
 
 (register-bean
   (defbean app-fetcher
