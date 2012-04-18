@@ -14,7 +14,7 @@
                  [org.slf4j/slf4j-api "1.5.8"]
                  [org.slf4j/slf4j-log4j12 "1.5.8"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]]
-  :dev-dependencies [[org.iplantc/lein-iplant-rpm "1.0.0-SNAPSHOT"]
+  :dev-dependencies [[org.iplantc/lein-iplant-rpm "1.1.0-SNAPSHOT"]
                      [lein-ring "0.4.5"]
                      [swank-clojure "1.4.0-SNAPSHOT"]]
   :extra-classpath-dirs ["conf/test"]
