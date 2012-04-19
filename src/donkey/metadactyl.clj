@@ -1,14 +1,12 @@
 (ns donkey.metadactyl
-  (:use [clojure-commons.cas-proxy-auth :only (validate-cas-proxy-ticket)]
-        [donkey.beans]
+  (:use [donkey.beans]
         [donkey.config]
         [donkey.notifications]
         [donkey.service]
-        [donkey.transformers])
+        [donkey.transformers]
+        [donkey.user-attributes])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]
            [java.util HashMap]
-           [org.iplantc.authn.service UserSessionService]
-           [org.iplantc.authn.user User]
            [org.iplantc.workflow.client OsmClient ZoidbergClient]
            [org.iplantc.files.service FileInfoService]
            [org.iplantc.files.types
@@ -29,39 +27,6 @@
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
   (:require [clojure.tools.logging :as log]))
-
-(def
-  ^{:doc "The authenticated user or nil if the service is unsecured."
-    :dynamic true}
-   current-user nil)
-
-(def
-  ^{:doc "The service used to get information about the authenticated user."}
-   user-session-service (proxy [UserSessionService] []
-                          (getUser [] current-user)))
-
-(defn- user-from-attributes
-  "Creates an instance of org.iplantc.authn.user.User from user attributes
-   stored in the request by validate-cas-proxy-ticket."
-  [{:keys [user-attributes]}]
-  (log/warn user-attributes)
-  (doto (User.)
-    (.setUsername (str (get user-attributes "uid") "@" (uid-domain)))
-    (.setPassword (get user-attributes "password"))
-    (.setEmail (get user-attributes "email"))
-    (.setShortUsername (get user-attributes "uid"))))
-
-(defn store-current-user
-  "Authenticates the user using validate-cas-proxy-ticket and binds
-   current-user to a new instance of org.iplantc.authn.user.User that is built
-   from the user attributes that validate-cas-proxy-ticket stores in the
-   request."
-  [handler cas-server-fn server-name-fn]
-  (validate-cas-proxy-ticket
-    (fn [request]
-      (binding [current-user (user-from-attributes request)]
-        (handler request)))
-    cas-server-fn server-name-fn))
 
 (register-bean
   (defbean db-url

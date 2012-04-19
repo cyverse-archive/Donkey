@@ -7,6 +7,7 @@
         [donkey.metadactyl]
         [donkey.notifications]
         [donkey.service]
+        [donkey.user-attributes]
         [donkey.user-sessions]
         [ring.middleware keyword-params nested-params])
   (:require [compojure.route :as route]
@@ -76,7 +77,13 @@
 
   (POST "/make-analysis-public" [:as {body :body}]
         (trap #(make-app-public body)))
-  
+
+  (GET "/sessions" []
+       (trap #(user-session)))
+
+  (POST "/sessions" [:as {body :body}]
+        (trap #(user-session (slurp body))))
+
   (route/not-found (unrecognized-path-response)))
 
 (defroutes donkey-routes
@@ -157,12 +164,6 @@
 
   (GET "/get-property-values/:job-id" [job-id]
        (trap #(get-property-values job-id)))
-  
-  (GET "/sessions/:user" [user]
-       (trap #(user-session user)))
-  
-  (POST "/sessions/:user" [user :as {body :body}]
-        (trap #(user-session user (slurp body))))
 
   (context "/secured" []
            (store-current-user secured-routes #(cas-server) #(server-name)))
