@@ -9,5 +9,8 @@
 /.lein-deps-sum
 /.classpath
 /.project
+/donkey
+/donkey.spec
+/donkey*.tar.gz
 *~
 \#*

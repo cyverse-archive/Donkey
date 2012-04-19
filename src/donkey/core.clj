@@ -86,6 +86,9 @@
   (GET "/get-workflow-elements/:element-type" [element-type]
        (trap #(get-workflow-elements element-type)))
 
+  (GET "/search-deployed-components/:search-term" [search-term]
+       (trap #(search-deployed-components search-term)))
+
   (GET "/get-all-analysis-ids" []
        (trap #(get-all-app-ids)))
 

@@ -1,6 +1,6 @@
 (defproject donkey "1.1.0-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
-  :dependencies [[org.clojure/clojure "1.3.0"]
+  :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/data.json "0.1.1"]
                  [clj-http "0.3.2"]
@@ -15,7 +15,8 @@
                  [org.slf4j/slf4j-log4j12 "1.5.8"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [slingshot "0.10.1"]]
-  :dev-dependencies [[lein-ring "0.4.5"]
+  :dev-dependencies [[org.iplantc/lein-iplant-rpm "1.1.0-SNAPSHOT"]
+                     [lein-ring "0.4.5"]
                      [swank-clojure "1.4.0-SNAPSHOT"]]
   :extra-classpath-dirs ["conf/test"]
   :aot [donkey.core]

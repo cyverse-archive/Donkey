@@ -24,7 +24,7 @@
             TemplateGroupService UserService WorkflowElementRetrievalService
             WorkflowExportService AnalysisListingService WorkflowPreviewService
             WorkflowImportService AnalysisDeletionService RatingService
-            PropertyValueService]
+            WorkflowElementSearchService PropertyValueService]
            [org.iplantc.workflow.template.notifications NotificationAppender]
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
@@ -96,6 +96,13 @@
     "Services used to obtain elements that are commonly shared by multiple
      apps in the metadata model (for example, property types)."
     (doto (WorkflowElementRetrievalService.)
+      (.setSessionFactory (session-factory)))))
+
+(register-bean
+  (defbean workflow-element-search-service
+    "Services used to search elements that are commonly shared by multiple
+     apps in the metadata model (currently, only deployed components)."
+    (doto (WorkflowElementSearchService.)
       (.setSessionFactory (session-factory)))))
 
 (register-bean
@@ -231,7 +238,8 @@
 (register-bean
   (defbean analysis-deletion-service
     "Handles workflow/metadactyl deletion actions."
-    (AnalysisDeletionService. (session-factory))))
+    (doto (AnalysisDeletionService. (session-factory))
+      (.setZoidbergClient (zoidberg-client)))))
 
 (register-bean
   (defbean app-fetcher
@@ -253,6 +261,7 @@
       (.setSessionFactory (session-factory))
       (.setZoidbergClient (zoidberg-client))
       (.setUserService (user-service))
+      (.setWorkflowImportService (workflow-import-service))
       (.setWorkflowExportService (workflow-export-service)))))
 
 (register-bean
@@ -319,6 +328,11 @@
   "A service to get information about workflow elements."
   [element-type]
   (.getElements (workflow-element-service) element-type))
+
+(defn search-deployed-components
+  "A service to search information about deployed components."
+  [search-term]
+  (.searchDeployedComponents (workflow-element-search-service) search-term))
 
 (defn get-all-app-ids
   "A service to get the list of app identifiers."
