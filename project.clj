@@ -22,6 +22,12 @@
   :aot [donkey.core]
   :main donkey.core
   :ring {:handler donkey.core/app :init donkey.core/load-configuration}
+  :iplant-rpm {:summary "iPlant Discovery Environment Metadata Services"
+               :release 1
+               :provides "donkey"
+               :dependencies ["iplant-service-config >= 0.1.0-4"]
+               :config-files ["log4j.properties" "reference_genomes.json"]
+               :config-path "conf/main"}
   :uberjar-exclusions [#"BCKEY.SF"]
   :repositories {"iplantCollaborative"
                  "http://projects.iplantcollaborative.org/archiva/repository/internal/"})
