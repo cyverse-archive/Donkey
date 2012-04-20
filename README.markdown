@@ -2461,3 +2461,31 @@ $ curl -sd '
 ' http://by-tor:8888/secured/make-analysis-public?proxyToken=$(cas-ticket)
 {}
 ```
+
+### Saving User Session Data
+
+Secured Endpoint: POST /secured/sessions
+
+This service can be used to save arbitrary user session information.  The post
+body is stored as-is and can be retrieved by sending an HTTP GET request to
+the same URL.
+
+Here's an example:
+
+```
+$ curl -sd data http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)
+```
+
+### Retrieving User Session Data
+
+Secured Endpoint: GET /secured/sessions
+
+This service can be used to retrieve user session information that was
+previously saved by sending a POST request to the same service.
+
+Here's an example:
+
+```
+$ curl http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)
+data
+```
