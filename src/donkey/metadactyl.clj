@@ -1,7 +1,7 @@
 (ns donkey.metadactyl
-  (:use [donkey.beans]
+  (:use [clojure.data.json :only [read-json]]
+        [donkey.beans]
         [donkey.config]
-        [donkey.notifications]
         [donkey.service]
         [donkey.transformers]
         [donkey.user-attributes])
@@ -26,7 +26,8 @@
            [org.iplantc.workflow.template.notifications NotificationAppender]
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
-  (:require [clojure.tools.logging :as log]))
+  (:require [clojure.tools.logging :as log]
+            [donkey.notifications :as dn]))
 
 (register-bean
   (defbean db-url
@@ -284,11 +285,6 @@
       (.setSessionFactory (session-factory))
       (.setOsmClient (osm-job-request-client)))))
 
-(defn- notificationagent-url
-  "Builds a URL that can be used to connect to the notification agent."
-  [relative-url]
-  (build-url (notificationagent-base-url) relative-url))
-
 (defn get-workflow-elements
   "A service to get information about workflow elements."
   [element-type]
@@ -390,6 +386,17 @@
   (.importWorkflow (workflow-import-service) (slurp body))
   (empty-response))
 
+(defn import-tools
+  "This service will import deployed components into the DE and send
+   notifications if notification information is included and the deployed
+   components are successfully imported."
+  [body]
+  (let [json-str (slurp body)
+        json-obj (read-json json-str)]
+    (.importWorkflow (workflow-import-service) json-str)
+    (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
+  (success-response))
+
 (defn update-template
   "This service will either update an existing template or import a new template."
   [body]
@@ -431,8 +438,8 @@
   "This service forwards requests to the notification agent in order to
    retrieve notifications that the user may or may not have seen yet."
   [req]
-  (let [url (notificationagent-url "get-messages")]
-    (add-app-details
+  (let [url (dn/notificationagent-url "get-messages")]
+    (dn/add-app-details
       (forward-post url req (add-username-to-json req))
       (analysis-retriever))))
 
@@ -440,8 +447,8 @@
   "This service forwards requests to the notification agent in order to
    retrieve notifications that the user hasn't seen yet."
   [req]
-  (let [url (notificationagent-url "get-unseen-messages")]
-    (add-app-details
+  (let [url (dn/notificationagent-url "get-unseen-messages")]
+    (dn/add-app-details
       (forward-post url req (add-username-to-json req))
       (analysis-retriever))))
 
@@ -449,8 +456,15 @@
   "This service forwards requests to the notification agent in order to delete
    existing notifications."
   [req]
-  (let [url (notificationagent-url "delete")]
+  (let [url (dn/notificationagent-url "delete")]
     (forward-post url req (add-username-to-json req))))
+
+(defn send-notification
+  "This service forwards a notifiction to the notification agent's general
+   notification endpoint."
+  [req]
+  (let [url (dn/notificationagent-url "notification")]
+    (forward-post url req)))
 
 (defn run-experiment
   "This service accepts a job submission from a user then reformats it and

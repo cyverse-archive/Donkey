@@ -9,10 +9,13 @@
 (defn empty-response []
   {:status 200})
 
-(defn success-response [map]
-  {:status 200
-   :body (json-str (merge {:success true} map))
-   :content-type json-content-type})
+(defn success-response
+  ([]
+    (success-response {}))
+  ([map]
+    {:status 200
+     :body (json-str (merge {:success true} map))
+     :content-type json-content-type}))
 
 (defn failure-response [e]
   (log/error e "internal error")
@@ -51,13 +54,17 @@
 
 (defn forward-post
   "Forwards a POST request to a remote service."
-  [url request body]
-  (client/post url (prepare-forwarded-request request body)))
+  ([url request]
+    (forward-post url request (slurp (:body request))))
+  ([url request body]
+    (client/post url (prepare-forwarded-request request body))))
 
 (defn forward-put
   "Forwards a PUT request to a remote service."
-  [url request body]
-  (client/put url (prepare-forwarded-request request body)))
+  ([url request]
+    (forward-put url request (slurp (:body request))))
+  ([url request body]
+    (client/put url (prepare-forwarded-request request body))))
 
 (defn forward-delete
   "Forwards a DELETE request to a remote service."

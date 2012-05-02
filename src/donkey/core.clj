@@ -5,7 +5,6 @@
         [donkey.beans]
         [donkey.config]
         [donkey.metadactyl]
-        [donkey.notifications]
         [donkey.service]
         [donkey.user-attributes]
         [donkey.user-sessions]
@@ -162,8 +161,14 @@
   (POST "/import-workflow" [:as {body :body}]
         (trap #(import-workflow body)))
 
+  (POST "/import-tools" [:as {body :body}]
+        (trap #(import-tools body)))
+
   (GET "/get-property-values/:job-id" [job-id]
        (trap #(get-property-values job-id)))
+
+  (POST "/send-notification" [:as req]
+        (trap #(send-notification req)))
 
   (context "/secured" []
            (store-current-user secured-routes #(cas-server) #(server-name)))

@@ -1473,6 +1473,131 @@ existing analysis.  To overwrite an existing analysis, please use the
 see the (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
+### Importing Deployed Components
+
+Unsecured Endpoint: POST /import-tools
+
+This service is an extension of the /import-workflow endpoint that also sends
+a notification for every deployed component that is imported provided that a
+username and e-mail address is provided for the notification.  The request
+body should be in the following format:
+
+```json
+{
+    "components": [
+        {
+            "name": component-name,
+            "location": component-location,
+            "implementation": {
+                "implementor_email": e-mail-address-of-implementor,
+                "implementor": name-of-implementor,
+                "test": {
+                    "params": [
+                        param-1,
+                        param-2,
+                        ...,
+                        param-n
+                    ],
+                    "input_files": [
+                        input-file-1,
+                        input-file-2,
+                        ...,
+                        input-file-n
+                    ],
+                    "output_files": [
+                        output-file-1,
+                        output-file-2,
+                        ...,
+                        output-file-n
+                    ]
+                }
+            },
+            "type": deployed-component-type,
+            "description": deployed-component-description,
+            "version": deployed-component-version,
+            "attribution": deployed-component-attribution,
+            "user": username-for-notification,
+            "email": e-mail-address-for-notification
+        }
+    ]
+}
+```
+
+Note that this format is identical to the one used by the /import-workflow
+endpoint except that the `user` and `email` fields have been added to allow
+notifications to be generated automatically.  If either of these fields is
+missing or empty, a notification will not be sent even if the deployed
+component is imported successfully.
+
+The response body for this service contains a success flag along with a brief
+description of the reason for the failure if the deployed components can't be
+imported.
+
+Here's an example of a successful import:
+
+```
+$ curl -sd '
+{
+    "components": [
+        {
+            "name": "foo",
+            "location": "/usr/local/bin",
+            "implementation": {
+                "implementor_email": "nobody@iplantcollaborative.org",
+                "implementor": "Nobody",
+                "test": {
+                    "params": [],
+                    "input_files": [],
+                    "output_files": []
+                }
+            },
+            "type": "executable",
+            "description": "the foo is in the bar",
+            "version": "1.2.3",
+            "attribution": "the foo needs no attribution",
+            "user": "nobody",
+            "email": "nobody@iplantcollaborative.org"
+        }
+    ]
+}
+' http://by-tor:8888/import-tools | python -mjson.tool
+{
+    "success": true
+}
+```
+
+Here's an example of an unsuccessful import:
+
+```
+$ curl -sd '
+{
+    "components": [
+        {
+            "name": "foo",
+            "location": "/usr/local/bin",
+            "implementation": {
+                "implementor_email": "nobody@iplantcollaborative.org",
+                "implementor": "Nobody"
+            },
+            "type": "executable",
+            "description": "the foo is in the bar",
+            "version": "1.2.3",
+            "attribution": "the foo needs no attribution",
+            "user": "nobody",
+            "email": "nobody@iplantcollaborative.org"
+        }
+    ]
+}
+' http://localhost:3000/import-tools | python -mjson.tool
+{
+    "reason": "org.json.JSONException: JSONObject[\"test\"] not found.", 
+    "success": false
+}
+```
+
+Though it is possible to import analyses using this endpoint, this practice is
+not recommended because it can cause spurious notifications to be sent.
+
 #### Obtaining Property Values for a Previously Executed Job
 
 Unsecured Endpoint: GET /get-property-values/{job-id}

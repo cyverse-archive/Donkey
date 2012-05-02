@@ -1,6 +1,9 @@
 (ns donkey.notifications
-  (:use [clojure.data.json :only (json-str read-json)])
-  (:require [clojure.tools.logging :as log]))
+  (:use [clojure.data.json :only [json-str read-json]]
+        [donkey.config :only [notificationagent-base-url]]
+        [donkey.service :only [build-url json-content-type]])
+  (:require [clj-http.client :as client]
+            [clojure.tools.logging :as log]))
 
 (defn- get-app
   "Gets an app from the database."
@@ -42,3 +45,36 @@
   (let [m (read-json (:body res))]
     (log/debug "adding app details to notifications:" m)
     (assoc res :body (json-str (add-app-details-to-map m app-retriever)))))
+
+(defn notificationagent-url
+  "Builds a URL that can be used to connect to the notification agent."
+  [relative-url]
+  (build-url (notificationagent-base-url) relative-url))
+
+(defn send-notification
+  "Sends a notification to a user."
+  [m]
+  (client/post (notificationagent-url "notification")
+               {:content-type json-content-type
+                :body (json-str m)}))
+
+(defn send-tool-notification
+  "Sends notification of tool deployment to a user if notification information
+   is included in the import JSON."
+  [m]
+  (let [{:keys [user email]} m]
+    (when (every? (comp not nil?) [user email])
+      (try
+        (send-notification {:type "tool"
+                            :user user
+                            :subject (str (:name m) " has been deployed")
+                            :email true
+                            :email_template "tool_deployment"
+                            :payload {:email_address email
+                                      :toolname (:name m)
+                                      :tooldirectory (:location m)
+                                      :tooldescription (:description m)
+                                      :toolattribution (:attribution m)
+                                      :toolversion (:version m)}})
+        (catch Exception e
+          (log/warn e "unable to send tool deployment notification for" m))))))
