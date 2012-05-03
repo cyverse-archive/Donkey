@@ -260,6 +260,10 @@
   "The bucket in Riak to retrieve user sessions from."
   "donkey.sessions.bucket")
 
+(STR userinfo-base-url
+  "The base URL for the user info API."
+  "donkey.userinfo.base-url")
+
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should
    only be called after Donkey has been initialized."

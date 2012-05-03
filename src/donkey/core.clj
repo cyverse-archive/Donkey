@@ -7,6 +7,7 @@
         [donkey.metadactyl]
         [donkey.service]
         [donkey.user-attributes]
+        [donkey.user-info]
         [donkey.user-sessions]
         [ring.middleware keyword-params nested-params])
   (:require [compojure.route :as route]
@@ -82,6 +83,9 @@
 
   (POST "/sessions" [:as {body :body}]
         (trap #(user-session (slurp body))))
+
+  (GET "/user-search/:search-string" [search-string]
+        (trap #(user-search search-string)))
 
   (route/not-found (unrecognized-path-response)))
 
