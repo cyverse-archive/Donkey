@@ -1,5 +1,5 @@
 (ns donkey.user-attributes
-  (:use [clojure-commons.cas-proxy-auth :only (validate-cas-proxy-ticket)]
+  (:use [clj-cas.cas-proxy-auth :only (validate-cas-proxy-ticket)]
         [donkey.config])
   (:require [clojure.tools.logging :as log])
   (:import [org.iplantc.authn.user User]

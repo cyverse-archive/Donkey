@@ -8,6 +8,7 @@
                  [com.cemerick/url "0.0.5"]
                  [compojure "1.0.1"]
                  [swank-clojure "1.4.0-SNAPSHOT"]
+                 [org.iplantc/clj-cas "1.0.0-SNAPSHOT"]
                  [org.iplantc/clojure-commons "1.1.0-SNAPSHOT"]
                  [org.iplantc.core/metadactyl "dev-SNAPSHOT"]
                  [org.springframework/spring-orm "3.1.0.RELEASE"]
@@ -22,7 +23,9 @@
   :extra-classpath-dirs ["conf/test"]
   :aot [donkey.core]
   :main donkey.core
-  :ring {:handler donkey.core/app :init donkey.core/load-configuration}
+  :ring {:handler donkey.core/app
+         :init donkey.core/load-configuration
+         :port 31325}
   :iplant-rpm {:summary "iPlant Discovery Environment Metadata Services"
                :release 1
                :provides "donkey"
