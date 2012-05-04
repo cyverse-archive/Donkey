@@ -264,6 +264,13 @@
   "The base URL for the user info API."
   "donkey.userinfo.base-url")
 
+(INT default-user-search-result-limit
+  "The default limit for the number of results for a user info search.  Note
+   this is the maximum number of results returned by trellis for any given
+   search.  Our aggregate search may return the limit times the number of
+   search types."
+  "donkey.userinfo.default-search-limit")
+
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should
    only be called after Donkey has been initialized."

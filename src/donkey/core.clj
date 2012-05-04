@@ -84,8 +84,8 @@
   (POST "/sessions" [:as {body :body}]
         (trap #(user-session (slurp body))))
 
-  (GET "/user-search/:search-string" [search-string]
-        (trap #(user-search search-string)))
+  (GET "/user-search/:search-string" [search-string :as req]
+       (trap #(user-search search-string (get-in req [:headers "range"]))))
 
   (route/not-found (unrecognized-path-response)))
 
