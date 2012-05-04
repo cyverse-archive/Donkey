@@ -1,5 +1,6 @@
 (ns donkey.transformers
-  (:use [clojure.data.json :only (json-str read-json)])
+  (:use [clojure.data.json :only (json-str read-json)]
+        [donkey.user-attributes])
   (:require [clojure.tools.logging :as log])
   (:import [net.sf.json JSONObject]))
 
@@ -20,6 +21,14 @@
   (let [m (read-json (slurp (:body req)))
         username (get-in req [:user-attributes "uid"])]
     (json-str (assoc m :user username))))
+
+(defn add-current-user-to-url
+  "Adds the name of the currently authenticated user to a JSON object in the
+   body of a request, and returns only the updated body."
+  [url]
+  (let [user (.getShortUsername current-user)
+        email (.getEmail current-user)]
+    (str url "?uid=" user "&email=" email)))
 
 (defn add-workspace-id
   "Adds a workspace ID to a JSON request body."

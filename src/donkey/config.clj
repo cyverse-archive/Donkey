@@ -175,6 +175,14 @@
   "The dialect that Hibernate should use when generating SQL."
   "donkey.hibernate.dialect")
 
+(STR metadactyl-base-url
+  "The base URL to use when connecting to secured Metadactyl services."
+  "donkey.metadactyl.base-url")
+
+(STR metadactyl-unprotected-base-url
+  "The base URL to use when connecting to unsecured Metadactyl services."
+  "donkey.metadactyl.unprotected-base-url")
+
 (STR zoidberg-base-url
   "The base URL to use when connecting to Zoidberg."
   "donkey.zoidberg.base-url")

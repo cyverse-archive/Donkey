@@ -29,6 +29,18 @@
   (:require [clojure.tools.logging :as log]
             [donkey.notifications :as dn]))
 
+(defn build-metadactyl-secured-url
+  "Adds the name and email of the currently authenticated user to the secured
+   metadactyl URL with the given relative URL path."
+  [relative-url]
+  (add-current-user-to-url
+    (build-url (metadactyl-base-url) relative-url)))
+
+(defn build-metadactyl-unprotected-url
+  "Builds the unsecured metadactyl URL from the given relative URL path."
+  [relative-url]
+  (build-url (metadactyl-unprotected-base-url) relative-url))
+
 (register-bean
   (defbean db-url
     "The URL to use when connecting to the database."
