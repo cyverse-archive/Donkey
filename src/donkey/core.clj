@@ -27,8 +27,8 @@
     (catch Throwable t (error-response t))))
 
 (defroutes secured-routes
-  (GET "/bootstrap" []
-       (trap #(bootstrap)))
+  (GET "/bootstrap" [:as req]
+       (trap #(bootstrap req)))
 
   (POST "/notifications/get-messages" [:as req]
         (trap #(get-messages req)))
@@ -39,14 +39,14 @@
   (POST "/notifications/:params" [:as req]
         (trap #(delete-notifications req)))
 
-  (GET "/template/:app-id" [app-id]
-       (trap #(get-app app-id)))
+  (GET "/template/:app-id" [app-id :as req]
+       (trap #(get-app-secured req app-id)))
 
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
        (trap #(run-experiment body workspace-id)))
 
-  (GET "/workspaces/:workspace-id/executions/list" [workspace-id]
-       (trap #(get-experiments workspace-id)))
+  (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
+       (trap #(get-experiments req workspace-id)))
 
   (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}]
        (trap #(delete-experiments body workspace-id)))
@@ -57,23 +57,23 @@
   (POST "/delete-rating" [:as {body :body}]
         (trap #(delete-rating body)))
 
-  (GET "/search-analyses/:search-term" [search-term]
-       (trap #(search-apps search-term)))
+  (GET "/search-analyses/:search-term" [search-term :as req]
+       (trap #(search-apps req search-term)))
 
-  (GET "/get-analyses-in-group/:app-group-id" [app-group-id]
-       (trap #(list-apps-in-group app-group-id)))
+  (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as req]
+       (trap #(list-apps-in-group req app-group-id)))
 
-  (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
-       (trap #(list-apps-in-group app-group-id)))
+  (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id :as req]
+       (trap #(list-apps-in-group req app-group-id)))
 
   (POST "/update-favorites" [:as {body :body}]
         (trap #(update-favorites body)))
 
-  (GET "/edit-template/:app-id" [app-id]
-       (trap #(edit-app app-id)))
+  (GET "/edit-template/:app-id" [app-id :as req]
+       (trap #(edit-app req app-id)))
 
-  (GET "/copy-template/:app-id" [app-id]
-       (trap #(copy-app app-id)))
+  (GET "/copy-template/:app-id" [app-id :as req]
+       (trap #(copy-app req app-id)))
 
   (POST "/make-analysis-public" [:as {body :body}]
         (trap #(make-app-public body)))
@@ -93,29 +93,29 @@
   (GET "/" []
        "Welcome to Donkey!  I've mastered the stairs!\n")
 
-  (GET "/get-workflow-elements/:element-type" [element-type]
-       (trap #(get-workflow-elements element-type)))
+  (GET "/get-workflow-elements/:element-type" [element-type :as req]
+       (trap #(get-workflow-elements req element-type)))
 
-  (GET "/search-deployed-components/:search-term" [search-term]
-       (trap #(search-deployed-components search-term)))
+  (GET "/search-deployed-components/:search-term" [search-term :as req]
+       (trap #(search-deployed-components req search-term)))
 
-  (GET "/get-all-analysis-ids" []
-       (trap #(get-all-app-ids)))
+  (GET "/get-all-analysis-ids" [:as req]
+       (trap #(get-all-app-ids req)))
 
   (POST "/delete-categories" [:as {body :body}]
         (trap #(delete-categories body)))
 
-  (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
-       (trap #(validate-app-for-pipelines app-id)))
+  (GET "/validate-analysis-for-pipelines/:app-id" [app-id :as req]
+       (trap #(validate-app-for-pipelines req app-id)))
 
-  (GET "/analysis-data-objects/:app-id" [app-id]
-       (trap #(get-data-objects-for-app app-id)))
+  (GET "/analysis-data-objects/:app-id" [app-id :as req]
+       (trap #(get-data-objects-for-app req app-id)))
 
   (POST "/categorize-analyses" [:as {body :body}]
         (trap #(categorize-apps body)))
 
-  (GET "/get-analysis-categories/:category-set" [category-set]
-       (trap #(get-app-categories category-set)))
+  (GET "/get-analysis-categories/:category-set" [category-set :as req]
+       (trap #(get-app-categories req category-set)))
 
   (POST "/can-export-analysis" [:as {body :body}]
         (trap #(can-export-app body)))
@@ -123,17 +123,17 @@
   (POST "/add-analysis-to-group" [:as {body :body}]
         (trap #(add-app-to-group body)))
 
-  (GET "/get-analysis/:app-id" [app-id]
-       (trap #(get-app app-id)))
+  (GET "/get-analysis/:app-id" [app-id :as req]
+       (trap #(get-app req app-id)))
 
-  (GET "/get-only-analysis-groups/:workspace-id" [workspace-id]
-       (trap #(get-only-analysis-groups workspace-id)))
+  (GET "/get-only-analysis-groups/:workspace-id" [workspace-id :as req]
+       (trap #(get-only-analysis-groups req workspace-id)))
 
-  (GET "/export-template/:template-id" [template-id]
-       (trap #(export-template template-id)))
+  (GET "/export-template/:template-id" [template-id :as req]
+       (trap #(export-template req template-id)))
 
-  (GET "/export-workflow/:app-id" [app-id]
-       (trap #(export-workflow app-id)))
+  (GET "/export-workflow/:app-id" [app-id :as req]
+       (trap #(export-workflow req app-id)))
 
   (POST "/export-deployed-components" [:as {body :body}]
         (trap #(export-deployed-components body)))
@@ -168,8 +168,8 @@
   (POST "/import-tools" [:as {body :body}]
         (trap #(import-tools body)))
 
-  (GET "/get-property-values/:job-id" [job-id]
-       (trap #(get-property-values job-id)))
+  (GET "/get-property-values/:job-id" [job-id :as req]
+       (trap #(get-property-values req job-id)))
 
   (POST "/send-notification" [:as req]
         (trap #(send-notification req)))
