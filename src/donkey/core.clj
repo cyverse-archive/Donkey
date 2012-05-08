@@ -51,11 +51,11 @@
   (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}]
        (trap #(delete-experiments body workspace-id)))
 
-  (POST "/rate-analysis" [:as {body :body}]
-        (trap #(rate-app body)))
+  (POST "/rate-analysis" [:as req]
+        (trap #(rate-app req)))
 
-  (POST "/delete-rating" [:as {body :body}]
-        (trap #(delete-rating body)))
+  (POST "/delete-rating" [:as req]
+        (trap #(delete-rating req)))
 
   (GET "/search-analyses/:search-term" [search-term :as req]
        (trap #(search-apps req search-term)))
@@ -66,8 +66,8 @@
   (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id :as req]
        (trap #(list-apps-in-group req app-group-id)))
 
-  (POST "/update-favorites" [:as {body :body}]
-        (trap #(update-favorites body)))
+  (POST "/update-favorites" [:as req]
+        (trap #(update-favorites req)))
 
   (GET "/edit-template/:app-id" [app-id :as req]
        (trap #(edit-app req app-id)))
@@ -75,8 +75,8 @@
   (GET "/copy-template/:app-id" [app-id :as req]
        (trap #(copy-app req app-id)))
 
-  (POST "/make-analysis-public" [:as {body :body}]
-        (trap #(make-app-public body)))
+  (POST "/make-analysis-public" [:as req]
+        (trap #(make-app-public req)))
 
   (GET "/sessions" []
        (trap #(user-session)))
@@ -102,8 +102,8 @@
   (GET "/get-all-analysis-ids" [:as req]
        (trap #(get-all-app-ids req)))
 
-  (POST "/delete-categories" [:as {body :body}]
-        (trap #(delete-categories body)))
+  (POST "/delete-categories" [:as req]
+        (trap #(delete-categories req)))
 
   (GET "/validate-analysis-for-pipelines/:app-id" [app-id :as req]
        (trap #(validate-app-for-pipelines req app-id)))
@@ -111,17 +111,17 @@
   (GET "/analysis-data-objects/:app-id" [app-id :as req]
        (trap #(get-data-objects-for-app req app-id)))
 
-  (POST "/categorize-analyses" [:as {body :body}]
-        (trap #(categorize-apps body)))
+  (POST "/categorize-analyses" [:as req]
+        (trap #(categorize-apps req)))
 
   (GET "/get-analysis-categories/:category-set" [category-set :as req]
        (trap #(get-app-categories req category-set)))
 
-  (POST "/can-export-analysis" [:as {body :body}]
-        (trap #(can-export-app body)))
+  (POST "/can-export-analysis" [:as req]
+        (trap #(can-export-app req)))
 
-  (POST "/add-analysis-to-group" [:as {body :body}]
-        (trap #(add-app-to-group body)))
+  (POST "/add-analysis-to-group" [:as req]
+        (trap #(add-app-to-group req)))
 
   (GET "/get-analysis/:app-id" [app-id :as req]
        (trap #(get-app req app-id)))
@@ -135,38 +135,38 @@
   (GET "/export-workflow/:app-id" [app-id :as req]
        (trap #(export-workflow req app-id)))
 
-  (POST "/export-deployed-components" [:as {body :body}]
-        (trap #(export-deployed-components body)))
+  (POST "/export-deployed-components" [:as req]
+        (trap #(export-deployed-components req)))
 
-  (POST "/permanently-delete-workflow" [:as {body :body}]
-        (trap #(permanently-delete-workflow body)))
+  (POST "/permanently-delete-workflow" [:as req]
+        (trap #(permanently-delete-workflow req)))
 
-  (POST "/delete-workflow" [:as {body :body}]
-        (trap #(delete-workflow body)))
+  (POST "/delete-workflow" [:as req]
+        (trap #(delete-workflow req)))
 
-  (POST "/preview-template" [:as {body :body}]
-        (trap #(preview-template body)))
+  (POST "/preview-template" [:as req]
+        (trap #(preview-template req)))
 
-  (POST "/preview-workflow" [:as {body :body}]
-        (trap #(preview-workflow body)))
+  (POST "/preview-workflow" [:as req]
+        (trap #(preview-workflow req)))
 
-  (POST "/update-template" [:as {body :body}]
-        (trap #(update-template body)))
+  (POST "/update-template" [:as req]
+        (trap #(update-template req)))
 
-  (POST "/force-update-workflow" [:as {body :body}]
-        (trap #(force-update-workflow body)))
+  (POST "/force-update-workflow" [:as req]
+        (trap #(force-update-workflow req)))
 
-  (POST "/update-workflow" [:as {body :body}]
-        (trap #(update-workflow body)))
+  (POST "/update-workflow" [:as req]
+        (trap #(update-workflow req)))
 
-  (POST "/import-template" [:as {body :body}]
-        (trap #(import-template body)))
+  (POST "/import-template" [:as req]
+        (trap #(import-template req)))
 
-  (POST "/import-workflow" [:as {body :body}]
-        (trap #(import-workflow body)))
+  (POST "/import-workflow" [:as req]
+        (trap #(import-workflow req)))
 
-  (POST "/import-tools" [:as {body :body}]
-        (trap #(import-tools body)))
+  (POST "/import-tools" [:as req]
+        (trap #(import-tools req)))
 
   (GET "/get-property-values/:job-id" [job-id :as req]
        (trap #(get-property-values req job-id)))

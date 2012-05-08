@@ -183,18 +183,6 @@
   "The base URL to use when connecting to unsecured Metadactyl services."
   "donkey.metadactyl.unprotected-base-url")
 
-(STR zoidberg-base-url
-  "The base URL to use when connecting to Zoidberg."
-  "donkey.zoidberg.base-url")
-
-(INT zoidberg-connection-timeout
-  "The maximum number of milliseconds to wait for a connection to Zoidberg."
-  "donkey.zoidberg.connection-timeout")
-
-(STR zoidberg-encoding
-  "The character encoding to use when communicating with Zoidberg."
-  "donkey.zoidberg.encoding")
-
 (STR osm-base-url
   "The base URL to use when connecting to the OSM."
   "donkey.osm.base-url")
@@ -237,15 +225,6 @@
   "The names of the app groups that appear immediately beneath the root app
    group in each user's workspace."
   "donkey.workspace.default-app-groups")
-
-(INT workspace-dev-app-group-index
-  "The index of the category within a user's workspace for apps under
-   development."
-  "donkey.workspace.dev-app-group-index")
-
-(INT workspace-favorites-app-group-index
-  "The index of the category within a user's workspace for favorite apps."
-  "donkey.workspace.favorites-app-group-index")
 
 (STR cas-server
   "The base URL used to connect to the CAS server."

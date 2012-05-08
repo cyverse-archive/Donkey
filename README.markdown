@@ -732,7 +732,7 @@ $ curl -s http://by-tor:8888/analysis-data-objects/19F78CC1-7E14-481B-9D80-85EBC
 
 #### Categorizing Analyses
 
-Unsecured Endpoint: POST /categorize_analyses
+Unsecured Endpoint: POST /categorize-analyses
 
 When services are exported and re-imported, the analysis categorization
 information also needs to be exported and re-imported.  This service allows
