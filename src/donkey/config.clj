@@ -1,7 +1,6 @@
 (ns donkey.config
   (:use [clojure.string :only (blank? split)])
   (:require [clojure-commons.props :as cc-props]
-            [clojure.data.json :as json]
             [clojure.tools.logging :as log]))
 
 (defn- file-exists-on-classpath
@@ -115,18 +114,6 @@
 
 (def ^:dynamic refgens (atom nil))
 
-(defn reference-genomes
-  "Pulls in reference_genomes.json from the classpath, parses it as JSON,
-   and returns a HashMap (for compatibility with metadactyl)."
-  []
-  (if (nil? @refgens)
-    (reset! refgens 
-            (java.util.HashMap. 
-              (json/read-json 
-                (slurp (cc-props/find-resources-file "reference_genomes.json")) 
-                false)))
-    @refgens))
-
 (INT listen-port 
   "The port that donkey listens to."
   "donkey.app.listen-port")
@@ -183,48 +170,9 @@
   "The base URL to use when connecting to unsecured Metadactyl services."
   "donkey.metadactyl.unprotected-base-url")
 
-(STR osm-base-url
-  "The base URL to use when connecting to the OSM."
-  "donkey.osm.base-url")
-
-(INT osm-connection-timeout
-  "The maximum number of milliseconds to wait for a connection to the OSM."
-  "donkey.osm.connection-timeout")
-
-(STR osm-encoding
-  "The character encoding to use when communicating with the OSM."
-  "donkey.osm.encoding")
-
-(STR osm-jobs-bucket
-  "The OSM bucket containing information about jobs that the user has
-   submitted."
-  "donkey.osm.jobs-bucket")
-
-(STR osm-session-bucket
-  "The OSM bucket containing information about the users' sessions."
-  "user_sessions")
-
-(STR osm-job-request-bucket
-  "The OSM bucket containing job submission requests that were sent from the
-   UI to metadactyl."
-  "donkey.osm.job-request-bucket")
-
-(STR jex-base-url
-  "The base URL to use when connecting to the JEX."
-  "donkey.jex.base-url")
-
 (STR notificationagent-base-url
   "The base URL to use when connecting to the notification agent."
   "donkey.notificationagent.base-url")
-
-(STR workspace-root-app-group
-  "The name of the root app group in each user's workspace."
-  "donkey.workspace.root-app-group")
-
-(STR workspace-default-app-groups
-  "The names of the app groups that appear immediately beneath the root app
-   group in each user's workspace."
-  "donkey.workspace.default-app-groups")
 
 (STR cas-server
   "The base URL used to connect to the CAS server."

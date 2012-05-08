@@ -42,14 +42,14 @@
   (GET "/template/:app-id" [app-id :as req]
        (trap #(get-app-secured req app-id)))
 
-  (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
-       (trap #(run-experiment body workspace-id)))
+  (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as req]
+       (trap #(run-experiment req workspace-id)))
 
   (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
        (trap #(get-experiments req workspace-id)))
 
-  (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as {body :body}]
-       (trap #(delete-experiments body workspace-id)))
+  (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as req]
+       (trap #(delete-experiments req workspace-id)))
 
   (POST "/rate-analysis" [:as req]
         (trap #(rate-app req)))

@@ -29,16 +29,3 @@
   (let [user (.getShortUsername current-user)
         email (.getEmail current-user)]
     (str url "?uid=" user "&email=" email)))
-
-(defn add-workspace-id
-  "Adds a workspace ID to a JSON request body."
-  [body workspace-id]
-  (json-str (assoc (read-json body) :workspace_id workspace-id)))
-
-(defn string->long
-  "Converts a String to a long."
-  [string]
-  (try
-    (Long/parseLong string)
-    (catch NumberFormatException e
-      (throw (IllegalArgumentException. e)))))

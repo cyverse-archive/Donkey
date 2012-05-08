@@ -6,17 +6,7 @@
         [donkey.transformers]
         [donkey.user-attributes])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]
-           [java.util HashMap]
-           [org.iplantc.workflow.client OsmClient]
-           [org.iplantc.files.service FileInfoService]
-           [org.iplantc.files.types
-            FileTypeHandler ReferenceAnnotationHandler ReferenceGenomeHandler
-            ReferenceSequenceHandler]
-           [org.iplantc.workflow.experiment
-            AnalysisRetriever AnalysisService ExperimentRunner
-            IrodsUrlAssembler]
-           [org.iplantc.workflow.service
-            UserService]
+           [org.iplantc.workflow.experiment AnalysisRetriever]
            [org.springframework.orm.hibernate3.annotation
             AnnotationSessionFactoryBean])
   (:require [clojure.tools.logging :as log]
@@ -63,96 +53,10 @@
         (.afterPropertiesSet)))))
 
 (register-bean
-  (defbean osm-job-request-client
-    "The client used to communicate with OSM services."
-    (doto (OsmClient.)
-      (.setBaseUrl (osm-base-url))
-      (.setBucket (osm-job-request-bucket))
-      (.setConnectionTimeout (osm-connection-timeout))
-      (.setEncoding (osm-encoding)))))
-
-(register-bean
-  (defbean user-service
-    "Services used to obtain information about a user."
-    (doto (UserService.)
-      (.setSessionFactory (session-factory))
-      (.setUserSessionService user-session-service)
-      (.setRootAnalysisGroup (workspace-root-app-group))
-      (.setDefaultAnalysisGroups (workspace-default-app-groups)))))
-
-(register-bean
-  (defbean reference-genome-handler
-    "Resolves paths to named reference genomes."
-    (doto (ReferenceGenomeHandler.)
-      (.setReferenceGenomeUrlMap (reference-genomes)))))
-
-(register-bean
-  (defbean reference-sequence-handler
-    "Resolves paths to named reference sequences."
-    (doto (ReferenceSequenceHandler.)
-      (.setReferenceGenomeUrlMap (reference-genomes)))))
-
-(register-bean
-  (defbean reference-annotation-handler
-    "Resolves paths to named reference annotations."
-    (doto (ReferenceAnnotationHandler.)
-      (.setReferenceGenomeUrlMap (reference-genomes)))))
-
-(def
-  ^{:doc "A placeholder service used to clearly indicate that automatically
-          saved barcode files are no longer supported."}
-   barcode-file-handler
-  (proxy [FileTypeHandler] []
-    (getFileAccessUrl [file-id]
-      (let [msg "barcode selectors are no longer supported"]
-        (throw (IllegalArgumentException. msg))))))
-
-(register-bean
-  (defbean file-type-handlers
-    "Maps property types to file type handlers."
-    (doto (HashMap.)
-      (.put "ReferenceGenome" (reference-genome-handler))
-      (.put "ReferenceAnnotation" (reference-annotation-handler))
-      (.put "ReferenceSequence" (reference-sequence-handler))
-      (.put "BarcodeSelector" barcode-file-handler))))
-
-(register-bean
   (defbean analysis-retriever
     "Used by several services to retrieve apps from the daatabase."
     (doto (AnalysisRetriever.)
       (.setSessionFactory (session-factory)))))
-
-(register-bean
-  (defbean analysis-service
-    "Services to retrieve information about analyses that a user has
-     submitted."
-    (doto (AnalysisService.)
-      (.setSessionFactory (session-factory))
-      (.setOsmBaseUrl (osm-base-url))
-      (.setOsmBucket (osm-jobs-bucket))
-      (.setConnectionTimeout (osm-connection-timeout)))))
-
-(register-bean
-  (defbean file-info-service
-    "Services used to resolve paths to named files."
-    (doto (FileInfoService.)
-      (.setFileTypeHandlerMap (file-type-handlers)))))
-
-(register-bean
-  (defbean url-assembler
-    "Used to assemble URLs."
-    (IrodsUrlAssembler.)))
-
-(register-bean
-  (defbean experiment-runner
-    "Services to submit jobs to the JEX for execution."
-    (doto (ExperimentRunner.)
-      (.setSessionFactory (session-factory))
-      (.setFileInfo (file-info-service))
-      (.setUserService (user-service))
-      (.setExecutionUrl (jex-base-url))
-      (.setUrlAssembler (url-assembler))
-      (.setJobRequestOsmClient (osm-job-request-client)))))
 
 (defn get-workflow-elements
   "A service to get information about workflow elements."
@@ -370,11 +274,10 @@
 (defn run-experiment
   "This service accepts a job submission from a user then reformats it and
    submits it to the JEX."
-  [body workspace-id]
-  (let [json-str (add-workspace-id (slurp body) workspace-id)
-        json-obj (object->json-obj json-str)]
-    (.runExperiment (experiment-runner) json-obj))
-  (empty-response))
+  [req workspace-id]
+  (let [url (build-metadactyl-secured-url
+              (str "/workspaces/" workspace-id "/newexperiment"))]
+    (forward-put url req)))
 
 (defn get-experiments
   "This service retrieves information about jobs that a user has submitted."
@@ -386,10 +289,10 @@
 (defn delete-experiments
   "This service marks experiments as deleted so that they no longer show up
    in the Analyses window."
-  [body workspace-id]
-  (let [json-str (add-workspace-id (slurp body) workspace-id)]
-    (.deleteExecutionSet (analysis-service) (object->json-obj json-str)))
-  (empty-response))
+  [req workspace-id]
+  (let [url (build-metadactyl-secured-url
+              (str "/workspaces/" workspace-id "/executions/delete"))]
+    (forward-put url req)))
 
 (defn rate-app
   "This service adds a user's rating to an app."
