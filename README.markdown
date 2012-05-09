@@ -26,57 +26,12 @@ Here's an example configuration file:
 # Connection details.
 donkey.app.listen-port = 8888
 
-# Database settings.
-donkey.db.driver      = org.postgresql.Driver
-donkey.db.subprotocol = postgresql
-donkey.db.host        = hostname.iplantcollaborative.org
-donkey.db.port        = 5432
-donkey.db.name        = database
-donkey.db.user        = user
-donkey.db.password    = password
-
-# Hibernate resource definition files.
-donkey.hibernate.resources = template-mapping.hbm.xml, \
-                             notifications.hbm.xml, \
-                             workflow.hbm.xml
-
-# Java packages containing classes with JPA Annotations.
-donkey.hibernate.packages = org.iplantc.persistence.dto.step, \
-                            org.iplantc.persistence.dto.transformation, \
-                            org.iplantc.persistence.dto.data, \
-                            org.iplantc.persistence.dto.workspace, \
-                            org.iplantc.persistence.dto.user, \
-                            org.iplantc.persistence.dto.components, \
-                            org.iplantc.persistence.dto.listing, \
-                            org.iplantc.workflow.core
-
-# The Hibernate dialect to use.
-donkey.hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect
-
-# Zoidberg connection settings.
-donkey.zoidberg.base-url           = http://hostname.iplantcollaborative.org:8888
-donkey.zoidberg.connection-timeout = 5000
-donkey.zoidberg.encoding           = UTF-8
-
-# OSM connection settings.
-donkey.osm.base-url           = http://hostname.iplantcollaborative.org:8888
-donkey.osm.connection-timeout = 5000
-donkey.osm.encoding           = UTF-8
-donkey.osm.jobs-bucket        = jobs
-donkey.osm.job-request-bucket = job_requests
-
-# JEX connection settings.
-donkey.jex.base-url = http://hostname.iplantcollaborative.org:8888
+# Metadactyl connection settings
+donkey.metadactyl.base-url = http://hostname.iplantcollaborative.org:8888/metadactyl/secured
+donkey.metadactyl.unprotected-base-url = http://hostname.iplantcollaborative.org:8888/metadactyl
 
 # Notification agent connection settings.
-donkey.notificationagent.base-url = http://hostname.iplantcollaborative.org:8888
-
-# Workspace app group names.
-donkey.workspace.root-app-group            = Workspace
-donkey.workspace.default-app-groups        = [ "Applications Under Development", \
-                                               "Favorite Applications" ]
-donkey.workspace.dev-app-group-index       = 0
-donkey.workspace.favorites-app-group-index = 1
+donkey.notificationagent.base-url = http://hostname.iplantcollaborative.org:8888/notificationagent
 
 # CAS Settings
 donkey.cas.cas-server  = https://hostname.iplantcollaborative.org/cas/
@@ -84,10 +39,14 @@ donkey.cas.server-name = http://hostname.iplantcollaborative.org:8888
 
 # The domain name to append to the user id to get the fully qualified user id.
 donkey.uid.domain = iplantcollaborative.org
+
+# User session settings
+donkey.sessions.base-url = http://hostname.iplantcollaborative.org:8888/sessions/
+donkey.sessions.bucket = sessions
 ```
 
-Generally, the database and service connection settings will have to be
-updated for each deployment.
+Generally, the service connection settings will have to be updated for each
+deployment.
 
 ### Zookeeper Connection Information
 
@@ -105,10 +64,6 @@ looks like this by default:
 
 ```properties
 log4j.rootLogger=WARN, A
-
-# Uncomment these lines to enable debugging for iPlant classes.
-# log4j.category.org.iplantc=DEBUG, A
-# log4j.additivity.org.iplantc=false
 
 # Uncomment these lines to enable debugging in Donkey itself.
 # log4j.category.donkey=DEBUG, A
@@ -145,13 +100,6 @@ log4j.appender.A.MaxFileSize=10MB
 log4j.appender.A.MaxBackupIndex=1
 ```
 
-The most useful configuration change here is to enable debugging for iPlant
-classes, which can be done by uncommenting two lines.  In rare cases, it may
-be helpful to enable debugging in Donkey and iPlant Clojure Commons.  Most of
-the logic in Donkey is implemented in Java classes that are underneath the
-org.iplantc package, however, so enabling debugging for those classes will be
-the most helpful.
-
 See the [log4j documentation](http://logging.apache.org/log4j/1.2/manual.html)
 for additional logging configuration instructions.
 
@@ -162,8 +110,8 @@ platform for hosting services.  Donkey services are defined using Compojure, a
 framework for creating web services in Clojure.  Each service matches a
 specific HTTP method and URL pattern, which causes one or more function calls
 to be performed.  The services themselves are defined in the file `core.clj`
-and, in most cases, the functions that actually implement the services are
-defined in the file `metadactyl.clj`.
+and, in most cases, Donkey forwards these requests to services defined in files
+named for their corresponding service.
 
 ### Security
 
