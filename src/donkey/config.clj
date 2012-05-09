@@ -118,50 +118,6 @@
   "The port that donkey listens to."
   "donkey.app.listen-port")
 
-(STR db-driver-class
-  "The name of the JDBC driver to use."
-  "donkey.db.driver" )
-
-(STR db-subprotocol
-  "The subprotocol to use when connecting to the database (e.g.
-   postgresql)."
-  "donkey.db.subprotocol")
-
-(STR db-host
-  "The host name or IP address to use when
-   connecting to the database."
-  "donkey.db.host")
-
-(STR db-port
-  "The port number to use when connecting to the database."
-  "donkey.db.port")
-
-(STR db-name
-  "The name of the database to connect to."
-  "donkey.db.name")
-
-(STR db-user
-  "The username to use when authenticating to the database."
-  "donkey.db.user")
-
-(STR db-password
-  "The password to use when authenticating to the database."
-  "donkey.db.password")
-
-(VEC hibernate-resources
-  "The names of the hibernate resource files to include in the Hibernate
-   session factory configuration."
-  "donkey.hibernate.resources")
-
-(VEC hibernate-packages
-  "The names of Java packages that Hibernate needs to scan for JPA
-   annotations."
-  "donkey.hibernate.packages")
-
-(STR hibernate-dialect
-  "The dialect that Hibernate should use when generating SQL."
-  "donkey.hibernate.dialect")
-
 (STR metadactyl-base-url
   "The base URL to use when connecting to secured Metadactyl services."
   "donkey.metadactyl.base-url")

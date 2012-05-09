@@ -1,50 +1,49 @@
 (ns donkey.notifications
   (:use [clojure.data.json :only [json-str read-json]]
-        [donkey.config :only [notificationagent-base-url]]
+        [donkey.config :only
+         [notificationagent-base-url metadactyl-unprotected-base-url]]
         [donkey.service :only [build-url json-content-type]])
   (:require [clj-http.client :as client]
             [clojure.tools.logging :as log]))
 
-(defn- get-app
-  "Gets an app from the database."
-  [app-id app-retriever]
-  (if (nil? app-id)
-    nil
-    (try 
-      (.getTransformationActivity app-retriever app-id)
-      (catch Exception e nil))))
+(defn- app-description-url
+  "Builds a URL that can be used to fetch the description for the App with the
+   given ID."
+  [app-id]
+  (build-url (metadactyl-unprotected-base-url) "/get-app-description/" app-id))
 
 (defn- get-app-description
   "Gets an app description from the database."
-  [app-id app-retriever]
+  [app-id]
   (log/debug "looking up the description for app" app-id)
-  (let [app (get-app app-id app-retriever)]
-    (if (nil? app) "" (.getDescription app))))
+  (if (empty? app-id)
+    ""
+    (client/get (app-description-url app-id))))
 
 (defn- add-app-details-to-message
   "Adds application details to a single message."
-  [msg app-retriever]
+  [msg]
   (let [app-id (get-in msg [:payload :analysis_id])]
     (assoc-in msg [:payload :analysis-details]
-              (get-app-description app-id app-retriever))))
+              (get-app-description app-id))))
 
 (defn- add-app-details-to-messages
   "Adds application details to a list of messages."
-  [msgs app-retriever]
-  (map #(add-app-details-to-message % app-retriever) msgs))
+  [msgs]
+  (map #(add-app-details-to-message %) msgs))
 
 (defn- add-app-details-to-map
   "Adds application details to a map."
-  [m app-retriever]
-  {:messages (add-app-details-to-messages (:messages m) app-retriever)})
+  [m]
+  {:messages (add-app-details-to-messages (:messages m))})
 
 (defn add-app-details
   "Adds application details to notifications in a response from the
    notification agent."
-  [res app-retriever]
+  [res]
   (let [m (read-json (:body res))]
     (log/debug "adding app details to notifications:" m)
-    (assoc res :body (json-str (add-app-details-to-map m app-retriever)))))
+    (assoc res :body (json-str (add-app-details-to-map m)))))
 
 (defn notificationagent-url
   "Builds a URL that can be used to connect to the notification agent."

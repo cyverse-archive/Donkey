@@ -5,10 +5,6 @@
         [donkey.service]
         [donkey.transformers]
         [donkey.user-attributes])
-  (:import [com.mchange.v2.c3p0 ComboPooledDataSource]
-           [org.iplantc.workflow.experiment AnalysisRetriever]
-           [org.springframework.orm.hibernate3.annotation
-            AnnotationSessionFactoryBean])
   (:require [clojure.tools.logging :as log]
             [donkey.notifications :as dn]))
 
@@ -23,40 +19,6 @@
   "Builds the unsecured metadactyl URL from the given relative URL path."
   [relative-url]
   (build-url (metadactyl-unprotected-base-url) relative-url))
-
-(register-bean
-  (defbean db-url
-    "The URL to use when connecting to the database."
-    (str "jdbc:" (db-subprotocol) "://" (db-host) ":" (db-port) "/" (db-name))))
-
-(register-bean
-  (defbean data-source
-    "The data source used to obtain database connections."
-    (doto (ComboPooledDataSource.)
-      (.setDriverClass (db-driver-class))
-      (.setJdbcUrl (db-url))
-      (.setUser (db-user))
-      (.setPassword (db-password)))))
-
-(register-bean
-  (defbean session-factory
-    "A factory for generating Hibernate sessions."
-    (.getObject
-      (doto (AnnotationSessionFactoryBean.)
-        (.setDataSource (data-source))
-        (.setPackagesToScan (into-array String (hibernate-packages)))
-        (.setMappingResources (into-array String (hibernate-resources)))
-        (.setHibernateProperties (as-properties
-                                   {"hibernate.dialect" (hibernate-dialect)
-                                    "hibernate.hbm2ddl.auto" "validate"
-                                    "hibernate.jdbc.batch-size" "50"}))
-        (.afterPropertiesSet)))))
-
-(register-bean
-  (defbean analysis-retriever
-    "Used by several services to retrieve apps from the daatabase."
-    (doto (AnalysisRetriever.)
-      (.setSessionFactory (session-factory)))))
 
 (defn get-workflow-elements
   "A service to get information about workflow elements."
@@ -245,8 +207,7 @@
   [req]
   (let [url (dn/notificationagent-url "get-messages")]
     (dn/add-app-details
-      (forward-post url req (add-username-to-json req))
-      (analysis-retriever))))
+      (forward-post url req (add-username-to-json req)))))
 
 (defn get-unseen-messages
   "This service forwards requests to the notification agent in order to
@@ -254,8 +215,7 @@
   [req]
   (let [url (dn/notificationagent-url "get-unseen-messages")]
     (dn/add-app-details
-      (forward-post url req (add-username-to-json req))
-      (analysis-retriever))))
+      (forward-post url req (add-username-to-json req)))))
 
 (defn delete-notifications
   "This service forwards requests to the notification agent in order to delete
