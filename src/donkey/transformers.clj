@@ -26,6 +26,6 @@
   "Adds the name of the currently authenticated user to a JSON object in the
    body of a request, and returns only the updated body."
   [url]
-  (let [user (.getShortUsername current-user)
-        email (.getEmail current-user)]
+  (let [user (:shortUsername current-user)
+        email (:email current-user)]
     (str url "?uid=" user "&email=" email)))

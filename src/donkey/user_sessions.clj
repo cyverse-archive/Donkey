@@ -17,7 +17,7 @@
 
 (defn user-session
   ([]
-    (let [user (.getUsername current-user)]
+    (let [user (:username current-user)]
       (log/warn (str "user-session: GET " (key-url user)))
       (let [resp (cl/get (key-url user) {:throw-exceptions false})]
         (cond
@@ -27,7 +27,7 @@
                          :body (:body resp)})))))
 
   ([new-session]
-    (let [user (.getUsername current-user)]
+    (let [user (:username current-user)]
       (log/warn (str "user-session: POST " (key-url user) " " new-session))
       (let [resp (cl/post 
                    (key-url user) 
