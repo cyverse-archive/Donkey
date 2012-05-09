@@ -1,6 +1,5 @@
 (ns donkey.metadactyl
   (:use [clojure.data.json :only [read-json]]
-        [donkey.beans]
         [donkey.config]
         [donkey.service]
         [donkey.transformers]

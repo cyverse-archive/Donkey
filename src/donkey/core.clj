@@ -2,7 +2,6 @@
   (:gen-class)
   (:use [clojure-commons.query-params :only (wrap-query-params)]
         [compojure.core]
-        [donkey.beans]
         [donkey.config]
         [donkey.metadactyl]
         [donkey.service]
@@ -190,7 +189,6 @@
       (System/exit 1))
     (reset! props (cl/properties "donkey")))
   (log/warn @props)
-  (init-registered-beans)
   (when (not (configuration-valid))
     (log/warn "THE CONFIGURATION IS INVALID - EXITING NOW")
     (System/exit 1)))
