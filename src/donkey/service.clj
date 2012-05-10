@@ -18,13 +18,13 @@
      :content-type json-content-type}))
 
 (defn failure-response [e]
-  (log/error e "internal error")
+  (log/error e "bad request")
   {:status 400
    :body (json-str {:success false :reason (.getMessage e)})
    :content-type json-content-type})
 
 (defn error-response [e]
-  (log/error e "bad request")
+  (log/error e "internal error")
   {:status 500
    :body (json-str {:success false :reason (.getMessage e)})
    :content-type json-content-type})
