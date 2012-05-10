@@ -24,8 +24,8 @@
   :ring {:handler donkey.core/app
          :init donkey.core/load-configuration
          :port 31325}
-  :iplant-rpm {:summary "iPlant Discovery Environment Metadata Services"
-               :release 1
+  :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
+               :release 2
                :provides "donkey"
                :dependencies ["iplant-service-config >= 0.1.0-4"]
                :config-files ["log4j.properties"]
