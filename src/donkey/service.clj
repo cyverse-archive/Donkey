@@ -45,7 +45,8 @@
   ([request body]
   {:content-type (get-in request [:headers :content-type])
    :headers (dissoc (:headers request) "content-length" "content-type")
-   :body body})
+   :body body
+   :throw-exceptions false})
 
   ([request] (prepare-forwarded-request request nil)))
 
