@@ -1,386 +1,128 @@
 (ns donkey.metadactyl
-  (:use [clojure-commons.cas-proxy-auth :only (validate-cas-proxy-ticket)]
-        [donkey.beans]
+  (:use [clojure.data.json :only [read-json]]
         [donkey.config]
-        [donkey.notifications]
         [donkey.service]
-        [donkey.transformers])
-  (:import [com.mchange.v2.c3p0 ComboPooledDataSource]
-           [java.util HashMap]
-           [org.iplantc.authn.service UserSessionService]
-           [org.iplantc.authn.user User]
-           [org.iplantc.workflow.client OsmClient ZoidbergClient]
-           [org.iplantc.files.service FileInfoService]
-           [org.iplantc.files.types
-            FileTypeHandler ReferenceAnnotationHandler ReferenceGenomeHandler
-            ReferenceSequenceHandler]
-           [org.iplantc.workflow HibernateTemplateFetcher]
-           [org.iplantc.workflow.experiment
-            AnalysisRetriever AnalysisService ExperimentRunner
-            IrodsUrlAssembler]
-           [org.iplantc.workflow.service
-            AnalysisCategorizationService AnalysisEditService CategoryService
-            ExportService InjectableWorkspaceInitializer PipelineService
-            TemplateGroupService UserService WorkflowElementRetrievalService
-            WorkflowExportService AnalysisListingService WorkflowPreviewService
-            WorkflowImportService AnalysisDeletionService RatingService
-            PropertyValueService]
-           [org.iplantc.workflow.template.notifications NotificationAppender]
-           [org.springframework.orm.hibernate3.annotation
-            AnnotationSessionFactoryBean])
-  (:require [clojure.tools.logging :as log]))
+        [donkey.transformers]
+        [donkey.user-attributes])
+  (:require [clojure.tools.logging :as log]
+            [donkey.notifications :as dn]))
 
-(def
-  ^{:doc "The authenticated user or nil if the service is unsecured."
-    :dynamic true}
-   current-user nil)
-
-(def
-  ^{:doc "The service used to get information about the authenticated user."}
-   user-session-service (proxy [UserSessionService] []
-                          (getUser [] current-user)))
-
-(defn- user-from-attributes
-  "Creates an instance of org.iplantc.authn.user.User from user attributes
-   stored in the request by validate-cas-proxy-ticket."
-  [{:keys [user-attributes]}]
-  (log/warn user-attributes)
-  (doto (User.)
-    (.setUsername (str (get user-attributes "uid") "@" (uid-domain)))
-    (.setPassword (get user-attributes "password"))
-    (.setEmail (get user-attributes "email"))
-    (.setShortUsername (get user-attributes "uid"))))
-
-(defn store-current-user
-  "Authenticates the user using validate-cas-proxy-ticket and binds
-   current-user to a new instance of org.iplantc.authn.user.User that is built
-   from the user attributes that validate-cas-proxy-ticket stores in the
-   request."
-  [handler cas-server-fn server-name-fn]
-  (validate-cas-proxy-ticket
-    (fn [request]
-      (binding [current-user (user-from-attributes request)]
-        (handler request)))
-    cas-server-fn server-name-fn))
-
-(register-bean
-  (defbean db-url
-    "The URL to use when connecting to the database."
-    (str "jdbc:" (db-subprotocol) "://" (db-host) ":" (db-port) "/" (db-name))))
-
-(register-bean
-  (defbean data-source
-    "The data source used to obtain database connections."
-    (doto (ComboPooledDataSource.)
-      (.setDriverClass (db-driver-class))
-      (.setJdbcUrl (db-url))
-      (.setUser (db-user))
-      (.setPassword (db-password)))))
-
-(register-bean
-  (defbean session-factory
-    "A factory for generating Hibernate sessions."
-    (.getObject
-      (doto (AnnotationSessionFactoryBean.)
-        (.setDataSource (data-source))
-        (.setPackagesToScan (into-array String (hibernate-packages)))
-        (.setMappingResources (into-array String (hibernate-resources)))
-        (.setHibernateProperties (as-properties
-                                   {"hibernate.dialect" (hibernate-dialect)
-                                    "hibernate.hbm2ddl.auto" "validate"
-                                    "hibernate.jdbc.batch-size" "50"}))
-        (.afterPropertiesSet)))))
-
-(register-bean
-  (defbean workflow-element-service
-    "Services used to obtain elements that are commonly shared by multiple
-     apps in the metadata model (for example, property types)."
-    (doto (WorkflowElementRetrievalService.)
-      (.setSessionFactory (session-factory)))))
-
-(register-bean
-  (defbean workflow-export-service
-    "Services used to export apps and templates from the DE."
-    (WorkflowExportService. (session-factory))))
-
-(register-bean
-  (defbean export-service
-    "Services used to determine whether or not an ap can be exported."
-    (doto (ExportService.)
-      (.setSessionFactory (session-factory)))))
-
-(register-bean
-  (defbean category-service
-    "Services used to manage app categories."
-    (doto (CategoryService.)
-      (.setSessionFactory (session-factory)))))
-
-(register-bean
-  (defbean pipeline-service
-    "Services used to manage pipelines"
-    (doto (PipelineService.)
-      (.setSessionFactory (session-factory)))))
-
-(register-bean
-  (defbean zoidberg-client
-    "The client used to communicate with Zoidberg services."
-    (doto (ZoidbergClient.)
-      (.setBaseUrl (zoidberg-base-url))
-      (.setConnectionTimeout (zoidberg-connection-timeout))
-      (.setEncoding (zoidberg-encoding)))))
-
-(register-bean
-  (defbean osm-job-request-client
-    "The client used to communicate with OSM services."
-    (doto (OsmClient.)
-      (.setBaseUrl (osm-base-url))
-      (.setBucket (osm-job-request-bucket))
-      (.setConnectionTimeout (osm-connection-timeout))
-      (.setEncoding (osm-encoding)))))
-
-(register-bean
-  (defbean user-service
-    "Services used to obtain information about a user."
-    (doto (UserService.)
-      (.setSessionFactory (session-factory))
-      (.setUserSessionService user-session-service)
-      (.setRootAnalysisGroup (workspace-root-app-group))
-      (.setDefaultAnalysisGroups (workspace-default-app-groups)))))
-
-(register-bean
-  (defbean workspace-initializer
-    "A bean that can be used to initialize a user's workspace."
-    (doto (InjectableWorkspaceInitializer.)
-      (.setUserService (user-service)))))
-
-(register-bean
-  (defbean analysis-categorization-service
-    "Services used to categorize apps."
-    (doto (AnalysisCategorizationService.)
-      (.setSessionFactory (session-factory))
-      (.setDevAnalysisGroupIndex (workspace-dev-app-group-index))
-      (.setFavoritesAnalysisGroupIndex (workspace-favorites-app-group-index))
-      (.setWorkspaceInitializer (workspace-initializer)))))
-
-(register-bean
-  (defbean analysis-listing-service
-    "Services used to list analyses."
-    (doto (AnalysisListingService.)
-      (.setSessionFactory (session-factory))
-      (.setFavoritesAnalysisGroupIndex (workspace-favorites-app-group-index))
-      (.setWorkspaceInitializer (workspace-initializer)))))
-
-(register-bean
-  (defbean template-group-service
-    "Services used to place apps in app groups."
-    (doto (TemplateGroupService.)
-      (.setSessionFactory (session-factory))
-      (.setZoidbergClient (zoidberg-client))
-      (.setUserSessionService user-session-service))))
-
-(register-bean
-  (defbean reference-genome-handler
-    "Resolves paths to named reference genomes."
-    (doto (ReferenceGenomeHandler.)
-      (.setReferenceGenomeUrlMap (reference-genomes)))))
-
-(register-bean
-  (defbean reference-sequence-handler
-    "Resolves paths to named reference sequences."
-    (doto (ReferenceSequenceHandler.)
-      (.setReferenceGenomeUrlMap (reference-genomes)))))
-
-(register-bean
-  (defbean reference-annotation-handler
-    "Resolves paths to named reference annotations."
-    (doto (ReferenceAnnotationHandler.)
-      (.setReferenceGenomeUrlMap (reference-genomes)))))
-
-(def
-  ^{:doc "A placeholder service used to clearly indicate that automatically
-          saved barcode files are no longer supported."}
-   barcode-file-handler
-  (proxy [FileTypeHandler] []
-    (getFileAccessUrl [file-id]
-      (let [msg "barcode selectors are no longer supported"]
-        (throw (IllegalArgumentException. msg))))))
-
-(register-bean
-  (defbean file-type-handlers
-    "Maps property types to file type handlers."
-    (doto (HashMap.)
-      (.put "ReferenceGenome" (reference-genome-handler))
-      (.put "ReferenceAnnotation" (reference-annotation-handler))
-      (.put "ReferenceSequence" (reference-sequence-handler))
-      (.put "BarcodeSelector" barcode-file-handler))))
-
-(register-bean
-  (defbean workflow-preview-service
-    "Handles workflow/metadactyl related previews."
-    (WorkflowPreviewService. (session-factory) (reference-genome-handler))))
-
-(register-bean
-  (defbean workflow-import-service
-    "Handles workflow/metadactyl import actions."
-    (WorkflowImportService. 
-      (session-factory) 
-      (Integer/toString (workspace-dev-app-group-index)) 
-      (Integer/toString (workspace-favorites-app-group-index)) 
-      (workspace-initializer))))
-
-(register-bean
-  (defbean analysis-deletion-service
-    "Handles workflow/metadactyl deletion actions."
-    (AnalysisDeletionService. (session-factory))))
-
-(register-bean
-  (defbean app-fetcher
-    "Retrieves apps from the database."
-    (doto (HibernateTemplateFetcher.)
-      (.setSessionFactory (session-factory))
-      (.setRefGenomeHandler (reference-genome-handler)))))
-
-(register-bean
-  (defbean notification-appender
-    "Appends UI notifications to an app."
-    (doto (NotificationAppender.)
-      (.setSessionFactory (session-factory)))))
-
-(register-bean
-  (defbean analysis-edit-service
-    "Services to make apps available for editing in Tito."
-    (doto (AnalysisEditService.)
-      (.setSessionFactory (session-factory))
-      (.setZoidbergClient (zoidberg-client))
-      (.setUserService (user-service))
-      (.setWorkflowExportService (workflow-export-service)))))
-
-(register-bean
-  (defbean analysis-retriever
-    "Used by several services to retrieve apps from the daatabase."
-    (doto (AnalysisRetriever.)
-      (.setSessionFactory (session-factory)))))
-
-(register-bean
-  (defbean rating-service
-    "Services to associate user ratings with or remove user ratings from
-     apps."
-    (doto (RatingService.)
-      (.setSessionFactory (session-factory))
-      (.setUserSessionService user-session-service)
-      (.setAnalysisRetriever (analysis-retriever)))))
-
-(register-bean
-  (defbean analysis-service
-    "Services to retrieve information about analyses that a user has
-     submitted."
-    (doto (AnalysisService.)
-      (.setSessionFactory (session-factory))
-      (.setOsmBaseUrl (osm-base-url))
-      (.setOsmBucket (osm-jobs-bucket))
-      (.setConnectionTimeout (osm-connection-timeout)))))
-
-(register-bean
-  (defbean file-info-service
-    "Services used to resolve paths to named files."
-    (doto (FileInfoService.)
-      (.setFileTypeHandlerMap (file-type-handlers)))))
-
-(register-bean
-  (defbean url-assembler
-    "Used to assemble URLs."
-    (IrodsUrlAssembler.)))
-
-(register-bean
-  (defbean experiment-runner
-    "Services to submit jobs to the JEX for execution."
-    (doto (ExperimentRunner.)
-      (.setSessionFactory (session-factory))
-      (.setFileInfo (file-info-service))
-      (.setUserService (user-service))
-      (.setExecutionUrl (jex-base-url))
-      (.setUrlAssembler (url-assembler))
-      (.setJobRequestOsmClient (osm-job-request-client)))))
-
-(register-bean
-  (defbean property-value-service
-    "Services to retrieve property values for jobs that have previously been
-     submitted."
-    (doto (PropertyValueService.)
-      (.setSessionFactory (session-factory))
-      (.setOsmClient (osm-job-request-client)))))
-
-(defn- notificationagent-url
-  "Builds a URL that can be used to connect to the notification agent."
+(defn build-metadactyl-secured-url
+  "Adds the name and email of the currently authenticated user to the secured
+   metadactyl URL with the given relative URL path."
   [relative-url]
-  (build-url (notificationagent-base-url) relative-url))
+  (add-current-user-to-url
+    (build-url (metadactyl-base-url) relative-url)))
+
+(defn build-metadactyl-unprotected-url
+  "Builds the unsecured metadactyl URL from the given relative URL path."
+  [relative-url]
+  (build-url (metadactyl-unprotected-base-url) relative-url))
 
 (defn get-workflow-elements
   "A service to get information about workflow elements."
-  [element-type]
-  (.getElements (workflow-element-service) element-type))
+  [req element-type]
+  (let [url (build-metadactyl-unprotected-url
+              (str "/get-workflow-elements/" element-type))]
+    (forward-get url req)))
+
+(defn search-deployed-components
+  "A service to search information about deployed components."
+  [req search-term]
+  (let [url (build-metadactyl-unprotected-url
+              (str "/search-deployed-components/" search-term))]
+    (forward-get url req)))
 
 (defn get-all-app-ids
   "A service to get the list of app identifiers."
-  []
-  (.getAnalysisIds (workflow-export-service)))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/get-all-analysis-ids")]
+    (forward-get url req)))
 
 (defn delete-categories
   "A service used to delete app categories."
-  [body]
-  (.deleteCategories (category-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/delete-categories")]
+    (forward-post url req)))
 
 (defn validate-app-for-pipelines
   "A service used to determine whether or not an app can be included in a
    pipeline."
-  [app-id]
-  (.validateAnalysisForPipelines (pipeline-service) app-id))
+  [req app-id]
+  (let [url (build-metadactyl-unprotected-url
+              (str "/validate-analysis-for-pipelines/" app-id))]
+    (forward-get url req)))
 
 (defn get-data-objects-for-app
   "A service used to list the data objects in an app."
-  [app-id]
-  (.getDataObjectsForAnalysis (pipeline-service) app-id))
+  [req app-id]
+  (let [url (build-metadactyl-unprotected-url
+              (str "/analysis-data-objects/" app-id))]
+    (forward-get url req)))
 
 (defn categorize-apps
   "A service used to recategorize apps."
-  [body]
-  (.categorizeAnalyses (analysis-categorization-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/categorize-analyses")]
+    (forward-post url req)))
 
 (defn get-app-categories
   "A service used to get a list of app categories."
-  [category-set]
-  (.getAnalysisCategories (analysis-categorization-service) category-set))
+  [req category-set]
+  (let [url (build-metadactyl-unprotected-url
+              (str "/get-analysis-categories/" category-set))]
+    (forward-get url req)))
 
 (defn can-export-app
   "A service used to determine whether or not an app can be exported to Tito."
-  [body]
-  (.canExportAnalysis (export-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/can-export-analysis")]
+    (forward-post url req)))
 
 (defn add-app-to-group
   "A service used to add an existing app to an app group."
-  [body]
-  (.addAnalysisToTemplateGroup (template-group-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/add-analysis-to-group")]
+    (forward-post url req)))
 
 (defn get-app
   "A service used to get an app in the format required by the DE."
-  [app-id]
-  (.appendNotificationToTemplate (notification-appender)
-    (.fetchTemplateByName (app-fetcher) app-id)))
+  [req app-id]
+  (let [url (build-metadactyl-unprotected-url (str "/get-analysis/" app-id))]
+    (forward-get url req)))
+
+(defn get-app-secured
+  "A secured service used to get an app in the format required by the DE."
+  [req app-id]
+  (let [url (build-metadactyl-secured-url (str "/template/" app-id))]
+    (forward-get url req)))
 
 (defn get-only-analysis-groups
   "Retrieves the list of public analyses."
-  [workspace-id]
-  (.listAnalysisGroups (analysis-listing-service) workspace-id))
+  [req workspace-id]
+  (let [url (build-metadactyl-unprotected-url
+              (str "/get-only-analysis-groups/" workspace-id))]
+    (forward-get url req)))
 
 (defn export-template
   "This service will export the template with the given identifier."
-  [template-id]
-  (.exportTemplate (workflow-export-service) template-id))
+  [req template-id]
+  (let [url (build-metadactyl-unprotected-url
+              (str "/export-template/" template-id))]
+    (forward-get url req)))
 
 (defn export-workflow
   "This service will export a workflow with the given identifier."
-  [app-id]
-  (.exportAnalysis (workflow-export-service) app-id))
+  [req app-id]
+  (let [url (build-metadactyl-unprotected-url
+              (str "/export-workflow/" app-id))]
+    (forward-get url req)))
+
+(defn export-deployed-components
+  "This service will export all or selected deployed components."
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/export-deployed-components")]
+    (forward-post url req)))
 
 (defn export-deployed-components
   "This service will export all or selected deployed components."
@@ -390,155 +132,189 @@
 (defn preview-template
   "This service will convert a JSON document in the format consumed by 
    the import service into the format required by the DE."
-  [body]
-  (.previewTemplate (workflow-preview-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/preview-template")]
+    (forward-post url req)))
 
 (defn preview-workflow
   "This service will convert a JSON document in the format consumed by 
    the import service into the format required by the DE."
-  [body]
-  (.previewWorkflow (workflow-preview-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/preview-workflow")]
+    (forward-post url req)))
 
 (defn import-template
   "This service will import a template into the DE."
-  [body]
-  (.importTemplate (workflow-import-service) (slurp body))
-  (empty-response))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/import-template")]
+    (forward-post url req)))
 
 (defn import-workflow
   "This service will import a workflow into the DE."
-  [body]
-  (.importWorkflow (workflow-import-service) (slurp body))
-  (empty-response))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/import-workflow")]
+    (forward-post url req)))
+
+(defn import-tools
+  "This service will import deployed components into the DE and send
+   notifications if notification information is included and the deployed
+   components are successfully imported."
+  [req]
+  (let [json-str (slurp (:body req))
+        json-obj (read-json json-str)
+        url (build-metadactyl-unprotected-url "/import-tools")]
+    (forward-post url req json-str)
+    (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
+  (success-response))
 
 (defn update-template
   "This service will either update an existing template or import a new template."
-  [body]
-  (.updateTemplate (workflow-import-service) (slurp body))
-  (empty-response))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/update-template")]
+    (forward-post url req)))
 
 (defn update-workflow
   "This service will either update an existing workflow or import a new workflow."
-  [body]
-  (.updateWorkflow (workflow-import-service) (slurp body))
-  (empty-response))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/update-workflow")]
+    (forward-post url req)))
 
 (defn force-update-workflow
   "This service will either update an existing workflow or import a new workflow.  
    Vetted workflows may be updated."
-  [body]
-  (.forceUpdateWorkflow (workflow-import-service) (slurp body))
-  (empty-response))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/force-update-workflow")]
+    (forward-post url req)))
 
 (defn delete-workflow
   "This service will logically remove a workflow from the DE."
-  [body]
-  (.deleteAnalysis (analysis-deletion-service) (slurp body))
-  (empty-response))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/delete-workflow")]
+    (forward-post url req)))
 
 (defn permanently-delete-workflow
   "This service will physically remove a workflow from the DE."
-  [body]
-  (.physicallyDeleteAnalysis (analysis-deletion-service) (slurp body))
-  (empty-response))
+  [req]
+  (let [url (build-metadactyl-unprotected-url "/permanently-delete-workflow")]
+    (forward-post url req)))
 
 (defn bootstrap
   "This service obtains information about and initializes the workspace for
    the authenticated user."
-  []
-  (object->json-str (.getCurrentUserInfo (user-service))))
+  [req]
+  (let [url (build-metadactyl-secured-url "/bootstrap")]
+    (forward-get url req)))
 
 (defn get-messages
   "This service forwards requests to the notification agent in order to
    retrieve notifications that the user may or may not have seen yet."
   [req]
-  (let [url (notificationagent-url "get-messages")]
-    (add-app-details
-      (forward-post url req (add-username-to-json req))
-      (analysis-retriever))))
+  (let [url (dn/notificationagent-url "get-messages")]
+    (dn/add-app-details
+      (forward-post url req (add-username-to-json req)))))
 
 (defn get-unseen-messages
   "This service forwards requests to the notification agent in order to
    retrieve notifications that the user hasn't seen yet."
   [req]
-  (let [url (notificationagent-url "get-unseen-messages")]
-    (add-app-details
-      (forward-post url req (add-username-to-json req))
-      (analysis-retriever))))
+  (let [url (dn/notificationagent-url "get-unseen-messages")]
+    (dn/add-app-details
+      (forward-post url req (add-username-to-json req)))))
 
 (defn delete-notifications
   "This service forwards requests to the notification agent in order to delete
    existing notifications."
   [req]
-  (let [url (notificationagent-url "delete")]
+  (let [url (dn/notificationagent-url "delete")]
     (forward-post url req (add-username-to-json req))))
+
+(defn send-notification
+  "This service forwards a notifiction to the notification agent's general
+   notification endpoint."
+  [req]
+  (let [url (dn/notificationagent-url "notification")]
+    (forward-post url req)))
 
 (defn run-experiment
   "This service accepts a job submission from a user then reformats it and
    submits it to the JEX."
-  [body workspace-id]
-  (let [json-str (add-workspace-id (slurp body) workspace-id)
-        json-obj (object->json-obj json-str)]
-    (.runExperiment (experiment-runner) json-obj))
-  (empty-response))
+  [req workspace-id]
+  (let [url (build-metadactyl-secured-url
+              (str "/workspaces/" workspace-id "/newexperiment"))]
+    (forward-put url req)))
 
 (defn get-experiments
   "This service retrieves information about jobs that a user has submitted."
-  [workspace-id]
-  (.retrieveExperimentsByWorkspaceId
-    (analysis-service) (string->long workspace-id)))
+  [req workspace-id]
+  (let [url (build-metadactyl-secured-url
+              (str "/workspaces/" workspace-id "/executions/list"))]
+    (forward-get url req)))
 
 (defn delete-experiments
   "This service marks experiments as deleted so that they no longer show up
    in the Analyses window."
-  [body workspace-id]
-  (let [json-str (add-workspace-id (slurp body) workspace-id)]
-    (.deleteExecutionSet (analysis-service) (object->json-obj json-str)))
-  (empty-response))
+  [req workspace-id]
+  (let [url (build-metadactyl-secured-url
+              (str "/workspaces/" workspace-id "/executions/delete"))]
+    (forward-put url req)))
 
 (defn rate-app
   "This service adds a user's rating to an app."
-  [body]
-  (.rateAnalysis (rating-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-secured-url "/rate-analysis")]
+    (forward-post url req)))
 
 (defn delete-rating
   "This service removes a user's rating from an app."
-  [body]
-  (.deleteRating (rating-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-secured-url "/delete-rating")]
+    (forward-post url req)))
 
 (defn search-apps
   "This service searches for apps based on a search term."
-  [search-term]
-  (.searchAnalyses (analysis-listing-service) search-term))
+  [req search-term]
+  (let [url (build-metadactyl-secured-url
+              (str "/search-analyses/" search-term))]
+    (forward-get url req)))
 
 (defn list-apps-in-group
   "This service lists all of the apps in an app group and all of its
    descendents."
-  [app-group-id]
-  (.listAnalysesInGroup (analysis-listing-service) app-group-id))
+  [req app-group-id]
+  (let [url (build-metadactyl-secured-url
+              (str "/get-analyses-in-group/" app-group-id))]
+    (forward-get url req)))
 
 (defn update-favorites
   "This service adds apps to or removes apps from a user's favorites list."
-  [body]
-  (.updateFavorite (analysis-categorization-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-secured-url "/update-favorites")]
+    (forward-post url req)))
 
 (defn edit-app
   "This service makes an app available in Tito for editing."
-  [app-id]
-  (.prepareAnalysisForEditing (analysis-edit-service) app-id))
+  [req app-id]
+  (let [url (build-metadactyl-secured-url
+              (str "/edit-template/" app-id))]
+    (forward-get url req)))
 
 (defn copy-app
   "This service makes a copy of an app available in Tito for editing."
-  [app-id]
-  (.copyAnalysis (analysis-edit-service) app-id))
+  [req app-id]
+  (let [url (build-metadactyl-secured-url
+              (str "/copy-template/" app-id))]
+    (forward-get url req)))
 
 (defn make-app-public
   "This service copies an app from a user's private workspace to the public
    workspace."
-  [body]
-  (.makeAnalysisPublic (template-group-service) (slurp body)))
+  [req]
+  (let [url (build-metadactyl-secured-url "/make-analysis-public")]
+    (forward-post url req)))
 
 (defn get-property-values
   "Gets the property values for a previously submitted job."
-  [job-id]
-  (.getPropertyValues (property-value-service) job-id))
+  [req job-id]
+  (let [url (build-metadactyl-unprotected-url
+              (str "/get-property-values/" job-id))]
+    (forward-get url req)))

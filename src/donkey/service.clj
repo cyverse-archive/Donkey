@@ -9,19 +9,22 @@
 (defn empty-response []
   {:status 200})
 
-(defn success-response [map]
-  {:status 200
-   :body (json-str (merge {:success true} map))
-   :content-type json-content-type})
+(defn success-response
+  ([]
+    (success-response {}))
+  ([map]
+    {:status 200
+     :body (json-str (merge {:success true} map))
+     :content-type json-content-type}))
 
 (defn failure-response [e]
-  (log/error e "internal error")
+  (log/error e "bad request")
   {:status 400
    :body (json-str {:success false :reason (.getMessage e)})
    :content-type json-content-type})
 
 (defn error-response [e]
-  (log/error e "bad request")
+  (log/error e "internal error")
   {:status 500
    :body (json-str {:success false :reason (.getMessage e)})
    :content-type json-content-type})
@@ -39,10 +42,13 @@
 
 (defn prepare-forwarded-request
   "Prepares a request to be forwarded to a remote service."
-  [request body]
+  ([request body]
   {:content-type (get-in request [:headers :content-type])
    :headers (dissoc (:headers request) "content-length" "content-type")
-   :body body})
+   :body body
+   :throw-exceptions false})
+
+  ([request] (prepare-forwarded-request request nil)))
 
 (defn forward-get
   "Forwards a GET request to a remote service."
@@ -51,13 +57,17 @@
 
 (defn forward-post
   "Forwards a POST request to a remote service."
-  [url request body]
-  (client/post url (prepare-forwarded-request request body)))
+  ([url request]
+    (forward-post url request (slurp (:body request))))
+  ([url request body]
+    (client/post url (prepare-forwarded-request request body))))
 
 (defn forward-put
   "Forwards a PUT request to a remote service."
-  [url request body]
-  (client/put url (prepare-forwarded-request request body)))
+  ([url request]
+    (forward-put url request (slurp (:body request))))
+  ([url request body]
+    (client/put url (prepare-forwarded-request request body))))
 
 (defn forward-delete
   "Forwards a DELETE request to a remote service."

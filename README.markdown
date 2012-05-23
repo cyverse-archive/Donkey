@@ -26,57 +26,12 @@ Here's an example configuration file:
 # Connection details.
 donkey.app.listen-port = 8888
 
-# Database settings.
-donkey.db.driver      = org.postgresql.Driver
-donkey.db.subprotocol = postgresql
-donkey.db.host        = hostname.iplantcollaborative.org
-donkey.db.port        = 5432
-donkey.db.name        = database
-donkey.db.user        = user
-donkey.db.password    = password
-
-# Hibernate resource definition files.
-donkey.hibernate.resources = template-mapping.hbm.xml, \
-                             notifications.hbm.xml, \
-                             workflow.hbm.xml
-
-# Java packages containing classes with JPA Annotations.
-donkey.hibernate.packages = org.iplantc.persistence.dto.step, \
-                            org.iplantc.persistence.dto.transformation, \
-                            org.iplantc.persistence.dto.data, \
-                            org.iplantc.persistence.dto.workspace, \
-                            org.iplantc.persistence.dto.user, \
-                            org.iplantc.persistence.dto.components, \
-                            org.iplantc.persistence.dto.listing, \
-                            org.iplantc.workflow.core
-
-# The Hibernate dialect to use.
-donkey.hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect
-
-# Zoidberg connection settings.
-donkey.zoidberg.base-url           = http://hostname.iplantcollaborative.org:8888
-donkey.zoidberg.connection-timeout = 5000
-donkey.zoidberg.encoding           = UTF-8
-
-# OSM connection settings.
-donkey.osm.base-url           = http://hostname.iplantcollaborative.org:8888
-donkey.osm.connection-timeout = 5000
-donkey.osm.encoding           = UTF-8
-donkey.osm.jobs-bucket        = jobs
-donkey.osm.job-request-bucket = job_requests
-
-# JEX connection settings.
-donkey.jex.base-url = http://hostname.iplantcollaborative.org:8888
+# Metadactyl connection settings
+donkey.metadactyl.base-url = http://hostname.iplantcollaborative.org:8888/metadactyl/secured
+donkey.metadactyl.unprotected-base-url = http://hostname.iplantcollaborative.org:8888/metadactyl
 
 # Notification agent connection settings.
-donkey.notificationagent.base-url = http://hostname.iplantcollaborative.org:8888
-
-# Workspace app group names.
-donkey.workspace.root-app-group            = Workspace
-donkey.workspace.default-app-groups        = [ "Applications Under Development", \
-                                               "Favorite Applications" ]
-donkey.workspace.dev-app-group-index       = 0
-donkey.workspace.favorites-app-group-index = 1
+donkey.notificationagent.base-url = http://hostname.iplantcollaborative.org:8888/notificationagent
 
 # CAS Settings
 donkey.cas.cas-server  = https://hostname.iplantcollaborative.org/cas/
@@ -84,10 +39,14 @@ donkey.cas.server-name = http://hostname.iplantcollaborative.org:8888
 
 # The domain name to append to the user id to get the fully qualified user id.
 donkey.uid.domain = iplantcollaborative.org
+
+# User session settings
+donkey.sessions.base-url = http://hostname.iplantcollaborative.org:8888/sessions/
+donkey.sessions.bucket = sessions
 ```
 
-Generally, the database and service connection settings will have to be
-updated for each deployment.
+Generally, the service connection settings will have to be updated for each
+deployment.
 
 ### Zookeeper Connection Information
 
@@ -105,10 +64,6 @@ looks like this by default:
 
 ```properties
 log4j.rootLogger=WARN, A
-
-# Uncomment these lines to enable debugging for iPlant classes.
-# log4j.category.org.iplantc=DEBUG, A
-# log4j.additivity.org.iplantc=false
 
 # Uncomment these lines to enable debugging in Donkey itself.
 # log4j.category.donkey=DEBUG, A
@@ -145,13 +100,6 @@ log4j.appender.A.MaxFileSize=10MB
 log4j.appender.A.MaxBackupIndex=1
 ```
 
-The most useful configuration change here is to enable debugging for iPlant
-classes, which can be done by uncommenting two lines.  In rare cases, it may
-be helpful to enable debugging in Donkey and iPlant Clojure Commons.  Most of
-the logic in Donkey is implemented in Java classes that are underneath the
-org.iplantc package, however, so enabling debugging for those classes will be
-the most helpful.
-
 See the [log4j documentation](http://logging.apache.org/log4j/1.2/manual.html)
 for additional logging configuration instructions.
 
@@ -162,8 +110,8 @@ platform for hosting services.  Donkey services are defined using Compojure, a
 framework for creating web services in Clojure.  Each service matches a
 specific HTTP method and URL pattern, which causes one or more function calls
 to be performed.  The services themselves are defined in the file `core.clj`
-and, in most cases, the functions that actually implement the services are
-defined in the file `metadactyl.clj`.
+and, in most cases, Donkey forwards these requests to services defined in files
+named for their corresponding service.
 
 ### Security
 
@@ -176,13 +124,11 @@ authentication.  This service can be accessed using the URL,
 refers to a service ticket string that has been obtained from CAS.
 
 Secured services can be distinguished from unsecured services by looking at
-the source code (or this document).  All endpoints are defined in the file,
-`core.clj`.  Endpoints defined with GET, POST, PUT, DELETE, HEAD and ANY
-macros are not secured.  Endpoints defined with FILTERED-GET, FILTERED-POST,
-FILTERED-PUT, FILTERED-DELETE, FILTERED-HEAD and FILTERED-ANY macros are
-secured.  In the documentation below, services that are not secured will be
-labeled as unsecured endpoints and services that are secured will be labeled
-as secured endpoints.
+the path in the URL.  The paths for all secured endpoints begin with
+`/secured` whereas the paths for all other endpoints do not.  In the
+documentation below, services that are not secured will be labeled as
+unsecured endpoints and services that are secured will be labeled as secured
+endpoints.
 
 If authentication or authorization fails for a secured service then an HTTP
 401 (unauthorized) status will result, and there will be no response body,
@@ -734,7 +680,7 @@ $ curl -s http://by-tor:8888/analysis-data-objects/19F78CC1-7E14-481B-9D80-85EBC
 
 #### Categorizing Analyses
 
-Unsecured Endpoint: POST /categorize_analyses
+Unsecured Endpoint: POST /categorize-analyses
 
 When services are exported and re-imported, the analysis categorization
 information also needs to be exported and re-imported.  This service allows
@@ -1475,9 +1421,134 @@ existing analysis.  To overwrite an existing analysis, please use the
 see the (Tool Integration Services wiki
 page)[https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services].
 
+### Importing Deployed Components
+
+Unsecured Endpoint: POST /import-tools
+
+This service is an extension of the /import-workflow endpoint that also sends
+a notification for every deployed component that is imported provided that a
+username and e-mail address is provided for the notification.  The request
+body should be in the following format:
+
+```json
+{
+    "components": [
+        {
+            "name": component-name,
+            "location": component-location,
+            "implementation": {
+                "implementor_email": e-mail-address-of-implementor,
+                "implementor": name-of-implementor,
+                "test": {
+                    "params": [
+                        param-1,
+                        param-2,
+                        ...,
+                        param-n
+                    ],
+                    "input_files": [
+                        input-file-1,
+                        input-file-2,
+                        ...,
+                        input-file-n
+                    ],
+                    "output_files": [
+                        output-file-1,
+                        output-file-2,
+                        ...,
+                        output-file-n
+                    ]
+                }
+            },
+            "type": deployed-component-type,
+            "description": deployed-component-description,
+            "version": deployed-component-version,
+            "attribution": deployed-component-attribution,
+            "user": username-for-notification,
+            "email": e-mail-address-for-notification
+        }
+    ]
+}
+```
+
+Note that this format is identical to the one used by the /import-workflow
+endpoint except that the `user` and `email` fields have been added to allow
+notifications to be generated automatically.  If either of these fields is
+missing or empty, a notification will not be sent even if the deployed
+component is imported successfully.
+
+The response body for this service contains a success flag along with a brief
+description of the reason for the failure if the deployed components can't be
+imported.
+
+Here's an example of a successful import:
+
+```
+$ curl -sd '
+{
+    "components": [
+        {
+            "name": "foo",
+            "location": "/usr/local/bin",
+            "implementation": {
+                "implementor_email": "nobody@iplantcollaborative.org",
+                "implementor": "Nobody",
+                "test": {
+                    "params": [],
+                    "input_files": [],
+                    "output_files": []
+                }
+            },
+            "type": "executable",
+            "description": "the foo is in the bar",
+            "version": "1.2.3",
+            "attribution": "the foo needs no attribution",
+            "user": "nobody",
+            "email": "nobody@iplantcollaborative.org"
+        }
+    ]
+}
+' http://by-tor:8888/import-tools | python -mjson.tool
+{
+    "success": true
+}
+```
+
+Here's an example of an unsuccessful import:
+
+```
+$ curl -sd '
+{
+    "components": [
+        {
+            "name": "foo",
+            "location": "/usr/local/bin",
+            "implementation": {
+                "implementor_email": "nobody@iplantcollaborative.org",
+                "implementor": "Nobody"
+            },
+            "type": "executable",
+            "description": "the foo is in the bar",
+            "version": "1.2.3",
+            "attribution": "the foo needs no attribution",
+            "user": "nobody",
+            "email": "nobody@iplantcollaborative.org"
+        }
+    ]
+}
+' http://localhost:3000/import-tools | python -mjson.tool
+{
+    "reason": "org.json.JSONException: JSONObject[\"test\"] not found.", 
+    "success": false
+}
+```
+
+Though it is possible to import analyses using this endpoint, this practice is
+not recommended because it can cause spurious notifications to be sent.
+
 #### Obtaining Property Values for a Previously Executed Job
 
-Unsecured Endpoint: GET "/get-property-values/{job-id}"
+Unsecured Endpoint: GET /get-property-values/{job-id}
 
 This service obtains the property values that were passed to a job that has
 already been executed so that the user can see which values were passed to the
@@ -1586,7 +1657,7 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
 
 #### Initializing a User's Workspace
 
-Secured Endpoint: GET /bootstrap
+Secured Endpoint: GET /secured/bootstrap
 
 The DE calls this service as soon as the user logs in.  If the user has never
 logged in before then the service initializes the user's workspace and returns
@@ -1603,7 +1674,7 @@ in the following format:
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/bootstrap?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "workspaceId": "4"
 }
@@ -1614,6 +1685,8 @@ CAS service ticket.  All secured services in Donkey require the CAS service
 ticket to be sent to the service in the `proxyToken` query-string parameter.
 
 #### Obtaining Notifications
+
+Secured Endpoint: GET /secured/notifications/get-messages
 
 Notifications in the DE are used to inform users when the status of a job has
 changed.  This service provides a way for the DE to retrieve notifications
@@ -1684,7 +1757,7 @@ Both of these notification types have the same payload format:
 Here's an example:
 
 ```
-$ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -sd '{"limit":1}' "http://by-tor:8888/secured/notifications/get-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "messages": [
         {
@@ -1721,7 +1794,7 @@ $ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-messages?proxyTok
 
 #### Obtaining Unseen Notifications
 
-Secured Endpoint: POST /notifications/get-unseen-messages
+Secured Endpoint: POST /secured/notifications/get-unseen-messages
 
 This service is equivalent to calling the `/notifications/get-messages`
 service and specifying a `seen` flag of `false`.  If the user has already seen
@@ -1730,7 +1803,7 @@ notification before) then no notifications will be returned.  Here's an
 example:
 
 ```
-$ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-unseen-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -sd '{"limit":1}' "http://by-tor:8888/secured/notifications/get-unseen-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "messages": []
 }
@@ -1738,7 +1811,7 @@ $ curl -sd '{"limit":1}' "http://by-tor:8888/notifications/get-unseen-messages?p
 
 #### Marking Notifications as Deleted
 
-Secured Endpoint: POST /notifications/delete
+Secured Endpoint: POST /secured/notifications/delete
 
 Users may wish to dismiss notifications that they've already seen.  This
 service marks one or more notifications as deleted so that neither the
@@ -1766,7 +1839,7 @@ $ curl -sd '
         "C15763CF-A5C9-48F5-BE4F-9FB3CB1897EB"
     ]
 }
-' http://by-tor:8888/notifications/delete
+' http://by-tor:8888/secured/notifications/delete
 ```
 
 Note that the UUIDs provided in the request body must be obtained from the
@@ -1774,7 +1847,7 @@ Note that the UUIDs provided in the request body must be obtained from the
 
 #### Getting Analyses in the JSON Format Required by the DE
 
-Secured Endpoint: GET /template/{analysis-id}
+Secured Endpoint: GET /secured/template/{analysis-id}
 
 This service is the secured version of the `/get-analyis` endpoint.  The
 response body for this service is in the following format:
@@ -1829,7 +1902,7 @@ response body for this service is in the following format:
 Here's an example:
 
 ```
-curl -s "http://by-tor:8888/template/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C?proxyToken=$(cas-ticket)" | python -mjson.tool
+curl -s "http://by-tor:8888/secured/template/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "groups": [
         {
@@ -1864,7 +1937,7 @@ curl -s "http://by-tor:8888/template/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C?proxyT
 
 #### Submitting a Job for Execution
 
-Secured Endpoint: PUT /workspaces/{workspace-id}/newexperiment
+Secured Endpoint: PUT /secured/workspaces/{workspace-id}/newexperiment
 
 The DE uses this service to submit jobs for execution on behalf of the user.
 The request body is in the following format:
@@ -1919,12 +1992,12 @@ $ curl -X PUT -sd '
     "description": ""
 }
 '
-"http://by-tor:8888/workspaces/4/newexperiment?proxyToken=$(cas-ticket)"
+"http://by-tor:8888/secured/workspaces/4/newexperiment?proxyToken=$(cas-ticket)"
 ```
 
 #### Listing Jobs
 
-Secured Endpoint: GET /workspaces/{workspace-id}/executions/list
+Secured Endpoint: GET /secured/workspaces/{workspace-id}/executions/list
 
 Information about the status of jobs that have previously been submitted for
 execution can be obtained using this service.  The DE uses this service to
@@ -1955,7 +2028,7 @@ following format:
 Here's an example:
 
 ```
-$ curl -s http://by-tor:8888/workspaces/4/executions/list?proxyToken=$(cas-ticket) | python -mjson.tool
+$ curl -s http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket) | python -mjson.tool
 {
     "analyses": [
         {
@@ -1978,7 +2051,7 @@ $ curl -s http://by-tor:8888/workspaces/4/executions/list?proxyToken=$(cas-ticke
 
 #### Deleting Jobs
 
-Secured Endpoint: PUT /workspaces/{workspace-id}/executions/delete
+Secured Endpoint: PUT /secured/workspaces/{workspace-id}/executions/delete
 
 After a job has completed, a user may not want to view the job status
 information in the _Analyses_ window any longer.  This service provides a way
@@ -2016,12 +2089,12 @@ $ curl -X PUT -sd '
         "FOO"
     ]
 }
-' "http://by-tor:8888/workspaces/4/executions/delete?proxyToken=$(cas-ticket)"
+' "http://by-tor:8888/secured/workspaces/4/executions/delete?proxyToken=$(cas-ticket)"
 ```
 
 #### Rating Analyses
 
-Secured Endpoint: POST /rate-analysis
+Secured Endpoint: POST /secured/rate-analysis
 
 Users have the ability to rate an analysis for its usefulness, and this
 service provides the means to store the analysis rating.  This service accepts
@@ -2056,7 +2129,7 @@ $ curl -sd '
     "rating": 4,
     "comment_id": 27
 }
-' "http://by-tor:8888/rate-analysis?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/rate-analysis?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "avg": 4
 }
@@ -2064,7 +2137,7 @@ $ curl -sd '
 
 #### Deleting Analysis Ratings
 
-Secured Endpoint: POST /delete-rating
+Secured Endpoint: POST /secured/delete-rating
 
 The DE uses this service to remove a rating that a user has previously made.
 This service accepts an analysis identifier in a JSON request body and deletes
@@ -2093,7 +2166,7 @@ $ curl -sd '
 {
     "analysis_id": "a65fa62bcebc0418cbb947485a63b30cd"
 }
-' "http://by-tor:8888/delete-rating?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/delete-rating?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "avg": 0
 }
@@ -2101,7 +2174,7 @@ $ curl -sd '
 
 #### Searching for Analyses
 
-Secured Endpoint: GET /search-analyses/{search-term}
+Secured Endpoint: GET /secured/search-analyses/{search-term}
 
 This service allows users to search for analyses based on a part of the
 analysis name.  The response body is in the following format:
@@ -2132,7 +2205,7 @@ analysis name.  The response body is in the following format:
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/search-analyses/ranger?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/search-analyses/ranger?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "templates": [
         {
@@ -2156,7 +2229,7 @@ $ curl -s "http://by-tor:8888/search-analyses/ranger?proxyToken=$(cas-ticket)" |
 
 #### Listing Analyses in an Analysis Group
 
-Secured Endpoint: GET /get-analyses-in-group/{group-id}
+Secured Endpoint: GET /secured/get-analyses-in-group/{group-id}
 
 This service lists all of the analyses within an analysis group or any of its
 descendents.  The DE uses this service to obtain the list of analyses when a
@@ -2212,7 +2285,7 @@ service is in the following format:
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "description": "", 
     "id": "C3DED4E2-EC99-4A54-B0D8-196112D1BB7B", 
@@ -2258,7 +2331,7 @@ $ curl -s "http://by-tor:8888/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12
 
 #### Listing Analyses that may be Included in a Pipeline
 
-Secured Endpoint: GET /list-analyses-for-pipeline/{group-id}
+Secured Endpoint: GET /secured/list-analyses-for-pipeline/{group-id}
 
 This service is an alias for the `/get-analyses-in-group/{group-id}` service.
 At one time, this was a different service that returned additional information
@@ -2269,7 +2342,7 @@ for backward compatibility.
 
 #### Updating the Favorite Analyses List
 
-Secured Endpoint: POST /update-favorites
+Secured Endpoint: POST /secured/update-favorites
 
 Analyses can be marked as favorites in the DE, which allows users to access
 them without having to search.  This service is used to add or remove analyses
@@ -2304,7 +2377,7 @@ $ curl -sd '
     "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
     "user_favorite": true
 }
-' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
 }
@@ -2317,7 +2390,7 @@ $ curl -sd '
     "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
     "user_favorite": true
 }
-' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "reason": "analysis, F99526B9-CC88-46DA-84B3-0743192DCB7B, is already a favorite", 
     "success": false
@@ -2331,7 +2404,7 @@ $ curl -sd '
     "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
     "user_favorite": false
 }
-' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
 }
@@ -2344,7 +2417,7 @@ $ curl -sd '
     "analysis_id": "FOO",          
     "user_favorite": false
 }
-' "http://by-tor:8888/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
+' "http://by-tor:8888/secured/update-favorites?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "reason": "analysis, FOO not found", 
     "success": false
@@ -2353,7 +2426,7 @@ $ curl -sd '
 
 #### Making an Analysis Available for Editing in Tito
 
-Secured Endpoint: GET /edit-template/{analysis-id}
+Secured Endpoint: GET /secured/edit-template/{analysis-id}
 
 This service can be used to make an analysis available for editing in Tito.
 If the user already owns the analysis then this service merely makes ensures
@@ -2371,14 +2444,14 @@ which may be different from the analysis identifier that was provided:
 Here are some examples:
 
 ```
-$ curl -s "http://by-tor:8888/edit-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
+$ curl -s "http://by-tor:8888/secured/edit-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
 {
     "analysis_id": "DED7E03E-B011-4F3E-8750-3F903FB28137"
 }
 ```
 
 ```
-$ curl -s "http://by-tor:8888/edit-template/DED7E03E-B011-4F3E-8750-3F903FB28137?proxyToken=$(cas-ticket)" | python -m json.tool
+$ curl -s "http://by-tor:8888/secured/edit-template/DED7E03E-B011-4F3E-8750-3F903FB28137?proxyToken=$(cas-ticket)" | python -m json.tool
 {
     "analysis_id": "DED7E03E-B011-4F3E-8750-3F903FB28137"
 }
@@ -2386,7 +2459,7 @@ $ curl -s "http://by-tor:8888/edit-template/DED7E03E-B011-4F3E-8750-3F903FB28137
 
 #### Making a Copy of an Analysis Available for Editing in Tito
 
-Secured Endpoint: GET /copy-template/{analysis-id}
+Secured Endpoint: GET /secured/copy-template/{analysis-id}
 
 This service can be used to make a copy of an analysis available for editing
 in Tito.  The only difference between this service and the
@@ -2395,7 +2468,7 @@ copy of an existing analysis, even if the user already owns the analysis.
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
+$ curl -s "http://by-tor:8888/secured/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
 {
     "analysis_id": "13FF6D0C-F6F7-4ACE-A6C7-635A17826383"
 }
@@ -2403,7 +2476,7 @@ $ curl -s "http://by-tor:8888/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5
 
 #### Submitting an Analysis for Public Use
 
-Secured Endpoint: POST /make-analysis-public
+Secured Endpoint: POST /secured/make-analysis-public
 
 This service can be used to submit a private analysis for public use.  The
 user supplies basic information about the analysis and a suggested location
@@ -2458,6 +2531,34 @@ $ curl -sd '
     "desc": "The foo is in the bar.",
     "wiki_url": "https://wiki.iplantcollaborative.org/docs/Foo+Foo"
 }
-' http://by-tor:8888/make-analysis-public?proxyToken=$(cas-ticket)
+' http://by-tor:8888/secured/make-analysis-public?proxyToken=$(cas-ticket)
 {}
+```
+
+### Saving User Session Data
+
+Secured Endpoint: POST /secured/sessions
+
+This service can be used to save arbitrary user session information.  The post
+body is stored as-is and can be retrieved by sending an HTTP GET request to
+the same URL.
+
+Here's an example:
+
+```
+$ curl -sd data http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)
+```
+
+### Retrieving User Session Data
+
+Secured Endpoint: GET /secured/sessions
+
+This service can be used to retrieve user session information that was
+previously saved by sending a POST request to the same service.
+
+Here's an example:
+
+```
+$ curl http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)
+data
 ```
