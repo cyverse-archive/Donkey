@@ -181,8 +181,9 @@
 (defn load-configuration
   "Loads the configuration properties from Zookeeper."
   []
+  (println "zk-url =" zk-url)
   (cl/with-zk
-    zk-url
+    (zk-url)
     (when (not (cl/can-run?))
       (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
       (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
