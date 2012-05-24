@@ -9,6 +9,7 @@
 /.lein-deps-sum
 /.classpath
 /.project
+/target
 /donkey
 /donkey.spec
 /donkey*.tar.gz
