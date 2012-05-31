@@ -5,6 +5,7 @@
         [donkey.config]
         [donkey.metadactyl]
         [donkey.service]
+        [donkey.sharing]
         [donkey.user-attributes]
         [donkey.user-info]
         [donkey.user-sessions]
@@ -97,6 +98,9 @@
 
   (POST "/remove-collaborators" [:as req]
         (trap #(remove-collaborators req)))
+
+  (POST "/share" [:as req]
+        (trap #(share req)))
 
   (route/not-found (unrecognized-path-response)))
 
