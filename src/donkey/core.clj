@@ -86,6 +86,15 @@
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
 
+  (GET "/collaborators" [:as req]
+       (trap #(get-collaborators req)))
+
+  (POST "/collaborators" [:as req]
+        (trap #(add-collaborators req)))
+
+  (POST "/remove-collaborators" [:as req]
+        (trap #(remove-collaborators req)))
+
   (route/not-found (unrecognized-path-response)))
 
 (defroutes donkey-routes

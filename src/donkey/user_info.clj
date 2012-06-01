@@ -69,5 +69,27 @@
   ([search-string start end]
     (let [results (map #(% search-string start end) search-fns)
           users (remove-duplicates (apply concat (map #(:users %) results)))
-          truncated (if (some #(:truncated %) results) true false)]
+          truncated (if (some :truncated results) true false)]
       (json-str {:users users :truncated truncated}))))
+
+(defn empty-user-info
+  "Returns an empty user-info record for the given username."
+  [username]
+  {:email     ""
+   :firstname ""
+   :id        -1
+   :lastname  ""
+   :username  username})
+
+(defn get-user-details
+  "Performs a user search for a single username."
+  [username]
+  (try
+    (let [info (first (filter #(= (:username %) username)
+                              (search "username" username 0 100)))]
+      (when (nil? info)
+        (log/warn (str "no user info found for username '" username "'")))
+      (empty-user-info username))
+    (catch Exception e
+      (log/error e (str "username search for '" username "' failed"))
+      (empty-user-info username))))

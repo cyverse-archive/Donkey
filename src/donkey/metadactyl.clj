@@ -1,9 +1,10 @@
 (ns donkey.metadactyl
-  (:use [clojure.data.json :only [read-json]]
+  (:use [clojure.data.json :only [read-json json-str]]
         [donkey.config]
         [donkey.service]
         [donkey.transformers]
-        [donkey.user-attributes])
+        [donkey.user-attributes]
+        [donkey.user-info :only [get-user-details]])
   (:require [clojure.tools.logging :as log]
             [donkey.notifications :as dn]))
 
@@ -155,10 +156,10 @@
    notifications if notification information is included and the deployed
    components are successfully imported."
   [req]
-  (let [json-str (slurp (:body req))
-        json-obj (read-json json-str)
+  (let [json-string (slurp (:body req))
+        json-obj    (read-json json-string)
         url (build-metadactyl-unprotected-url "/import-tools")]
-    (forward-post url req json-str)
+    (forward-post url req json-string)
     (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
   (success-response))
 
@@ -313,3 +314,42 @@
   (let [url (build-metadactyl-unprotected-url
               (str "/get-property-values/" job-id))]
     (forward-get url req)))
+
+(defn- add-user-details
+  "Adds user details to the results from a request to obtain a list of
+   collaborators."
+  [{:keys [users]}]
+  {:users (map get-user-details users)})
+
+(defn get-collaborators
+  "Gets the list of collaborators from metadactyl and retrieves detailed
+   information from Trellis."
+  [req]
+  (let [url      (build-metadactyl-secured-url "/collaborators")
+        response (forward-get url req)
+        status   (:status response)]
+    (if-not (or (< status 200) (> status 299))
+      (success-response (add-user-details (read-json (:body response))))
+      response)))
+
+(defn- extract-usernames
+  "Extracts the usernames from the request body for the services to add and
+   remove collaborators."
+  [{:keys [users]}]
+  {:users (map :username users)})
+
+(defn add-collaborators
+  "Adds users to the list of collaborators for the current user."
+  [req]
+  (let [url   (build-metadactyl-secured-url "/collaborators")
+        body  (slurp (:body req))
+        users (json-str (extract-usernames (read-json body)))]
+    (forward-post url req users)))
+
+(defn remove-collaborators
+  "Adds users to the list of collaborators for the current user."
+  [req]
+  (let [url   (build-metadactyl-secured-url "/remove-collaborators")
+        body  (slurp (:body req))
+        users (json-str (extract-usernames (read-json body)))]
+    (forward-post url req users)))
