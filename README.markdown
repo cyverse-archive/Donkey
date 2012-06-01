@@ -2563,6 +2563,27 @@ $ curl http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)
 data
 ```
 
+### Removing User Seession Data
+
+Secured Endpoint: DELETE /secured/sessions
+
+This service can be used to remove saved user session information.  This is
+helpful in cases where the user's session is in an unusable state and saving
+the session information keeps all of the user's future sessions in an unusable
+state.
+
+Here's an example:
+
+```
+$ curl -XDELETE http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket) | python -mjson.tool
+{
+    "success": true
+}
+```
+
+An attempt to remove session data that doesn't already exist will be silently
+ignored.
+
 ### Listing Collaborators
 
 Secured Endpoint: GET /secured/collaborators
