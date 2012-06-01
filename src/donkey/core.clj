@@ -83,6 +83,9 @@
   (POST "/sessions" [:as {body :body}]
         (trap #(user-session (slurp body))))
 
+  (DELETE "/sessions" []
+          (trap #(remove-session)))
+
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
 

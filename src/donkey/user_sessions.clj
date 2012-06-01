@@ -18,7 +18,7 @@
 (defn user-session
   ([]
     (let [user (:username current-user)]
-      (log/warn (str "user-session: GET " (key-url user)))
+      (log/debug (str "user-session: GET " (key-url user)))
       (let [resp (cl/get (key-url user) {:throw-exceptions false})]
         (cond
           (= 200 (:status resp)) (:body resp)
@@ -28,7 +28,7 @@
 
   ([new-session]
     (let [user (:username current-user)]
-      (log/warn (str "user-session: POST " (key-url user) " " new-session))
+      (log/debug (str "user-session: POST " (key-url user) " " new-session))
       (let [resp (cl/post 
                    (key-url user) 
                    {:content-type :json :body new-session} 
@@ -37,3 +37,15 @@
           (= 200 (:status resp)) (:body resp)
           :else                  (throw+ {:error_code ERR_REQUEST_FAILED 
                                           :body (:body resp)}))))))
+
+(defn remove-session
+  "Removes user session information from the Riak cluster."
+  []
+  (let [user (:username current-user)
+        url  (key-url user)
+        _    (log/debug "user-session: DELETE" url)
+        resp (cl/delete url {:throw-exceptions false})]
+    (if-not (<= 200 (:status resp) 299)
+      (throw+ {:error_code ERR_REQUEST_FAILED
+               :body (:body resp)})
+      (:body resp))))
