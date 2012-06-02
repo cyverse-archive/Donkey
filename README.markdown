@@ -2851,3 +2851,63 @@ The service will response with a success or failure message per user-resource pa
 }
 ```
 
+### Unsharing User Data
+
+Secured Endpoint: POST /secured/unshare
+
+This service can be used to unshare a user's files and folders with other users.
+
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "unshare": [
+        {
+            "path": "/path/to/shared/file1",
+            "users": [
+                "shared-with-user"
+            ]
+        },
+        {
+            "path": "/path/to/shared/folder1",
+            "users": [
+                "shared-with-user"
+            ]
+        }
+    ]
+}
+' http://by-tor:8888/secured/unshare?proxyToken=$(cas-ticket)
+```
+
+The service will respond with a success or failure message per resource:
+
+```
+{
+    "unshare": [
+        {
+            "path": "/path/to/shared/file1",
+            "success": true,
+            "users": [
+                "shared-with-user"
+            ]
+        },
+        {
+            "error": {
+                "action": "unshare",
+                "error_code": "ERR_DOES_NOT_EXIST",
+                "paths": [
+                    "/path/to/shared/folder1"
+                ],
+                "status": "failure"
+            },
+            "path": "/path/to/shared/folder1",
+            "success": false,
+            "users": [
+                "shared-with-user"
+            ]
+        }
+    ]
+}
+```
+

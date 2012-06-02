@@ -102,6 +102,9 @@
   (POST "/share" [:as req]
         (trap #(share req)))
 
+  (POST "/unshare" [:as req]
+        (trap #(unshare req)))
+
   (route/not-found (unrecognized-path-response)))
 
 (defroutes donkey-routes

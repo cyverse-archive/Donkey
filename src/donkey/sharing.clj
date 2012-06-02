@@ -20,6 +20,12 @@
    :users (list (:user user_perms)),
    :permissions (:permissions user_perms)})
 
+(defn unshare-obj->nibb-unshare-req
+  "Builds a Nibblonian unshare request object from an unshare object."
+  [unshare]
+  {:paths (list (:path unshare)),
+   :users (:users unshare)})
+
 (defn foward-nibblonian-share
   "Forwards a Nibblonian share request."
   [path user_perms]
@@ -34,6 +40,22 @@
       (merge {:success false,
               :error (read-json (:body e))}
              user_perms))))
+
+(defn foward-nibblonian-unshare
+  "Parses an unshare object, which contains a path and a list of users,
+   forwarding the path-users request to Nibblonian."
+  [unshare]
+  (try+
+    (client/post (nibblonian-url "unshare")
+                 {:content-type json-content-type
+                  :body (json-str (unshare-obj->nibb-unshare-req unshare))
+                  :throw-entire-message? true})
+    (merge {:success true} unshare)
+    (catch map? e
+      (log/error "nibblonian error: " e)
+      (merge {:success false,
+              :error (read-json (:body e))}
+             unshare))))
 
 (defn walk-share
   "Parses a share object, which contains a path and a list of users with
@@ -50,3 +72,13 @@
   [req]
   (let [sharing (read-json (slurp (:body req)))]
     (walk #(walk-share %) #(json-str {:sharing %}) (:sharing sharing))))
+
+(defn unshare
+  "Parses a batch unshare request, forwarding each path-users request to
+   Nibblonian."
+  [req]
+  (let [unshare (read-json (slurp (:body req)))]
+    (walk #(foward-nibblonian-unshare %)
+          #(json-str {:unshare %})
+          (:unshare unshare))))
+
