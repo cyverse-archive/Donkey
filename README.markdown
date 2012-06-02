@@ -1536,7 +1536,7 @@ $ curl -sd '
         }
     ]
 }
-' http://localhost:3000/import-tools | python -mjson.tool
+' http://by-tor:8888/import-tools | python -mjson.tool
 {
     "reason": "org.json.JSONException: JSONObject[\"test\"] not found.", 
     "success": false
@@ -2246,18 +2246,6 @@ service is in the following format:
     "templates": [
         {
             "deleted": analysis-deleted-flag,
-            "deployed_components": [
-                {
-                    "attribution": deployed-component-attribution,
-                    "description": deployed-component-description,
-                    "id": deployed-component-id,
-                    "location": deployed-component-location,
-                    "name": deployed-component-name,
-                    "type": deployed-component-type,
-                    "version": deployed-component-version
-                },
-                ...
-            ],
             "description": analysis-description,
             "disabled": analysis-disabled-flag,
             "id": analysis-id,
@@ -2295,17 +2283,6 @@ $ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9
     "templates": [
         {
             "deleted": false, 
-            "deployed_components": [
-                {
-                    "attribution": "Some attribution.", 
-                    "description": "Some description.", 
-                    "id": "2B80C676-1F3B-4B46-A2E2-34014F22AD5C", 
-                    "location": "/some/path/", 
-                    "name": "sometool", 
-                    "type": "executable", 
-                    "version": "0.0.1"
-                }
-            ], 
             "description": "Some app description.", 
             "disabled": false, 
             "id": "81C0CCEE-439C-4516-805F-3E260E336EE4", 
@@ -2339,6 +2316,59 @@ that was normally omitted for the sake of efficiency.  Some recent efficiency
 improvements have eliminated the need to omit this information from the more
 commonly used endpoint, however.  This endpoint is currently being retained
 for backward compatibility.
+
+#### Listing Deployed Components in an Analysis
+
+Secured Endpoint: GET /secured/get-components-in-analysis/{analysis-id}
+
+This service can be used to list all of the deployed components in an
+analysis.  The response body is in the following format:
+
+```json
+{
+    "deployed_components": [
+        {
+            "attribution": attribution-1,
+            "description": description-1,
+            "id": id-1,
+            "location": location-1,
+            "name": name-1,
+            "type": type-1,
+            "version": version-1
+        },
+        ...
+    ]
+}
+```
+
+Here's an example:
+
+```
+$ curl -s http://by-tor:8888/secured/get-components-in-analysis/0BA04303-F0CB-4A34-BACE-7090F869B332?proxyToken=$(cas-ticket) | python -mjson.tool
+{
+    "deployed_components": [
+        {
+            "attribution": "", 
+            "description": "", 
+            "id": "c73ef66158ef94f1bb90689ff813629f5", 
+            "location": "/usr/local2/muscle3.8.31", 
+            "name": "muscle", 
+            "type": "executable", 
+            "version": ""
+        }, 
+        {
+            "attribution": "", 
+            "description": "", 
+            "id": "c2d79e93d83044a659b907764275248ef", 
+            "location": "/usr/local2/phyml-20110304", 
+            "name": "phyml", 
+            "type": "executable", 
+            "version": ""
+        }
+    ]
+}
+```
+
 
 #### Updating the Favorite Analyses List
 
