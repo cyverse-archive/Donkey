@@ -166,6 +166,10 @@
    search types."
   "donkey.userinfo.default-search-limit")
 
+(STR nibblonian-base-url
+  "The base URL for the Nibblonian data management services."
+  "donkey.nibblonian.base-url")
+
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should
    only be called after Donkey has been initialized."
