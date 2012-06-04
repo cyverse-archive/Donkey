@@ -2614,6 +2614,38 @@ $ curl -XDELETE http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket) | p
 An attempt to remove session data that doesn't already exist will be silently
 ignored.
 
+### Saving User Preferences
+
+Secured Endpoint: POST /secured/preferences
+
+This service can be used to save arbitrary user preferences. The POST
+body is stored without modification and can be retrieved by sending a GET
+request to the same URL.
+
+Example:
+
+```
+$ curl -sd data http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
+data
+```
+
+### Removing User Preferences
+
+Secured Endpoint: DELETE /secured/preferences
+
+This service can be used to remove a user's preferences.
+
+Example:
+
+```
+$ curl -X DELETE http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
+{
+    "success" : true
+}
+```
+
+An attempt to remove preference data that doesn't already exist will be silently ignored.
+
 ### Listing Collaborators
 
 Secured Endpoint: GET /secured/collaborators

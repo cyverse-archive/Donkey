@@ -9,6 +9,7 @@
         [donkey.user-attributes]
         [donkey.user-info]
         [donkey.user-sessions]
+        [donkey.user-prefs]
         [ring.middleware keyword-params nested-params])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
@@ -90,6 +91,15 @@
   (DELETE "/sessions" []
           (trap #(remove-session)))
 
+  (GET "/preferences" []
+       (trap #(user-prefs)))
+
+  (POST "/preferences" [:as {body :body}]
+        (trap #(user-prefs (slurp body))))
+
+  (DELETE "/preferences" []
+          (trap #(remove-prefs)))
+  
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
 
