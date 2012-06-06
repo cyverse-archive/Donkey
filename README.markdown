@@ -1,4 +1,4 @@
-Donkey# 
+# Donkey
 
 Donkey is a platform for hosting Services written in Clojure; it's intended to
 be the replacement for the Mule instance that used to run inside the Discovery
