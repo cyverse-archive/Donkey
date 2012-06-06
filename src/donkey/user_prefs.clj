@@ -1,4 +1,4 @@
-(ns donkey.user-sessions
+(ns donkey.user-prefs
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
         [donkey.config]
@@ -13,7 +13,7 @@
   [user]
   (str 
     (string/join "/" 
-      (map ft/rm-last-slash [(riak-base-url) (riak-sessions-bucket) user]))
+      (map ft/rm-last-slash [(riak-base-url) (riak-prefs-bucket) user]))
     "?returnbody=true"))
 
 (defn- request-failed
@@ -22,33 +22,33 @@
   (throw+ {:error_code ERR_REQUEST_FAILED
            :body       (:body resp)}))
 
-(defn user-session
+(defn user-prefs
   ([]
     (let [user (:username current-user)]
-      (log/debug (str "user-session: GET " (key-url user)))
+      (log/debug (str "user-prefs: GET " (key-url user)))
       (let [resp (cl/get (key-url user) {:throw-exceptions false})]
         (cond
           (= 200 (:status resp)) (:body resp)
           (= 404 (:status resp)) "{}"
           :else                  (request-failed resp)))))
 
-  ([new-session]
+  ([new-prefs]
     (let [user (:username current-user)]
-      (log/debug (str "user-session: POST " (key-url user) " " new-session))
+      (log/debug (str "user-prefs: POST " (key-url user) " " new-prefs))
       (let [resp (cl/post 
                    (key-url user) 
-                   {:content-type :json :body new-session} 
+                   {:content-type :json :body new-prefs} 
                    {:throw-exceptions false})]
         (cond
           (= 200 (:status resp)) (:body resp)
           :else                  (request-failed resp))))))
 
-(defn remove-session
+(defn remove-prefs
   "Removes user session information from the Riak cluster."
   []
   (let [user   (:username current-user)
         url    (key-url user)
-        _      (log/debug "user-session: DELETE" url)
+        _      (log/debug "user-prefs: DELETE" url)
         resp   (cl/delete url {:throw-exceptions false})
         status (:status resp)]
     (cond (= 404 (:status resp))      (success-response)

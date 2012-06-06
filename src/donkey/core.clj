@@ -5,9 +5,11 @@
         [donkey.config]
         [donkey.metadactyl]
         [donkey.service]
+        [donkey.sharing]
         [donkey.user-attributes]
         [donkey.user-info]
         [donkey.user-sessions]
+        [donkey.user-prefs]
         [ring.middleware keyword-params nested-params])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
@@ -65,6 +67,9 @@
   (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id :as req]
        (trap #(list-apps-in-group req app-group-id)))
 
+  (GET "/get-components-in-analysis/:app-id" [app-id :as req]
+       (trap #(list-deployed-components-in-app req app-id)))
+
   (POST "/update-favorites" [:as req]
         (trap #(update-favorites req)))
 
@@ -83,8 +88,35 @@
   (POST "/sessions" [:as {body :body}]
         (trap #(user-session (slurp body))))
 
+  (DELETE "/sessions" []
+          (trap #(remove-session)))
+
+  (GET "/preferences" []
+       (trap #(user-prefs)))
+
+  (POST "/preferences" [:as {body :body}]
+        (trap #(user-prefs (slurp body))))
+
+  (DELETE "/preferences" []
+          (trap #(remove-prefs)))
+  
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
+
+  (GET "/collaborators" [:as req]
+       (trap #(get-collaborators req)))
+
+  (POST "/collaborators" [:as req]
+        (trap #(add-collaborators req)))
+
+  (POST "/remove-collaborators" [:as req]
+        (trap #(remove-collaborators req)))
+
+  (POST "/share" [:as req]
+        (trap #(share req)))
+
+  (POST "/unshare" [:as req]
+        (trap #(unshare req)))
 
   (route/not-found (unrecognized-path-response)))
 
@@ -181,8 +213,9 @@
 (defn load-configuration
   "Loads the configuration properties from Zookeeper."
   []
+  (println "zk-url =" zk-url)
   (cl/with-zk
-    zk-url
+    (zk-url)
     (when (not (cl/can-run?))
       (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
       (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")

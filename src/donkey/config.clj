@@ -13,21 +13,25 @@
   [files]
   (first (filter file-exists-on-classpath files)))
 
-(def
-  ^{:doc "The names of the properties files."}
-  prop-files ["zkhosts.properties" "donkey.properties"])
+(defn- prop-files
+  "The names of the properties files to look for."
+  []
+  ["zkhosts.properties" "donkey.properties"])
 
-(def
-  ^{:doc "The name of the properties files that is being used."}
-   prop-file (find-first-existing-file prop-files))
+(defn prop-file
+  "The name of the properties file that is being used."
+  []
+  (find-first-existing-file (prop-files)))
 
-(def
-  ^{:doc "The properties loaded from the properties file."}
-   zk-props (cc-props/parse-properties prop-file))
+(defn zk-props
+  "The properties loaded from the properties file."
+  []
+  (cc-props/parse-properties (prop-file)))
 
-(def
-  ^{:doc "The URL used to connect to zookeeper."}
-   zk-url (get zk-props "zookeeper"))
+(defn zk-url
+  "The URL used to connect to zookeeper."
+  []
+  (get (zk-props) "zookeeper"))
 
 (def
   ^{:doc "The properites that have been loaded from Zookeeper."}
@@ -151,6 +155,10 @@
   "The bucket in Riak to retrieve user sessions from."
   "donkey.sessions.bucket")
 
+(STR riak-prefs-bucket
+   "The bucket in Riak to retrieve user preferences from."
+   "donkey.preferences.bucket")
+
 (STR userinfo-base-url
   "The base URL for the user info API."
   "donkey.userinfo.base-url")
@@ -161,6 +169,10 @@
    search.  Our aggregate search may return the limit times the number of
    search types."
   "donkey.userinfo.default-search-limit")
+
+(STR nibblonian-base-url
+  "The base URL for the Nibblonian data management services."
+  "donkey.nibblonian.base-url")
 
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should

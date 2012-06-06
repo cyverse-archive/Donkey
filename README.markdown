@@ -1536,7 +1536,7 @@ $ curl -sd '
         }
     ]
 }
-' http://localhost:3000/import-tools | python -mjson.tool
+' http://by-tor:8888/import-tools | python -mjson.tool
 {
     "reason": "org.json.JSONException: JSONObject[\"test\"] not found.", 
     "success": false
@@ -2246,18 +2246,6 @@ service is in the following format:
     "templates": [
         {
             "deleted": analysis-deleted-flag,
-            "deployed_components": [
-                {
-                    "attribution": deployed-component-attribution,
-                    "description": deployed-component-description,
-                    "id": deployed-component-id,
-                    "location": deployed-component-location,
-                    "name": deployed-component-name,
-                    "type": deployed-component-type,
-                    "version": deployed-component-version
-                },
-                ...
-            ],
             "description": analysis-description,
             "disabled": analysis-disabled-flag,
             "id": analysis-id,
@@ -2295,17 +2283,6 @@ $ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9
     "templates": [
         {
             "deleted": false, 
-            "deployed_components": [
-                {
-                    "attribution": "Some attribution.", 
-                    "description": "Some description.", 
-                    "id": "2B80C676-1F3B-4B46-A2E2-34014F22AD5C", 
-                    "location": "/some/path/", 
-                    "name": "sometool", 
-                    "type": "executable", 
-                    "version": "0.0.1"
-                }
-            ], 
             "description": "Some app description.", 
             "disabled": false, 
             "id": "81C0CCEE-439C-4516-805F-3E260E336EE4", 
@@ -2339,6 +2316,59 @@ that was normally omitted for the sake of efficiency.  Some recent efficiency
 improvements have eliminated the need to omit this information from the more
 commonly used endpoint, however.  This endpoint is currently being retained
 for backward compatibility.
+
+#### Listing Deployed Components in an Analysis
+
+Secured Endpoint: GET /secured/get-components-in-analysis/{analysis-id}
+
+This service can be used to list all of the deployed components in an
+analysis.  The response body is in the following format:
+
+```json
+{
+    "deployed_components": [
+        {
+            "attribution": attribution-1,
+            "description": description-1,
+            "id": id-1,
+            "location": location-1,
+            "name": name-1,
+            "type": type-1,
+            "version": version-1
+        },
+        ...
+    ]
+}
+```
+
+Here's an example:
+
+```
+$ curl -s http://by-tor:8888/secured/get-components-in-analysis/0BA04303-F0CB-4A34-BACE-7090F869B332?proxyToken=$(cas-ticket) | python -mjson.tool
+{
+    "deployed_components": [
+        {
+            "attribution": "", 
+            "description": "", 
+            "id": "c73ef66158ef94f1bb90689ff813629f5", 
+            "location": "/usr/local2/muscle3.8.31", 
+            "name": "muscle", 
+            "type": "executable", 
+            "version": ""
+        }, 
+        {
+            "attribution": "", 
+            "description": "", 
+            "id": "c2d79e93d83044a659b907764275248ef", 
+            "location": "/usr/local2/phyml-20110304", 
+            "name": "phyml", 
+            "type": "executable", 
+            "version": ""
+        }
+    ]
+}
+```
+
 
 #### Updating the Favorite Analyses List
 
@@ -2562,3 +2592,384 @@ Here's an example:
 $ curl http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)
 data
 ```
+
+### Removing User Seession Data
+
+Secured Endpoint: DELETE /secured/sessions
+
+This service can be used to remove saved user session information.  This is
+helpful in cases where the user's session is in an unusable state and saving
+the session information keeps all of the user's future sessions in an unusable
+state.
+
+Here's an example:
+
+```
+$ curl -XDELETE http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket) | python -mjson.tool
+{
+    "success": true
+}
+```
+
+An attempt to remove session data that doesn't already exist will be silently
+ignored.
+
+### Saving User Preferences
+
+Secured Endpoint: POST /secured/preferences
+
+This service can be used to save arbitrary user preferences. The POST
+body is stored without modification and can be retrieved by sending a GET
+request to the same URL.
+
+Example:
+
+```
+$ curl -sd data http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
+data
+```
+
+### Removing User Preferences
+
+Secured Endpoint: DELETE /secured/preferences
+
+This service can be used to remove a user's preferences.
+
+Example:
+
+```
+$ curl -X DELETE http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
+{
+    "success" : true
+}
+```
+
+An attempt to remove preference data that doesn't already exist will be silently ignored.
+
+### Listing Collaborators
+
+Secured Endpoint: GET /secured/collaborators
+
+This service can be used to retrieve the list of collaborators for the current
+user.  The response body is in the following format:
+
+```json
+{
+    "success": true,
+    "users": [
+        {
+            "email": email-1,
+            "firstname": firstname-1,
+            "id": id-1,
+            "lastname": lastname-1,
+            "useranme": username-1
+        },
+        ...
+    ]
+}
+```
+
+Here's an example:
+
+```
+$ curl -s http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket) | python -mjson.tool
+{
+    "success": true, 
+    "users": [
+        {
+            "email": "foo@iplantcollaborative.org", 
+            "firstname": "The", 
+            "id": 123, 
+            "lastname": "Foo", 
+            "username": "foo"
+        }, 
+        {
+            "email": "bar@iplantcollaborative.org", 
+            "firstname": "The", 
+            "id": 456, 
+            "lastname": "Bar", 
+            "username": "bar"
+        }
+    ]
+}
+```
+
+### Adding Collaborators
+
+Secured Endpoint: POST /secured/collaborators
+
+This service can be used to add users to the list of collaborators for the
+current user.  The request body is in the following format:
+
+```json
+{
+    "users": [
+        {
+            "email": email-1,
+            "firstname": firstname-1,
+            "id": id-1,
+            "lastname": lastname-1,
+            "username": username-1
+        },
+        ...
+    ]
+}
+```
+
+Note that the only field that is actually required for each user is the
+`username` field.  The rest of the fields may be included if desired,
+however.  This feature is provided as a convenience to the caller, who may be
+forwarding results from the user search service to this service.
+
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "users": [
+        {
+            "username": "baz"
+        }
+    ]
+}
+' http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket) | python -mjson.tool
+{
+    "success": true
+}
+```
+
+### Removing Collaborators
+
+Secured Endpoint: POST /secured/remove-collaborators
+
+This service can be used to remove users from the list of collaborators for
+the current user.  The request body is in the following format:
+
+```json
+{
+    "users": [
+        {
+            "email": email-1,
+            "firstname": firstname-1,
+            "id": id-1,
+            "lastname": lastname-1,
+            "username": username-1
+        },
+        ...
+    ]
+}
+```
+
+Note that the only field that is actually required for each user is the
+`username` field.  The rest of the fields may be included if desired,
+however.  This feature is provided as a convenience to the caller, who may be
+forwarding results from the user search service to this service.
+
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "users": [
+        {
+            "username": "baz"
+        }
+    ]
+}
+' http://by-tor:8888/secured/remove-collaborators?proxyToken=$(cas-ticket) | python -mjson.tool
+{
+    "success": true
+}
+```
+
+### Sharing User Data
+
+Secured Endpoint: POST /secured/share
+
+This service can be used to share a user's files and folders with other users,
+and with specific permissions for each user and resource.
+
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "sharing": [
+        {
+            "path": "/path/to/shared/file",
+            "users": [
+                {
+                    "user": "shared-with-user1",
+                    "permissions": {
+                        "read": true,
+                        "write": false,
+                        "own": false
+                    }
+                },
+                {
+                    "user": "shared-with-user2",
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": true
+                    }
+                }
+            ]
+        },
+        {
+            "path": "/path/to/shared/folder",
+            "users": [
+                {
+                    "user": "shared-with-user1",
+                    "permissions": {
+                        "read": true,
+                        "write": false,
+                        "own": false
+                    }
+                },
+                {
+                    "user": "shared-with-user2",
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": true
+                    }
+                }
+            ]
+        }
+    ]
+}
+' http://by-tor:8888/secured/share?proxyToken=$(cas-ticket)
+```
+
+The service will response with a success or failure message per user-resource pair:
+
+```
+{
+    "sharing": [
+        {
+            "path": "/path/to/shared/file",
+            "users": [
+                {
+                    "permissions": {
+                        "own": false,
+                        "read": true,
+                        "write": false
+                    },
+                    "success": true,
+                    "user": "shared-with-user1"
+                },
+                {
+                    "error": {
+                        "action": "share",
+                        "error_code": "ERR_NOT_A_USER",
+                        "status": "failure",
+                        "users": [
+                            "shared-with-user2"
+                        ]
+                    },
+                    "permissions": {
+                        "own": true,
+                        "read": true,
+                        "write": true
+                    },
+                    "success": false,
+                    "user": "shared-with-user2"
+                }
+            ]
+        },
+        {
+            "path": "/path/to/shared/folder",
+            "users": [
+                {
+                    "permissions": {
+                        "own": false,
+                        "read": true,
+                        "write": false
+                    },
+                    "success": true,
+                    "user": "shared-with-user1"
+                },
+                {
+                    "error": {
+                        "action": "share",
+                        "error_code": "ERR_NOT_A_USER",
+                        "status": "failure",
+                        "users": [
+                            "shared-with-user2"
+                        ]
+                    },
+                    "permissions": {
+                        "own": true,
+                        "read": true,
+                        "write": true
+                    },
+                    "success": false,
+                    "user": "shared-with-user2"
+                }
+            ]
+        }
+    ]
+}
+```
+
+### Unsharing User Data
+
+Secured Endpoint: POST /secured/unshare
+
+This service can be used to unshare a user's files and folders with other users.
+
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "unshare": [
+        {
+            "path": "/path/to/shared/file1",
+            "users": [
+                "shared-with-user"
+            ]
+        },
+        {
+            "path": "/path/to/shared/folder1",
+            "users": [
+                "shared-with-user"
+            ]
+        }
+    ]
+}
+' http://by-tor:8888/secured/unshare?proxyToken=$(cas-ticket)
+```
+
+The service will respond with a success or failure message per resource:
+
+```
+{
+    "unshare": [
+        {
+            "path": "/path/to/shared/file1",
+            "success": true,
+            "users": [
+                "shared-with-user"
+            ]
+        },
+        {
+            "error": {
+                "action": "unshare",
+                "error_code": "ERR_DOES_NOT_EXIST",
+                "paths": [
+                    "/path/to/shared/folder1"
+                ],
+                "status": "failure"
+            },
+            "path": "/path/to/shared/folder1",
+            "success": false,
+            "users": [
+                "shared-with-user"
+            ]
+        }
+    ]
+}
+```
+

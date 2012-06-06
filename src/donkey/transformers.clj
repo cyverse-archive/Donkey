@@ -28,4 +28,4 @@
   [url]
   (let [user (:shortUsername current-user)
         email (:email current-user)]
-    (str url "?uid=" user "&email=" email)))
+    (str url "?user=" user "&email=" email)))

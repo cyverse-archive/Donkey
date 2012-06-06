@@ -43,7 +43,7 @@
   [res]
   (let [m (read-json (:body res))]
     (log/debug "adding app details to notifications:" m)
-    (assoc res :body (json-str (add-app-details-to-map m)))))
+    (json-str (add-app-details-to-map m))))
 
 (defn notificationagent-url
   "Builds a URL that can be used to connect to the notification agent."
