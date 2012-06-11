@@ -104,24 +104,14 @@
     (str "unable to send share error notification for " path)))
 
 (defn- send-unshare-notifications
-  "Sends unshare notifications to both the current user and unshared users."
+  "Sends an unshare notification to only the current user."
   [unshare]
-  (let [path (:path unshare)
-        user (:shortUsername current-user)
-        error-message (str "unable to send unshare notification for " path)]
+  (let [path (:path unshare)]
     (send-sharing-notification
-      user
+      (:shortUsername current-user)
       (str path " has been unshared.")
       (str path " has been unshared with " (join ", " (:users unshare)))
-      error-message)
-    (doall
-      (map
-        #(send-sharing-notification
-           %
-           (str path " has been unshared.")
-           (str user " has unshared " path " with you.")
-           error-message)
-        (:users unshare)))))
+      (str "unable to send unshare notification for " path))))
 
 (defn- send-unshare-err-notification
   "Sends an unshare error notification to the current user."
