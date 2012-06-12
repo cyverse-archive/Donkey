@@ -77,7 +77,7 @@
   [username]
   {:email     ""
    :firstname ""
-   :id        -1
+   :id        "-1"
    :lastname  ""
    :username  username})
 
@@ -86,10 +86,12 @@
   [username]
   (try
     (let [info (first (filter #(= (:username %) username)
-                              (search "username" username 0 100)))]
-      (when (nil? info)
-        (log/warn (str "no user info found for username '" username "'")))
-      (empty-user-info username))
+                              (:users (search "username" username 0 100))))]
+      (if (nil? info)
+        (do
+          (log/warn (str "no user info found for username '" username "'"))
+          (empty-user-info username))
+        info))
     (catch Exception e
       (log/error e (str "username search for '" username "' failed"))
       (empty-user-info username))))

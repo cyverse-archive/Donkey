@@ -334,7 +334,7 @@
   "Adds user details to the results from a request to obtain a list of
    collaborators."
   [{:keys [users]}]
-  {:users (map get-user-details users)})
+  {:users (map get-user-details (filter #(not (string/blank? %)) users))})
 
 (defn get-collaborators
   "Gets the list of collaborators from metadactyl and retrieves detailed
