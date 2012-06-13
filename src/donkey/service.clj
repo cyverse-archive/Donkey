@@ -50,7 +50,8 @@
               "content-type"
               "transfer-encoding")
    :body body
-   :throw-exceptions false})
+   :throw-exceptions false
+   :as :stream})
 
   ([request] (prepare-forwarded-request request nil)))
 

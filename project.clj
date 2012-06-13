@@ -3,7 +3,7 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/data.json "0.1.2"]
-                 [clj-http "0.4.1"]
+                 [clj-http "0.4.3"]
                  [com.cemerick/url "0.0.6"]
                  [compojure "1.0.1"]
                  [org.iplantc/clj-cas "1.0.0-SNAPSHOT"]
