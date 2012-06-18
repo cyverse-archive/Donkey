@@ -21,7 +21,7 @@
          :init donkey.core/load-configuration
          :port 31325}
   :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
-               :release 4
+               :release 5
                :provides "donkey"
                :dependencies ["iplant-service-config >= 0.1.0-5"]
                :config-files ["log4j.properties"]

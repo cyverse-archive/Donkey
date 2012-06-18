@@ -344,7 +344,7 @@
         response (forward-get url req)
         status   (:status response)]
     (if-not (or (< status 200) (> status 299))
-      (success-response (add-user-details (read-json (:body response))))
+      (success-response (add-user-details (read-json (slurp (:body response)))))
       response)))
 
 (defn- extract-usernames

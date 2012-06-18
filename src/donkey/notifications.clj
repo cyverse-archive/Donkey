@@ -41,7 +41,7 @@
   "Adds application details to notifications in a response from the
    notification agent."
   [res]
-  (let [m (read-json (:body res))]
+  (let [m (read-json (slurp (:body res)))]
     (log/debug "adding app details to notifications:" m)
     (json-str (add-app-details-to-map m))))
 
