@@ -43,17 +43,17 @@
 (defn prepare-forwarded-request
   "Prepares a request to be forwarded to a remote service."
   ([request body]
-  {:content-type (get-in request [:headers :content-type])
-   :headers (dissoc
-              (:headers request)
-              "content-length"
-              "content-type"
-              "transfer-encoding")
-   :body body
-   :throw-exceptions false
-   :as :stream})
-
-  ([request] (prepare-forwarded-request request nil)))
+     {:content-type (get-in request [:headers :content-type])
+      :headers (dissoc
+                (:headers request)
+                "content-length"
+                "content-type"
+                "transfer-encoding")
+      :body body
+      :throw-exceptions false
+      :as :stream})
+  ([request]
+     (prepare-forwarded-request request nil)))
 
 (defn forward-get
   "Forwards a GET request to a remote service."

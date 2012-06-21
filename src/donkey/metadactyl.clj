@@ -4,7 +4,8 @@
         [donkey.service]
         [donkey.transformers]
         [donkey.user-attributes]
-        [donkey.user-info :only [get-user-details]])
+        [donkey.user-info :only [get-user-details]]
+        [ring.util.codec :only [url-encode]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [donkey.notifications :as dn]))
@@ -279,7 +280,7 @@
   "This service searches for apps based on a search term."
   [req search-term]
   (let [url (build-metadactyl-secured-url
-              (str "/search-analyses/" search-term))]
+              (str "/search-analyses/" (url-encode search-term)))]
     (forward-get url req)))
 
 (defn list-apps-in-group
