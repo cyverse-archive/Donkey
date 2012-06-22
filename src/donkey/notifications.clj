@@ -2,7 +2,8 @@
   (:use [clojure.data.json :only [json-str read-json]]
         [donkey.config :only
          [notificationagent-base-url metadactyl-unprotected-base-url]]
-        [donkey.service :only [build-url json-content-type]])
+        [donkey.service :only [build-url build-url-with-query]]
+        [donkey.transformers :only [add-current-user-to-map]])
   (:require [clj-http.client :as client]
             [clojure.tools.logging :as log]))
 
@@ -10,7 +11,7 @@
   "Builds a URL that can be used to fetch the description for the App with the
    given ID."
   [app-id]
-  (build-url (metadactyl-unprotected-base-url) "/get-app-description/" app-id))
+  (build-url (metadactyl-unprotected-base-url) "get-app-description" app-id))
 
 (defn- get-app-description
   "Gets an app description from the database."
@@ -47,14 +48,17 @@
 
 (defn notificationagent-url
   "Builds a URL that can be used to connect to the notification agent."
-  [relative-url]
-  (build-url (notificationagent-base-url) relative-url))
+  ([relative-url]
+     (notificationagent-url relative-url {}))
+  ([relative-url query]
+     (build-url-with-query (notificationagent-base-url)
+       (add-current-user-to-map query) relative-url)))
 
 (defn send-notification
   "Sends a notification to a user."
   [m]
   (client/post (notificationagent-url "notification")
-               {:content-type json-content-type
+               {:content-type :json
                 :body (json-str m)}))
 
 (defn send-tool-notification

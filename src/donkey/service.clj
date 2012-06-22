@@ -1,8 +1,10 @@
 (ns donkey.service
-  (:use [clojure.data.json :only (json-str)]
-        [clojure.string :only (join)])
+  (:use [cemerick.url :only [url]]
+        [clojure.data.json :only [json-str]]
+        [clojure.string :only [join]])
   (:require [clj-http.client :as client]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log])
+  (:import [clojure.lang IPersistentMap]))
 
 (def json-content-type "application/json")
 
@@ -34,11 +36,16 @@
   (let [msg "unrecognized service path"]
     (json-str {:success false :reason msg})))
 
+(defn build-url-with-query
+  "Builds a URL from a base URL and one or more URL components.  Any query
+   string parameters that are provided will be included in the result."
+  [base query & components]
+  (str (assoc (apply url base components) :query query)))
+
 (defn build-url
   "Builds a URL from a base URL and one or more URL components."
   [base & components]
-  (join "/" (map #(.replaceAll % "^/|/$" "")
-                 (cons base components))))
+  (apply build-url-with-query base {} components))
 
 (defn prepare-forwarded-request
   "Prepares a request to be forwarded to a remote service."
@@ -57,24 +64,24 @@
 
 (defn forward-get
   "Forwards a GET request to a remote service."
-  [url request]
-  (client/get url (prepare-forwarded-request request)))
+  [addr request]
+  (client/get addr (prepare-forwarded-request request)))
 
 (defn forward-post
   "Forwards a POST request to a remote service."
-  ([url request]
-    (forward-post url request (slurp (:body request))))
-  ([url request body]
-    (client/post url (prepare-forwarded-request request body))))
+  ([addr request]
+    (forward-post addr request (slurp (:body request))))
+  ([addr request body]
+    (client/post addr (prepare-forwarded-request request body))))
 
 (defn forward-put
   "Forwards a PUT request to a remote service."
-  ([url request]
-    (forward-put url request (slurp (:body request))))
-  ([url request body]
-    (client/put url (prepare-forwarded-request request body))))
+  ([addr request]
+    (forward-put addr request (slurp (:body request))))
+  ([addr request body]
+    (client/put addr (prepare-forwarded-request request body))))
 
 (defn forward-delete
   "Forwards a DELETE request to a remote service."
-  [url request]
-  (client/delete url (prepare-forwarded-request request)))
+  [addr request]
+  (client/delete addr (prepare-forwarded-request request)))

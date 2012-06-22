@@ -10,50 +10,42 @@
             [clojure.tools.logging :as log]
             [donkey.notifications :as dn]))
 
-(defn- build-url-path
-  "Builds the path component of a URL from a given relative URL followed by
-   zero or more path components."
-  [relative-url path-components]
-  (let [path (string/join "/" (cons relative-url path-components))]
-    (if (re-find #"^/" path) path (str "/" path))))
-
-(defn build-metadactyl-secured-url
+(defn- build-metadactyl-secured-url
   "Adds the name and email of the currently authenticated user to the secured
    metadactyl URL with the given relative URL path."
-  [relative-url & path-components]
-  (let [path (build-url-path relative-url path-components)]
-    (add-current-user-to-url (build-url (metadactyl-base-url) path))))
+  [& components]
+  (apply build-url-with-query (metadactyl-base-url)
+         (add-current-user-to-map {}) components))
 
- (defn build-metadactyl-unprotected-url
+(defn- build-metadactyl-unprotected-url
   "Builds the unsecured metadactyl URL from the given relative URL path."
-  [relative-url & path-components]
-  (let [path (build-url-path relative-url path-components)]
-    (build-url (metadactyl-unprotected-base-url) path)))
+  [& components]
+  (apply build-url (metadactyl-unprotected-base-url) components))
 
 (defn get-workflow-elements
   "A service to get information about workflow elements."
   [req element-type]
   (let [url (build-metadactyl-unprotected-url
-              (str "/get-workflow-elements/" element-type))]
+             "get-workflow-elements" element-type)]
     (forward-get url req)))
 
 (defn search-deployed-components
   "A service to search information about deployed components."
   [req search-term]
   (let [url (build-metadactyl-unprotected-url
-              (str "/search-deployed-components/" search-term))]
+             "search-deployed-components" search-term)]
     (forward-get url req)))
 
 (defn get-all-app-ids
   "A service to get the list of app identifiers."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/get-all-analysis-ids")]
+  (let [url (build-metadactyl-unprotected-url "get-all-analysis-ids")]
     (forward-get url req)))
 
 (defn delete-categories
   "A service used to delete app categories."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/delete-categories")]
+  (let [url (build-metadactyl-unprotected-url "delete-categories")]
     (forward-post url req)))
 
 (defn validate-app-for-pipelines
@@ -61,104 +53,101 @@
    pipeline."
   [req app-id]
   (let [url (build-metadactyl-unprotected-url
-              (str "/validate-analysis-for-pipelines/" app-id))]
+             "validate-analysis-for-pipelines" app-id)]
     (forward-get url req)))
 
 (defn get-data-objects-for-app
   "A service used to list the data objects in an app."
   [req app-id]
-  (let [url (build-metadactyl-unprotected-url
-              (str "/analysis-data-objects/" app-id))]
+  (let [url (build-metadactyl-unprotected-url "analysis-data-objects" app-id)]
     (forward-get url req)))
 
 (defn categorize-apps
   "A service used to recategorize apps."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/categorize-analyses")]
+  (let [url (build-metadactyl-unprotected-url "categorize-analyses")]
     (forward-post url req)))
 
 (defn get-app-categories
   "A service used to get a list of app categories."
   [req category-set]
   (let [url (build-metadactyl-unprotected-url
-              (str "/get-analysis-categories/" category-set))]
+             "get-analysis-categories" category-set)]
     (forward-get url req)))
 
 (defn can-export-app
   "A service used to determine whether or not an app can be exported to Tito."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/can-export-analysis")]
+  (let [url (build-metadactyl-unprotected-url "can-export-analysis")]
     (forward-post url req)))
 
 (defn add-app-to-group
   "A service used to add an existing app to an app group."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/add-analysis-to-group")]
+  (let [url (build-metadactyl-unprotected-url "add-analysis-to-group")]
     (forward-post url req)))
 
 (defn get-app
   "A service used to get an app in the format required by the DE."
   [req app-id]
-  (let [url (build-metadactyl-unprotected-url (str "/get-analysis/" app-id))]
+  (let [url (build-metadactyl-unprotected-url "get-analysis" app-id)]
     (forward-get url req)))
 
 (defn get-app-secured
   "A secured service used to get an app in the format required by the DE."
   [req app-id]
-  (let [url (build-metadactyl-secured-url (str "/template/" app-id))]
+  (let [url (build-metadactyl-secured-url "template" app-id)]
     (forward-get url req)))
 
 (defn get-only-analysis-groups
   "Retrieves the list of public analyses."
   [req workspace-id]
   (let [url (build-metadactyl-unprotected-url
-              (str "/get-only-analysis-groups/" workspace-id))]
+             "get-only-analysis-groups" workspace-id)]
     (forward-get url req)))
 
 (defn export-template
   "This service will export the template with the given identifier."
   [req template-id]
-  (let [url (build-metadactyl-unprotected-url
-              (str "/export-template/" template-id))]
+  (let [url (build-metadactyl-unprotected-url "export-template" template-id)]
     (forward-get url req)))
 
 (defn export-workflow
   "This service will export a workflow with the given identifier."
   [req app-id]
-  (let [url (build-metadactyl-unprotected-url
-              (str "/export-workflow/" app-id))]
+  (let [url (build-metadactyl-unprotected-url "export-workflow" app-id)]
     (forward-get url req)))
 
 (defn export-deployed-components
   "This service will export all or selected deployed components."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/export-deployed-components")]
+  (let [url (build-metadactyl-unprotected-url "export-deployed-components")]
     (forward-post url req)))
 
 (defn preview-template
   "This service will convert a JSON document in the format consumed by 
    the import service into the format required by the DE."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/preview-template")]
+  (let [url (build-metadactyl-unprotected-url "preview-template")]
     (forward-post url req)))
 
 (defn preview-workflow
   "This service will convert a JSON document in the format consumed by 
    the import service into the format required by the DE."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/preview-workflow")]
+  (let [url (build-metadactyl-unprotected-url "preview-workflow")]
     (forward-post url req)))
 
 (defn import-template
   "This service will import a template into the DE."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/import-template")]
+  (let [url (build-metadactyl-unprotected-url "import-template")]
     (forward-post url req)))
 
 (defn import-workflow
   "This service will import a workflow into the DE."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/import-workflow")]
+  (let [url (build-metadactyl-unprotected-url "import-workflow")]
     (forward-post url req)))
 
 (defn import-tools
@@ -168,7 +157,7 @@
   [req]
   (let [json-string (slurp (:body req))
         json-obj    (read-json json-string)
-        url (build-metadactyl-unprotected-url "/import-tools")]
+        url (build-metadactyl-unprotected-url "import-tools")]
     (forward-post url req json-string)
     (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
   (success-response))
@@ -176,63 +165,73 @@
 (defn update-template
   "This service will either update an existing template or import a new template."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/update-template")]
+  (let [url (build-metadactyl-unprotected-url "update-template")]
     (forward-post url req)))
 
 (defn update-workflow
   "This service will either update an existing workflow or import a new workflow."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/update-workflow")]
+  (let [url (build-metadactyl-unprotected-url "update-workflow")]
     (forward-post url req)))
 
 (defn force-update-workflow
   "This service will either update an existing workflow or import a new workflow.  
    Vetted workflows may be updated."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/force-update-workflow")]
+  (let [url (build-metadactyl-unprotected-url "force-update-workflow")]
     (forward-post url req)))
 
 (defn delete-workflow
   "This service will logically remove a workflow from the DE."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/delete-workflow")]
+  (let [url (build-metadactyl-unprotected-url "delete-workflow")]
     (forward-post url req)))
 
 (defn permanently-delete-workflow
   "This service will physically remove a workflow from the DE."
   [req]
-  (let [url (build-metadactyl-unprotected-url "/permanently-delete-workflow")]
+  (let [url (build-metadactyl-unprotected-url "permanently-delete-workflow")]
     (forward-post url req)))
 
 (defn bootstrap
   "This service obtains information about and initializes the workspace for
    the authenticated user."
   [req]
-  (let [url (build-metadactyl-secured-url "/bootstrap")]
+  (let [url (build-metadactyl-secured-url "bootstrap")]
+    (log/warn "url =" url)
     (forward-get url req)))
 
 (defn get-messages
   "This service forwards requests to the notification agent in order to
    retrieve notifications that the user may or may not have seen yet."
   [req]
-  (let [url (dn/notificationagent-url "get-messages")]
-    (dn/add-app-details
-      (forward-post url req (add-username-to-json req)))))
+  (let [url (dn/notificationagent-url "messages" (:params req))]
+    (log/warn "url =" url)
+    (dn/add-app-details (forward-get url req))))
 
 (defn get-unseen-messages
   "This service forwards requests to the notification agent in order to
    retrieve notifications that the user hasn't seen yet."
   [req]
-  (let [url (dn/notificationagent-url "get-unseen-messages")]
-    (dn/add-app-details
-      (forward-post url req (add-username-to-json req)))))
+  (let [url (dn/notificationagent-url "unseen-messages")]
+    (log/warn "url =" url)
+    (dn/add-app-details (forward-get url req))))
 
 (defn delete-notifications
   "This service forwards requests to the notification agent in order to delete
    existing notifications."
   [req]
   (let [url (dn/notificationagent-url "delete")]
-    (forward-post url req (add-username-to-json req))))
+    (log/warn "url =" url)
+    (forward-post url req)))
+
+(defn mark-notifications-as-seen
+  "This service forwards requests to the notification agent in order to mark
+   notifications as seen by the user."
+  [req]
+  (let [url (dn/notificationagent-url "seen")]
+    (log/warn "url =" url)
+    (forward-post url req)))
 
 (defn send-notification
   "This service forwards a notifiction to the notification agent's general
@@ -246,14 +245,14 @@
    submits it to the JEX."
   [req workspace-id]
   (let [url (build-metadactyl-secured-url
-              (str "/workspaces/" workspace-id "/newexperiment"))]
+             "workspaces" workspace-id "newexperiment")]
     (forward-put url req)))
 
 (defn get-experiments
   "This service retrieves information about jobs that a user has submitted."
   [req workspace-id]
   (let [url (build-metadactyl-secured-url
-              (str "/workspaces/" workspace-id "/executions/list"))]
+              "workspaces" workspace-id "executions" "list")]
     (forward-get url req)))
 
 (defn delete-experiments
@@ -261,34 +260,32 @@
    in the Analyses window."
   [req workspace-id]
   (let [url (build-metadactyl-secured-url
-              (str "/workspaces/" workspace-id "/executions/delete"))]
+              "workspaces" workspace-id "executions" "delete")]
     (forward-put url req)))
 
 (defn rate-app
   "This service adds a user's rating to an app."
   [req]
-  (let [url (build-metadactyl-secured-url "/rate-analysis")]
+  (let [url (build-metadactyl-secured-url "rate-analysis")]
     (forward-post url req)))
 
 (defn delete-rating
   "This service removes a user's rating from an app."
   [req]
-  (let [url (build-metadactyl-secured-url "/delete-rating")]
+  (let [url (build-metadactyl-secured-url "delete-rating")]
     (forward-post url req)))
 
 (defn search-apps
   "This service searches for apps based on a search term."
   [req search-term]
-  (let [url (build-metadactyl-secured-url
-              (str "/search-analyses/" (url-encode search-term)))]
+  (let [url (build-metadactyl-secured-url "search-analyses" search-term)]
     (forward-get url req)))
 
 (defn list-apps-in-group
   "This service lists all of the apps in an app group and all of its
    descendents."
   [req app-group-id]
-  (let [url (build-metadactyl-secured-url
-              (str "/get-analyses-in-group/" app-group-id))]
+  (let [url (build-metadactyl-secured-url "get-analyses-in-group" app-group-id)]
     (forward-get url req)))
 
 (defn list-deployed-components-in-app
@@ -300,35 +297,32 @@
 (defn update-favorites
   "This service adds apps to or removes apps from a user's favorites list."
   [req]
-  (let [url (build-metadactyl-secured-url "/update-favorites")]
+  (let [url (build-metadactyl-secured-url "update-favorites")]
     (forward-post url req)))
 
 (defn edit-app
   "This service makes an app available in Tito for editing."
   [req app-id]
-  (let [url (build-metadactyl-secured-url
-              (str "/edit-template/" app-id))]
+  (let [url (build-metadactyl-secured-url "edit-template" app-id)]
     (forward-get url req)))
 
 (defn copy-app
   "This service makes a copy of an app available in Tito for editing."
   [req app-id]
-  (let [url (build-metadactyl-secured-url
-              (str "/copy-template/" app-id))]
+  (let [url (build-metadactyl-secured-url "copy-template" app-id)]
     (forward-get url req)))
 
 (defn make-app-public
   "This service copies an app from a user's private workspace to the public
    workspace."
   [req]
-  (let [url (build-metadactyl-secured-url "/make-analysis-public")]
+  (let [url (build-metadactyl-secured-url "make-analysis-public")]
     (forward-post url req)))
 
 (defn get-property-values
   "Gets the property values for a previously submitted job."
   [req job-id]
-  (let [url (build-metadactyl-unprotected-url
-              (str "/get-property-values/" job-id))]
+  (let [url (build-metadactyl-unprotected-url "get-property-values" job-id)]
     (forward-get url req)))
 
 (defn- add-user-details
@@ -341,7 +335,7 @@
   "Gets the list of collaborators from metadactyl and retrieves detailed
    information from Trellis."
   [req]
-  (let [url      (build-metadactyl-secured-url "/collaborators")
+  (let [url      (build-metadactyl-secured-url "collaborators")
         response (forward-get url req)
         status   (:status response)]
     (if-not (or (< status 200) (> status 299))
@@ -357,7 +351,7 @@
 (defn add-collaborators
   "Adds users to the list of collaborators for the current user."
   [req]
-  (let [url   (build-metadactyl-secured-url "/collaborators")
+  (let [url   (build-metadactyl-secured-url "collaborators")
         body  (slurp (:body req))
         users (json-str (extract-usernames (read-json body)))]
     (forward-post url req users)))
@@ -365,7 +359,7 @@
 (defn remove-collaborators
   "Adds users to the list of collaborators for the current user."
   [req]
-  (let [url   (build-metadactyl-secured-url "/remove-collaborators")
+  (let [url   (build-metadactyl-secured-url "remove-collaborators")
         body  (slurp (:body req))
         users (json-str (extract-usernames (read-json body)))]
     (forward-post url req users)))

@@ -31,14 +31,17 @@
   (GET "/bootstrap" [:as req]
        (trap #(bootstrap req)))
 
-  (POST "/notifications/get-messages" [:as req]
+  (GET "/notifications/messages" [:as req]
         (trap #(get-messages req)))
 
-  (POST "/notifications/get-unseen-messages" [:as req]
+  (GET "/notifications/unseen-messages" [:as req]
         (trap #(get-unseen-messages req)))
 
-  (POST "/notifications/:params" [:as req]
+  (POST "/notifications/delete" [:as req]
         (trap #(delete-notifications req)))
+
+  (POST "/notifications/seen" [:as req]
+        (trap #(mark-notifications-as-seen req)))
 
   (GET "/template/:app-id" [app-id :as req]
        (trap #(get-app-secured req app-id)))

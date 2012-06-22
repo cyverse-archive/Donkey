@@ -1,5 +1,6 @@
 (ns donkey.transformers
-  (:use [clojure.data.json :only (json-str read-json)]
+  (:use [cemerick.url :only [url]]
+        [clojure.data.json :only [json-str read-json]]
         [donkey.user-attributes])
   (:require [clojure.tools.logging :as log])
   (:import [net.sf.json JSONObject]))
@@ -22,10 +23,21 @@
         username (get-in req [:user-attributes "uid"])]
     (json-str (assoc m :user username))))
 
+(defn add-current-user-to-map
+  "Adds the name and e-mail address of the currently authenticated user to a
+   map that can be used to generate a query string."
+  [query]
+  (assoc query
+    :user  (:shortUsername current-user)
+    :email (:email current-user)))
+
 (defn add-current-user-to-url
-  "Adds the name of the currently authenticated user to a JSON object in the
-   body of a request, and returns only the updated body."
-  [url]
-  (let [user (:shortUsername current-user)
-        email (:email current-user)]
-    (str url "?user=" user "&email=" email)))
+  "Adds the name of the currently authenticated user to the query string of a
+   URL."
+  [addr]
+  (let [url-map (url addr)
+        query   (assoc (:query url-map)
+                  :user  (:shortUsername current-user)
+                  :email (:email current-user))
+        url-map (assoc url-map :query query)]
+    (str url-map)))
