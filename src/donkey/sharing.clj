@@ -4,7 +4,7 @@
         [clojure.string :only [join]]
         [slingshot.slingshot :only [try+]]
         [donkey.config :only [nibblonian-base-url]]
-        [donkey.service :only [build-url json-content-type]]
+        [donkey.service :only [build-url]]
         [donkey.transformers :only [add-current-user-to-url]]
         [donkey.user-attributes])
   (:require [clojure.tools.logging :as log]
@@ -34,7 +34,7 @@
   [path user_perms]
   (try+
     (client/post (nibblonian-url "share")
-                 {:content-type json-content-type
+                 {:content-type :json
                   :body (json-str (share-obj->nibb-share-req path user_perms))
                   :throw-entire-message? true})
     (merge {:success true} user_perms)
@@ -50,7 +50,7 @@
   [unshare]
   (try+
     (client/post (nibblonian-url "unshare")
-                 {:content-type json-content-type
+                 {:content-type :json
                   :body (json-str (unshare-obj->nibb-unshare-req unshare))
                   :throw-entire-message? true})
     (merge {:success true} unshare)

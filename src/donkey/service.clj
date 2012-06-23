@@ -1,12 +1,11 @@
 (ns donkey.service
   (:use [cemerick.url :only [url]]
         [clojure.data.json :only [json-str]]
-        [clojure.string :only [join]])
+        [clojure.string :only [join blank?]]
+        [slingshot.slingshot :only [throw+]])
   (:require [clj-http.client :as client]
             [clojure.tools.logging :as log])
   (:import [clojure.lang IPersistentMap]))
-
-(def json-content-type "application/json")
 
 (defn empty-response []
   {:status 200})
@@ -17,22 +16,43 @@
   ([map]
     {:status 200
      :body (json-str (merge {:success true} map))
-     :content-type json-content-type}))
+     :content-type :json}))
+
+(defn error-body [e]
+  (json-str {:success false :reason (.getMessage e)}))
 
 (defn failure-response [e]
   (log/error e "bad request")
-  {:status 400
-   :body (json-str {:success false :reason (.getMessage e)})
-   :content-type json-content-type})
+  {:status       400
+   :body         (error-body e)
+   :content-type :json})
 
 (defn error-response [e]
   (log/error e "internal error")
-  {:status 500
-   :body (json-str {:success false :reason (.getMessage e)})
-   :content-type json-content-type})
+  {:status       500
+   :body         (error-body e)
+   :content-type :json})
 
-(defn unrecognized-path-response []
+(defn missing-arg-response [arg]
+  (log/error "missing required argument:" (name arg))
+  {:status       400
+   :body         (json-str {:success false
+                            :code    "MISSING-REQUIRED-ARGUMENT"
+                            :arg     (name arg)})
+   :content-type :json})
+
+(defn required-param
+  "Retrieves a required parameter from the map of query string parameters."
+  [params k]
+  (let [v (params k)]
+    (when (blank? v)
+      (throw+ {:type :missing-argument
+               :arg  k}))
+    v))
+
+(defn unrecognized-path-response
   "Builds the response to send for an unrecognized service path."
+  []
   (let [msg "unrecognized service path"]
     (json-str {:success false :reason msg})))
 

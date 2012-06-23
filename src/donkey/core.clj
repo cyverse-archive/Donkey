@@ -3,6 +3,7 @@
   (:use [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.config]
+        [donkey.file-listing]
         [donkey.metadactyl]
         [donkey.service]
         [donkey.sharing]
@@ -25,6 +26,7 @@
   (try+
    (f)
    (catch [:type :error-status] {:keys [res]} res)
+   (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))
    (catch Throwable t (error-response t))))
@@ -122,6 +124,9 @@
 
   (POST "/unshare" [:as req]
         (trap #(unshare req)))
+
+  (GET "/default-output-dir" [:as {params :params}]
+       (trap #(get-default-output-dir (required-param params :name))))
 
   (route/not-found (unrecognized-path-response)))
 
