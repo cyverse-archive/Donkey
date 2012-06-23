@@ -1,6 +1,6 @@
 (ns donkey.core
   (:gen-class)
-  (:use [clojure-commons.query-params :only (wrap-query-params)]
+  (:use [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.config]
         [donkey.metadactyl]
@@ -10,7 +10,8 @@
         [donkey.user-info]
         [donkey.user-sessions]
         [donkey.user-prefs]
-        [ring.middleware keyword-params nested-params])
+        [ring.middleware keyword-params nested-params]
+        [slingshot.slingshot :only [try+]])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
@@ -21,11 +22,12 @@
   "Traps any exception thrown by a service and returns an appropriate
    repsonse."
   [f]
-  (try
-    (f)
-    (catch IllegalArgumentException e (failure-response e))
-    (catch IllegalStateException e (failure-response e))
-    (catch Throwable t (error-response t))))
+  (try+
+   (f)
+   (catch [:type :error-status] {:keys [res]} res)
+   (catch IllegalArgumentException e (failure-response e))
+   (catch IllegalStateException e (failure-response e))
+   (catch Throwable t (error-response t))))
 
 (defroutes secured-routes
   (GET "/bootstrap" [:as req]

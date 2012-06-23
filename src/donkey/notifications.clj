@@ -36,7 +36,7 @@
 (defn- add-app-details-to-map
   "Adds application details to a map."
   [m]
-  {:messages (add-app-details-to-messages (:messages m))})
+  (assoc m :messages (add-app-details-to-messages (:messages m))))
 
 (defn add-app-details
   "Adds application details to notifications in a response from the
