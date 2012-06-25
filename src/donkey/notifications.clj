@@ -19,7 +19,7 @@
   (log/debug "looking up the description for app" app-id)
   (if (empty? app-id)
     ""
-    (client/get (app-description-url app-id))))
+    (:body (client/get (app-description-url app-id)))))
 
 (defn- add-app-details-to-message
   "Adds application details to a single message."
