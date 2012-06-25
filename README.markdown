@@ -1686,24 +1686,59 @@ ticket to be sent to the service in the `proxyToken` query-string parameter.
 
 #### Obtaining Notifications
 
-Secured Endpoint: GET /secured/notifications/get-messages
+Secured Endpoint: GET /secured/notifications/messages
 
-Notifications in the DE are used to inform users when the status of a job has
-changed.  This service provides a way for the DE to retrieve notifications
-that the user may or may not have seen before.  The request body for this
-service is in the following format:
+Notifications in the DE are used to inform users when some event (for example
+a job status change or the completion of a file upload) has occurred.  This
+service provides a way for the DE to retrieve notifications that the user may
+or may not have seen before.  This service accepts five different query-string
+parameters (in addition to the `proxyToken` parameter, which is required for
+all secured services):
 
-```json
-{
-    "seen": seen-flag,
-    "limit": max-notifications
-}
-```
-
-Note that both elements in the request body are optional.  If the seen flag is
-not specified then both messages that have been seen and messages that have
-not been seen will be returned.  If the limit is not specified then all
-notifications for the user will be returned.
+<table>
+    <thead>
+        <tr><th>Name</th><th>Description</th><th>Required/Optional</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>limit</td>
+            <td>The maximum number of notifications to return at a time.</td>
+            <td>Required</td>
+        </tr>
+        <tr>
+            <td>offset</td>
+            <td>The index of the starting message.</td>
+            <td>Required</td>
+        </tr>
+        <tr>
+            <td>sortField</td>
+            <td>
+                The field to use when sorting messages.  Currently, the only
+                supported value for this field is `timestamp`.
+            </td>
+            <td>Optional (defaults to `timestamp`)</td>
+        </tr>
+        <tr>
+            <td>sortDir</td>
+            <td>
+                The sorting direction, which can be `asc` (ascending) or `des`
+                (descending).
+            </td>
+            <td>Optional (defaults to `des`)</td>
+        </tr>
+        <tr>
+            <td>filter</td>
+            <td>
+                Specifies the type of notification messages to return, which
+                can be `data`, `analysis` or `tool`.  Other types of
+                notifications may be added in the future.  If this parameter
+                it not specified then all types of notifications will be
+                returned.
+            </td>
+            <td>Optional</td>
+        </tr>
+    </tbody>
+</table>
 
 The response body for this service is in the following format:
 
@@ -1734,8 +1769,9 @@ The response body for this service is in the following format:
 
 The payload object in each message is a JSON object with a format that is
 specific to the notification type, and its format will vary.  There are
-currently two types of notifications that we support: `data` and `analysis`.
-Both of these notification types have the same payload format:
+currently three types of notifications that we support: `data`, `analysis` and
+`tool`.  The `data` and `analysis` notification types have the same payload
+format:
 
 ```json
 {
@@ -1754,10 +1790,23 @@ Both of these notification types have the same payload format:
 }
 ```
 
+The payload format for the `tool` notification type is a little simpler:
+
+```json
+{
+    "email_address": email-address,
+    "toolname": tool-name,
+    "tooldirectory": tool-directory,
+    "tooldescription": tool-description,
+    "toolattribution": tool-attribution,
+    "toolversion": tool-version
+}
+```
+
 Here's an example:
 
 ```
-$ curl -sd '{"limit":1}' "http://by-tor:8888/secured/notifications/get-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/notifications/get-messages?proxyToken=$(cas-ticket)&limit=1&offset=0" | python -mjson.tool
 {
     "messages": [
         {
@@ -1794,30 +1843,27 @@ $ curl -sd '{"limit":1}' "http://by-tor:8888/secured/notifications/get-messages?
 
 #### Obtaining Unseen Notifications
 
-Secured Endpoint: POST /secured/notifications/get-unseen-messages
+Secured Endpoint: GET /secured/notifications/unseen-messages
 
-This service is equivalent to calling the `/notifications/get-messages`
-service and specifying a `seen` flag of `false`.  If the user has already seen
-all notifications (that is, if any service call has ever returned the
-notification before) then no notifications will be returned.  Here's an
-example:
+This service is used to obtain notifications that the user hasn't seen yet.
+This service takes no query-string parameters other than the `proxyToken`
+parameter that is required by all secured services.  Here's an example:
 
 ```
-$ curl -sd '{"limit":1}' "http://by-tor:8888/secured/notifications/get-unseen-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/notifications/unseen-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "messages": []
 }
 ```
 
-#### Marking Notifications as Deleted
+#### Marking Notifications as Seen
 
-Secured Endpoint: POST /secured/notifications/delete
+Secured Endpoint: POST /secured/notifications/seen
 
-Users may wish to dismiss notifications that they've already seen.  This
-service marks one or more notifications as deleted so that neither the
-`/notfications/get-messages` endpoint nor the
-`/notifications/get-unseen-messages` endpoint will return them.  The request
-body for this service is in the following format:
+Once a user has seen a notification, the notification should be marked as seen
+to prevent it from being returned by the `/notifications/unseen-messages`
+endpoint.  This service provides a way to mark notifications as seen.  The
+request body for this service is in the following format:
 
 ```
 {
@@ -1830,7 +1876,8 @@ body for this service is in the following format:
 }
 ```
 
-This service has no response body.  Here's an example:
+The response body for this service is a simple JSON object that indicates
+whether or not the service call succeeded.  Here's an example:
 
 ```
 $ curl -sd '
@@ -1839,7 +1886,50 @@ $ curl -sd '
         "C15763CF-A5C9-48F5-BE4F-9FB3CB1897EB"
     ]
 }
-' http://by-tor:8888/secured/notifications/delete
+' http://by-tor:8888/secured/notifications/seen | python -mjson.tool
+{
+    "success": true
+}
+```
+
+Note that the UUIDs provided in the request body must be obtained from the
+`message` -> `id` element of the notification the user wishes to mark as seen.
+
+#### Marking Notifications as Deleted
+
+Secured Endpoint: POST /secured/notifications/delete
+
+Users may wish to dismiss notifications that they've already seen.  This
+service marks one or more notifications as deleted so that neither the
+`/notfications/messages` endpoint nor the `/notifications/unseen-messages`
+endpoint will return them.  The request body for this service is in the
+following format:
+
+```
+{
+    "uuids": [
+        uuid-1,
+        uuid-2,
+        ...,
+        uuid-n
+    ]
+}
+```
+
+The response body for this service is a simple JSON object that indicates
+whether or not the service call succeeded.  Here's an example:
+
+```
+$ curl -sd '
+{
+    "uuids": [
+        "C15763CF-A5C9-48F5-BE4F-9FB3CB1897EB"
+    ]
+}
+' http://by-tor:8888/secured/notifications/delete | python -mjson.tool
+{
+    "success": true
+}
 ```
 
 Note that the UUIDs provided in the request body must be obtained from the
