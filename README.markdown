@@ -1721,7 +1721,7 @@ all secured services):
         <tr>
             <td>sortDir</td>
             <td>
-                The sorting direction, which can be `asc` (ascending) or `des`
+                The sorting direction, which can be `asc` (ascending) or `desc`
                 (descending).
             </td>
             <td>Optional (defaults to `des`)</td>
