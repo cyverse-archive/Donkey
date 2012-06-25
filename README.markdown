@@ -3063,3 +3063,44 @@ The service will respond with a success or failure message per resource:
 }
 ```
 
+### Determining a User's Default Output Directory
+
+Secured Endpoint: GET /secured/default-output-dir
+
+This endoint determines the default output directory in iRODS for the
+currently authenticated user.  Aside from the `proxyToken` parameter, this
+endpoint requires one other query-string parameter: `name`, which specifies
+the name of the output directory.  If the directory exists already then this
+service will just return the full path to the directory.  If the directory
+does not exist already then this service will create it _then_ return the full
+path to the directory.
+
+Upon success, the JSON object returned in the response body contains a flag
+indicating that the service call was successfull along with the full path to
+the default output directory.  Upon failure, the response body contains a flag
+indicating that the service call was not successful along with some
+information about why the service call failed.
+
+Here are some examples:
+
+```
+$ curl -s "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)&name=analyses" | python -mjson.tool
+{
+    "path": "/iplant/home/ipctest/analyses",
+    "success": true
+}
+```
+
+```
+$ curl -s "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "arg": "name",
+    "code": "MISSING-REQUIRED-ARGUMENT",
+    "success": false
+}
+```
+
+At the time of this writing, if the path exists but points to a regular file
+rather than a directory, then the directory will not be created and no error
+will be logged.  This will be fixed when a service exists that determines
+whether a path points to a file or a directory.
