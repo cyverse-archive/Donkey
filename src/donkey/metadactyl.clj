@@ -106,6 +106,15 @@
              "get-only-analysis-groups" workspace-id)]
     (forward-get url req)))
 
+(defn list-app
+  "This service lists a single application.  The response body contains a JSON
+   string representing an object containing a list of apps.  If an app with the
+   provided identifier exists then the list will contain that app.  Otherwise,
+   the list will be empty."
+  [req app-id]
+  (let [url (build-metadactyl-unprotected-url "list-analysis" app-id)]
+    (forward-get url req)))
+
 (defn export-template
   "This service will export the template with the given identifier."
   [req template-id]
@@ -161,6 +170,14 @@
     (forward-post url req json-string)
     (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
   (success-response))
+
+(defn update-app
+  "This service will update the information at the top level of an analysis.
+   It will not update any of the components of the analysis."
+  [req]
+  (let [url (build-metadactyl-unprotected-url "update-analysis")]
+    (println url)
+    (forward-post url req)))
 
 (defn update-template
   "This service will either update an existing template or import a new template."
