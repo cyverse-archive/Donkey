@@ -1140,6 +1140,49 @@ $ curl -s http://by-tor:8888/get-only-analysis-groups/nobody@iplantcollaborative
 }
 ```
 
+#### Listing Individual Analyses
+
+Unsecured Endpoint: GET /list-analysis/{analysis-id}
+
+This service lists information about a single analysis if that analysis
+exists.  Here are some examples:
+
+```
+$ curl -s http://by-tor:8888/list-analysis/00102BE0-A7D7-4CC8-89F0-B1DB84B79018 | python -mjson.tool
+{
+    "analyses": [
+        {
+            "deleted": false, 
+            "description": "", 
+            "disabled": false, 
+            "edited_date": "", 
+            "id": "00102BE0-A7D7-4CC8-89F0-B1DB84B79018", 
+            "integration_date": "", 
+            "integrator_email": "mherde@iplantcollaborative.org", 
+            "integrator_name": "mherde", 
+            "is_favorite": false, 
+            "is_public": false, 
+            "name": "Copy of FASTX Barcode Splitter (Single End)", 
+            "pipeline_eligibility": {
+                "is_valid": true, 
+                "reason": ""
+            }, 
+            "rating": {
+                "average": 0
+            }, 
+            "wiki_url": ""
+        }
+    ]
+}
+```
+
+```
+$ curl -s http://by-tor:8888/list-analysis/I-DO-NOT-EXIST | python -mjson.tool
+{
+    "analyses": []
+}
+```
+
 #### Exporting a Template
 
 Unsecured Endpoint: GET /export-template/{template-id}
@@ -1545,6 +1588,28 @@ $ curl -sd '
 
 Though it is possible to import analyses using this endpoint, this practice is
 not recommended because it can cause spurious notifications to be sent.
+
+#### Updating Top-Level Analysis Information
+
+Unsecured Endpoint: POST /update-analysis
+
+This service updates analysis information without updating any components
+within the analysis.  The effect in the database is that the
+`transformation_activity` table will be updated, but none of its associated
+tables will be updated.  The request body is in the following format:
+
+```json
+{
+    "id": analysis-id,
+    "name": analysis-name,
+    "description": analysis-description,
+    "edited_date": analysis-edited-date,
+    "published_date": analysis-published-date
+}
+```
+
+Only the "id" field is required; the rest of the fields will be left
+unmodified if they're not specified.
 
 #### Obtaining Property Values for a Previously Executed Job
 
