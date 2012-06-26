@@ -176,7 +176,6 @@
    It will not update any of the components of the analysis."
   [req]
   (let [url (build-metadactyl-unprotected-url "update-analysis")]
-    (println url)
     (forward-post url req)))
 
 (defn update-template
