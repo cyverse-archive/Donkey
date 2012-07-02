@@ -1824,8 +1824,7 @@ The response body for this service is in the following format:
             }
             "seen": seen-flag,
             "type": notification-type-code,
-            "user": username,
-            "workspaceId": workspace-identifier-if-available
+            "user": username
         },
         ...
     ]
@@ -1871,7 +1870,7 @@ The payload format for the `tool` notification type is a little simpler:
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/secured/notifications/get-messages?proxyToken=$(cas-ticket)&limit=1&offset=0" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/notifications/messages?proxyToken=$(cas-ticket)&limit=1&offset=0" | python -mjson.tool
 {
     "messages": [
         {
@@ -1899,8 +1898,7 @@ $ curl -s "http://by-tor:8888/secured/notifications/get-messages?proxyToken=$(ca
             }, 
             "seen": true, 
             "type": "data", 
-            "user": "nobody", 
-            "workspaceId": null
+            "user": "nobody"
         }
     ]
 }
