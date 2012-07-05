@@ -12,7 +12,7 @@
   "Creates a map of values from user attributes stored in the request by
    validate-cas-proxy-ticket."
   [{:keys [user-attributes]}]
-  (log/warn user-attributes)
+  (log/trace user-attributes)
   {:username (str (get user-attributes "uid") "@" (uid-domain)),
    :password (get user-attributes "password"),
    :email (get user-attributes "email"),

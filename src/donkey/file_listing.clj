@@ -3,6 +3,7 @@
         [donkey.config]
         [donkey.service :only [build-url-with-query success-response]]
         [donkey.transformers :only [add-current-user-to-map]]
+        [donkey.user-prefs :only [user-prefs]]
         [slingshot.slingshot :only [throw+]])
   (:require [clj-http.client :as client]
             [clojure.string :as string]))
@@ -49,14 +50,6 @@
   []
   (nibblonian-get {} #(:body %) "home"))
 
-(defn- exists
-  "Determines whether or not a path exists."
-  [path]
-  (let [query {}
-        body  {:paths [path]}
-        f     #(get (:paths (read-json (:body %))) (keyword path))]
-    (nibblonian-post query body f "exists")))
-
 (defn- create
   "Creates a directory."
   [path]
@@ -65,11 +58,37 @@
         f     #(:path (read-json (:body %)))]
     (nibblonian-post query body f "directory" "create")))
 
+(defn- stat
+  "Obtains file status information for a path."
+  [path]
+  (let [query {}
+        body  {:path path}
+        f     #(get (:paths (read-json (:body %))) (keyword path))]
+    (nibblonian-post query body f "stat")))
+
+(defn- get-or-create-dir
+  "Returns the path argument if the path exists and refers to a directory.  If
+   the path exists and refers to a regular file then nil is returned.
+   Otherwise, a new directory is created and the path is returned."
+  [path]
+  (let [stats (stat path)]
+    (cond (nil? stats)            (create path)
+          (= (:type stats) "dir") path
+          :else                   nil)))
+
+(defn- generate-output-dir
+  "Automatically generates the default output directory based on the default
+   name sent to the service."
+  [base]
+  (let [home (home-dir)
+        base (build-path home dirname)]
+    (first (filter #(get-or-create-dir %)
+                   (cons base (map #(str base "-" %) range))))))
+
 (defn get-default-output-dir
   "Determines whether or not the default directory name exists for a user."
   [dirname]
-  (let [home (home-dir)
-        path (build-path home dirname)]
-    (if (exists path)
-      (success-response {:path path})
-      (success-response {:path (create path)}))))
+  (let [prefs (user-prefs)
+        base  (:defaultOutputFolder user-prefs)
+        base  (if base base (build-path home dirname))]
+    (success-response {:path (generate-output-dir base)})))

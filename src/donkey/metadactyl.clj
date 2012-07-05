@@ -214,7 +214,6 @@
    the authenticated user."
   [req]
   (let [url (build-metadactyl-secured-url "bootstrap")]
-    (log/warn "url =" url)
     (forward-get url req)))
 
 (defn get-messages
@@ -222,7 +221,6 @@
    retrieve notifications that the user may or may not have seen yet."
   [req]
   (let [url (dn/notificationagent-url "messages" (:params req))]
-    (log/warn "url =" url)
     (dn/add-app-details (forward-get url req))))
 
 (defn get-unseen-messages
@@ -230,7 +228,6 @@
    retrieve notifications that the user hasn't seen yet."
   [req]
   (let [url (dn/notificationagent-url "unseen-messages")]
-    (log/warn "url =" url)
     (dn/add-app-details (forward-get url req))))
 
 (defn delete-notifications
@@ -238,7 +235,6 @@
    existing notifications."
   [req]
   (let [url (dn/notificationagent-url "delete")]
-    (log/warn "url =" url)
     (forward-post url req)))
 
 (defn mark-notifications-as-seen
@@ -246,7 +242,6 @@
    notifications as seen by the user."
   [req]
   (let [url (dn/notificationagent-url "seen")]
-    (log/warn "url =" url)
     (forward-post url req)))
 
 (defn send-notification
