@@ -66,6 +66,13 @@
         f     #(get (:paths (read-json (:body %))) (keyword path))]
     (nibblonian-post query body f "stat")))
 
+(defn- save-default-output-dir
+  "Saves the path to the user's default output folder in the user's prefs."
+  [path]
+  (user-prefs
+   (json-str (assoc (read-json (user-prefs)
+                               :defaultOutputFolder path)))))
+
 (defn- get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
    the path exists and refers to a regular file then nil is returned.
@@ -81,14 +88,26 @@
    name sent to the service."
   [base]
   (let [home (home-dir)
-        base (build-path home dirname)]
-    (first (filter #(get-or-create-dir %)
-                   (cons base (map #(str base "-" %) range))))))
+        path (first (filter #(get-or-create-dir %)
+                            (cons base (map #(str base "-" %) range))))]
+    (save-default-output-dir path)
+    path))
+
+(defn- validate-output-dir
+  "Validates the user's selected output directory."
+  [path]
+  (let [validated-path (get-or-create-dir path)]
+    (when-not validated-path
+      (throw+ {:type :regular-file-selected-as-output-folder
+               :path  path}))
+    path))
 
 (defn get-default-output-dir
   "Determines whether or not the default directory name exists for a user."
   [dirname]
-  (let [prefs (user-prefs)
-        base  (:defaultOutputFolder user-prefs)
-        base  (if base base (build-path home dirname))]
-    (success-response {:path (generate-output-dir base)})))
+  (let [prefs (read-json (user-prefs))
+        path  (:defaultOutputFolder user-prefs)]
+    (if path
+      (success-response {:path (validate-output-dir path)})
+      (let [base  (build-path home-dir dirname)]
+        (success-response {:path (generate-output-dir base)})))))
