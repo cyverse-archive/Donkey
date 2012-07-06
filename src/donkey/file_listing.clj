@@ -6,7 +6,8 @@
         [donkey.user-prefs :only [user-prefs]]
         [slingshot.slingshot :only [throw+]])
   (:require [clj-http.client :as client]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.tools.logging :as log]))
 
 (defn- build-path
   "Builds a path from a base path and a list of components."
@@ -62,7 +63,7 @@
   "Obtains file status information for a path."
   [path]
   (let [query {}
-        body  {:path path}
+        body  {:paths [path]}
         f     #(get (:paths (read-json (:body %))) (keyword path))]
     (nibblonian-post query body f "stat")))
 
@@ -70,14 +71,15 @@
   "Saves the path to the user's default output folder in the user's prefs."
   [path]
   (user-prefs
-   (json-str (assoc (read-json (user-prefs)
-                               :defaultOutputFolder path)))))
+   (json-str (assoc (read-json (user-prefs))
+               :defaultOutputFolder path))))
 
 (defn- get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
    the path exists and refers to a regular file then nil is returned.
    Otherwise, a new directory is created and the path is returned."
   [path]
+  (log/debug "getting or creating dir: path =" path)
   (let [stats (stat path)]
     (cond (nil? stats)            (create path)
           (= (:type stats) "dir") path
@@ -87,15 +89,18 @@
   "Automatically generates the default output directory based on the default
    name sent to the service."
   [base]
+  (log/debug "generating output directory: base =" base)
   (let [home (home-dir)
-        path (first (filter #(get-or-create-dir %)
-                            (cons base (map #(str base "-" %) range))))]
+        path (first
+              (filter #(not (nil? (get-or-create-dir %)))
+                      (cons base (map #(str base "-" %) (iterate inc 1)))))]
     (save-default-output-dir path)
     path))
 
 (defn- validate-output-dir
   "Validates the user's selected output directory."
   [path]
+  (log/debug "validating path:" path)
   (let [validated-path (get-or-create-dir path)]
     (when-not validated-path
       (throw+ {:type :regular-file-selected-as-output-folder
@@ -106,8 +111,8 @@
   "Determines whether or not the default directory name exists for a user."
   [dirname]
   (let [prefs (read-json (user-prefs))
-        path  (:defaultOutputFolder user-prefs)]
+        path  (:defaultOutputFolder prefs)]
     (if path
       (success-response {:path (validate-output-dir path)})
-      (let [base  (build-path home-dir dirname)]
+      (let [base  (build-path (home-dir) dirname)]
         (success-response {:path (generate-output-dir base)})))))
