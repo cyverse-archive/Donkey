@@ -43,6 +43,17 @@ donkey.uid.domain = iplantcollaborative.org
 # User session settings
 donkey.sessions.base-url = http://hostname.iplantcollaborative.org:8888/sessions/
 donkey.sessions.bucket = sessions
+
+# User preferences settings
+donkey.preferences.bucket = preferences
+
+# User information lookup settings.
+donkey.userinfo.base-url = https://hostname.iplantcollaborative.org/users/index.php/api/v1
+donkey.userinfo.default-search-limit = 50
+
+# Nibblonian connection settings
+donkey.nibblonian.base-url = http://services-2.iplantcollaborative.org:31360/
+
 ```
 
 Generally, the service connection settings will have to be updated for each
@@ -3133,10 +3144,27 @@ Secured Endpoint: GET /secured/default-output-dir
 This endoint determines the default output directory in iRODS for the
 currently authenticated user.  Aside from the `proxyToken` parameter, this
 endpoint requires one other query-string parameter: `name`, which specifies
-the name of the output directory.  If the directory exists already then this
-service will just return the full path to the directory.  If the directory
-does not exist already then this service will create it _then_ return the full
-path to the directory.
+the default name of the output directory.
+
+This service works in conjunction with user preferences.  If a default output
+directory has been selected already (either by the user or automatically) then
+this service will attempt to use that directory.  If that directory exists
+already then this service will just return the full path to the directory.  If
+the path exists and refers to a regular file then the service will fail with
+an error code of `REGULAR-FILE-SELECTED-AS-OUTPUT-FOLDER`.  Otherwise, this
+service will create the directory and return the path.
+
+If the default output directory has not been selected yet then this service
+will automatically generate the path to the directory based on the name that
+was given to it in the `name` query-string parameter.  The value of this
+parameter is treated as being relative to the user's home directory in iRODS.
+If the path exists and is a directory then the path is saved in the user's
+preferences and returned.  If the path does not exist then the directory is
+created and the path is saved in the user's preferences and returned.  If the
+path exists and is a regular file then the service will generate a unique path
+(by repeatedly trying the same name with a hyphen and an integer appended to
+it) and update the preferences and return the path when a unique path is
+found.
 
 Upon success, the JSON object returned in the response body contains a flag
 indicating that the service call was successfull along with the full path to
