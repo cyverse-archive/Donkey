@@ -26,13 +26,15 @@
 (def
   ^{:private true
     :doc "The list of functions to use in a generalized search."}
-   search-fns [(partial search "username") (partial search "name")
-               (partial search "email")])
+  search-fns [(partial search "username") (partial search "name")
+              (partial search "email")])
 
 (defn- remove-duplicates
-  "Removes duplicate user records from the merged search results."
+  "Removes duplicate user records from the merged search results.  We use
+   (map val ...) here rather than (vals) because (vals) returns nil if the
+   map is empty."
   [results]
-  (vals (into {} (map #(vector (:id %) %) results))))
+  (map val (into {} (map #(vector (:id %) %) results))))
 
 (defn- to-int
   "Converts a string to an integer, throwing an IllegalArgumentException if
@@ -43,9 +45,9 @@
     (Integer/parseInt string)
     (catch NumberFormatException e
       (throw (IllegalArgumentException.
-               (str "invalid number format in Range header: " string) e)))))
+              (str "invalid number format in Range header: " string) e)))))
 
-(defn parse-range
+(defn- parse-range
   "Parses the value of a range header in the request.  We expect the header
    value to be in the format, records=<first>-<last>.  For example, to get
    records 0 through 50, the header value should be records=0-50."
@@ -56,23 +58,23 @@
           [begin end] (map to-int [begin-str end-str])]
       (if (or (not= "records" units) (< begin 0) (< end 0) (>= begin end))
         (throw (IllegalArgumentException.
-                 "invalid Range header value: should be records=0-50")))
+                "invalid Range header value: should be records=0-50")))
       [begin end])))
 
 (defn user-search
   "Performs user searches by username, name and e-mail address and returns the
    merged results."
   ([search-string]
-    (user-search search-string 0 (default-user-search-result-limit)))
+     (user-search search-string 0 (default-user-search-result-limit)))
   ([search-string range-setting]
-    (apply user-search search-string (parse-range range-setting)))
+     (apply user-search search-string (parse-range range-setting)))
   ([search-string start end]
-    (let [results (map #(% search-string start end) search-fns)
-          users (remove-duplicates (apply concat (map #(:users %) results)))
-          truncated (if (some :truncated results) true false)]
-      (json-str {:users users :truncated truncated}))))
+     (let [results (map #(% search-string start end) search-fns)
+           users (remove-duplicates (apply concat (map #(:users %) results)))
+           truncated (if (some :truncated results) true false)]
+       (json-str {:users users :truncated truncated}))))
 
-(defn empty-user-info
+(defn- empty-user-info
   "Returns an empty user-info record for the given username."
   [username]
   {:email     ""
