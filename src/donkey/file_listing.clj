@@ -112,7 +112,7 @@
   [dirname]
   (let [prefs (read-json (user-prefs))
         path  (:defaultOutputFolder prefs)]
-    (if path
+    (if (not (string/blank? path))
       (success-response {:path (validate-output-dir path)})
       (let [base  (build-path (home-dir) dirname)]
         (success-response {:path (generate-output-dir base)})))))
