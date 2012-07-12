@@ -3195,3 +3195,17 @@ At the time of this writing, if the path exists but points to a regular file
 rather than a directory, then the directory will not be created and no error
 will be logged.  This will be fixed when a service exists that determines
 whether a path points to a file or a directory.
+
+
+### Stopping a Running Analysis
+
+Secured Endpoint: DELETE /secured/stop-analysis/<uuid>
+
+This is a pass-through endpoint to the JEX that stops a running analysis. The <uuid>
+should be replaced with the UUID of a running analysis.
+
+For more information, see the docs for the /stop endpoint in the JEX, available here:
+
+    https://github.com/iPlantCollaborativeOpenSource/JEX#stopping-a-running-analysis
+
+
