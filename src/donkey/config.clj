@@ -163,6 +163,10 @@
   "The base URL for the user info API."
   "donkey.userinfo.base-url")
 
+(STR jex-base-url
+  "The base URL for the JEX."
+  "donkey.jex.base-url")
+
 (INT default-user-search-result-limit
   "The default limit for the number of results for a user info search.  Note
    this is the maximum number of results returned by trellis for any given

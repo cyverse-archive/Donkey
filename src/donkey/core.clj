@@ -17,7 +17,8 @@
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
             [clojure-commons.clavin-client :as cl]
-            [ring.adapter.jetty :as jetty]))
+            [ring.adapter.jetty :as jetty]
+            [donkey.jex :as jex]))
 
 (defn- trap
   "Traps any exception thrown by a service and returns an appropriate
@@ -58,6 +59,9 @@
 
   (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as req]
        (trap #(delete-experiments req workspace-id)))
+  
+  (DELETE "/stop-analysis/:uuid" [uuid :as req]
+        (trap #(jex/stop-analysis req uuid)))
 
   (POST "/rate-analysis" [:as req]
         (trap #(rate-app req)))
