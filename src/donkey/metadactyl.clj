@@ -17,6 +17,13 @@
   (apply build-url-with-query (metadactyl-base-url)
          (add-current-user-to-map {}) components))
 
+(defn- build-metadactyl-secured-url-with-query
+  "Adds the name and email of the currently authenticated user to the secured
+   metadactyl URL with the given relative URL path."
+  [query & components]
+  (apply build-url-with-query (metadactyl-base-url)
+         (add-current-user-to-map query) components))
+
 (defn- build-metadactyl-unprotected-url
   "Builds the unsecured metadactyl URL from the given relative URL path."
   [& components]
@@ -304,7 +311,10 @@
   "This service lists all of the apps in an app group and all of its
    descendents."
   [req app-group-id]
-  (let [url (build-metadactyl-secured-url "get-analyses-in-group" app-group-id)]
+  (let [url (build-metadactyl-secured-url-with-query
+              (:params req)
+              "get-analyses-in-group"
+              app-group-id)]
     (forward-get url req)))
 
 (defn list-deployed-components-in-app

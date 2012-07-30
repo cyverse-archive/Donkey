@@ -465,6 +465,36 @@ $ curl -s http://by-tor:8888/get-workflow-elements/all | python -mjson.tool
 }
 ```
 
+#### Search Deployed Components
+
+Unsecured Endpoint: GET /search-deployed-components/{search-term}
+
+The `/search-deployed-components/{search-term}` endpoint is used by Tito to
+search for a deployed component with a name or description that contains the
+given search-term.
+
+The response format is the same as the /get-workflow-elements/components
+endpoint:
+
+```
+$ curl -s http://by-tor:8888/search-deployed-components/example | python -mjson.tool
+{
+    "components": [
+        {
+            "name": "foo-example.pl", 
+            "description": "You'll find out!", 
+            ...
+        },
+        {
+            "name": "foo-bar.pl", 
+            "description": "Another Example Script", 
+            ...
+        }, 
+        ...
+    ]
+}
+```
+
 #### Listing Analysis Identifiers
 
 Unsecured Endpoint: GET /get-all-analysis-ids
