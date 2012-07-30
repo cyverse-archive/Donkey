@@ -29,6 +29,14 @@
   [& components]
   (apply build-url (metadactyl-unprotected-base-url) components))
 
+(defn- build-unprotected-url-with-query
+  "Builds an unsecured metadactyl URL from the given relative URL path.  Any
+   query-string parameters that are present in the request will be forwarded
+   to metadactyl."
+  [request & components]
+  (apply build-url-with-query (metadactyl-unprotected-base-url)
+         (:params request) components))
+
 (defn get-workflow-elements
   "A service to get information about workflow elements."
   [req element-type]
@@ -201,7 +209,7 @@
   "This service will either update an existing workflow or import a new workflow.  
    Vetted workflows may be updated."
   [req]
-  (let [url (build-metadactyl-unprotected-url "force-update-workflow")]
+  (let [url (build-unprotected-url-with-query req "force-update-workflow")]
     (forward-post url req)))
 
 (defn delete-workflow
