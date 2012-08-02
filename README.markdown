@@ -2574,49 +2574,20 @@ $ curl -s "http://by-tor:8888/secured/search-analyses/ranger?proxyToken=$(cas-ti
 
 Secured Endpoint: GET /secured/get-analyses-in-group/{group-id}
 
-This service lists all of the analyses within an analysis group or any of its
-descendents.  The DE uses this service to obtain the list of analyses when a
-user clicks on a group in the _Apps_ window.  The response body for this
-service is in the following format:
+This endpoint forwards requests to the metadactyl-clj service that lists all of
+the analyses within an analysis group or any of its descendents.  The DE uses
+this service to obtain the list of analyses when a user clicks on a group in the
+_Apps_ window.
 
-```json
-{
-    "description": analysis-group-description,
-    "id": analysis-group-id,
-    "is_public": public-group-flag,
-    "name": analysis-group-name,
-    "template_count": number-of-analyses-in-group-and-descendents,
-    "templates": [
-        {
-            "deleted": analysis-deleted-flag,
-            "description": analysis-description,
-            "disabled": analysis-disabled-flag,
-            "id": analysis-id,
-            "integrator_email": integrator-email-address,
-            "integrator_name": integrator-name,
-            "is_favorite": favorite-analysis-flag,
-            "is_public": public-analysis-flag,
-            "name": analysis-name,
-            "pipeline_eligibility": {
-                "is_valid": valid-for-pipelines-flag,
-                "reason": reason-for-exclusion-from-pipelines-if-applicable,
-            },
-            "rating": {
-                "average": average-rating,
-                "comment-id": comment-id,
-                "user": user-rating
-            },
-            "wiki_url": documentation-link
-        },
-        ...
-    ]
-}
-```
+URL query parameters are also forwarded to the service endpoint. See
+https://github.com/iPlantCollaborativeOpenSource/metadactyl-clj#listing-analyses-in-an-analysis-group
+for more details about what URL query parameters are supported as well as the
+service's response body format.
 
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)&limit=1&sortField=name" | python -mjson.tool
 {
     "description": "", 
     "id": "C3DED4E2-EC99-4A54-B0D8-196112D1BB7B", 
