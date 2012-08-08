@@ -59,13 +59,22 @@
         f     #(:path (read-json (:body %)))]
     (nibblonian-post query body f "directory" "create")))
 
-(defn- stat
-  "Obtains file status information for a path."
+(defn- exists?
+  "Determines whether or not a path exists."
   [path]
   (let [query {}
         body  {:paths [path]}
-        f     #(get (:paths (read-json (:body %))) (keyword path))]
-    (nibblonian-post query body f "stat")))
+        f     #(get-in (read-json (:body %)) [:paths (keyword path)])]
+    (nibblonian-post query body f "exists")))
+
+(defn- stat
+  "Obtains file status information for a path."
+  [path]
+  (when (exists? path)
+    (let [query {}
+          body  {:paths [path]}
+          f     #(get-in (read-json (:body %)) [:paths (keyword path)])]
+      (nibblonian-post query body f "stat"))))
 
 (defn- save-default-output-dir
   "Saves the path to the user's default output folder in the user's prefs."

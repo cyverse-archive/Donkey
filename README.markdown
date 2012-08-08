@@ -209,6 +209,8 @@ are currently supported:
     <tr><td>property-types</td><td>Known types of parameters</td></tr>
     <tr><td>rule-types</td><td>Known types of validation rules</td></tr>
     <tr><td>value-types</td><td>Known types of parameter values</td></tr>
+    <tr><td>data-sources</td><td>Known sources for data objects</td></tr>
+    <tr><td>tool-types</td><td>Known types of deployed components</td></tr>
     <tr><td>all</td><td>All workflow element types</td></tr>
 </table>
 
@@ -234,7 +236,8 @@ $ curl -s http://by-tor:8888/get-workflow-elements/components | python -mjson.to
             "version": "0.0.1"
         }, 
         ...
-    ]
+    ],
+    "success": true
 }
 ```
 
@@ -260,7 +263,8 @@ $ curl -s http://by-tor:8888/get-workflow-elements/formats | python -mjson.tool
             "name": "Barcode-0"
         }, 
         ...
-    ]
+    ],
+    "success": true
 }
 ```
 
@@ -292,7 +296,8 @@ $ curl -s http://by-tor:8888/get-workflow-elements/info-types | python -mjson.to
             "name": "ReferenceGenome"
         }, 
         ...
-    ]
+    ],
+    "success": true
 }
 ```
 
@@ -302,7 +307,12 @@ command-line option and the property type represents the type of data required
 by the command-line option.  For example a `Boolean` property generally
 corresponds to a single command-line flag that takes no arguments.  A `Text`
 property, on the other hand, generally represents some sort of textual
-information.  Here's an example listing:
+information.  Some property types are not supported by all tool types, so it
+is helpful in some cases to filter property types either by the tool type or
+optionally by the deployed component (which is used to determine the tool
+type).
+
+Here's an example that is not filtered by tool type:
 
 ```
 $ curl -s http://by-tor:8888/get-workflow-elements/property-types | python -mjson.tool
@@ -323,7 +333,82 @@ $ curl -s http://by-tor:8888/get-workflow-elements/property-types | python -mjso
             "value_type": "Number"
         }, 
         ...
-    ]
+    ],
+    "success": true
+}
+```
+
+Here's an example that is filtered by tool type explicitly:
+
+```
+$ curl -s http://by-tor:8888/get-workflow-elements/property-types?tool-type=fAPI | python -mjson.tool
+{
+    "property_types": [
+        {
+            "description": "A text box that checks for valid number input", 
+            "hid": 1, 
+            "id": "ptd2340f11-d260-41b4-93fd-c1d695bf6fef", 
+            "name": "Number", 
+            "value_type": "Number"
+        }, 
+        {
+            "description": "", 
+            "hid": 2, 
+            "id": "pt2cf37b0d-5463-4aef-98a2-4db63d2f3dbc", 
+            "name": "ClipperSelector", 
+            "value_type": null
+        }, 
+        ...
+    ],
+    "success": true
+}
+```
+
+Here's an example that is filtered by component identifier:
+
+```
+$ curl -s http://by-tor:8888/get-workflow-elements/property-types?component-id=c1b9f95a766b64454a2570f5ddb255931 | python -mjson.tool
+{
+    "property_types": [
+        {
+            "description": "A text box that checks for valid number input", 
+            "hid": 1, 
+            "id": "ptd2340f11-d260-41b4-93fd-c1d695bf6fef", 
+            "name": "Number", 
+            "value_type": "Number"
+        }, 
+        {
+            "description": "", 
+            "hid": 2, 
+            "id": "pt2cf37b0d-5463-4aef-98a2-4db63d2f3dbc", 
+            "name": "ClipperSelector", 
+            "value_type": null
+        },
+        ...
+    ],
+    "success": true
+}
+```
+
+If you filter by both tool type and deployed component ID then the tool type
+will take precedence.  Including either an undefined tool type or an undefined
+tool type name will result in an error:
+
+```
+$ curl -s http://by-tor:8888/get-workflow-elements/property-types?component-id=foo | python -mjson.tool
+{
+    "code": "UNKNOWN_DEPLOYED_COMPONENT", 
+    "id": "foo",
+    "success": false
+}
+```
+
+```
+$ curl -s http://by-tor:8888/get-workflow-elements/property-types?tool-type=foo | python -mjson.tool
+{
+    "code": "UNKNOWN_TOOL_TYPE", 
+    "name": "foo",
+    "success": false
 }
 ```
 
@@ -359,7 +444,8 @@ $ curl -s http://by-tor:8888/get-workflow-elements/rule-types | python -mjson.to
                 "Number"
             ]
         },
-    ]
+    ],
+    "success": true
 }
 ```
 
@@ -388,6 +474,50 @@ $ curl -s http://by-tor:8888/get-workflow-elements/value-types | python -mjson.t
             "name": "Boolean"
         }, 
         ...
+    ],
+    "success": true
+}
+```
+
+Data sources are the known possible sources for data objects.  In most cases,
+data objects will come from a plain file.  The only other options that are
+currently available are redirected standard output and redirected standard
+error output.  Both of these options apply only to data objects that are
+associated with an output.  Here's an example:
+
+```
+$ curl -s http://by-tor:8888/get-workflow-elements/data-sources | python -mjson.tool
+{
+    "data_sources": [
+        {
+            "hid": 1, 
+            "id": "8D6B8247-F1E7-49DB-9FFE-13EAD7C1AED6", 
+            "label": "File", 
+            "name": "file"
+        },
+        ...
+    ],
+    "success": true
+}
+```
+
+Tool types are known types of deployed components in the Discovery
+Environment.  Generally, there's a different tool type for each execution
+environment that is supported by the Discovery Environment.  Here's an
+example:
+
+```
+$ curl -s http://by-tor:8888/get-workflow-elements/tool-types | python -mjson.tool
+{
+    "success": true, 
+    "tool_types": [
+        {
+            "description": "Run at the University of Arizona", 
+            "id": 1, 
+            "label": "UA", 
+            "name": "executable"
+        },
+        ...
     ]
 }
 ```
@@ -411,6 +541,15 @@ $ curl -s http://by-tor:8888/get-workflow-elements/all | python -mjson.tool
         },
         ...
     ], 
+    "data_sources": [
+        {
+            "hid": 1, 
+            "id": "8D6B8247-F1E7-49DB-9FFE-13EAD7C1AED6", 
+            "label": "File", 
+            "name": "file"
+        },
+        ...
+    ],
     "formats": [
         {
             "hid": 1, 
@@ -452,7 +591,17 @@ $ curl -s http://by-tor:8888/get-workflow-elements/all | python -mjson.tool
             ]
         },
         ...
-    ], 
+    ],
+    "success": true,
+    "tool_types": [
+        {
+            "description": "Run at the University of Arizona", 
+            "id": 1, 
+            "label": "UA", 
+            "name": "executable"
+        },
+        ...
+    ],
     "value_types": [
         {
             "description": "Arbitrary text", 
@@ -460,6 +609,36 @@ $ curl -s http://by-tor:8888/get-workflow-elements/all | python -mjson.tool
             "id": "0115898A-F81A-4598-B1A8-06E538F1D774", 
             "name": "String"
         },
+        ...
+    ]
+}
+```
+
+#### Search Deployed Components
+
+Unsecured Endpoint: GET /search-deployed-components/{search-term}
+
+The `/search-deployed-components/{search-term}` endpoint is used by Tito to
+search for a deployed component with a name or description that contains the
+given search-term.
+
+The response format is the same as the /get-workflow-elements/components
+endpoint:
+
+```
+$ curl -s http://by-tor:8888/search-deployed-components/example | python -mjson.tool
+{
+    "components": [
+        {
+            "name": "foo-example.pl", 
+            "description": "You'll find out!", 
+            ...
+        },
+        {
+            "name": "foo-bar.pl", 
+            "description": "Another Example Script", 
+            ...
+        }, 
         ...
     ]
 }
@@ -2395,49 +2574,20 @@ $ curl -s "http://by-tor:8888/secured/search-analyses/ranger?proxyToken=$(cas-ti
 
 Secured Endpoint: GET /secured/get-analyses-in-group/{group-id}
 
-This service lists all of the analyses within an analysis group or any of its
-descendents.  The DE uses this service to obtain the list of analyses when a
-user clicks on a group in the _Apps_ window.  The response body for this
-service is in the following format:
+This endpoint forwards requests to the metadactyl-clj service that lists all of
+the analyses within an analysis group or any of its descendents.  The DE uses
+this service to obtain the list of analyses when a user clicks on a group in the
+_Apps_ window.
 
-```json
-{
-    "description": analysis-group-description,
-    "id": analysis-group-id,
-    "is_public": public-group-flag,
-    "name": analysis-group-name,
-    "template_count": number-of-analyses-in-group-and-descendents,
-    "templates": [
-        {
-            "deleted": analysis-deleted-flag,
-            "description": analysis-description,
-            "disabled": analysis-disabled-flag,
-            "id": analysis-id,
-            "integrator_email": integrator-email-address,
-            "integrator_name": integrator-name,
-            "is_favorite": favorite-analysis-flag,
-            "is_public": public-analysis-flag,
-            "name": analysis-name,
-            "pipeline_eligibility": {
-                "is_valid": valid-for-pipelines-flag,
-                "reason": reason-for-exclusion-from-pipelines-if-applicable,
-            },
-            "rating": {
-                "average": average-rating,
-                "comment-id": comment-id,
-                "user": user-rating
-            },
-            "wiki_url": documentation-link
-        },
-        ...
-    ]
-}
-```
+URL query parameters are also forwarded to the service endpoint. See
+https://github.com/iPlantCollaborativeOpenSource/metadactyl-clj#listing-analyses-in-an-analysis-group
+for more details about what URL query parameters are supported as well as the
+service's response body format.
 
 Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)&limit=1&sortField=name" | python -mjson.tool
 {
     "description": "", 
     "id": "C3DED4E2-EC99-4A54-B0D8-196112D1BB7B", 
