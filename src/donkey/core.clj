@@ -37,10 +37,10 @@
        (trap #(bootstrap req)))
 
   (GET "/notifications/messages" [:as req]
-        (trap #(get-messages req)))
+       (trap #(get-messages req)))
 
   (GET "/notifications/unseen-messages" [:as req]
-        (trap #(get-unseen-messages req)))
+       (trap #(get-unseen-messages req)))
 
   (POST "/notifications/delete" [:as req]
         (trap #(delete-notifications req)))
@@ -61,7 +61,7 @@
        (trap #(delete-experiments req workspace-id)))
   
   (DELETE "/stop-analysis/:uuid" [uuid :as req]
-        (trap #(jex/stop-analysis req uuid)))
+          (trap #(jex/stop-analysis req uuid)))
 
   (POST "/rate-analysis" [:as req]
         (trap #(rate-app req)))
@@ -131,6 +131,9 @@
 
   (GET "/default-output-dir" [:as {params :params}]
        (trap #(get-default-output-dir (required-param params :name))))
+
+  (POST "/default-output-dir" [:as {body :body}]
+        (trap #(reset-default-output-dir body)))
 
   (route/not-found (unrecognized-path-response)))
 

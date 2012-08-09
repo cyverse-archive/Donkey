@@ -1,7 +1,8 @@
 (ns donkey.file-listing
   (:use [clojure.data.json :only [json-str read-json]]
         [donkey.config]
-        [donkey.service :only [build-url-with-query success-response]]
+        [donkey.service
+         :only [build-url-with-query required-param success-response]]
         [donkey.transformers :only [add-current-user-to-map]]
         [donkey.user-prefs :only [user-prefs]]
         [slingshot.slingshot :only [throw+]])
@@ -125,3 +126,10 @@
       (success-response {:path (validate-output-dir path)})
       (let [base  (build-path (home-dir) dirname)]
         (success-response {:path (generate-output-dir base)})))))
+
+(defn reset-default-output-dir
+  "Resets the default output directory for a user."
+  [body]
+  (let [path (required-param (read-json (slurp body)) :path)]
+    (success-response
+     {:path (generate-output-dir (build-path (home-dir) path))})))

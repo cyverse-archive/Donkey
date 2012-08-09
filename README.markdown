@@ -3346,6 +3346,38 @@ rather than a directory, then the directory will not be created and no error
 will be logged.  This will be fixed when a service exists that determines
 whether a path points to a file or a directory.
 
+### Resetting a user's default output directory.
+
+Secured Endpoint: POST /secured/default-output-dir
+
+This endpoint resets a user's default output directory to its default value
+even if the user has already chosen a different default output directory.
+Since this is a POST request, this request requires a message body.  The
+message body in this case is a JSON object containing the path relative to the
+user's home directory in the `path` attribute.  Here are some examples:
+
+```
+$ curl -sd '
+{
+    "path":"foon"
+}' "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "path": "/iplant/home/ipctest/foon", 
+    "success": true
+}
+```
+
+```
+$ curl -sd '
+{
+    "inv":"foon"
+}' "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "arg": "path", 
+    "code": "MISSING-REQUIRED-ARGUMENT", 
+    "success": false
+}
+```
 
 ### Stopping a Running Analysis
 
