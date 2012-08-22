@@ -42,7 +42,8 @@
    :content-type :json})
 
 (defn required-param
-  "Retrieves a required parameter from the map of query string parameters."
+  "Retrieves a required parameter from a map.  The may may contain either query-
+   string parameters or a map that has been generated from a JSON request body."
   [params k]
   (let [v (params k)]
     (when (blank? v)
