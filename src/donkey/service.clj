@@ -1,5 +1,6 @@
 (ns donkey.service
   (:use [cemerick.url :only [url]]
+        [ring.util.codec :only [url-encode]]
         [clojure.data.json :only [json-str]]
         [clojure.string :only [join blank?]]
         [slingshot.slingshot :only [throw+]])
@@ -61,7 +62,7 @@
   "Builds a URL from a base URL and one or more URL components.  Any query
    string parameters that are provided will be included in the result."
   [base query & components]
-  (str (assoc (apply url base components) :query query)))
+  (str (assoc (apply url base (map #(url-encode %) components)) :query query)))
 
 (defn build-url
   "Builds a URL from a base URL and one or more URL components."
