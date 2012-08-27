@@ -135,6 +135,12 @@
   (POST "/default-output-dir" [:as {body :body}]
         (trap #(reset-default-output-dir body)))
 
+  (GET "/reference-genomes" [:as req]
+       (trap #(list-reference-genomes req)))
+
+  (PUT "/reference-genomes" [:as req]
+       (trap #(replace-reference-genomes req)))
+
   (route/not-found (unrecognized-path-response)))
 
 (defroutes donkey-routes
