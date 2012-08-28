@@ -392,3 +392,16 @@
         body  (slurp (:body req))
         users (json-str (extract-usernames (read-json body)))]
     (forward-post url req users)))
+
+(defn list-reference-genomes
+  "Lists the reference genomes in the database."
+  [req]
+  (let [url (build-metadactyl-secured-url "reference-genomes")]
+    (forward-get url req)))
+
+(defn replace-reference-genomes
+  "Replaces the reference genomes in the database with a new set of reference
+   genomes."
+  [req]
+  (let [url  (build-metadactyl-secured-url "reference-genomes")]
+    (forward-put url req)))

@@ -178,6 +178,22 @@
   "The base URL for the Nibblonian data management services."
   "donkey.nibblonian.base-url")
 
+(STR scruffian-base-url
+  "The base URL for the Scruffian file export and import services."
+  "donkey.scruffian.base-url")
+
+(STR tree-parser-url
+  "The URL for the tree parser service."
+  "donkey.tree-viewer.base-url")
+
+(STR buggalo-path
+  "The path to the buggalo executable file."
+  "donkey.tree-viewer.buggalo-path")
+
+(VEC supported-tree-formats
+  "The list of supported tree formats."
+  "donkey.tree-viewer.accepted-tree-formats")
+
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should
    only be called after Donkey has been initialized."

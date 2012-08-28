@@ -42,6 +42,24 @@
                             :arg     (name arg)})
    :content-type :json})
 
+(defn temp-dir-failure-response [{:keys [parent prefix base]}]
+  (log/error "unable to create a temporary directory in" parent
+             "using base name" base)
+  {:status       500 
+   :content-type :json
+   :body         (json-str {:success    false
+                            :error_code "ERR-TEMP-DIR-CREATION"
+                            :parent     parent
+                            :prefix     prefix
+                            :base       base})})
+
+(defn tree-file-parse-err-response [{:keys [details]}]
+  {:status       400
+   :content-type :json
+   :body         (json-str {:success    false
+                            :error_code "ERR-TREE-FILE-PARSE"
+                            :details    details})})
+
 (defn required-param
   "Retrieves a required parameter from a map.  The may may contain either query-
    string parameters or a map that has been generated from a JSON request body."
