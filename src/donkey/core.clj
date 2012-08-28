@@ -145,6 +145,7 @@
 
   (PUT "/reference-genomes" [:as req]
        (trap #(replace-reference-genomes req)))
+
   (GET "/tree-viewer-urls" [:as {params :params}]
        (trap #(tree-viewer-urls (required-param params :path))))
 
