@@ -4,11 +4,15 @@
         [clojure.java.shell :only [sh]]
         [clojure-commons.file-utils :only [with-temp-dir]]
         [donkey.config
-         :only [buggalo-path supported-tree-formats tree-parser-url]]
+         :only [buggalo-path supported-tree-formats tree-parser-url
+                scruffian-base-url nibblonian-base-url]]
         [donkey.service :only [success-response]]
+        [donkey.user-attributes :only [current-user]]
         [slingshot.slingshot :only [throw+]])
   (:require [clj-http.client :as client]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [clojure-commons.nibblonian :as nibblonian]
+            [clojure-commons.scruffian :as scruffian])
   (:import [java.io FilenameFilter]))
 
 (defn- temp-dir-creation-failure
@@ -22,10 +26,8 @@
 (defn- list-tree-files
   "Lists the tree files in the provided directory."
   [dir]
-  (let [files (sort (filter #(re-find #".tre$" (.getName %))
-                            (seq (.listFiles dir))))]
-    (dorun (map #(println (.getPath %)) files))
-    files))
+  (sort (filter #(re-find #".tre$" (.getName %))
+                (seq (.listFiles dir)))))
 
 (defn- tree-parser-error
   "Throws an exception indicating that the tree parser encountered an error."
@@ -39,27 +41,20 @@
                    :content-type :json
                    :body         (json-str body)}})))
 
-(defn- tree-url
-  "Creates a tree URL element."
-  [label url]
-  {:label label
-   :url   url})
-
 (defn- get-tree-viewer-url
   "Obtains a tree viewer URL for a single tree file."
   [f]
-  (let [tree   (slurp f)
-        label  (first (string/split (.getName f) #"[.]" 2))
-        newick (str (slurp f) ";")
-        _      (println newick)
-        res    (client/post (tree-parser-url)
-                            {:form-params      {:name       label
-                                                :newickData newick}
-                             :throw-exceptions false})]
+  (let [label     (first (string/split (.getName f) #"[.]" 2))
+        multipart [{:name "name"       :content label}
+                   {:name "newickData" :content f}]
+        res       (client/post (tree-parser-url)
+                               {:multipart        multipart
+                                :throw-exceptions false})]
     (if (< 199 (:status res) 300)
-      (tree-url label (string/trim (:body res)))
+      (nibblonian/format-tree-url label (string/trim (:body res)))
       (tree-parser-error res))))
 
+;; TODO: try to allow contents to be an input stream rather than a string.
 (defn get-tree-viewer-urls
   "Obtains the tree viewer URLs for the contents of a tree file."
   [contents]
@@ -78,8 +73,7 @@
 (defn- build-response-map
   "Builds the map to use when formatting the response body."
   [urls]
-  {:action    "tree_manifest"
-   :tree-urls urls})
+  (assoc (nibblonian/format-tree-urls urls) :action "tree_manifest"))
 
 (defn tree-viewer-urls-for
   "Obtains the tree viewer URLs for a request body."
@@ -88,4 +82,10 @@
 
 (defn tree-viewer-urls
   "Obtains the tree viewer URLs for a tree file in iRODS."
-  [path])
+  [path]
+  (let [user      (:shortUsername current-user)
+        contents  (scruffian/download (scruffian-base-url) user path)
+        tree-urls (get-tree-viewer-urls (slurp contents))]
+    (nibblonian/delete-tree-urls (nibblonian-base-url) user path)
+    (nibblonian/save-tree-urls (nibblonian-base-url) user path tree-urls)
+    (success-response (build-response-map tree-urls))))

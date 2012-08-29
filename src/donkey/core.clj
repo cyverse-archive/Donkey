@@ -20,6 +20,7 @@
             [clojure.tools.logging :as log]
             [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as cp]
+            [clojure-commons.error-codes :as ce]
             [ring.adapter.jetty :as jetty]
             [donkey.jex :as jex]))
 
@@ -33,6 +34,7 @@
    (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
    (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
    (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
+   (catch ce/error? err (common-error-code &throw-context))
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))
    (catch Throwable t (error-response t))))

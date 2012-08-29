@@ -5,7 +5,8 @@
         [clojure.string :only [join blank?]]
         [slingshot.slingshot :only [throw+]])
   (:require [clj-http.client :as client]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce])
   (:import [clojure.lang IPersistentMap]))
 
 (defn empty-response []
@@ -59,6 +60,10 @@
    :body         (json-str {:success    false
                             :error_code "ERR-TREE-FILE-PARSE"
                             :details    details})})
+
+(defn common-error-code [exception]
+  (log/error ce/format-exception exception)
+  (ce/err-resp (:object exception)))
 
 (defn required-param
   "Retrieves a required parameter from a map.  The may may contain either query-
