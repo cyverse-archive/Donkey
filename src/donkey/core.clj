@@ -244,6 +244,10 @@
   (POST "/send-notification" [:as req]
         (trap #(send-notification req)))
 
+  (GET "/tree-viewer-urls" [:as {params :params}]
+       (trap #(tree-viewer-urls (required-param params :path)
+                                (required-param params :user))))
+
   (POST "/tree-viewer-urls" [:as {body :body}]
         (trap #(tree-viewer-urls-for (slurp body))))
 

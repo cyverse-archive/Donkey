@@ -82,10 +82,11 @@
 
 (defn tree-viewer-urls
   "Obtains the tree viewer URLs for a tree file in iRODS."
-  [path]
-  (let [user      (:shortUsername current-user)
-        contents  (scruffian/download (scruffian-base-url) user path)
-        tree-urls (get-tree-viewer-urls (slurp contents))]
-    (nibblonian/delete-tree-urls (nibblonian-base-url) user path)
-    (nibblonian/save-tree-urls (nibblonian-base-url) user path tree-urls)
-    (success-response (build-response-map tree-urls))))
+  ([path]
+     (tree-viewer-urls path (:shortUsername current-user)))
+  ([path user]
+     (let [contents  (scruffian/download (scruffian-base-url) user path)
+           tree-urls (get-tree-viewer-urls (slurp contents))]
+       (nibblonian/delete-tree-urls (nibblonian-base-url) user path)
+       (nibblonian/save-tree-urls (nibblonian-base-url) user path tree-urls)
+       (success-response (build-response-map tree-urls)))))
