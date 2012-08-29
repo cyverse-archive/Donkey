@@ -76,8 +76,8 @@
   (POST "/delete-rating" [:as req]
         (trap #(delete-rating req)))
 
-  (GET "/search-analyses/:search-term" [search-term :as req]
-       (trap #(search-apps req search-term)))
+  (GET "/search-analyses" [:as req]
+       (trap #(search-apps req)))
 
   (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as req]
        (trap #(list-apps-in-group req app-group-id)))

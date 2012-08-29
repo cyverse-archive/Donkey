@@ -303,8 +303,10 @@
 
 (defn search-apps
   "This service searches for apps based on a search term."
-  [req search-term]
-  (let [url (build-metadactyl-secured-url "search-analyses" search-term)]
+  [req]
+  (let [url (build-metadactyl-secured-url-with-query
+              (:params req)
+              "search-analyses")]
     (forward-get url req)))
 
 (defn list-apps-in-group
