@@ -1,6 +1,6 @@
 (ns donkey.buggalo
   (:use [clojure.data.json :only [json-str]]
-        [clojure.java.io :only [file]]
+        [clojure.java.io :only [copy file]]
         [clojure.java.shell :only [sh]]
         [clojure-commons.file-utils :only [with-temp-dir]]
         [donkey.config
@@ -54,19 +54,21 @@
       (nibblonian/format-tree-url label (string/trim (:body res)))
       (tree-parser-error res))))
 
-;; TODO: try to allow contents to be an input stream rather than a string.
 (defn get-tree-viewer-urls
   "Obtains the tree viewer URLs for the contents of a tree file."
   [contents]
   (with-temp-dir dir "tv" temp-dir-creation-failure
     (let [buggalo (buggalo-path)
           formats (supported-tree-formats)
-          results (map #(assoc (sh buggalo "-f" % :in contents :dir dir) :fmt %)
+          infile  (file dir "data.txt")
+          inpath  (.getPath infile)
+          _       (copy contents infile)
+          results (map #(assoc (sh buggalo "-i" inpath "-f" % :dir dir) :fmt %)
                        formats)
           success #(first (filter (comp zero? :exit) results))
           details #(into {} (map (fn [{:keys [fmt err]}] [fmt err]) results))]
       (if (success)
-        (vec (map get-tree-viewer-url (list-tree-files dir)))
+        (mapv get-tree-viewer-url (list-tree-files dir))
         (throw+ {:type    :tree-file-parse-err
                  :details (details)})))))
 
@@ -86,7 +88,7 @@
      (tree-viewer-urls path (:shortUsername current-user)))
   ([path user]
      (let [contents  (scruffian/download (scruffian-base-url) user path)
-           tree-urls (get-tree-viewer-urls (slurp contents))]
+           tree-urls (get-tree-viewer-urls contents)]
        (nibblonian/delete-tree-urls (nibblonian-base-url) user path)
        (nibblonian/save-tree-urls (nibblonian-base-url) user path tree-urls)
        (success-response (build-response-map tree-urls)))))

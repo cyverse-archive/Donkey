@@ -249,7 +249,7 @@
                                 (required-param params :user))))
 
   (POST "/tree-viewer-urls" [:as {body :body}]
-        (trap #(tree-viewer-urls-for (slurp body))))
+        (trap #(tree-viewer-urls-for body)))
 
   (context "/secured" []
            (store-current-user secured-routes #(cas-server) #(server-name)))
