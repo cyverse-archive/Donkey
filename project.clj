@@ -23,7 +23,7 @@
   :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
                :provides "donkey"
                :dependencies ["iplant-service-config >= 0.1.0-5"
-                              "buggalo >= 0.0.1-1"]
+                              "buggalo >= 0.0.1-3"]
                :config-files ["log4j.properties"]
                :config-path "conf/main"}
   :uberjar-exclusions [#"BCKEY.SF"]
