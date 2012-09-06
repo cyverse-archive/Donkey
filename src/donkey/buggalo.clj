@@ -2,7 +2,7 @@
   (:use [clojure.data.json :only [json-str]]
         [clojure.java.io :only [copy file]]
         [clojure.java.shell :only [sh]]
-        [clojure-commons.file-utils :only [with-temp-dir]]
+        [clojure-commons.file-utils :only [with-temp-dir-in]]
         [donkey.config
          :only [buggalo-path supported-tree-formats tree-parser-url
                 scruffian-base-url nibblonian-base-url]]
@@ -57,7 +57,7 @@
 (defn get-tree-viewer-urls
   "Obtains the tree viewer URLs for the contents of a tree file."
   [contents]
-  (with-temp-dir dir "tv" temp-dir-creation-failure
+  (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
     (let [buggalo (buggalo-path)
           formats (supported-tree-formats)
           infile  (file dir "data.txt")
