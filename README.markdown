@@ -1910,6 +1910,79 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
 }
 ```
 
+#### Obtaining Tree Viewer URLs for a POST Body
+
+Unsecured Endpoint: POST /tree-viewer-urls
+
+This service is a slight variation of the secured GET /secured/tree-viewer-urls
+service and is intended primarily for debugging.  The request body should
+contain the contents of the file for which you want to view trees.  The response
+body consists of a JSON object listing the paths to the TREE urls:
+
+```json
+{
+    "action": "tree_manifest", 
+    "success": true, 
+    "tree-urls": [
+        {
+            "label": tree-label-1, 
+            "url": tree-url-1
+        }, 
+        {
+            "label": tree-label-2,
+            "url": tree-url-2
+        },
+        ...,
+        {
+            "label": tree-label-n,
+            "url": tree-url-n
+        }
+    ]
+}
+```
+
+If the tree file contains labels for each of its trees then those labels will be
+used.  Otherwise, a generic label, tree\__n_, where _n_ is a sequential number.
+Here's an example of a successful call:
+
+```
+$ curl -s --data-binary @Aquilegia.nex http://by-tor:8888/tree-viewer-urls | python -mjson.tool
+{
+    "action": "tree_manifest", 
+    "success": true, 
+    "tree-urls": [
+        {
+            "label": "anthocyanin gene expression - ultrametric", 
+            "url": "http://by-tor/view/tree/27c1db94fe8dafe006a113d8fbfcb4c7"
+        }, 
+        {
+            "label": "floral traits tree - aflp branchlengths", 
+            "url": "http://by-tor/view/tree/94d8339e4be13c3dd9d8f357572590b3"
+        }, 
+        {
+            "label": "floral traits tree - ultrametric", 
+            "url": "http://by-tor/view/tree/cd1c8ea9cc3792cbc4cf2e2d8353b7f1"
+        }
+    ]
+}
+```
+
+Here's an example of an unsuccessful call:
+
+```
+$ curl -s --data-binary @AminoAcid.nex http://by-tor:8888/tree-viewer-urls | python -mjson.tool
+{
+    "details": {
+        "aaaln": "Nexus Parsing error: Expecting file to start \"CLUSTAL\" found \"#\" at line 1 column 0\n", 
+        "nexus": "storing implied block: TAXA\nstoring read block: DATA\nterminate called after throwing an instance of 'no_trees_exception'\n  what():  the file was parsed successfully, but no trees were found\n", 
+        "relaxedphyliptree": "Nexus Parsing error: Expecting a tree description, but found \"#NEXUS\" instead at line 0 column 0\n", 
+        "rnaaln": "Nexus Parsing error: Expecting file to start \"CLUSTAL\" found \"#\" at line 1 column 0\n"
+    }, 
+    "error_code": "ERR-TREE-FILE-PARSE", 
+    "success": false
+}
+```
+
 #### Initializing a User's Workspace
 
 Secured Endpoint: GET /secured/bootstrap
@@ -3420,7 +3493,7 @@ $ curl -s http://by-tor:8888/secured/reference-genomes?proxyToken=$(cas-ticket) 
 }
 ```
 
-### Importing Reference Genomes
+#### Importing Reference Genomes
 
 Secured Endpoint: PUT /secured/reference-genomes
 
@@ -3450,5 +3523,67 @@ $ curl -X PUT -sd '
 ' http://by-tor:8888/secured/reference-genomes?proxyToken=$(cas-ticket) | python -mjson.tool
 {
     "success": true
+}
+```
+
+#### Obtaining Tree Viewer URLs
+
+Secured Endpoint: GET /secured/tree-viewer-urls
+
+This service is used to obtain tree viewer URLs for a single file in the iPlant
+data store.  This URL requires one query-string parameter, `path`, in addition
+to the usual `proxyToken` parameter that is required by all secured endpoints.
+The `path` query-string parameter should contain the path to the file.  If the
+service call is successful then the response body will look something like this:
+
+```json
+{
+    "action": "tree_manifest", 
+    "success": true, 
+    "tree-urls": [
+        {
+            "label": tree-label-1, 
+            "url": tree-url-1
+        }, 
+        {
+            "label": tree-label-2,
+            "url": tree-url-2
+        },
+        ...,
+        {
+            "label": tree-label-n,
+            "url": tree-url-n
+        }
+    ]
+}
+```
+
+Otherwise, the response body will contain information about the cause of the
+failure.
+
+Here's an example of a successful service call:
+
+```
+$ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&path=/iplant/home/nobody/sample1.newick" | python -mjson.tool
+{
+    "action": "tree_manifest", 
+    "success": true, 
+    "tree-urls": [
+        {
+            "label": "tree_0", 
+            "url": "http://by-tor/view/tree/d0f44d9cc8cd27ad060fbc2616ba2247"
+        }
+    ]
+}
+```
+
+Here's an example of an unsuccessful service call:
+
+```
+$ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&path=/iplant/home/nobody/missing.newick" | python -mjson.tool
+{
+    "body": "{\"status\":\"failure\",\"action\":\"file-download\",\"error_code\":\"ERR_DOES_NOT_EXIST\",\"path\":\"\\/iplant\\/home\\/ipctest\\/missing.newick\"}", 
+    "error_code": "ERR_REQUEST_FAILED", 
+    "status": "failure"
 }
 ```
