@@ -1,7 +1,9 @@
 (ns donkey.core
   (:gen-class)
-  (:use [clojure-commons.query-params :only [wrap-query-params]]
+  (:use [clojure.java.io :only [file]]
+        [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
+        [donkey.buggalo]
         [donkey.config]
         [donkey.file-listing]
         [donkey.metadactyl]
@@ -17,6 +19,8 @@
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
             [clojure-commons.clavin-client :as cl]
+            [clojure-commons.props :as cp]
+            [clojure-commons.error-codes :as ce]
             [ring.adapter.jetty :as jetty]
             [donkey.jex :as jex]))
 
@@ -28,6 +32,9 @@
    (f)
    (catch [:type :error-status] {:keys [res]} res)
    (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
+   (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
+   (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
+   (catch ce/error? err (common-error-code &throw-context))
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))
    (catch Throwable t (error-response t))))
@@ -69,8 +76,8 @@
   (POST "/delete-rating" [:as req]
         (trap #(delete-rating req)))
 
-  (GET "/search-analyses/:search-term" [search-term :as req]
-       (trap #(search-apps req search-term)))
+  (GET "/search-analyses" [:as req]
+       (trap #(search-apps req)))
 
   (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as req]
        (trap #(list-apps-in-group req app-group-id)))
@@ -140,6 +147,9 @@
 
   (PUT "/reference-genomes" [:as req]
        (trap #(replace-reference-genomes req)))
+
+  (GET "/tree-viewer-urls" [:as {params :params}]
+       (trap #(tree-viewer-urls (required-param params :path))))
 
   (route/not-found (unrecognized-path-response)))
 
@@ -234,12 +244,33 @@
   (POST "/send-notification" [:as req]
         (trap #(send-notification req)))
 
+  (POST "/tree-viewer-urls" [:as {body :body}]
+        (trap #(tree-viewer-urls-for body)))
+
   (context "/secured" []
            (store-current-user secured-routes #(cas-server) #(server-name)))
 
   (route/not-found (unrecognized-path-response)))
 
-(defn load-configuration
+(defn init-service
+  "Initializes the service after the configuration settings have been loaded."
+  []
+  (dorun (map (fn [[k v]] (log/warn "CONFIG:" k "=" v)) (sort-by key @props)))
+  (when-not (configuration-valid)
+    (log/warn "THE CONFIGURATION IS INVALID - EXITING NOW")
+    (System/exit 1)))
+
+(defn load-configuration-from-file
+  "Loads the configuration properties from a file."
+  []
+  (let [filename "donkey.properties"
+        conf-dir (System/getenv "IPLANT_CONF_DIR")]
+    (if (nil? conf-dir)
+      (reset! props (cp/read-properties (file filename)))
+      (reset! props (cp/read-properties (file conf-dir filename)))))
+  (init-service))
+
+(defn load-configuration-from-zookeeper
   "Loads the configuration properties from Zookeeper."
   []
   (println "zk-url =" zk-url)
@@ -250,10 +281,7 @@
       (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
       (System/exit 1))
     (reset! props (cl/properties "donkey")))
-  (log/warn @props)
-  (when (not (configuration-valid))
-    (log/warn "THE CONFIGURATION IS INVALID - EXITING NOW")
-    (System/exit 1)))
+  (init-service))
 
 (defn site-handler [routes]
   (-> routes
@@ -266,6 +294,6 @@
 
 (defn -main
   [& args]
-  (load-configuration)
+  (load-configuration-from-zookeeper)
   (log/warn "Listening on" (listen-port))
   (jetty/run-jetty app {:port (listen-port)}))
