@@ -54,6 +54,9 @@ donkey.userinfo.default-search-limit = 50
 # Nibblonian connection settings
 donkey.nibblonian.base-url = http://services-2.iplantcollaborative.org:31360/
 
+" Infosquito settings
+donkey.infosquito.es-url = http://services-2.iplantcollaborative.org:31338
+
 ```
 
 Generally, the service connection settings will have to be updated for each
@@ -3587,3 +3590,162 @@ $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&
     "status": "failure"
 }
 ```
+
+### Searching User Data
+
+#### Query Parameters
+
+All query parameters except the required `proxyToken` are ignored.
+
+#### Request Body
+
+All queries will be made by passing a query encoded in a JSON document using a 
+[Elastic Search’s Search API][http://www.elasticsearch.org/guide/reference/api/search]  
+as a request body to one of search endpoints.  In the search document, there 
+will always be a field named `query`.  Its value will be a JSON object 
+describing the query encoded using 
+[Elastic Search's Query DSL][http://www.elasticsearch.org/guide/reference/query-dsl].
+The document may contain other fields.  Here's a basic representation of its 
+form.
+
+```json
+{ 
+     "query" : query-dsl-object,
+     possible-other-fields
+}
+```
+
+##### Specific Queries
+
+Here are some specific queries that can be performed.  They describe particular
+forms of the `query-dsl-object` mentioned above.
+
+The following query object looks for entries with the name `name`.
+
+```json
+{
+     "term" : {
+          "name" : name
+     }
+}
+```
+
+The following query object looks for entries with a name matching the glob 
+pattern `glob`.
+
+```json
+{
+     "wildcard" : {
+          "name" : glob
+     }
+}
+```
+
+Both the `*` and `?` wildcards are supported.  The wildcard `*` expands to zero
+or more of any character.  The wildcard `?` expands to one and only one 
+character.
+
+##### Maximum Number of Matches
+
+By default, at most 10 matches will be returned.  This can be changed by adding
+a `size` field to the search document.  The `size` field specifies the maximum
+number of matches to be returned.  Heres a search document with a `size` field.
+
+```json
+{
+     "query" : query-dsl-object,
+     "size" : max-matches,
+     possible-other-fields
+}
+```
+
+##### Paging Matches
+
+The `from` field may be used to skip the first few matches.  This is useful for
+paging the matches.  Heres a search document with a `from` field.
+
+```json
+{
+     "query" : query-dsl-object,
+     "from" : first-match-index,
+     possible-other-fields
+}
+```
+
+#### Response Body
+
+Donkey will pass the results back to the caller unaltered.
+
+##### Successful Response
+
+When the search succeeds or partially succeeds a JSON document of the following
+form will be returned.
+
+```json
+{ 
+     “took” : time-taken-to-respond,
+     "timed_out" : timed-out?,
+     "_shards" : {
+          "total" : total-#-shards,
+          "successful" : #-successful-shards,
+          "failed" : #-failed-shards 
+     },
+     "hits" : {
+          "total" : #-matches,
+          "max_score" : max-score,
+          "hits" : array-of-matches 
+     }
+}
+```
+
+If a timeout is specified in the query, the `time_out` field will indicate if
+the request timed out.  Otherwise, the request will never time out.
+
+The `_shards.failed` field indicates how many shards failed on the query.  If
+`_shards.failed` is not `0`, then the search results are incomplete.  *A shard
+failure indicates that a portion of the index may be corrupted.  This will need
+to be addressed by a sys admin, but it is not a show-stopper.*
+
+The matches are in the array `hits.hits`.  The field `hits.total` is not the 
+number of elements in this array; it is the total number of matches that could 
+be returned.  By default, only the first 10 matches are in the `hits.hits` array.  
+This default may be changed by setting the `size` or `from` fields in the 
+request body.
+
+Here is the form of a match in the `hits.hits` array.
+
+```json
+{
+     "_index" : "iplant",
+     "_type" : mapping-type-of-match,
+     "_id" : id-of-match,
+     "_score" : score,
+     "_source" : {
+          "name" : matched-name,
+          "user" : owner-account
+     }
+}
+```
+
+The `_type` field indicates the mapping type of the match.  Infosquito indexes 
+files and folders with different mapping types.  It uses the `file` mapping type 
+for files and `folder` for folders.  The `_id` field holds the unique identifier 
+relative to the mapping type for the match.  Infosquito identifies all files and 
+folders with their absolute paths in iRODS.  The `_source.name` field holds the 
+name being matched.  Finally, the `_source.user` field holds the account name of 
+the user whose home folder contains the matched file or folder.
+
+##### Failed Response
+
+When a request fails, a JSON document of the following form is returned.  
+
+```json
+{ 
+     “error” : error-message,
+     “status” : http-status-code 
+}
+```
+
+Finding no matches is not a failure.  The `error` field has a cryptic message 
+helpful for determining the cause.  The `status` field contains a guess at the 
+most appropriate HTTP status code.  It does not always appear to be correct.
