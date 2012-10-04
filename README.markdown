@@ -54,7 +54,7 @@ donkey.userinfo.default-search-limit = 50
 # Nibblonian connection settings
 donkey.nibblonian.base-url = http://services-2.iplantcollaborative.org:31360/
 
-" Infosquito settings
+# Infosquito settings
 donkey.infosquito.es-url = http://services-2.iplantcollaborative.org:31338
 
 ```
@@ -3600,7 +3600,7 @@ All query parameters except the required `proxyToken` are ignored.
 #### Request Body
 
 All queries will be made by passing a query encoded in a JSON document using a 
-[Elastic Search’s Search API][http://www.elasticsearch.org/guide/reference/api/search]  
+[Elastic Search's Search API][http://www.elasticsearch.org/guide/reference/api/search]  
 as a request body to one of search endpoints.  In the search document, there 
 will always be a field named `query`.  Its value will be a JSON object 
 describing the query encoded using 
@@ -3683,7 +3683,7 @@ form will be returned.
 
 ```json
 { 
-     “took” : time-taken-to-respond,
+     "took" : time-taken-to-respond,
      "timed_out" : timed-out?,
      "_shards" : {
           "total" : total-#-shards,
@@ -3741,8 +3741,8 @@ When a request fails, a JSON document of the following form is returned.
 
 ```json
 { 
-     “error” : error-message,
-     “status” : http-status-code 
+     "error" : error-message,
+     "status" : http-status-code 
 }
 ```
 
