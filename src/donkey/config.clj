@@ -194,6 +194,10 @@
   "The list of supported tree formats."
   "donkey.tree-viewer.accepted-tree-formats")
 
+(STR es-url
+  "The URL for Elastic Search"
+  "donkey.infosquito.es-url")
+
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should
    only be called after Donkey has been initialized."
