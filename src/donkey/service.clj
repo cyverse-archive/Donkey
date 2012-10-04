@@ -108,9 +108,20 @@
      (prepare-forwarded-request request nil)))
 
 (defn forward-get
-  "Forwards a GET request to a remote service."
-  [addr request]
-  (client/get addr (prepare-forwarded-request request)))
+  "Forwards a GET request to a remote service.  If no body is provided, the
+   request body is stripped off.
+
+   Parameters:
+     addr - the URL receiving the request
+     request - the request to send structured by compojure
+     body - the body to attach to the request
+
+   Returns:
+     the response from the remote service"
+  ([addr request]
+    (client/get addr (prepare-forwarded-request request)))
+  ([addr request body]
+    (client/get addr (prepare-forwarded-request request body))))
 
 (defn forward-post
   "Forwards a POST request to a remote service."
