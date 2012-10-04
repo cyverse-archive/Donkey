@@ -3596,13 +3596,13 @@ $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&
 #### Query String Parameters
 
 All query string parameters except `proxyToken` will be passed on to Elastic 
-Search.  Exception the `source` parameter, none of the parameters will be 
+Search.  Excepting the `source` parameter, none of the parameters will be 
 altered.
 
 #### Search Request
 
 All queries will be made by passing a query encoded in a JSON document using a 
-[Elastic Search's Search API][http://www.elasticsearch.org/guide/reference/api/search]  
+[Elastic Search's Search API](http://www.elasticsearch.org/guide/reference/api/search)
 as a request body or in the `source` query string parameter to one of search 
 endpoints.  Because some client and servers don't handle a request body properly
 in GET requests, it is preferable to pass the document in through the `source`
@@ -3610,7 +3610,7 @@ parameter.
 
 In the search document, there will always be a field named `query`.  Its value 
 will be a JSON object describing the query encoded using 
-[Elastic Search's Query DSL][http://www.elasticsearch.org/guide/reference/query-dsl].
+[Elastic Search's Query DSL](http://www.elasticsearch.org/guide/reference/query-dsl).
 The document may contain other fields.  Here's a basic representation of its 
 form.
 
