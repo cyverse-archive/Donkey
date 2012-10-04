@@ -3597,6 +3597,10 @@ environment.  The request body for this service should be in the same format
 as the response body for the endpoint to export the reference genomes.  Note
 that the success flag, if present in the request body, will be ignored.
 
+Note that this service replaces *all* reference genomes; it doesn't just add
+reference genomes to the list.  Use the services in Conrad to import individual
+reference genomes.
+
 Here's an example:
 
 ```
