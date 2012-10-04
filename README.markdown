@@ -3593,17 +3593,23 @@ $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&
 
 ### Searching User Data
 
-#### Query Parameters
+#### Query String Parameters
 
-All query parameters except the required `proxyToken` are ignored.
+All query string parameters except `proxyToken` will be passed on to Elastic 
+Search.  Exception the `source` parameter, none of the parameters will be 
+altered.
 
-#### Request Body
+#### Search Request
 
 All queries will be made by passing a query encoded in a JSON document using a 
 [Elastic Search's Search API][http://www.elasticsearch.org/guide/reference/api/search]  
-as a request body to one of search endpoints.  In the search document, there 
-will always be a field named `query`.  Its value will be a JSON object 
-describing the query encoded using 
+as a request body or in the `source` query string parameter to one of search 
+endpoints.  Because some client and servers don't handle a request body properly
+in GET requests, it is preferable to pass the document in through the `source`
+parameter.
+
+In the search document, there will always be a field named `query`.  Its value 
+will be a JSON object describing the query encoded using 
 [Elastic Search's Query DSL][http://www.elasticsearch.org/guide/reference/query-dsl].
 The document may contain other fields.  Here's a basic representation of its 
 form.
@@ -3749,3 +3755,20 @@ When a request fails, a JSON document of the following form is returned.
 Finding no matches is not a failure.  The `error` field has a cryptic message 
 helpful for determining the cause.  The `status` field contains a guess at the 
 most appropriate HTTP status code.  It does not always appear to be correct.
+
+#### Endpoints
+
+Secured Endpoint: GET /secured/search/iplant
+
+This service performs a search of everything under the querying user's home 
+folder on iRODS.
+
+Secured Endpoint: GET /secured/search/iplant/file
+
+This service performs a search of just the files under the querying user's home
+folder on iRODS.
+
+Secured Endpoint: GET /secured/search/iplant/folder
+
+This service performs a search of just the folders under the querying user's 
+home folder on iRODS.

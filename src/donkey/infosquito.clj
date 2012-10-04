@@ -5,16 +5,35 @@
             [donkey.service :as s]))
 
 
-(defn- transform-request-body
-  [orig-body user]
-  (let [orig-search (dj/read-json orig-body)] 
+(defn- extract-source
+  [request]
+  (let [source (if-let [source' (:source (:params request))]
+                 source'
+                 (slurp (:body request)))]
+    (if (empty? source)
+      (throw (Exception. "no search document provided"))
+      source)))
+
+    
+(defn- transform-source
+  [orig-source user]
+  (let [orig-search (dj/read-json orig-source)] 
     (dj/json-str (assoc orig-search 
                         :query {:filtered {:query  (:query orig-search)
-                                           :filter {:term {:user user}}}}))))
+                                           :filter {:term {:user user}}}}))))  
+
+
+(defn- mk-url
+  [base type params]
+  (apply s/build-url-with-query base params (remove nil? ["iplant" type "_search"])))
 
 
 (defn search
-  "Performs a search on the Elastic Search repository.
+  "Performs a search on the Elastic Search repository.  The filtered search JSON
+   document will be passed to Elastic Search as the source parameter in the 
+   query string.  The orginal search document may come from either the source
+   parameter in the query string or from the request body.  If both are provided,
+   the one provided in the query string will be used.
     
    Parameters:
      request - The original request structured by compojure
@@ -24,7 +43,9 @@
    Returns:
      the response from Elastic Search"
   [request user & [type]]
-  (s/forward-get 
-    (apply s/build-url (c/es-url) (remove nil? ["iplant" type "_search"]))
-    request 
-    (transform-request-body (slurp (:body request)) (:shortUsername user))))
+  (let [source (transform-source (extract-source request) (:shortUsername user))]
+    (s/forward-get (mk-url (c/es-url) 
+                           type 
+                           (assoc (dissoc (:params request) :proxyToken) 
+                                  :source source)) 
+                   request)))
