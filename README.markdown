@@ -2030,13 +2030,30 @@ all secured services):
     <tbody>
         <tr>
             <td>limit</td>
-            <td>The maximum number of notifications to return at a time.</td>
-            <td>Required</td>
+            <td>
+                The maximum number of notifications to return at a time or `0`
+                if there is no limit.
+            </td>
+            <td>Optional (defaults to `0`)</td>
         </tr>
         <tr>
             <td>offset</td>
             <td>The index of the starting message.</td>
-            <td>Required</td>
+            <td>Optional (defaults to `0`)</td>
+        </tr>
+        <tr>
+            <td>seen</td>
+            <td>
+                Indicates whether messages that the user has seen, messages
+                that the user has not seen, or both should be returned.  If
+                this parameter is equal to `true` then only messages that the
+                user has seen will be returned.  If it is equal to `false` then
+                only messages that the user has not seen will be returned.  If
+                this parameter is not specified at all then both messages that
+                have been seen and messages that have not been seen will be
+                returned.
+            </td>
+            <td>Optional</td>
         </tr>
         <tr>
             <td>sortField</td>
@@ -2052,7 +2069,7 @@ all secured services):
                 The sorting direction, which can be `asc` (ascending) or `desc`
                 (descending).
             </td>
-            <td>Optional (defaults to `des`)</td>
+            <td>Optional (defaults to `desc`)</td>
         </tr>
         <tr>
             <td>filter</td>
@@ -2090,7 +2107,8 @@ The response body for this service is in the following format:
             "user": username
         },
         ...
-    ]
+    ],
+    "total": message-count
 }
 ```
 
@@ -2163,9 +2181,83 @@ $ curl -s "http://by-tor:8888/secured/notifications/messages?proxyToken=$(cas-ti
             "type": "data", 
             "user": "nobody"
         }
-    ]
+    ],
+    "total": "37"
 }
 ```
+
+#### Obtaining Notification Counts
+
+Secured Endpoint: GET /secured/notifications/count-messages
+
+This service takes a subset of the query-string parameters as the /messages
+service, and returns the number of messages that match the criteria specified in
+the query-string parameters.  Here's the list of supported query-string
+parameters:
+
+<table>
+    <thead>
+        <tr><th>Name</th><th>Description</th><th>Required/Optional</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>seen</td>
+            <td>
+                Indicates whether messages that the user has seen, messages
+                that the user has not seen, or both should be counted.  If
+                this parameter is equal to `true` then only messages that the
+                user has seen will be counted.  If it is equal to `false` then
+                only messages that the user has not seen will be counted.  If
+                this parameter is not specified at all then both messages that
+                have been seen and messages that have not been seen will be
+                counted.
+            </td>
+            <td>Optional</td>
+        </tr>
+        <tr>
+            <td>filter</td>
+            <td>
+                Specifies the type of notification messages to return, which
+                can be `data`, `analysis` or `tool`.  Other types of
+                notifications may be added in the future.  If this parameter
+                it not specified then all types of notifications will be
+                returned.
+            </td>
+            <td>Optional</td>
+        </tr>
+    </tbody>
+</table>
+
+The response body consists of a JSON object containing one field, `total`, which
+contains the number of messages that have not been marked as deleted and match
+the criteria specified in the query string:
+
+```json
+{
+    "total": message-count
+}
+
+Here are some examples:
+
+```
+$ curl -s "http://by-tor:8888/secured/notifications/count-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "total": "409"
+}
+```
+
+In this example, all messages that are available for the user that have not been
+marked as deleted are counted.
+
+```
+$ curl -s "http://by-tor:8888/secured/notifications/count-messages?proxyToken=$(cas-ticket)&filter=data" | python -mjson.tool
+{
+    "total": "91"
+}
+```
+
+In this example only the data notifications that have not been marked as deleted
+are counted.
 
 #### Obtaining Unseen Notifications
 
