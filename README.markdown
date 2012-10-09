@@ -2533,27 +2533,106 @@ following format:
 }
 ```
 
-Here's an example:
+With no query string parameters aside from `user` and `email`, this service
+returns information about all jobs ever run by the user that haven't been marked
+as deleted in descending order by start time (that is, the `startdate` field in
+the result).  Several query-string parameters are available to alter the way
+this service behaves:
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>limit</td>
+            <td>
+                The maximum number of results to return.  If this value is zero
+                or negative then all results will be returned.
+            </td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>offset</td>
+            <td>The index of the first result to return.</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>filter</td>
+            <td>
+                Allows results to be filtered based on the value of a single
+                result field.  The format of this parameter is `field=value`,
+                where `field` is the mame of the field on which the filter is
+                based and `value` is the desired value to include in the result
+                set.  For example, to obtain the list of all jobs that were
+                executed using the application, `CACE`, you the parameter value
+                would be `analysis_name=CACE`.  Equality is the only type of
+                comparison available for this field at this time.
+            </td>
+            <td>No filtering</td>
+        </tr>
+        <tr>
+            <td>sort-field</td>
+            <td>The name of the field that results are sorted by.</td>
+            <td>startdate</td>
+        </tr>
+        <tr>
+            <td>sort-order</td>
+            <td>`asc` for ascending or `desc` for descending.</td>
+            <td>desc</td>
+        </tr>
+    </tbody>
+</table>
+
+Here's an example using no parameters:
 
 ```
-$ curl -s http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket) | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "analyses": [
         {
-            "analysis_details": "Find significant changes in transcript expression, splicing, and promoter use across RNAseq alignment data files", 
-            "analysis_id": "516ED301-E250-40BC-B2BC-31DD7B64D3BA", 
-            "analysis_name": "CuffDiff", 
-            "description": "Selecting a non-default file for output. ", 
-            "enddate": "1329252482000", 
-            "id": "BD421AF3-2C6E-4A92-A215-D380CD6FECC8", 
-            "name": "CuffDiffTest1", 
-            "resultfolderid": "/iplant/home/nobody/analyses/CuffDiff/", 
-            "startdate": "1329252412998", 
-            "status": "Failed", 
+            "analysis_details": "Find significant changes in transcript expression, splicing, and promoter use across RNAseq alignment data files",
+            "analysis_id": "516ED301-E250-40BC-B2BC-31DD7B64D3BA",
+            "analysis_name": "CuffDiff",
+            "description": "Selecting a non-default file for output. ",
+            "enddate": "1329252482000",
+            "id": "BD421AF3-2C6E-4A92-A215-D380CD6FECC8",
+            "name": "CuffDiffTest1",
+            "resultfolderid": "/iplant/home/nobody/analyses/CuffDiff/",
+            "startdate": "1329252412998",
+            "status": "Failed",
             "wiki_url": "https://pods.iplantcollaborative.org/wiki/some/doc/link/CuffDiff"
-        }, 
+        },
         ...
     ]
+}
+```
+
+Here's an example of a filtered search with a limit of one result:
+
+```
+$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)&filter=analysis_name=CACE&limit=1" | python -mjson.tool
+{
+    "analyses": [
+        {
+            "analysis_details": "Maximum likelihood ancestral character estimation for continuous traits",
+            "analysis_id": "4BA117B1-0BFB-F4B2-C5B0-AABE56CF8406",
+            "analysis_name": "CACE",
+            "description": "",
+            "enddate": 1346444723000,
+            "id": "j34b7dd71-1a72-45fb-9569-c68a71f0b58d",
+            "name": "analysis1",
+            "resultfolderid": "/iplant/home/ipctest/analyses/analysis1-2012-08-31-13-25-03.493",
+            "startdate": 1346444703493,
+            "status": "Failed",
+            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/CACE"
+        }
+    ],
+    "success": true
 }
 ```
 
