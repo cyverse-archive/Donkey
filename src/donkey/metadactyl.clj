@@ -285,7 +285,8 @@
 (defn get-experiments
   "This service retrieves information about jobs that a user has submitted."
   [req workspace-id]
-  (let [url (build-metadactyl-secured-url
+  (let [url (build-metadactyl-secured-url-with-query
+              (:params req)
               "workspaces" workspace-id "executions" "list")]
     (forward-get url req)))
 
