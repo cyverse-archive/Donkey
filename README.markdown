@@ -2636,6 +2636,94 @@ $ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(
 }
 ```
 
+#### Getting Status Information for Selected Jobs
+
+Secured Endpoint: POST /secured/workspaces/{workspace-id}/executions/list
+
+The UI needs to be able to retrieve status information for selected jobs when
+updating the analyses window.  This endpoint provides it with the means to do
+so.  This endpoint takes no query-string parameters but, instead, takes a list
+of job IDs in a JSON request body in the following format:
+
+```json
+{
+    "executions": [
+        job-id-1,
+        job-id-2,
+        ...,
+        job-id-n
+    ]
+}
+
+The response body for this endpoint is in the same format as the GET request for
+the same URL path:
+
+```json
+{
+    "analyses": [
+        {
+            "analysis_details": analysis-description,
+            "analysis_id": analysis-id,
+            "analysis_name": analysis-name,
+            "description": job-description,
+            "enddate": end-date-as-milliseconds-since-epoch,
+            "id": job-id,
+            "name": job-name,
+            "resultfolderid": path-to-result-folder,
+            "startdate": start-date-as-milliseconds-since-epoch,
+            "status": job-status-code,
+            "wiki_url": analysis-documentation-link
+        },
+        ...
+    ],
+    "success": true
+}
+```
+
+Here's an example:
+
+```
+$ curl -sd '
+{
+    "executions": [
+        "j34b7dd71-1a72-45fb-9569-c68a71f0b58d",
+        "j2d719268-4b12-440b-b086-89228c1ecbe6"
+    ]
+}
+' "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "analyses": [
+        {
+            "analysis_details": "Maximum likelihood ancestral character estimation for continuous traits",
+            "analysis_id": "4BA117B1-0BFB-F4B2-C5B0-AABE56CF8406",
+            "analysis_name": "CACE",
+            "description": "",
+            "enddate": 1346443377000,
+            "id": "j2d719268-4b12-440b-b086-89228c1ecbe6",
+            "name": "analysis1",
+            "resultfolderid": "/iplant/home/snow-dog/analyses/analysis1-2012-08-31-13-02-37.512",
+            "startdate": 1346443357512,
+            "status": "Failed",
+            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/CACE"
+        },
+        {
+            "analysis_details": "Maximum likelihood ancestral character estimation for continuous traits",
+            "analysis_id": "4BA117B1-0BFB-F4B2-C5B0-AABE56CF8406",
+            "analysis_name": "CACE",
+            "description": "",
+            "enddate": 1346444723000,
+            "id": "j34b7dd71-1a72-45fb-9569-c68a71f0b58d",
+            "name": "analysis1",
+            "resultfolderid": "/iplant/home/snow-dog/analyses/analysis1-2012-08-31-13-25-03.493",
+            "startdate": 1346444703493,
+            "status": "Failed",
+            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/CACE"
+        }
+    ],
+    "success": true
+}
+```
+
 #### Deleting Jobs
 
 Secured Endpoint: PUT /secured/workspaces/{workspace-id}/executions/delete
