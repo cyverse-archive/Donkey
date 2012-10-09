@@ -2295,7 +2295,8 @@ request body for this service is in the following format:
 ```
 
 The response body for this service is a simple JSON object that indicates
-whether or not the service call succeeded.  Here's an example:
+whether or not the service call succeeded and contains the number of messages
+that are still marked as unseen.  Here's an example:
 
 ```
 $ curl -sd '
@@ -2306,7 +2307,8 @@ $ curl -sd '
 }
 ' http://by-tor:8888/secured/notifications/seen | python -mjson.tool
 {
-    "success": true
+    "success": true,
+    "count": 0
 }
 ```
 
