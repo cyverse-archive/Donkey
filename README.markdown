@@ -2236,6 +2236,7 @@ the criteria specified in the query string:
 {
     "total": message-count
 }
+```
 
 Here are some examples:
 
