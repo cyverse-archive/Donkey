@@ -2493,28 +2493,41 @@ service output.  If you're looking in the database (or in the output from the
 used in this service by combining the step name, a literal underscore and the
 actual property identifier.
 
-This service produces no response body.  Here's an example:
+This service produces a response body consisting of a single JSON object
+containing the job status information.  Here's an example:
 
 ```
-$ curl -X PUT -sd '
+$ curl -XPUT -sd '
 {
-    "config": {
-        "FastxQualityFilter_4654B648-676C-2B9E-A92B-6A9F22B64AE1": "/iplant/home/nobody/somefile.fq",
-        "FastxQualityFilter_51B9AD98-B0EF-7FE4-74B9-7ADEBADE6024": "20",
-        "FastxQualityFilter_BCCB23E7-02A5-8F7A-A4FA-EE49249D6FC0": "50"
-    },
-    "analysis_id": "a4ce6a7961e1f4aafabfce922fd00810f",
-    "name": "some_job",
-    "type": "",
-    "debug": false,
-    "workspace_id": "4",
-    "notify": true,
-    "output_dir": "/iplant/home/nobody/analyses",
-    "create_output_subdir": true,
-    "description": ""
+ "config":   {
+   "step_1_LastLines": "1",
+   "step_1_6FF31B1C-3DAB-499C-8521-69227C52CE10": "/iplant/home/snow-dog/data_files/aquilegia-tree.txt"
+ },
+ "analysis_id": "aa54b4fd9b56545db978fff4398c5ce81",
+ "name": "a1",
+ "type": "Text Manipulation",
+ "debug": false,
+ "workspace_id": "4",
+ "notify": true,
+ "output_dir": "/iplant/home/snow-dog/sharewith",
+ "create_output_subdir": true,
+ "description": ""
 }
-'
-"http://by-tor:8888/secured/workspaces/4/newexperiment?proxyToken=$(cas-ticket)"
+' http://by-tor:8888/secured/workspaces/4/newexperiment?proxyToken=($cas-ticket) | python -mjson.tool
+{
+   "analysis_details": "Extracts a specified number of lines from the beginning of file",
+   "analysis_id": "aa54b4fd9b56545db978fff4398c5ce81",
+   "analysis_name": "Extract First Lines From a File",
+   "description": "",
+   "enddate": "0",
+   "id": "jf7600670-ed13-46cd-8810-dfddb075d819",
+   "name": "a1",
+   "resultfolderid": "/iplant/home/snow-dog/sharewith/a1-2012-10-10-18-44-47.548",
+   "startdate": "1349919887549",
+   "status": "Submitted",
+   "success": true,
+   "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/Extract%20First%20Lines%20From%20a%20File"
+}
 ```
 
 #### Listing Jobs
