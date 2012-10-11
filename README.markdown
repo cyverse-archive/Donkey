@@ -2762,7 +2762,6 @@ request body for this service is in the following format:
 
 ```json
 {
-    "workspace_id": workspace-id,
     "executions": [
         job-id-1,
         job-id-2,
@@ -2772,7 +2771,8 @@ request body for this service is in the following format:
 }
 ```
 
-This service produces no response body.
+The response body for this endpoint contains only a status flag if the service
+succeeds.
 
 It should be noted that this service does not fail if any of the job
 identifiers refers to a non-existent or deleted job.  If the identifier refers
@@ -2785,13 +2785,15 @@ Here's an example:
 ```
 $ curl -X PUT -sd '
 {
-    "workspace_id": 4,
     "executions": [
         "84DFCC0E-03B9-4DF4-8484-55BFBD6FE841",
         "FOO"
     ]
 }
-' "http://by-tor:8888/secured/workspaces/4/executions/delete?proxyToken=$(cas-ticket)"
+' "http://by-tor:8888/secured/workspaces/4/executions/delete?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "success": true
+}
 ```
 
 #### Rating Analyses
