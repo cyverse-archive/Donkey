@@ -49,6 +49,9 @@
   (GET "/notifications/unseen-messages" [:as req]
        (trap #(get-unseen-messages req)))
 
+  (GET "/notifications/last-ten-messages" [:as req]
+       (trap #(last-ten-messages req)))
+
   (GET "/notifications/count-messages" [:as req]
        (trap #(count-messages req)))
 

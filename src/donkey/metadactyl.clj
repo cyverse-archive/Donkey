@@ -245,6 +245,13 @@
   (let [url (dn/notificationagent-url "unseen-messages")]
     (dn/add-app-details (forward-get url req))))
 
+(defn last-ten-messages
+  "This service forwards requests for the ten most recent notifications to the
+   notification agent."
+  [req]
+  (let [url (dn/notificationagent-url "last-ten-messages" (:params req))]
+    (dn/add-app-details (forward-get url req))))
+
 (defn count-messages
   "This service forwards requests to the notification agent in order to
    retrieve the number of notifications satisfying the conditions in the
