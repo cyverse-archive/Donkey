@@ -2275,6 +2275,17 @@ $ curl -s "http://by-tor:8888/secured/notifications/unseen-messages?proxyToken=$
 }
 ```
 
+#### Obtaining the Ten Most Recent Notifications
+
+* Endpoint: GET /secured/notifications/last-ten-messages
+
+This endpoint returns the ten most recent messages for the authenticated user in
+ascending order by message timestamp.  Obtaining the ten most recent messages in
+ascending order is difficult using other endpoints.
+
+Examples are omitted for this endpoint because the response body is identical to
+that of the other endpoints used to obtain notifications.
+
 #### Marking Notifications as Seen
 
 Secured Endpoint: POST /secured/notifications/seen
