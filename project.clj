@@ -11,7 +11,7 @@
                  [ring/ring-jetty-adapter "1.0.1"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [slingshot "0.10.1"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "1.3.2-SNAPSHOT"]
+  :plugins [[org.iplantc/lein-iplant-rpm "1.4.0-SNAPSHOT"]
             [lein-ring "0.7.4"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
