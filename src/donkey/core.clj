@@ -76,7 +76,7 @@
 
   (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as req]
        (trap #(delete-experiments req workspace-id)))
-  
+
   (DELETE "/stop-analysis/:uuid" [uuid :as req]
           (trap #(jex/stop-analysis req uuid)))
 
@@ -127,7 +127,7 @@
 
   (DELETE "/preferences" []
           (trap #(remove-prefs)))
-  
+
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
 
@@ -160,13 +160,13 @@
 
   (GET "/tree-viewer-urls" [:as {params :params}]
        (trap #(tree-viewer-urls (required-param params :path))))
-  
+
   (GET "/search/iplant" [:as req]
        (trap #(i/search req current-user)))
-  
+
   (GET "/search/iplant/:type" [type :as req]
        (trap #(i/search req current-user type)))
-  
+
   (route/not-found (unrecognized-path-response)))
 
 (defroutes donkey-routes
@@ -305,7 +305,7 @@
       wrap-nested-params
       wrap-query-params))
 
-(def app 
+(def app
   (site-handler donkey-routes))
 
 (defn -main
