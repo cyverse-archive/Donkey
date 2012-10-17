@@ -245,6 +245,13 @@
   (let [url (dn/notificationagent-url "unseen-messages")]
     (dn/add-app-details (forward-get url req))))
 
+(defn last-ten-messages
+  "This service forwards requests for the ten most recent notifications to the
+   notification agent."
+  [req]
+  (let [url (dn/notificationagent-url "last-ten-messages" (:params req))]
+    (dn/add-app-details (forward-get url req))))
+
 (defn count-messages
   "This service forwards requests to the notification agent in order to
    retrieve the number of notifications satisfying the conditions in the
@@ -285,9 +292,19 @@
 (defn get-experiments
   "This service retrieves information about jobs that a user has submitted."
   [req workspace-id]
-  (let [url (build-metadactyl-secured-url
+  (let [url (build-metadactyl-secured-url-with-query
+              (:params req)
               "workspaces" workspace-id "executions" "list")]
     (forward-get url req)))
+
+(defn get-selected-experiments
+  "This service retrieves information about selected jobs that a user has
+   submitted."
+  [req workspace-id]
+  (let [url (build-metadactyl-secured-url-with-query
+              (:params req)
+              "workspaces" workspace-id "executions" "list")]
+    (forward-post url req)))
 
 (defn delete-experiments
   "This service marks experiments as deleted so that they no longer show up

@@ -50,6 +50,9 @@
   (GET "/notifications/unseen-messages" [:as req]
        (trap #(get-unseen-messages req)))
 
+  (GET "/notifications/last-ten-messages" [:as req]
+       (trap #(last-ten-messages req)))
+
   (GET "/notifications/count-messages" [:as req]
        (trap #(count-messages req)))
 
@@ -67,6 +70,9 @@
 
   (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
        (trap #(get-experiments req workspace-id)))
+
+  (POST "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
+        (trap #(get-selected-experiments req workspace-id)))
 
   (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as req]
        (trap #(delete-experiments req workspace-id)))
