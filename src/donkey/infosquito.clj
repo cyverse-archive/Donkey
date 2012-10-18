@@ -1,13 +1,22 @@
 (ns donkey.infosquito
   "provides the functions that forward Infosquito requests"
   (:require [clojure.data.json :as dj]
+            [clojure-commons.client :as client]
             [donkey.config :as c]
             [donkey.service :as s]))
 
 
+(defn send-request
+  "Sends the search request to Elastic Search."
+  [query & [type]]
+  (let [components (remove nil? ["iplant" type "_search"])
+        url        (apply s/build-url (c/es-url) components)]
+    (client/get url {:query-params {"source" query}})))
+
+
 (defn- extract-source
   [request]
-  (let [source (if-let [source' (:source (:params request))]
+  (let [source (if-let [source' (get-in request [:params :source])]
                  source'
                  (slurp (:body request)))]
     (if (empty? source)
@@ -28,6 +37,18 @@
   (apply s/build-url-with-query base params (remove nil? ["iplant" type "_search"])))
 
 
+(defn- extract-result
+  "Extracts the result of the Donkey search services from the results returned
+   to us by Elastic Search."
+  [body]
+  (letfn [(flatten-source [m] (dissoc (merge m (:_source m)) :_source))
+          (flatten-sources [s] (map flatten-source s))
+          (reformat-result [m] (update-in m [:hits] flatten-sources))]
+   (->> (dj/read-json body)
+        :hits
+        reformat-result)))
+
+
 (defn search
   "Performs a search on the Elastic Search repository.  The filtered search JSON
    document will be passed to Elastic Search as the source parameter in the
@@ -42,10 +63,42 @@
 
    Returns:
      the response from Elastic Search"
-  [request user & [type]]
-  (let [source (transform-source (extract-source request) (:shortUsername user))]
-    (s/forward-get (mk-url (c/es-url)
-                           type
-                           (assoc (dissoc (:params request) :proxyToken)
-                                  :source source))
-                   request)))
+  [request {user :shortUsername} & [type]]
+  (-> (extract-source request)
+      (transform-source user)
+      (send-request type)
+      :body
+      extract-result
+      s/success-response))
+
+
+(defn- simple-query
+  "Builds a query to use for a simple search."
+  [search-term user]
+  (let [query (if (re-find #"[*?]" search-term)
+                {:wildcard {:name search-term}}
+                {:term {:name search-term}})]
+    {:query {:filtered {:query  query
+                        :filter {:term {:user user}}}}}))
+
+
+(defn simple-search
+  "Performs a simple search on the Elastic Search repository.  The value of the
+   search-term query-string parameter is used as the name pattern to search for.
+   If the search term contains an asterisk or a question mark then it will be
+   treated as a wildcard glob pattern.  Otherwise, it will be treated as the
+   actual name to search for.
+
+   Parameters:
+     search-term - the term to search for.
+     user-attrs  - the attributes of the user performing the search.
+     type        - the mapping type used to restrict the request.
+
+   Returns:
+     the response from Elastic Search"
+  [search-term {user :shortUsername} & [type]]
+  (-> (simple-query search-term user)
+      (send-request type)
+      :body
+      extract-result
+      s/success-response))

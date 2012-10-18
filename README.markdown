@@ -3885,12 +3885,6 @@ $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&
 
 ### Searching User Data
 
-#### Query String Parameters
-
-All query string parameters except `proxyToken` will be passed on to Elastic
-Search.  Excepting the `source` parameter, none of the parameters will be
-altered.
-
 #### Search Request
 
 All queries will be made by passing a query encoded in a JSON document using a
@@ -3972,7 +3966,29 @@ paging the matches.  Heres a search document with a `from` field.
 
 #### Response Body
 
-Donkey will pass the results back to the caller unaltered.
+The response body is similar to that returned by elastic search except that only
+the actual hits are returned and the `_source` member of each hit is removed and
+all of its components are placed in the body of the hit itself.  A success flag
+is also added to the top level of the response body.
+
+```json
+{
+    "success" : true,
+    "total" : #-matches,
+    "max_score" : max-score,
+    "hits" : [
+        {
+            "_index" : "iplant",
+            "_type" : mapping-type-of-match,
+            "_id" : id-of-match,
+            "_score" : score,
+            "name" : matched-name,
+            "user" : owner-account
+        },
+        ...
+    ]
+}
+```
 
 ##### Successful Response
 
@@ -3981,47 +3997,39 @@ form will be returned.
 
 ```json
 {
-     "took" : time-taken-to-respond,
-     "timed_out" : timed-out?,
-     "_shards" : {
-          "total" : total-#-shards,
-          "successful" : #-successful-shards,
-          "failed" : #-failed-shards
-     },
-     "hits" : {
-          "total" : #-matches,
-          "max_score" : max-score,
-          "hits" : array-of-matches
-     }
+    "success" : true,
+    "total" : #-matches,
+    "max_score" : max-score,
+    "hits" : [
+        {
+            "_index" : "iplant",
+            "_type" : mapping-type-of-match,
+            "_id" : id-of-match,
+            "_score" : score,
+            "name" : matched-name,
+            "user" : owner-account
+        },
+        ...
+    ]
 }
 ```
 
-If a timeout is specified in the query, the `time_out` field will indicate if
-the request timed out.  Otherwise, the request will never time out.
+The matches are in the array `hits`.  The field `total` is not the number of
+elements in this array; it is the total number of matches that could be
+returned.  By default, only the first 10 matches are in the `hits` array.  This
+default may be changed by setting the `size` or `from` fields in the request
+body.
 
-The `_shards.failed` field indicates how many shards failed on the query.  If
-`_shards.failed` is not `0`, then the search results are incomplete.  *A shard
-failure indicates that a portion of the index may be corrupted.  This will need
-to be addressed by a sys admin, but it is not a show-stopper.*
-
-The matches are in the array `hits.hits`.  The field `hits.total` is not the
-number of elements in this array; it is the total number of matches that could
-be returned.  By default, only the first 10 matches are in the `hits.hits` array.
-This default may be changed by setting the `size` or `from` fields in the
-request body.
-
-Here is the form of a match in the `hits.hits` array.
+Here is the form of a match in the `hits` array.
 
 ```json
 {
-     "_index" : "iplant",
-     "_type" : mapping-type-of-match,
-     "_id" : id-of-match,
-     "_score" : score,
-     "_source" : {
-          "name" : matched-name,
-          "user" : owner-account
-     }
+    "_index" : "iplant",
+    "_type" : mapping-type-of-match,
+    "_id" : id-of-match,
+    "_score" : score,
+    "name" : matched-name,
+    "user" : owner-account
 }
 ```
 
@@ -4029,9 +4037,9 @@ The `_type` field indicates the mapping type of the match.  Infosquito indexes
 files and folders with different mapping types.  It uses the `file` mapping type
 for files and `folder` for folders.  The `_id` field holds the unique identifier
 relative to the mapping type for the match.  Infosquito identifies all files and
-folders with their absolute paths in iRODS.  The `_source.name` field holds the
-name being matched.  Finally, the `_source.user` field holds the account name of
-the user whose home folder contains the matched file or folder.
+folders with their absolute paths in iRODS.  The `name` field holds the name
+being matched.  Finally, the `user` field holds the account name of the user
+whose home folder contains the matched file or folder.
 
 ##### Failed Response
 
@@ -4039,8 +4047,9 @@ When a request fails, a JSON document of the following form is returned.
 
 ```json
 {
-     "error" : error-message,
-     "status" : http-status-code
+     "success": false,
+     "error_code": "ERR_REQUEST_FAILED",
+     "body": "{\"error\":error-messages,\"status\":http-status-code}"
 }
 ```
 
@@ -4061,6 +4070,35 @@ This service performs a search of just the files under the querying user's home
 folder on iRODS.
 
 Secured Endpoint: GET /secured/search/iplant/folder
+
+This service performs a search of just the folders under the querying user's
+home folder on iRODS.
+
+### Simplified User Data Searches
+
+In addition to the full user data search endpoints described above, Donkey
+provides some simplified search endpoints that allow callers to specify the
+search term in the query-string parameter, `search-term`.  This group of
+services determines whether to perform a literal or wildcard search based on the
+presence or absence of wildcard characters in the search term.  If the search
+term contain any wildcard characters then a wildcard search will be performed.
+Otherwise, a literal term search will be performed.  The response returned by
+this group of endpoints is in the same format as that returned by the general
+search endpoints.
+
+#### Endpoints
+
+Secured Endpoint: GET /secured/simple-search/iplant
+
+This services performs a search of everything under the querying user's home
+folder on iRODS.
+
+Secured Endpoint: GET /secured/simple-search/iplant/file
+
+This service performs a search of just the files under the querying user's home
+folder on iRODS.
+
+Secured Endpoint: GET /secured/simple-search/iplant/folder
 
 This service performs a search of just the folders under the querying user's
 home folder on iRODS.

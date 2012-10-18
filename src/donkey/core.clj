@@ -167,6 +167,14 @@
   (GET "/search/iplant/:type" [type :as req]
        (trap #(i/search req current-user type)))
 
+  (GET "/simple-search/iplant" [:as {params :params}]
+       (trap #(-> (required-param params :search-term)
+                  (i/simple-search current-user))))
+
+  (GET "/simple-search/iplant/:type" [type :as {params :params}]
+       (trap #(-> (required-param params :search-term)
+                  (i/simple-search current-user type))))
+
   (route/not-found (unrecognized-path-response)))
 
 (defroutes donkey-routes
