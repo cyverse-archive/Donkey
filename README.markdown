@@ -3320,6 +3320,19 @@ $ curl -sd data http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
 data
 ```
 
+### Retrieving User Preferences
+
+Secured Endpoint: GET /secured/preferences
+
+This service can be used to retrieve a user's preferences.
+
+Example:
+
+```
+$ curl -s http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
+data
+```
+
 ### Removing User Preferences
 
 Secured Endpoint: DELETE /secured/preferences
@@ -3336,6 +3349,47 @@ $ curl -X DELETE http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
 ```
 
 An attempt to remove preference data that doesn't already exist will be silently ignored.
+
+### Saving User Search History
+
+Secured Endpoint: POST /secured/search-history
+
+This service can be used to save arbitrary user search history information.  The
+POST body is stored without modification and be retrieved by sending a GET
+request to the same URL.
+
+Example:
+
+```
+$ curl -sd data http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)
+data
+```
+
+### Retrieving User Search History
+
+Secured Endpoint: GET /secured/search-history
+
+This service can be used to retrieve a user's search history.
+
+Example:
+
+```
+$ curl -s http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)
+data
+```
+
+### Deleting User Search History
+
+This service can be used to delete a user's search history.
+
+Example:
+
+```
+$ curl -XDELETE -s http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)
+{
+    "success" : true
+}
+```
 
 ### Listing Collaborators
 
