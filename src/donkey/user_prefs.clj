@@ -59,3 +59,5 @@
 
 (def user-prefs (partial settings #(riak-prefs-bucket)))
 (def remove-prefs (partial remove-settings #(riak-prefs-bucket)))
+(def search-history (partial settings #(riak-search-hist-bucket)))
+(def clear-search-history (partial remove-settings #(riak-search-hist-bucket)))

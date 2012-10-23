@@ -128,6 +128,15 @@
   (DELETE "/preferences" []
           (trap #(remove-prefs)))
 
+  (GET "/search-history" []
+       (trap #(search-history)))
+
+  (POST "/search-history" [:as {body :body}]
+        (trap #(search-history (slurp body))))
+
+  (DELETE "/search-history" []
+          (trap #(clear-search-history)))
+
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
 

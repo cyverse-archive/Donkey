@@ -159,6 +159,10 @@
    "The bucket in Riak to retrieve user preferences from."
    "donkey.preferences.bucket")
 
+(STR riak-search-hist-bucket
+   "The bucket in Riak to use for the storage of user search history."
+   "donkey.search-history.bucket")
+
 (STR userinfo-base-url
   "The base URL for the user info API."
   "donkey.userinfo.base-url")
