@@ -168,12 +168,10 @@
        (trap #(i/search req current-user type)))
 
   (GET "/simple-search/iplant" [:as {params :params}]
-       (trap #(-> (required-param params :search-term)
-                  (i/simple-search current-user))))
+       (trap #(i/simple-search params current-user)))
 
   (GET "/simple-search/iplant/:type" [type :as {params :params}]
-       (trap #(-> (required-param params :search-term)
-                  (i/simple-search current-user type))))
+       (trap #(i/simple-search params current-user type)))
 
   (route/not-found (unrecognized-path-response)))
 

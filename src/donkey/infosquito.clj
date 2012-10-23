@@ -11,7 +11,7 @@
   [query & [type]]
   (let [components (remove nil? ["iplant" type "_search"])
         url        (apply s/build-url (c/es-url) components)]
-    (client/get url {:query-params {"source" query}})))
+    (client/get url {:query-params {"source" (dj/json-str query)}})))
 
 
 (defn- extract-source
@@ -27,9 +27,9 @@
 (defn- transform-source
   [orig-source user]
   (let [orig-search (dj/read-json orig-source)]
-    (dj/json-str (assoc orig-search
-                        :query {:filtered {:query  (:query orig-search)
-                                           :filter {:term {:user user}}}}))))
+    (assoc orig-search
+      :query {:filtered {:query  (:query orig-search)
+                         :filter {:term {:user user}}}})))
 
 
 (defn- mk-url
@@ -74,12 +74,14 @@
 
 (defn- simple-query
   "Builds a query to use for a simple search."
-  [search-term user]
-  (let [query (if (re-find #"[*?]" search-term)
-                {:wildcard {:name search-term}}
-                {:term {:name search-term}})]
-    {:query {:filtered {:query  query
-                        :filter {:term {:user user}}}}}))
+  [search-term user params]
+  (let [params (or params {})
+        query  (if (re-find #"[*?]" search-term)
+                 {:wildcard {:name search-term}}
+                 {:term {:name search-term}})]
+    (assoc params
+      :query {:filtered {:query  query
+                         :filter {:term {:user user}}}})))
 
 
 (defn simple-search
@@ -90,14 +92,14 @@
    actual name to search for.
 
    Parameters:
-     search-term - the term to search for.
-     user-attrs  - the attributes of the user performing the search.
-     type        - the mapping type used to restrict the request.
+     params     - the query-string parameters for this service.
+     user-attrs - the attributes of the user performing the search.
+     type       - the mapping type used to restrict the request.
 
    Returns:
      the response from Elastic Search"
-  [search-term {user :shortUsername} & [type]]
-  (-> (simple-query search-term user)
+  [{:keys [search-term] :as params} {user :shortUsername} & [type]]
+  (-> (simple-query search-term user (dissoc params :search-term :proxyToken))
       (send-request type)
       :body
       extract-result
