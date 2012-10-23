@@ -10,10 +10,10 @@
             [clojure-commons.file-utils :as ft]))
 
 (defn- key-url
-  [user]
-  (str 
-    (string/join "/" 
-      (map ft/rm-last-slash [(riak-base-url) (riak-prefs-bucket) user]))
+  [bucket-fn user]
+  (str
+    (string/join "/"
+      (map ft/rm-last-slash [(riak-base-url) (bucket-fn) user]))
     "?returnbody=true"))
 
 (defn- request-failed
@@ -22,35 +22,40 @@
   (throw+ {:error_code ERR_REQUEST_FAILED
            :body       (:body resp)}))
 
-(defn user-prefs
-  ([]
-    (let [user (:username current-user)]
-      (log/debug (str "user-prefs: GET " (key-url user)))
-      (let [resp (cl/get (key-url user) {:throw-exceptions false})]
-        (cond
+(defn- settings
+  ([bucket-fn]
+     (let [user (:username current-user)
+           url  (key-url bucket-fn user)]
+       (log/debug "settings: GET" url)
+       (let [resp (cl/get url {:throw-exceptions false})]
+         (cond
           (= 200 (:status resp)) (:body resp)
           (= 404 (:status resp)) "{}"
           :else                  (request-failed resp)))))
 
-  ([new-prefs]
-    (let [user (:username current-user)]
-      (log/debug (str "user-prefs: POST " (key-url user) " " new-prefs))
-      (let [resp (cl/post 
-                   (key-url user) 
-                   {:content-type :json :body new-prefs} 
+  ([bucket-fn new-settings]
+     (let [user (:username current-user)
+           url  (key-url bucket-fn user)]
+       (log/debug "settings: POST" url new-settings)
+       (let [resp (cl/post
+                   url
+                   {:content-type :json :body new-settings}
                    {:throw-exceptions false})]
-        (cond
+         (cond
           (= 200 (:status resp)) (:body resp)
           :else                  (request-failed resp))))))
 
-(defn remove-prefs
-  "Removes user session information from the Riak cluster."
-  []
+(defn- remove-settings
+  "Removes saved user settings from the Riak server."
+  [bucket-fn]
   (let [user   (:username current-user)
-        url    (key-url user)
-        _      (log/debug "user-prefs: DELETE" url)
+        url    (key-url bucket-fn user)
+        _      (log/debug "settings: DELETE" url)
         resp   (cl/delete url {:throw-exceptions false})
         status (:status resp)]
     (cond (= 404 (:status resp))      (success-response)
           (<= 200 (:status resp) 299) (success-response)
           :else                       (request-failed resp))))
+
+(def user-prefs (partial settings #(riak-prefs-bucket)))
+(def remove-prefs (partial remove-settings #(riak-prefs-bucket)))
