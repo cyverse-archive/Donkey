@@ -24,39 +24,52 @@ Here's an example configuration file:
 
 ```properties
 # Connection details.
-donkey.app.listen-port = 8888
+donkey.app.listen-port = 65002
 
 # Metadactyl connection settings
-donkey.metadactyl.base-url = http://hostname.iplantcollaborative.org:8888/metadactyl/secured
-donkey.metadactyl.unprotected-base-url = http://hostname.iplantcollaborative.org:8888/metadactyl
+donkey.metadactyl.base-url             = http://localhost:65007/secured
+donkey.metadactyl.unprotected-base-url = http://localhost:65007
 
 # Notification agent connection settings.
-donkey.notificationagent.base-url = http://hostname.iplantcollaborative.org:8888/notificationagent
+donkey.notificationagent.base-url = http://localhost:65011
 
 # CAS Settings
-donkey.cas.cas-server  = https://hostname.iplantcollaborative.org/cas/
-donkey.cas.server-name = http://hostname.iplantcollaborative.org:8888
+donkey.cas.cas-server  = https://cas-server.iplantcollaborative.org/cas/
+donkey.cas.server-name = http://localhost:65002
 
 # The domain name to append to the user id to get the fully qualified user id.
 donkey.uid.domain = iplantcollaborative.org
 
 # User session settings
-donkey.sessions.base-url = http://hostname.iplantcollaborative.org:8888/sessions/
-donkey.sessions.bucket = sessions
+donkey.sessions.base-url = http://localhost:65012/riak/
+donkey.sessions.bucket   = sessions
 
 # User preferences settings
 donkey.preferences.bucket = preferences
 
+# User search history settings.
+donkey.search-history.bucket = search-history
+
 # User information lookup settings.
-donkey.userinfo.base-url = https://hostname.iplantcollaborative.org/users/index.php/api/v1
+donkey.userinfo.base-url             = https://localhost/api/v1
 donkey.userinfo.default-search-limit = 50
 
 # Nibblonian connection settings
-donkey.nibblonian.base-url = http://services-2.iplantcollaborative.org:31360/
+donkey.nibblonian.base-url = http://localhost:65010/
+
+# JEX connection settings
+donkey.jex.base-url = http://localhost:65006/
+
+# Scruffian connection settings
+donkey.scruffian.base-url = http://localhost:65013/
+
+# Tree viewer settings
+donkey.tree-viewer.base-url              = http://localhost/parseTree
+donkey.tree-viewer.buggalo-path          = /usr/local/bin/buggalo
+donkey.tree-viewer.accepted-tree-formats = nexml, rnaaln, aaaln, relaxedphyliptree, nexus
 
 # Infosquito settings
-donkey.infosquito.es-url = http://services-2.iplantcollaborative.org:31338
-
+donkey.infosquito.es-url = http://localhost:65019
 ```
 
 Generally, the service connection settings will have to be updated for each
