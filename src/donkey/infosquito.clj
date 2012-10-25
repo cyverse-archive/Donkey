@@ -78,7 +78,7 @@
   (let [params (or params {})
         query  (if (re-find #"[*?]" search-term)
                  {:wildcard {:name search-term}}
-                 {:term {:name search-term}})]
+                 {:wildcard {:name (str \* search-term \*)}})]
     (assoc params
       :query {:filtered {:query  query
                          :filter {:term {:user user}}}})))
@@ -88,8 +88,9 @@
   "Performs a simple search on the Elastic Search repository.  The value of the
    search-term query-string parameter is used as the name pattern to search for.
    If the search term contains an asterisk or a question mark then it will be
-   treated as a wildcard glob pattern.  Otherwise, it will be treated as the
-   actual name to search for.
+   treated as a literal wildcard glob pattern.  Otherwise, asterisks will be
+   added to the beginning and end of the search term and that value will be used
+   as a glob pattern.
 
    Parameters:
      params     - the query-string parameters for this service.

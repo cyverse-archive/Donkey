@@ -4146,12 +4146,14 @@ home folder on iRODS.
 In addition to the full user data search endpoints described above, Donkey
 provides some simplified search endpoints that allow callers to specify the
 search term in the query-string parameter, `search-term`.  This group of
-services determines whether to perform a literal or wildcard search based on the
-presence or absence of wildcard characters in the search term.  If the search
-term contain any wildcard characters then a wildcard search will be performed.
-Otherwise, a literal term search will be performed.  The response returned by
-this group of endpoints is in the same format as that returned by the general
-search endpoints.
+services determines what type of search to perform based on the presence or
+absence of wildcard characters in the search term.  If the search term contains
+any wildcard characters then a wildcard search will be performed using the
+search term as a glob pattern.  Otherwise, asterisks will be added to the
+beginning and end of the search term and the resulting string will be used as a
+glob pattern in a wildcard search.  The response returned by this group of
+endpoints is in the same format as that returned by the general search
+endpoints.
 
 #### Endpoints
 
