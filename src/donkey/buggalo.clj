@@ -11,9 +11,11 @@
         [slingshot.slingshot :only [throw+]])
   (:require [clj-http.client :as client]
             [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [clojure-commons.nibblonian :as nibblonian]
             [clojure-commons.scruffian :as scruffian])
-  (:import [java.io FilenameFilter]))
+  (:import [java.io FilenameFilter]
+           [java.security MessageDigest DigestInputStream]))
 
 (defn- temp-dir-creation-failure
   "Handles the failure to create a temporary directory."
@@ -54,19 +56,29 @@
       (nibblonian/format-tree-url label (string/trim (:body res)))
       (tree-parser-error res))))
 
+(defn save-file
+  "Saves the contents of an input stream to a file and returns the SHA1 hash of
+   the file contents."
+  [contents infile]
+  (let [digest   (MessageDigest/getInstance "SHA1")
+        hex-byte #(Integer/toHexString (bit-and 0xff %))]
+    (copy (DigestInputStream. contents digest) infile)
+    (apply str (map hex-byte (seq (.digest digest))))))
+
 (defn get-tree-viewer-urls
   "Obtains the tree viewer URLs for the contents of a tree file."
   [contents]
   (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
-    (let [buggalo (buggalo-path)
-          formats (supported-tree-formats)
-          infile  (file dir "data.txt")
-          inpath  (.getPath infile)
-          _       (copy contents infile)
-          results (map #(assoc (sh buggalo "-i" inpath "-f" % :dir dir) :fmt %)
-                       formats)
-          success #(first (filter (comp zero? :exit) results))
-          details #(into {} (map (fn [{:keys [fmt err]}] [fmt err]) results))]
+    (let [buggalo  (buggalo-path)
+          formats  (supported-tree-formats)
+          infile   (file dir "data.txt")
+          inpath   (.getPath infile)
+          sha1     (save-file contents infile)
+          _        (log/warn "sha1 =" sha1)
+          results  (map #(assoc (sh buggalo "-i" inpath "-f" % :dir dir) :fmt %)
+                        formats)
+          success  #(first (filter (comp zero? :exit) results))
+          details  #(into {} (map (fn [{:keys [fmt err]}] [fmt err]) results))]
       (if (success)
         (mapv get-tree-viewer-url (list-tree-files dir))
         (throw+ {:type    :tree-file-parse-err
