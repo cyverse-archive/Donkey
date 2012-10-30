@@ -4,7 +4,7 @@
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/data.json "0.1.2"]
                  [clj-http "0.5.3"]
-                 [com.cemerick/url "0.0.6"]
+                 [com.cemerick/url "0.0.7"]
                  [compojure "1.0.1"]
                  [org.iplantc/clj-cas "1.0.0-SNAPSHOT"]
                  [org.iplantc/clojure-commons "1.3.0-SNAPSHOT"]

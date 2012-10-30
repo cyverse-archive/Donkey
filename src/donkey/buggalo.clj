@@ -10,7 +10,8 @@
         [donkey.service :only [success-response]]
         [donkey.user-attributes :only [current-user]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clj-http.client :as client]
+  (:require [cemerick.url :as curl]
+            [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.nibblonian :as nibblonian]
@@ -98,8 +99,9 @@
 (defn- save-tree-metaurl
   "Saves the URL used to obtain the tree URLs in the AVUs for the file."
   [user path metaurl]
-  (let [base (nibblonian-base-url)
-        res  (nibblonian/save-tree-metaurl base user path metaurl)]
+  (let [base    (nibblonian-base-url)
+        urlpath (:path (curl/url metaurl))
+        res     (nibblonian/save-tree-metaurl base user path urlpath)]
     (when-not (<= 200 (:status res) 299)
       (log/warn "unable to save the tree metaurl for" path "-" (:body res)))))
 
