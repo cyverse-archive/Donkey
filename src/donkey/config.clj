@@ -198,6 +198,10 @@
   "The list of supported tree formats."
   "donkey.tree-viewer.accepted-tree-formats")
 
+(STR tree-url-bucket
+  "The bucket in Riak to use for the storage of tree viewer URLs."
+  "donkey.tree-viewer.bucket")
+
 (STR es-url
   "The URL for Elastic Search"
   "donkey.infosquito.es-url")
