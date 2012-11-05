@@ -114,7 +114,7 @@
   [{:keys [search-term] :as params} {user :shortUsername} & [type]]
   (let [type (or type (:type params))
         type (and type (string/lower-case type))]
-    (-> (simple-query search-term user type (dissoc params :search-term :proxyToken :type))
+    (-> (simple-query search-term user type (dissoc params :search-term :proxytoken :type))
         (send-request)
         :body
         extract-result

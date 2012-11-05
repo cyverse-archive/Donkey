@@ -7,6 +7,7 @@
         [donkey.config]
         [donkey.file-listing]
         [donkey.metadactyl]
+        [donkey.middleware :only [wrap-lcase-params]]
         [donkey.service]
         [donkey.sharing]
         [donkey.user-attributes]
@@ -317,6 +318,7 @@
 (defn site-handler [routes]
   (-> routes
       wrap-keyword-params
+      wrap-lcase-params
       wrap-nested-params
       wrap-query-params))
 
