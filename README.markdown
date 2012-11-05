@@ -964,7 +964,7 @@ $ curl -sd '
             "category_path": {
                 "username": "nobody@iplantcollaborative.org",
                 "path": [
-                    "Public Applications",
+                    "Public Apps",
                     "Foo"
                 ]
             }
@@ -982,7 +982,7 @@ $ curl -sd '
                 },
                 "category_path": {
                     "path": [
-                        "Public Applications",
+                        "Public Apps",
                         "Foo"
                     ],
                     "username": "nobody@iplantcollaborative.org"
@@ -1052,7 +1052,7 @@ $ curl -s http://by-tor:8888/get-analysis-categories/public | python -mjson.tool
             },
             "category_path": {
                 "path": [
-                    "Public Applications",
+                    "Public Apps",
                     "Beta"
                 ],
                 "username": "<public>"
@@ -1291,14 +1291,14 @@ $ curl -s http://by-tor:8888/get-only-analysis-groups/4 | python -mjson.tool
                     "description": "",
                     "id": "b9a1a3b8-fef6-4576-bbfe-9ad17eb4c2ab",
                     "is_public": false,
-                    "name": "Applications Under Development",
+                    "name": "Apps Under Development",
                     "template_count": 0
                 },
                 {
                     "description": "",
                     "id": "2948ed96-9564-489f-ad73-e099b171a9a5",
                     "is_public": false,
-                    "name": "Favorite Applications",
+                    "name": "Favorite Apps",
                     "template_count": 0
                 }
             ],
@@ -1325,14 +1325,14 @@ $ curl -s http://by-tor:8888/get-only-analysis-groups/nobody@iplantcollaborative
                     "description": "",
                     "id": "b9a1a3b8-fef6-4576-bbfe-9ad17eb4c2ab",
                     "is_public": false,
-                    "name": "Applications Under Development",
+                    "name": "Apps Under Development",
                     "template_count": 0
                 },
                 {
                     "description": "",
                     "id": "2948ed96-9564-489f-ad73-e099b171a9a5",
                     "is_public": false,
-                    "name": "Favorite Applications",
+                    "name": "Favorite Apps",
                     "template_count": 0
                 }
             ],
