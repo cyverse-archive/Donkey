@@ -4160,7 +4160,9 @@ endpoints.
 Secured Endpoint: GET /secured/simple-search/iplant
 
 This services performs a search of everything under the querying user's home
-folder on iRODS.
+folder on iRODS.  As an alternative to the two endpoints listed below, the
+caller may pass in an optional 'type' parameter in the query string with a value
+of `file` or `folder` to specify which type of object to search for.
 
 Secured Endpoint: GET /secured/simple-search/iplant/file
 

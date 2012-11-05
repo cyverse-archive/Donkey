@@ -8,9 +8,8 @@
 
 (defn send-request
   "Sends the search request to Elastic Search."
-  [query & [type]]
-  (let [components (remove nil? ["iplant" type "_search"])
-        url        (apply s/build-url (c/es-url) components)]
+  [query]
+  (let [url        (s/build-url (c/es-url) "iplant" "_search")]
     (client/get url {:query-params {"source" (dj/json-str query)}})))
 
 
@@ -20,16 +19,27 @@
                  source'
                  (slurp (:body request)))]
     (if (empty? source)
-      (throw (Exception. "no search document provided"))
+      (throw (IllegalArgumentException. "no search document provided"))
       source)))
 
 
+(defn- build-filter
+  [m]
+  (when (nil? (:user m))
+    (throw (IllegalArgumentException. "no user provided for search")))
+  (let [terms (->> (remove (comp nil? val) m)
+                   (map (fn [[k v]] {:term {k v}})))]
+    (if (= 1 (count terms))
+      (first terms)
+      {:and terms})))
+
 (defn- transform-source
-  [orig-source user]
-  (let [orig-search (dj/read-json orig-source)]
+  [orig-source user type]
+  (let [orig-search (dj/read-json orig-source)
+        filt        (build-filter {:user user :_type type})]
     (assoc orig-search
       :query {:filtered {:query  (:query orig-search)
-                         :filter {:term {:user user}}}})))
+                         :filter filt}})))
 
 
 (defn- mk-url
@@ -65,8 +75,8 @@
      the response from Elastic Search"
   [request {user :shortUsername} & [type]]
   (-> (extract-source request)
-      (transform-source user)
-      (send-request type)
+      (transform-source user type)
+      (send-request)
       :body
       extract-result
       s/success-response))
@@ -74,14 +84,15 @@
 
 (defn- simple-query
   "Builds a query to use for a simple search."
-  [search-term user params]
+  [search-term user type params]
   (let [params (or params {})
         query  (if (re-find #"[*?]" search-term)
                  {:wildcard {:name search-term}}
-                 {:wildcard {:name (str \* search-term \*)}})]
+                 {:wildcard {:name (str \* search-term \*)}})
+        filt   (build-filter {:user user :_type type})]
     (assoc params
       :query {:filtered {:query  query
-                         :filter {:term {:user user}}}})))
+                         :filter filt}})))
 
 
 (defn simple-search
@@ -100,8 +111,9 @@
    Returns:
      the response from Elastic Search"
   [{:keys [search-term] :as params} {user :shortUsername} & [type]]
-  (-> (simple-query search-term user (dissoc params :search-term :proxyToken))
-      (send-request type)
-      :body
-      extract-result
-      s/success-response))
+  (let [type (or type (:type params))]
+    (-> (simple-query search-term user type (dissoc params :search-term :proxyToken :type))
+        (send-request)
+        :body
+        extract-result
+        s/success-response)))
