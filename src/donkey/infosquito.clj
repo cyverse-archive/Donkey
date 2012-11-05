@@ -1,6 +1,7 @@
 (ns donkey.infosquito
   "provides the functions that forward Infosquito requests"
   (:require [clojure.data.json :as dj]
+            [clojure.string :as string]
             [clojure-commons.client :as client]
             [donkey.config :as c]
             [donkey.service :as s]))
@@ -75,7 +76,7 @@
      the response from Elastic Search"
   [request {user :shortUsername} & [type]]
   (-> (extract-source request)
-      (transform-source user type)
+      (transform-source user (and type (string/lower-case type)))
       (send-request)
       :body
       extract-result
@@ -111,7 +112,8 @@
    Returns:
      the response from Elastic Search"
   [{:keys [search-term] :as params} {user :shortUsername} & [type]]
-  (let [type (or type (:type params))]
+  (let [type (or type (:type params))
+        type (and type (string/lower-case type))]
     (-> (simple-query search-term user type (dissoc params :search-term :proxyToken :type))
         (send-request)
         :body
