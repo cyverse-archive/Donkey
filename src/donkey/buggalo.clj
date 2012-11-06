@@ -1,6 +1,5 @@
 (ns donkey.buggalo
-  (:use [clojure.data.json :only [read-json json-str]]
-        [clojure.java.io :only [copy file]]
+  (:use [clojure.java.io :only [copy file]]
         [clojure.java.shell :only [sh]]
         [clojure-commons.file-utils :only [with-temp-dir-in]]
         [donkey.config
@@ -9,11 +8,13 @@
                 tree-url-bucket]]
         [donkey.service :only [success-response]]
         [donkey.user-attributes :only [current-user]]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
+            [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
             [clojure-commons.nibblonian :as nibblonian]
             [clojure-commons.scruffian :as scruffian])
   (:import [java.io FilenameFilter]
@@ -53,7 +54,7 @@
    (throw+ {:type :error-status
             :res  {:status       (:status res)
                    :content-type :json
-                   :body         (json-str body)}})))
+                   :body         (cheshire/generate-string body)}})))
 
 (defn- get-tree-viewer-url
   "Obtains a tree viewer URL for a single tree file."
@@ -84,13 +85,13 @@
   (log/debug "retrieving tree URLs from" url)
   (let [res (client/get url {:throw-exceptions false})]
     (when (<= 200 (:status res) 299)
-      (read-json (:body res)))))
+      (cheshire/parse-string (:body res) true))))
 
 (defn- save-tree-urls
   "Saves the tree URLs for a file."
   [tree-urls metaurl]
   (let [res (client/post metaurl
-                         {:body         (json-str tree-urls)
+                         {:body         (cheshire/generate-string tree-urls)
                           :content-type :json}
                          {:throw-exceptions false})]
     (when-not (<= 200 (:status res) 299)
@@ -100,10 +101,14 @@
   "Saves the URL used to obtain the tree URLs in the AVUs for the file."
   [user path metaurl]
   (let [base    (nibblonian-base-url)
-        urlpath (:path (curl/url metaurl))
-        res     (nibblonian/save-tree-metaurl base user path urlpath)]
-    (when-not (<= 200 (:status res) 299)
-      (log/warn "unable to save the tree metaurl for" path "-" (:body res)))))
+        urlpath (:path (curl/url metaurl))]
+    (try+
+      (nibblonian/save-tree-metaurl base user path urlpath)
+      (catch [:error_code ce/ERR_REQUEST_FAILED] {:keys [body]}
+        (log/warn "unable to save the tree metaurl for" path "-"
+                  (cheshire/generate-string (cheshire/parse-string body) {:pretty true})))
+      (catch Exception e
+        (log/warn e "unable to save the tree metaurl for" path)))))
 
 (defn- get-existing-tree-urls
   "Obtains existing tree URLs for either a file stored in the iPlant data store
@@ -119,7 +124,6 @@
      (log/debug "searching for existing tree URLs for SHA1 hash" sha1)
      (let [metaurl (metaurl-for sha1)]
        (when-let [urls (retrieve-tree-urls-from metaurl)]
-         (log/debug "saving existing tree meta URLs in AVUs for" path)
          (save-tree-metaurl user path metaurl)
          urls))))
 
@@ -150,12 +154,14 @@
   ([dir infile sha1]
      (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
            metaurl (metaurl-for sha1)]
-       (save-tree-urls urls metaurl)))
+       (save-tree-urls urls metaurl)
+       urls))
   ([path user dir infile sha1]
      (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
            metaurl (metaurl-for sha1)]
        (save-tree-urls urls metaurl)
-       (save-tree-metaurl user path metaurl))))
+       (save-tree-metaurl user path metaurl)
+       urls)))
 
 (defn tree-viewer-urls-for
   "Obtains the tree viewer URLs for a request body."
@@ -173,9 +179,9 @@
 (defn tree-viewer-urls
   "Obtains the tree viewer URLs for a tree file in iRODS."
   ([path]
-     (tree-viewer-urls path (:shortUsername current-user)))
-  ([path user & {:keys [refresh]}]
-     (log/info "obtaining tree URLs for user" user "and path" path)
+     (tree-viewer-urls path (:shortUsername current-user) {}))
+  ([path user {:keys [refresh]}]
+     (log/debug "obtaining tree URLs for user" user "and path" path)
      (success-response
       (or (and (not refresh) (get-existing-tree-urls user path))
           (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure

@@ -169,7 +169,8 @@
        (trap #(replace-reference-genomes req)))
 
   (GET "/tree-viewer-urls" [:as {params :params}]
-       (trap #(tree-viewer-urls (required-param params :path))))
+       (trap #(tree-viewer-urls (required-param params :path) (:shortUsername current-user)
+                                params)))
 
   (GET "/search/iplant" [:as req]
        (trap #(i/search req current-user)))
