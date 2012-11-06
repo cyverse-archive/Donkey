@@ -3952,84 +3952,37 @@ $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&
 
 ### Searching User Data
 
+Donkey provides a search endpoint that allow callers to search the data by name.
+It allows for partial matching, restricting to folders or files, and paging of 
+results.   
+
+#### Endpoints
+
+Secured Endpoint: GET /secured/search
+                  GET /secured/simple-search/iplant (deprecated)
+
 #### Search Request
 
-All queries will be made by passing a query encoded in a JSON document using a
-[Elastic Search's Search API](http://www.elasticsearch.org/guide/reference/api/search)
-as a request body or in the `source` query string parameter to one of search
-endpoints.  Because some client and servers don't handle a request body properly
-in GET requests, it is preferable to pass the document in through the `source`
-parameter.
+The request is encoded as query string.  The following parameters are recognized.
 
-In the search document, there will always be a field named `query`.  Its value
-will be a JSON object describing the query encoded using
-[Elastic Search's Query DSL](http://www.elasticsearch.org/guide/reference/query-dsl).
-The document may contain other fields.  Here's a basic representation of its
-form.
+`search-term=NAME-GLOB` is the search condition.  `NAME-GLOB` is a glob pattern
+indicating what entry names should be matched.  If the pattern has no wildcards
+(`*` or `?`), then `NAME-GLOB` will be surrounded by `*` wildcards causing all 
+entries with names containing `NAME-GLOB` to be matched.  *This parameter is 
+required*.
 
-```json
-{
-     "query" : query-dsl-object,
-     possible-other-fields
-}
-```
+`type=folder|file` limits the search results to a certain type of entry.  This 
+may be set to `folder` for only matching folder names and `file` for only 
+matching file names.  *This parameter is optional.  When it isn't provided, all 
+types of entries are matched.*
 
-##### Specific Queries
+`from=N` causes the first `N` results to be skipped.  When combined with `size` 
+it allows for paging results.  *This parameter is optional.  When it isn't 
+provided, no results will be skipped.*
 
-Here are some specific queries that can be performed.  They describe particular
-forms of the `query-dsl-object` mentioned above.
-
-The following query object looks for entries with the name `name`.
-
-```json
-{
-     "term" : {
-          "name" : name
-     }
-}
-```
-
-The following query object looks for entries with a name matching the glob
-pattern `glob`.
-
-```json
-{
-     "wildcard" : {
-          "name" : glob
-     }
-}
-```
-
-Both the `*` and `?` wildcards are supported.  The wildcard `*` expands to zero
-or more of any character.  The wildcard `?` expands to one and only one
-character.
-
-##### Maximum Number of Matches
-
-By default, at most 10 matches will be returned.  This can be changed by adding
-a `size` field to the search document.  The `size` field specifies the maximum
-number of matches to be returned.  Heres a search document with a `size` field.
-
-```json
-{
-     "query" : query-dsl-object,
-     "size" : max-matches,
-     possible-other-fields
-}
-```
-
-##### Paging Matches
-
-The `from` field may be used to skip the first few matches.  This is useful for
-paging the matches.  Heres a search document with a `from` field.
-
-```json
-{
-     "query" : query-dsl-object,
-     "from" : first-match-index,
-     possible-other-fields
-}
-```
+`size=N` limits the number of results to `N`.  When combined with `from` it 
+allows for paging results.  *This parameter is optional.  When it isn't provided, 
+the number of results will be at most 10.*
 
 #### Response Body
 
@@ -4123,53 +4076,3 @@ When a request fails, a JSON document of the following form is returned.
 Finding no matches is not a failure.  The `error` field has a cryptic message
 helpful for determining the cause.  The `status` field contains a guess at the
 most appropriate HTTP status code.  It does not always appear to be correct.
-
-#### Endpoints
-
-Secured Endpoint: GET /secured/search/iplant
-
-This service performs a search of everything under the querying user's home
-folder on iRODS.
-
-Secured Endpoint: GET /secured/search/iplant/file
-
-This service performs a search of just the files under the querying user's home
-folder on iRODS.
-
-Secured Endpoint: GET /secured/search/iplant/folder
-
-This service performs a search of just the folders under the querying user's
-home folder on iRODS.
-
-### Simplified User Data Searches
-
-In addition to the full user data search endpoints described above, Donkey
-provides some simplified search endpoints that allow callers to specify the
-search term in the query-string parameter, `search-term`.  This group of
-services determines what type of search to perform based on the presence or
-absence of wildcard characters in the search term.  If the search term contains
-any wildcard characters then a wildcard search will be performed using the
-search term as a glob pattern.  Otherwise, asterisks will be added to the
-beginning and end of the search term and the resulting string will be used as a
-glob pattern in a wildcard search.  The response returned by this group of
-endpoints is in the same format as that returned by the general search
-endpoints.
-
-#### Endpoints
-
-Secured Endpoint: GET /secured/simple-search/iplant
-
-This services performs a search of everything under the querying user's home
-folder on iRODS.  As an alternative to the two endpoints listed below, the
-caller may pass in an optional 'type' parameter in the query string with a value
-of `file` or `folder` to specify which type of object to search for.
-
-Secured Endpoint: GET /secured/simple-search/iplant/file
-
-This service performs a search of just the files under the querying user's home
-folder on iRODS.
-
-Secured Endpoint: GET /secured/simple-search/iplant/folder
-
-This service performs a search of just the folders under the querying user's
-home folder on iRODS.
