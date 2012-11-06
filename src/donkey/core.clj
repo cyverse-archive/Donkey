@@ -24,7 +24,7 @@
             [clojure-commons.error-codes :as ce]
             [ring.adapter.jetty :as jetty]
             [donkey.jex :as jex]
-            [donkey.infosquito :as i]))
+            [donkey.infosquito :as search]))
 
 (defn- trap
   "Traps any exception thrown by a service and returns an appropriate
@@ -172,17 +172,11 @@
        (trap #(tree-viewer-urls (required-param params :path) (:shortUsername current-user)
                                 params)))
 
-  (GET "/search/iplant" [:as req]
-       (trap #(i/search req current-user)))
-
-  (GET "/search/iplant/:type" [type :as req]
-       (trap #(i/search req current-user type)))
+  (GET "/search" [:as {params :params}]
+       (trap #(search/search params current-user)))
 
   (GET "/simple-search/iplant" [:as {params :params}]
-       (trap #(i/simple-search params current-user)))
-
-  (GET "/simple-search/iplant/:type" [type :as {params :params}]
-       (trap #(i/simple-search params current-user type)))
+       (trap #(search/search params current-user)))
 
   (route/not-found (unrecognized-path-response)))
 
