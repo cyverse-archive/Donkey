@@ -1,17 +1,17 @@
 (ns donkey.infosquito
   "provides the functions that forward Infosquito requests"
-  (:require [clojure.data.json :as dj]
+  (:require [clojure.data.json :as json]
             [clojure.string :as string]
             [clojure-commons.client :as client]
-            [donkey.config :as c]
-            [donkey.service :as s]))
+            [donkey.config :as cfg]
+            [donkey.service :as svc]))
 
 
 (defn send-request
   "Sends the search request to Elastic Search."
   [query]
-  (let [url        (s/build-url (c/es-url) "iplant" "_search")]
-    (client/get url {:query-params {"source" (dj/json-str query)}})))
+  (let [url (svc/build-url (cfg/es-url) "iplant" "_search")]
+    (client/get url {:query-params {"source" (json/json-str query)}})))
 
 
 (defn- extract-source
@@ -36,7 +36,7 @@
 
 (defn- transform-source
   [orig-source user type]
-  (let [orig-search (dj/read-json orig-source)
+  (let [orig-search (json/read-json orig-source)
         filt        (build-filter {:user user :_type type})]
     (assoc orig-search
       :query {:filtered {:query  (:query orig-search)
@@ -45,7 +45,7 @@
 
 (defn- mk-url
   [base type params]
-  (apply s/build-url-with-query base params (remove nil? ["iplant" type "_search"])))
+  (apply svc/build-url-with-query base params (remove nil? ["iplant" type "_search"])))
 
 
 (defn- extract-result
@@ -55,7 +55,7 @@
   (letfn [(flatten-source [m] (dissoc (merge m (:_source m)) :_source))
           (flatten-sources [s] (map flatten-source s))
           (reformat-result [m] (update-in m [:hits] flatten-sources))]
-   (->> (dj/read-json body)
+   (->> (json/read-json body)
         :hits
         reformat-result)))
 
@@ -80,7 +80,7 @@
       (send-request)
       :body
       extract-result
-      s/success-response))
+      svc/success-response))
 
 
 (defn- simple-query
@@ -118,4 +118,4 @@
         (send-request)
         :body
         extract-result
-        s/success-response)))
+        svc/success-response)))
