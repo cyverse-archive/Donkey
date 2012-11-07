@@ -1,5 +1,5 @@
-(ns donkey.infosquito
-  "provides the functions that forward Infosquito requests"
+(ns donkey.search
+  "provides the functions that forward search requests to Elastic Search"
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojurewerkz.elastisch.query :as es-query]

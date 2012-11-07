@@ -24,7 +24,7 @@
             [clojure-commons.error-codes :as ce]
             [ring.adapter.jetty :as jetty]
             [donkey.jex :as jex]
-            [donkey.infosquito :as search]))
+            [donkey.search :as search]))
 
 (defn- trap
   "Traps any exception thrown by a service and returns an appropriate
