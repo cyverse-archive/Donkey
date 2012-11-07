@@ -1,75 +1,72 @@
 (ns donkey.infosquito
   "provides the functions that forward Infosquito requests"
-  (:require [clojure.data.json :as json]
-            [clojure.string :as string]
-            [clojure-commons.client :as client]
+  (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]
+            [clojurewerkz.elastisch.query :as es-query]
+            [clojurewerkz.elastisch.rest :as es]
+            [clojurewerkz.elastisch.rest.document :as es-doc]
+            [clojurewerkz.elastisch.rest.response :as es-resp]
             [donkey.config :as cfg]
             [donkey.service :as svc]))
 
 
 (defn- send-request
   "Sends the search request to Elastic Search."
-  [query]
-  (let [url (svc/build-url (cfg/es-url) "iplant" "_search")]
-    (client/get url {:query-params {"source" (json/json-str query)}})))
-
-
-(defn- build-filter
-  [m]
-  (when (nil? (:user m))
-    (throw (IllegalArgumentException. "no user provided for search")))
-  (let [terms (->> (remove (comp nil? val) m)
-                   (map (fn [[k v]] {:term {k v}})))]
-    (if (= 1 (count terms))
-      (first terms)
-      {:and terms})))
-
+  [query from size type]
+  (let [index "iplant"]
+    (es/connect! (cfg/es-url))
+    (if type
+      (es-doc/search index type :query query :from from :size size)
+      (es-doc/search-all-types index :query query :from from :size size))))
+    
 
 (defn- extract-result
   "Extracts the result of the Donkey search services from the results returned
    to us by Elastic Search."
-  [body]
-  (letfn [(flatten-source [m] (dissoc (merge m (:_source m)) :_source))
-          (flatten-sources [s] (map flatten-source s))
-          (reformat-result [m] (update-in m [:hits] flatten-sources))]
-   (->> (json/read-json body)
-        :hits
-        reformat-result)))
+  [resp]
+  (letfn [(format-hit [hit] (dissoc (merge hit (:_source hit)) :_source))]
+    {:total     (or (es-resp/total-hits resp) 0)
+     :max_score (get-in resp [:hits :max_score])
+     :hits      (map format-hit (es-resp/hits-from resp))})) 
 
 
 (defn- mk-query
   "Builds a query to use for a simple search."
-  [search-term user type params]
-  (let [params (or params {})
-        query  (if (re-find #"[*?]" search-term)
-                 {:wildcard {:name search-term}}
-                 {:wildcard {:name (str search-term \*)}})
-        filt   (build-filter {:user user :_type type})]
-    (assoc params
-      :query {:filtered {:query  query
-                         :filter filt}})))
+  [name-glob user]
+  (let [query (es-query/wildcard :name (if (re-find #"[*?]" name-glob)
+                                         name-glob
+                                         (str name-glob \*)))]
+    (es-query/filtered :query query :filter (es-query/term :user user))))
 
-
+      
 (defn search
-  "Performs a simple search on the Elastic Search repository.  The value of the
+  "Performs a search on the Elastic Search repository.  The value of the
    search-term query-string parameter is used as the name pattern to search for.
-   If the search term contains an asterisk or a question mark then it will be
-   treated as a literal wildcard glob pattern.  Otherwise, asterisks will be
-   added to the beginning and end of the search term and that value will be used
-   as a glob pattern.
+   If search-term contains an asterisk or a question mark then it will be 
+   treated as a literal glob pattern.  Otherwise, an asterisk will be added to 
+   the end of the search term and that value will be used as a glob pattern.
+
+   Optionally, the type, from and size parameters may be provided in the query
+   string.  The type parameter is the type of entry to search, either file or 
+   folder.  If type isn't provided, all entries will be searched.  The from and
+   size parameters are used for paging.  from indicates the number of entries to
+   skip before returns matches.  size indicates the number of matches to return.
+   If from isn't provided, it defaults to 0.  If size isn't provided, it 
+   defaults to 10.
 
    Parameters:
      params     - the query-string parameters for this service.
      user-attrs - the attributes of the user performing the search.
-     type       - the mapping type used to restrict the request.
 
    Returns:
      the response from Elastic Search"
-  [{:keys [search-term] :as params} {user :shortUsername} & [type]]
-  (let [type (or type (:type params))
-        type (and type (string/lower-case type))]
-    (-> (mk-query search-term user type (dissoc params :search-term :proxytoken :type))
-        send-request
-        :body
-        extract-result
-        svc/success-response)))
+  [{:keys [search-term type from size]} {user :shortUsername}]
+  (when-not user
+    (throw (IllegalArgumentException. "no user provided for search")))  
+  (let [type' (and type (string/lower-case type))
+        from' (if from (Integer. from) 0)
+        size' (if size (Integer. size) 10)]
+    (-> (mk-query search-term user)
+      (send-request from' size' type')
+      extract-result
+      svc/success-response)))
