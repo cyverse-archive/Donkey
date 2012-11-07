@@ -3967,8 +3967,8 @@ The request is encoded as query string.  The following parameters are recognized
 
 `search-term=NAME-GLOB` is the search condition.  `NAME-GLOB` is a glob pattern
 indicating what entry names should be matched.  If the pattern has no wildcards
-(`*` or `?`), then `NAME-GLOB` will be surrounded by `*` wildcards causing all 
-entries with names containing `NAME-GLOB` to be matched.  *This parameter is 
+(`*` or `?`), then an `*` wildcard will be appended to `NAME-GLOB` causing all 
+entries with names beginning with `NAME-GLOB` to be matched.  *This parameter is 
 required*.
 
 `type=folder|file` limits the search results to a certain type of entry.  This 

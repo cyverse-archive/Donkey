@@ -43,7 +43,7 @@
   (let [params (or params {})
         query  (if (re-find #"[*?]" search-term)
                  {:wildcard {:name search-term}}
-                 {:wildcard {:name (str \* search-term \*)}})
+                 {:wildcard {:name (str search-term \*)}})
         filt   (build-filter {:user user :_type type})]
     (assoc params
       :query {:filtered {:query  query
