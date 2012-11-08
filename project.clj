@@ -1,4 +1,4 @@
-(defproject donkey "1.3.0-SNAPSHOT"
+(defproject donkey "1.3.1-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
