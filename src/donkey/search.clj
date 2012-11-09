@@ -65,7 +65,7 @@
   "Extracts the entity type from the URL parameters
 
    Throws:
-     IllegalArgumentException - This is thrown if the extracted type isn't valid."
+     :invalid-argument - This is thrown if the extracted type isn't valid."
   [params]
   (if-let [type-val (:type params)] 
     (let [type (string/lower-case type-val)]
@@ -81,7 +81,7 @@
   "Extracts a non-negative integer from the URL parameters
 
    Throws:
-     IllegalArgumentException - This is thrown if the parameter value isn't a
+     invalid-argument - This is thrown if the parameter value isn't a 
        non-negative integer."
   [params name-key default]
   (letfn [(mk-exception [val] {:type   :invalid-argument
