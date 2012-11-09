@@ -3986,30 +3986,6 @@ the number of results will be at most 10.*
 
 #### Response Body
 
-The response body is similar to that returned by elastic search except that only
-the actual hits are returned and the `_source` member of each hit is removed and
-all of its components are placed in the body of the hit itself.  A success flag
-is also added to the top level of the response body.
-
-```json
-{
-    "success" : true,
-    "total" : #-matches,
-    "max_score" : max-score,
-    "hits" : [
-        {
-            "_index" : "iplant",
-            "_type" : mapping-type-of-match,
-            "_id" : id-of-match,
-            "_score" : score,
-            "name" : matched-name,
-            "user" : owner-account
-        },
-        ...
-    ]
-}
-```
-
 ##### Successful Response
 
 When the search succeeds or partially succeeds a JSON document of the following
@@ -4027,7 +4003,7 @@ form will be returned.
             "_id" : id-of-match,
             "_score" : score,
             "name" : matched-name,
-            "user" : owner-account
+            "viewers" : viewer-array
         },
         ...
     ]
@@ -4036,30 +4012,16 @@ form will be returned.
 
 The matches are in the array `hits`.  The field `total` is not the number of
 elements in this array; it is the total number of matches that could be
-returned.  By default, only the first 10 matches are in the `hits` array.  This
-default may be changed by setting the `size` or `from` fields in the request
-body.
+returned. 
 
-Here is the form of a match in the `hits` array.
-
-```json
-{
-    "_index" : "iplant",
-    "_type" : mapping-type-of-match,
-    "_id" : id-of-match,
-    "_score" : score,
-    "name" : matched-name,
-    "user" : owner-account
-}
-```
-
-The `_type` field indicates the mapping type of the match.  Infosquito indexes
-files and folders with different mapping types.  It uses the `file` mapping type
-for files and `folder` for folders.  The `_id` field holds the unique identifier
-relative to the mapping type for the match.  Infosquito identifies all files and
-folders with their absolute paths in iRODS.  The `name` field holds the name
-being matched.  Finally, the `user` field holds the account name of the user
-whose home folder contains the matched file or folder.
+The fields in an element of the `hits` array are as follows.  The `_type` field 
+indicates the mapping type of the match.  Infosquito indexes files and folders 
+with different mapping types.  It uses the `file` mapping type for files and 
+`folder` for folders.  The `_id` field holds the unique identifier relative to 
+the mapping type for the match.  Infosquito identifies all files and folders 
+with their absolute paths in iRODS.  The `name` field holds the name being 
+matched.  Finally, the `viewers` field holds an array of user and group names 
+that have at least read access to the matched file or folder.
 
 ##### Failed Response
 
@@ -4068,11 +4030,10 @@ When a request fails, a JSON document of the following form is returned.
 ```json
 {
      "success": false,
-     "error_code": "ERR_REQUEST_FAILED",
-     "body": "{\"error\":error-messages,\"status\":http-status-code}"
+     "code": error-code,
+     other-fields
 }
 ```
 
-Finding no matches is not a failure.  The `error` field has a cryptic message
-helpful for determining the cause.  The `status` field contains a guess at the
-most appropriate HTTP status code.  It does not always appear to be correct.
+*Finding no matches is not a failure.*  The `code` field has a short message 
+identifying the problem.  The `other-fields` depend on the error.
