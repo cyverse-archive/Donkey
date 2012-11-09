@@ -18,13 +18,15 @@
         [slingshot.slingshot :only [try+]])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as cp]
             [clojure-commons.error-codes :as ce]
             [ring.adapter.jetty :as jetty]
             [donkey.jex :as jex]
-            [donkey.infosquito :as search]))
+            [donkey.infosquito :as search])
+  (:import [java.util UUID]))
 
 (defn- trap
   "Traps any exception thrown by a service and returns an appropriate
@@ -107,6 +109,9 @@
 
   (GET "/copy-template/:app-id" [app-id :as req]
        (trap #(copy-app req app-id)))
+
+  (PUT "/import-template" [:as req]
+       (trap #(import-template-secured req)))
 
   (POST "/make-analysis-public" [:as req]
         (trap #(make-app-public req)))
@@ -273,6 +278,9 @@
 
   (POST "/tree-viewer-urls" [:as {body :body}]
         (trap #(tree-viewer-urls-for body)))
+
+  (GET "/uuid" []
+       (string/upper-case (str (UUID/randomUUID))))
 
   (context "/secured" []
            (store-current-user secured-routes #(cas-server) #(server-name)))
