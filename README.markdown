@@ -3959,7 +3959,6 @@ results.
 #### Endpoints
 
 Secured Endpoint: GET /secured/search
-                  GET /secured/simple-search/iplant (deprecated)
 
 #### Search Request
 

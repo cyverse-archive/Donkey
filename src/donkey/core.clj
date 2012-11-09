@@ -177,9 +177,6 @@
   (GET "/search" [:as {params :params}]
        (trap #(search/search params current-user)))
 
-  (GET "/simple-search/iplant" [:as {params :params}]
-       (trap #(search/search params current-user)))
-
   (route/not-found (unrecognized-path-response)))
 
 (defroutes donkey-routes
