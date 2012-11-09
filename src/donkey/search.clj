@@ -1,11 +1,15 @@
 (ns donkey.search
   "provides the functions that forward search requests to Elastic Search"
-  (:require [clojure.string :as string]
+  (:require [clojure.data.json :as json]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [cemerick.url :as url]
+            [clj-http.client :as http]
             [clojurewerkz.elastisch.query :as es-query]
             [clojurewerkz.elastisch.rest :as es]
             [clojurewerkz.elastisch.rest.document :as es-doc]
             [clojurewerkz.elastisch.rest.response :as es-resp]
+            [slingshot.slingshot :as ss]
             [donkey.config :as cfg]
             [donkey.service :as svc]))
 
@@ -31,14 +35,70 @@
 
 
 (defn- mk-query
-  "Builds a query to use for a simple search."
-  [name-glob user]
-  (let [query (es-query/wildcard :name (if (re-find #"[*?]" name-glob)
-                                         name-glob
-                                         (str name-glob \*)))]
-    (es-query/filtered :query query :filter (es-query/term :user user))))
+  "Builds a query."
+  [name-glob user user-groups]
+  (let [pattern (if (re-find #"[*?]" name-glob)
+                  name-glob
+                  (str name-glob \*))
+        viewers (set (conj user-groups user))]
+    (es-query/filtered :query  (es-query/wildcard :name pattern)
+                       :filter (es-query/term :viewers viewers))))
 
-      
+
+(defn- get-groups
+  "Uses nibblonian to look up the group membership of a user
+
+   Throws:
+     :error-status - This is thrown when the nibblonian call fails."
+  [user]      
+  (let [resp (-> (url/url (cfg/nibblonian-base-url) "groups")
+               (assoc :query {:user (url/url-encode user)})
+               str
+               http/get)]
+    (when-not (= 200 (:status resp))
+      (log/error "Failed to get group information from nibblonian" (:body resp))
+      (ss/throw+ {:type :error-status :res (assoc resp :status 500)}))
+    (-> resp :body json/read-json :groups)))
+    
+
+(defn- extract-type
+  "Extracts the entity type from the URL parameters
+
+   Throws:
+     IllegalArgumentException - This is thrown if the extracted type isn't valid."
+  [params]
+  (if-let [type-val (:type params)] 
+    (let [type (string/lower-case type-val)]
+      (when-not (contains? #{"folder" "file"} type)
+        (ss/throw+ {:type   :invalid-argument 
+                    :reason "must be 'file' or 'folder'"
+                    :arg    :type 
+                    :val    type-val}))
+      type)))
+
+
+(defn- extract-uint
+  "Extracts a non-negative integer from the URL parameters
+
+   Throws:
+     IllegalArgumentException - This is thrown if the parameter value isn't a
+       non-negative integer."
+  [params name-key default]
+  (letfn [(mk-exception [val] {:type   :invalid-argument
+                               :reason "must be a non-negative integer"
+                               :arg    name-key
+                               :val    val})]
+    (if-let [val-str (name-key params)]
+      (ss/try+
+        (let [val (Integer. val-str)]
+          (when (< val 0) 
+            (ss/throw+ (mk-exception val)))
+          val)
+        (catch NumberFormatException _
+          (ss/throw+ (mk-exception val-str))))
+      default)))
+
+  
 (defn search
   "Performs a search on the Elastic Search repository.  The value of the
    search-term query-string parameter is used as the name pattern to search for.
@@ -60,13 +120,14 @@
 
    Returns:
      the response from Elastic Search"
-  [{:keys [search-term type from size]} {user :shortUsername}]
+  [params {user :shortUsername}]
   (when-not user
     (throw (IllegalArgumentException. "no user provided for search")))  
-  (let [type' (and type (string/lower-case type))
-        from' (if from (Integer. from) 0)
-        size' (if size (Integer. size) 10)]
-    (-> (mk-query search-term user)
-      (send-request from' size' type')
+  (let [search-term (svc/required-param params :search-term)
+        type        (extract-type params)
+        from        (extract-uint params :from 0)
+        size        (extract-uint params :size 10)]
+    (-> (mk-query search-term user (get-groups user))
+      (send-request from size type)
       extract-result
       svc/success-response)))
