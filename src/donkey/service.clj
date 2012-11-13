@@ -35,6 +35,15 @@
    :body         (error-body e)
    :content-type :json})
 
+(defn invalid-arg-response [arg val reason]
+  {:status       400
+   :body         (json-str {:success false
+                            :code    "INVALID-ARGUMENT"
+                            :reason  reason
+                            :arg     (name arg)
+                            :val      val})
+   :content-type :json})
+
 (defn missing-arg-response [arg]
   (log/error "missing required argument:" (name arg))
   {:status       400

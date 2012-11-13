@@ -25,7 +25,7 @@
             [clojure-commons.error-codes :as ce]
             [ring.adapter.jetty :as jetty]
             [donkey.jex :as jex]
-            [donkey.infosquito :as search])
+            [donkey.search :as search])
   (:import [java.util UUID]))
 
 (defn- trap
@@ -36,6 +36,8 @@
    (f)
    (catch [:type :error-status] {:keys [res]} res)
    (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
+   (catch [:type :invalid-argument] {:keys [arg val reason]} 
+     (invalid-arg-response arg val reason))
    (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
    (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
    (catch ce/error? err (common-error-code &throw-context))
@@ -178,9 +180,6 @@
                                 params)))
 
   (GET "/search" [:as {params :params}]
-       (trap #(search/search params current-user)))
-
-  (GET "/simple-search/iplant" [:as {params :params}]
        (trap #(search/search params current-user)))
 
   (route/not-found (unrecognized-path-response)))
