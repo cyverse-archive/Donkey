@@ -112,8 +112,8 @@
   (GET "/copy-template/:app-id" [app-id :as req]
        (trap #(copy-app req app-id)))
 
-  (PUT "/import-template" [:as req]
-       (trap #(import-template-secured req)))
+  (PUT "/update-template" [:as req]
+       (trap #(update-template-secured req)))
 
   (POST "/make-analysis-public" [:as req]
         (trap #(make-app-public req)))
