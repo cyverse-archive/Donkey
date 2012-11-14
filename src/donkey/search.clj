@@ -1,15 +1,14 @@
 (ns donkey.search
   "provides the functions that forward search requests to Elastic Search"
-  (:require [clojure.data.json :as json]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [cemerick.url :as url]
             [clojurewerkz.elastisch.query :as es-query]
             [clojurewerkz.elastisch.rest :as es]
             [clojurewerkz.elastisch.rest.document :as es-doc]
             [clojurewerkz.elastisch.rest.response :as es-resp]
             [slingshot.slingshot :as ss]
             [clojure-commons.client :as client]
+            [clojure-commons.nibblonian :as nibblonian]
             [donkey.config :as cfg]
             [donkey.service :as svc]))
 
@@ -40,19 +39,10 @@
   (let [pattern (if (re-find #"[*?]" name-glob)
                   name-glob
                   (str name-glob \*))
-        viewers (set (conj user-groups user))]
+        viewers (conj user-groups user)]
     (es-query/filtered :query  (es-query/wildcard :name pattern)
                        :filter (es-query/term :viewers viewers))))
 
-
-(defn- get-groups
-  "Uses nibblonian to look up the group membership of a user"
-  [user]      
-  (let [query {:user (url/url-encode user)}
-        req   (svc/build-url-with-query (cfg/nibblonian-base-url) query "groups")
-        resp  (client/get req)]
-    (-> resp :body json/read-json :groups)))
-    
 
 (defn- extract-type
   "Extracts the entity type from the URL parameters
@@ -119,8 +109,9 @@
   (let [search-term (svc/required-param params :search-term)
         type        (extract-type params)
         from        (extract-uint params :from 0)
-        size        (extract-uint params :size 10)]
-    (-> (mk-query search-term user (get-groups user))
+        size        (extract-uint params :size 10)
+        groups      (nibblonian/get-user-groups (cfg/nibblonian-base-url) user)]
+    (-> (mk-query search-term user groups)
       (send-request from size type)
       extract-result
       svc/success-response)))
