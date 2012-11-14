@@ -368,6 +368,12 @@
   (let [url (build-metadactyl-secured-url "copy-template" app-id)]
     (forward-get url req)))
 
+(defn update-template-secured
+  "This service will import an app into or update an app in the DE."
+  [req]
+  (let [url (build-metadactyl-secured-url "update-template")]
+    (forward-put url req)))
+
 (defn make-app-public
   "This service copies an app from a user's private workspace to the public
    workspace."

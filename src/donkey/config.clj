@@ -159,6 +159,10 @@
    "The bucket in Riak to retrieve user preferences from."
    "donkey.preferences.bucket")
 
+(STR riak-search-hist-bucket
+   "The bucket in Riak to use for the storage of user search history."
+   "donkey.search-history.bucket")
+
 (STR userinfo-base-url
   "The base URL for the user info API."
   "donkey.userinfo.base-url")
@@ -193,6 +197,14 @@
 (VEC supported-tree-formats
   "The list of supported tree formats."
   "donkey.tree-viewer.accepted-tree-formats")
+
+(STR tree-url-bucket
+  "The bucket in Riak to use for the storage of tree viewer URLs."
+  "donkey.tree-viewer.bucket")
+
+(STR es-url
+  "The URL for Elastic Search"
+  "donkey.infosquito.es-url")
 
 (defn configuration-valid
   "Returns the value of the configuration validity flag.  This function should

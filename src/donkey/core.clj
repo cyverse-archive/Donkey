@@ -7,6 +7,7 @@
         [donkey.config]
         [donkey.file-listing]
         [donkey.metadactyl]
+        [donkey.middleware :only [wrap-lcase-params]]
         [donkey.service]
         [donkey.sharing]
         [donkey.user-attributes]
@@ -17,12 +18,15 @@
         [slingshot.slingshot :only [try+]])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as cp]
             [clojure-commons.error-codes :as ce]
             [ring.adapter.jetty :as jetty]
-            [donkey.jex :as jex]))
+            [donkey.jex :as jex]
+            [donkey.search :as search])
+  (:import [java.util UUID]))
 
 (defn- trap
   "Traps any exception thrown by a service and returns an appropriate
@@ -32,6 +36,8 @@
    (f)
    (catch [:type :error-status] {:keys [res]} res)
    (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
+   (catch [:type :invalid-argument] {:keys [arg val reason]} 
+     (invalid-arg-response arg val reason))
    (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
    (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
    (catch ce/error? err (common-error-code &throw-context))
@@ -75,7 +81,7 @@
 
   (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as req]
        (trap #(delete-experiments req workspace-id)))
-  
+
   (DELETE "/stop-analysis/:uuid" [uuid :as req]
           (trap #(jex/stop-analysis req uuid)))
 
@@ -106,6 +112,9 @@
   (GET "/copy-template/:app-id" [app-id :as req]
        (trap #(copy-app req app-id)))
 
+  (PUT "/update-template" [:as req]
+       (trap #(update-template-secured req)))
+
   (POST "/make-analysis-public" [:as req]
         (trap #(make-app-public req)))
 
@@ -126,7 +135,16 @@
 
   (DELETE "/preferences" []
           (trap #(remove-prefs)))
-  
+
+  (GET "/search-history" []
+       (trap #(search-history)))
+
+  (POST "/search-history" [:as {body :body}]
+        (trap #(search-history (slurp body))))
+
+  (DELETE "/search-history" []
+          (trap #(clear-search-history)))
+
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
 
@@ -158,7 +176,11 @@
        (trap #(replace-reference-genomes req)))
 
   (GET "/tree-viewer-urls" [:as {params :params}]
-       (trap #(tree-viewer-urls (required-param params :path))))
+       (trap #(tree-viewer-urls (required-param params :path) (:shortUsername current-user)
+                                params)))
+
+  (GET "/search" [:as {params :params}]
+       (trap #(search/search params current-user)))
 
   (route/not-found (unrecognized-path-response)))
 
@@ -256,6 +278,9 @@
   (POST "/tree-viewer-urls" [:as {body :body}]
         (trap #(tree-viewer-urls-for body)))
 
+  (GET "/uuid" []
+       (string/upper-case (str (UUID/randomUUID))))
+
   (context "/secured" []
            (store-current-user secured-routes #(cas-server) #(server-name)))
 
@@ -295,10 +320,11 @@
 (defn site-handler [routes]
   (-> routes
       wrap-keyword-params
+      wrap-lcase-params
       wrap-nested-params
       wrap-query-params))
 
-(def app 
+(def app
   (site-handler donkey-routes))
 
 (defn -main

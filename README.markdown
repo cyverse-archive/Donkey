@@ -24,36 +24,52 @@ Here's an example configuration file:
 
 ```properties
 # Connection details.
-donkey.app.listen-port = 8888
+donkey.app.listen-port = 65002
 
 # Metadactyl connection settings
-donkey.metadactyl.base-url = http://hostname.iplantcollaborative.org:8888/metadactyl/secured
-donkey.metadactyl.unprotected-base-url = http://hostname.iplantcollaborative.org:8888/metadactyl
+donkey.metadactyl.base-url             = http://localhost:65007/secured
+donkey.metadactyl.unprotected-base-url = http://localhost:65007
 
 # Notification agent connection settings.
-donkey.notificationagent.base-url = http://hostname.iplantcollaborative.org:8888/notificationagent
+donkey.notificationagent.base-url = http://localhost:65011
 
 # CAS Settings
-donkey.cas.cas-server  = https://hostname.iplantcollaborative.org/cas/
-donkey.cas.server-name = http://hostname.iplantcollaborative.org:8888
+donkey.cas.cas-server  = https://cas-server.iplantcollaborative.org/cas/
+donkey.cas.server-name = http://localhost:65002
 
 # The domain name to append to the user id to get the fully qualified user id.
 donkey.uid.domain = iplantcollaborative.org
 
 # User session settings
-donkey.sessions.base-url = http://hostname.iplantcollaborative.org:8888/sessions/
-donkey.sessions.bucket = sessions
+donkey.sessions.base-url = http://localhost:65012/riak/
+donkey.sessions.bucket   = sessions
 
 # User preferences settings
 donkey.preferences.bucket = preferences
 
+# User search history settings.
+donkey.search-history.bucket = search-history
+
 # User information lookup settings.
-donkey.userinfo.base-url = https://hostname.iplantcollaborative.org/users/index.php/api/v1
+donkey.userinfo.base-url             = https://localhost/api/v1
 donkey.userinfo.default-search-limit = 50
 
 # Nibblonian connection settings
-donkey.nibblonian.base-url = http://services-2.iplantcollaborative.org:31360/
+donkey.nibblonian.base-url = http://localhost:65010/
 
+# JEX connection settings
+donkey.jex.base-url = http://localhost:65006/
+
+# Scruffian connection settings
+donkey.scruffian.base-url = http://localhost:65013/
+
+# Tree viewer settings
+donkey.tree-viewer.base-url              = http://localhost/parseTree
+donkey.tree-viewer.buggalo-path          = /usr/local/bin/buggalo
+donkey.tree-viewer.accepted-tree-formats = nexml, rnaaln, aaaln, relaxedphyliptree, nexus
+
+# Infosquito settings
+donkey.infosquito.es-url = http://localhost:65019
 ```
 
 Generally, the service connection settings will have to be updated for each
@@ -948,7 +964,7 @@ $ curl -sd '
             "category_path": {
                 "username": "nobody@iplantcollaborative.org",
                 "path": [
-                    "Public Applications",
+                    "Public Apps",
                     "Foo"
                 ]
             }
@@ -966,7 +982,7 @@ $ curl -sd '
                 },
                 "category_path": {
                     "path": [
-                        "Public Applications",
+                        "Public Apps",
                         "Foo"
                     ],
                     "username": "nobody@iplantcollaborative.org"
@@ -1036,7 +1052,7 @@ $ curl -s http://by-tor:8888/get-analysis-categories/public | python -mjson.tool
             },
             "category_path": {
                 "path": [
-                    "Public Applications",
+                    "Public Apps",
                     "Beta"
                 ],
                 "username": "<public>"
@@ -1275,14 +1291,14 @@ $ curl -s http://by-tor:8888/get-only-analysis-groups/4 | python -mjson.tool
                     "description": "",
                     "id": "b9a1a3b8-fef6-4576-bbfe-9ad17eb4c2ab",
                     "is_public": false,
-                    "name": "Applications Under Development",
+                    "name": "Apps Under Development",
                     "template_count": 0
                 },
                 {
                     "description": "",
                     "id": "2948ed96-9564-489f-ad73-e099b171a9a5",
                     "is_public": false,
-                    "name": "Favorite Applications",
+                    "name": "Favorite Apps",
                     "template_count": 0
                 }
             ],
@@ -1309,14 +1325,14 @@ $ curl -s http://by-tor:8888/get-only-analysis-groups/nobody@iplantcollaborative
                     "description": "",
                     "id": "b9a1a3b8-fef6-4576-bbfe-9ad17eb4c2ab",
                     "is_public": false,
-                    "name": "Applications Under Development",
+                    "name": "Apps Under Development",
                     "template_count": 0
                 },
                 {
                     "description": "",
                     "id": "2948ed96-9564-489f-ad73-e099b171a9a5",
                     "is_public": false,
-                    "name": "Favorite Applications",
+                    "name": "Favorite Apps",
                     "template_count": 0
                 }
             ],
@@ -3304,6 +3320,19 @@ $ curl -sd data http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
 data
 ```
 
+### Retrieving User Preferences
+
+Secured Endpoint: GET /secured/preferences
+
+This service can be used to retrieve a user's preferences.
+
+Example:
+
+```
+$ curl -s http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
+data
+```
+
 ### Removing User Preferences
 
 Secured Endpoint: DELETE /secured/preferences
@@ -3320,6 +3349,47 @@ $ curl -X DELETE http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
 ```
 
 An attempt to remove preference data that doesn't already exist will be silently ignored.
+
+### Saving User Search History
+
+Secured Endpoint: POST /secured/search-history
+
+This service can be used to save arbitrary user search history information.  The
+POST body is stored without modification and be retrieved by sending a GET
+request to the same URL.
+
+Example:
+
+```
+$ curl -sd data http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)
+data
+```
+
+### Retrieving User Search History
+
+Secured Endpoint: GET /secured/search-history
+
+This service can be used to retrieve a user's search history.
+
+Example:
+
+```
+$ curl -s http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)
+data
+```
+
+### Deleting User Search History
+
+This service can be used to delete a user's search history.
+
+Example:
+
+```
+$ curl -XDELETE -s http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)
+{
+    "success" : true
+}
+```
 
 ### Listing Collaborators
 
@@ -3879,3 +3949,90 @@ $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&
     "status": "failure"
 }
 ```
+
+### Searching User Data
+
+Donkey provides a search endpoint that allow callers to search the data by name.
+It allows for partial matching, restricting to folders or files, and paging of 
+results.   
+
+#### Endpoints
+
+Secured Endpoint: GET /secured/search
+
+#### Search Request
+
+The request is encoded as query string.  The following parameters are recognized.
+
+`search-term=NAME-GLOB` is the search condition.  `NAME-GLOB` is a glob pattern
+indicating what entry names should be matched.  If the pattern has no wildcards
+(`*` or `?`), then an `*` wildcard will be appended to `NAME-GLOB` causing all 
+entries with names beginning with `NAME-GLOB` to be matched.  *This parameter is 
+required*.
+
+`type=folder|file` limits the search results to a certain type of entry.  This 
+may be set to `folder` for only matching folder names and `file` for only 
+matching file names.  *This parameter is optional.  When it isn't provided, all 
+types of entries are matched.*
+
+`from=N` causes the first `N` results to be skipped.  When combined with `size` 
+it allows for paging results.  *This parameter is optional.  When it isn't 
+provided, no results will be skipped.*
+
+`size=N` limits the number of results to `N`.  When combined with `from` it 
+allows for paging results.  *This parameter is optional.  When it isn't provided, 
+the number of results will be at most 10.*
+
+#### Response Body
+
+##### Successful Response
+
+When the search succeeds or partially succeeds a JSON document of the following
+form will be returned.
+
+```json
+{
+    "success" : true,
+    "total" : #-matches,
+    "max_score" : max-score,
+    "hits" : [
+        {
+            "_index" : "iplant",
+            "_type" : mapping-type-of-match,
+            "_id" : id-of-match,
+            "_score" : score,
+            "name" : matched-name,
+            "viewers" : viewer-array
+        },
+        ...
+    ]
+}
+```
+
+The matches are in the array `hits`.  The field `total` is not the number of
+elements in this array; it is the total number of matches that could be
+returned. 
+
+The fields in an element of the `hits` array are as follows.  The `_type` field 
+indicates the mapping type of the match.  Infosquito indexes files and folders 
+with different mapping types.  It uses the `file` mapping type for files and 
+`folder` for folders.  The `_id` field holds the unique identifier relative to 
+the mapping type for the match.  Infosquito identifies all files and folders 
+with their absolute paths in iRODS.  The `name` field holds the name being 
+matched.  Finally, the `viewers` field holds an array of user and group names 
+that have at least read access to the matched file or folder.
+
+##### Failed Response
+
+When a request fails, a JSON document of the following form is returned.
+
+```json
+{
+     "success": false,
+     "code": error-code,
+     other-fields
+}
+```
+
+*Finding no matches is not a failure.*  The `code` field has a short message 
+identifying the problem.  The `other-fields` depend on the error.
