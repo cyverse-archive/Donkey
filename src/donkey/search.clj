@@ -4,12 +4,12 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [cemerick.url :as url]
-            [clj-http.client :as http]
             [clojurewerkz.elastisch.query :as es-query]
             [clojurewerkz.elastisch.rest :as es]
             [clojurewerkz.elastisch.rest.document :as es-doc]
             [clojurewerkz.elastisch.rest.response :as es-resp]
             [slingshot.slingshot :as ss]
+            [clojure-commons.client :as client]
             [donkey.config :as cfg]
             [donkey.service :as svc]))
 
@@ -46,18 +46,11 @@
 
 
 (defn- get-groups
-  "Uses nibblonian to look up the group membership of a user
-
-   Throws:
-     :error-status - This is thrown when the nibblonian call fails."
+  "Uses nibblonian to look up the group membership of a user"
   [user]      
-  (let [resp (-> (url/url (cfg/nibblonian-base-url) "groups")
-               (assoc :query {:user (url/url-encode user)})
-               str
-               http/get)]
-    (when-not (= 200 (:status resp))
-      (log/error "Failed to get group information from nibblonian" (:body resp))
-      (ss/throw+ {:type :error-status :res (assoc resp :status 500)}))
+  (let [query {:user (url/url-encode user)}
+        req   (svc/build-url-with-query (cfg/nibblonian-base-url) query "groups")
+        resp  (client/get req)]
     (-> resp :body json/read-json :groups)))
     
 
