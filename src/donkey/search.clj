@@ -1,15 +1,14 @@
 (ns donkey.search
   "provides the functions that forward search requests to Elastic Search"
-  (:require [clojure.data.json :as json]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [cemerick.url :as url]
-            [clj-http.client :as http]
             [clojurewerkz.elastisch.query :as es-query]
             [clojurewerkz.elastisch.rest :as es]
             [clojurewerkz.elastisch.rest.document :as es-doc]
             [clojurewerkz.elastisch.rest.response :as es-resp]
             [slingshot.slingshot :as ss]
+            [clojure-commons.client :as client]
+            [clojure-commons.nibblonian :as nibblonian]
             [donkey.config :as cfg]
             [donkey.service :as svc]))
 
@@ -40,26 +39,10 @@
   (let [pattern (if (re-find #"[*?]" name-glob)
                   name-glob
                   (str name-glob \*))
-        viewers (set (conj user-groups user))]
+        viewers (conj user-groups user)]
     (es-query/filtered :query  (es-query/wildcard :name pattern)
                        :filter (es-query/term :viewers viewers))))
 
-
-(defn- get-groups
-  "Uses nibblonian to look up the group membership of a user
-
-   Throws:
-     :error-status - This is thrown when the nibblonian call fails."
-  [user]      
-  (let [resp (-> (url/url (cfg/nibblonian-base-url) "groups")
-               (assoc :query {:user (url/url-encode user)})
-               str
-               http/get)]
-    (when-not (= 200 (:status resp))
-      (log/error "Failed to get group information from nibblonian" (:body resp))
-      (ss/throw+ {:type :error-status :res (assoc resp :status 500)}))
-    (-> resp :body json/read-json :groups)))
-    
 
 (defn- extract-type
   "Extracts the entity type from the URL parameters
@@ -126,8 +109,9 @@
   (let [search-term (svc/required-param params :search-term)
         type        (extract-type params)
         from        (extract-uint params :from 0)
-        size        (extract-uint params :size 10)]
-    (-> (mk-query search-term user (get-groups user))
+        size        (extract-uint params :size 10)
+        groups      (nibblonian/get-user-groups (cfg/nibblonian-base-url) user)]
+    (-> (mk-query search-term user groups)
       (send-request from size type)
       extract-result
       svc/success-response)))
