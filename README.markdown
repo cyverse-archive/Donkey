@@ -3541,39 +3541,39 @@ $ curl -sd '
 {
     "sharing": [
         {
-            "path": "/path/to/shared/file",
-            "users": [
+            "user": "shared-with-user1",
+            "paths": [
                 {
-                    "user": "shared-with-user1",
+                    "path": "/path/to/shared/file",
                     "permissions": {
                         "read": true,
-                        "write": false,
+                        "write": true,
                         "own": false
                     }
                 },
                 {
-                    "user": "shared-with-user2",
+                    "path": "/path/to/shared/folder",
                     "permissions": {
                         "read": true,
-                        "write": true,
-                        "own": true
+                        "write": false,
+                        "own": false
                     }
                 }
             ]
         },
         {
-            "path": "/path/to/shared/folder",
-            "users": [
+            "user": "shared-with-user2",
+            "paths": [
                 {
-                    "user": "shared-with-user1",
+                    "path": "/path/to/shared/file",
                     "permissions": {
                         "read": true,
-                        "write": false,
-                        "own": false
+                        "write": true,
+                        "own": true
                     }
                 },
                 {
-                    "user": "shared-with-user2",
+                    "path": "/path/to/shared/folder",
                     "permissions": {
                         "read": true,
                         "write": true,
@@ -3587,70 +3587,81 @@ $ curl -sd '
 ' http://by-tor:8888/secured/share?proxyToken=$(cas-ticket)
 ```
 
-The service will response with a success or failure message per user-resource pair:
+The service will respond with a success or failure message per user:
 
 ```
 {
     "sharing": [
         {
-            "path": "/path/to/shared/file",
-            "users": [
+            "user": "shared-with-user1",
+            "sharing": [
                 {
-                    "permissions": {
-                        "own": false,
-                        "read": true,
-                        "write": false
-                    },
                     "success": true,
-                    "user": "shared-with-user1"
+                    "paths": [
+                        {
+                            "path": "/path/to/shared/file",
+                            "permissions": {
+                                "read": true,
+                                "write": true,
+                                "own": false
+                            }
+                        }
+                    ]
                 },
                 {
+                    "success": false,
                     "error": {
-                        "action": "share",
-                        "error_code": "ERR_NOT_A_USER",
                         "status": "failure",
-                        "users": [
-                            "shared-with-user2"
+                        "action": "share",
+                        "error_code": "ERR_DOES_NOT_EXIST",
+                        "paths": [
+                            "/path/to/shared/folder"
                         ]
                     },
-                    "permissions": {
-                        "own": true,
-                        "read": true,
-                        "write": true
-                    },
-                    "success": false,
-                    "user": "shared-with-user2"
+                    "paths": [
+                        {
+                            "path": "/path/to/shared/folder",
+                            "permissions": {
+                                "read": true,
+                                "write": false,
+                                "own": false
+                            }
+                        }
+                    ]
                 }
             ]
         },
         {
-            "path": "/path/to/shared/folder",
-            "users": [
+            "user": "shared-with-user2",
+            "sharing": [
                 {
-                    "permissions": {
-                        "own": false,
-                        "read": true,
-                        "write": false
-                    },
-                    "success": true,
-                    "user": "shared-with-user1"
-                },
-                {
+                    "success": false,
                     "error": {
-                        "action": "share",
-                        "error_code": "ERR_NOT_A_USER",
                         "status": "failure",
-                        "users": [
-                            "shared-with-user2"
+                        "action": "share",
+                        "error_code": "ERR_DOES_NOT_EXIST",
+                        "paths": [
+                            "/path/to/shared/folder"
                         ]
                     },
-                    "permissions": {
-                        "own": true,
-                        "read": true,
-                        "write": true
-                    },
-                    "success": false,
-                    "user": "shared-with-user2"
+                    "paths": [
+                        {
+                            "path": "/path/to/shared/folder",
+                            "permissions": {
+                                "read": true,
+                                "write": true,
+                                "own": true
+                            }
+                        },
+                        {
+                            "path": "/path/to/shared/file",
+                            "permissions": {
+                                "read": true,
+                                "write": true,
+                                "own": true
+                            }
+                        }
+                    ]
                 }
             ]
         }
@@ -3671,15 +3682,17 @@ $ curl -sd '
 {
     "unshare": [
         {
-            "path": "/path/to/shared/file1",
-            "users": [
-                "shared-with-user"
+            "user": "shared-with-user1",
+            "paths": [
+                "/path/to/shared/file",
+                "/path/to/shared/folder"
             ]
         },
         {
-            "path": "/path/to/shared/folder1",
-            "users": [
-                "shared-with-user"
+            "user": "shared-with-user2",
+            "paths": [
+                "/path/to/shared/file",
+                "/path/to/shared/folder"
             ]
         }
     ]
@@ -3687,31 +3700,33 @@ $ curl -sd '
 ' http://by-tor:8888/secured/unshare?proxyToken=$(cas-ticket)
 ```
 
-The service will respond with a success or failure message per resource:
+The service will respond with a success or failure message per user:
 
 ```
 {
     "unshare": [
         {
-            "path": "/path/to/shared/file1",
-            "success": true,
-            "users": [
-                "shared-with-user"
-            ]
-        },
-        {
+            "success": false,
+            "user": "shared-with-user1",
+            "paths": [
+                "/path/to/shared/file",
+                "/path/to/shared/foo"
+            ],
             "error": {
+                "status": "failure",
                 "action": "unshare",
                 "error_code": "ERR_DOES_NOT_EXIST",
                 "paths": [
-                    "/path/to/shared/folder1"
-                ],
-                "status": "failure"
-            },
-            "path": "/path/to/shared/folder1",
-            "success": false,
-            "users": [
-                "shared-with-user"
+                    "/path/to/shared/foo"
+                ]
+            }
+        },
+        {
+            "success": true,
+            "user": "shared-with-user2",
+            "paths": [
+                "/path/to/shared/file",
+                "/path/to/shared/folder"
             ]
         }
     ]
