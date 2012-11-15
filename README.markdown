@@ -3685,7 +3685,7 @@ $ curl -sd '
             "user": "shared-with-user1",
             "paths": [
                 "/path/to/shared/file",
-                "/path/to/shared/folder"
+                "/path/to/shared/foo"
             ]
         },
         {
