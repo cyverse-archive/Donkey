@@ -3587,7 +3587,7 @@ $ curl -sd '
 ' http://by-tor:8888/secured/share?proxyToken=$(cas-ticket)
 ```
 
-The service will respond with a success or failure message per user:
+The service will respond with a success or failure message per user and resource:
 
 ```
 {
@@ -3597,16 +3597,12 @@ The service will respond with a success or failure message per user:
             "sharing": [
                 {
                     "success": true,
-                    "paths": [
-                        {
-                            "path": "/path/to/shared/file",
-                            "permissions": {
-                                "read": true,
-                                "write": true,
-                                "own": false
-                            }
-                        }
-                    ]
+                    "path": "/path/to/shared/file",
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": false
+                    }
                 },
                 {
                     "success": false,
@@ -3618,22 +3614,27 @@ The service will respond with a success or failure message per user:
                             "/path/to/shared/folder"
                         ]
                     },
-                    "paths": [
-                        {
-                            "path": "/path/to/shared/folder",
-                            "permissions": {
-                                "read": true,
-                                "write": false,
-                                "own": false
-                            }
-                        }
-                    ]
+                    "path": "/path/to/shared/folder",
+                    "permissions": {
+                        "read": true,
+                        "write": false,
+                        "own": false
+                    }
                 }
             ]
         },
         {
             "user": "shared-with-user2",
             "sharing": [
+                {
+                    "success": true,
+                    "path": "/path/to/shared/file",
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": true
+                    }
+                },
                 {
                     "success": false,
                     "error": {
@@ -3644,24 +3645,12 @@ The service will respond with a success or failure message per user:
                             "/path/to/shared/folder"
                         ]
                     },
-                    "paths": [
-                        {
-                            "path": "/path/to/shared/folder",
-                            "permissions": {
-                                "read": true,
-                                "write": true,
-                                "own": true
-                            }
-                        },
-                        {
-                            "path": "/path/to/shared/file",
-                            "permissions": {
-                                "read": true,
-                                "write": true,
-                                "own": true
-                            }
-                        }
-                    ]
+                    "path": "/path/to/shared/folder",
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": true
+                    }
                 }
             ]
         }
@@ -3706,27 +3695,37 @@ The service will respond with a success or failure message per user:
 {
     "unshare": [
         {
-            "success": false,
             "user": "shared-with-user1",
-            "paths": [
-                "/path/to/shared/file",
-                "/path/to/shared/foo"
-            ],
-            "error": {
-                "status": "failure",
-                "action": "unshare",
-                "error_code": "ERR_DOES_NOT_EXIST",
-                "paths": [
-                    "/path/to/shared/foo"
-                ]
-            }
+            "unshare": [
+                {
+                    "success": true,
+                    "path": "/path/to/shared/file"
+                },
+                {
+                    "success": false,
+                    "error": {
+                        "status": "failure",
+                        "action": "unshare",
+                        "error_code": "ERR_DOES_NOT_EXIST",
+                        "paths": [
+                            "/path/to/shared/foo"
+                        ]
+                    },
+                    "path": "/path/to/shared/foo"
+                }
+            ]
         },
         {
-            "success": true,
             "user": "shared-with-user2",
-            "paths": [
-                "/path/to/shared/file",
-                "/path/to/shared/folder"
+            "unshare": [
+                {
+                    "success": true,
+                    "path": "/path/to/shared/file"
+                },
+                {
+                    "success": true,
+                    "path": "/path/to/shared/folder"
+                }
             ]
         }
     ]

@@ -17,8 +17,8 @@
   [relative-url]
   (add-current-user-to-url (build-url (nibblonian-base-url) relative-url)))
 
-(defn- paths-map->path-list
-  "Converts a paths map to a list of path strings."
+(defn- share-list->path-list
+  "Converts a list of maps with path key-values to a list of path strings."
   [paths]
   (reduce #(conj %1 (:path %2)) [] paths))
 
@@ -36,53 +36,54 @@
                       (join ", ")))]
     [share-count file-list]))
 
-(defn- share-obj->nibb-share-req
-  "Builds a Nibblonian request object from a username, permissions map, and a
-   list of path maps."
-  [user permissions paths]
-  {:paths (paths-map->path-list paths),
+(defn- build-nibblonian-share-req
+  "Builds a Nibblonian request object from a username and a client share
+   request."
+  [user share]
+  {:paths (list (:path share)),
    :users (list user),
-   :permissions permissions})
+   :permissions (:permissions share)})
 
-(defn- unshare-obj->nibb-unshare-req
-  "Builds a Nibblonian unshare request object from a client unshare request."
-  [unshare]
-  {:paths (:paths unshare),
-   :users (list (:user unshare))})
+(defn- build-nibblonian-unshare-req
+  "Builds a Nibblonian unshare request object from a username and a path."
+  [user path]
+  {:paths (list path),
+   :users (list user)})
 
 (defn- foward-nibblonian-share
   "Forwards a Nibblonian share request."
-  [user [permissions paths]]
-  (let [body (json-str (share-obj->nibb-share-req user permissions paths))]
+  [user share]
+  (let [body (json-str (build-nibblonian-share-req user share))]
     (log/debug "foward-nibblonian-share: " body)
     (try+
       (client/post (nibblonian-url "share")
                    {:content-type :json
                     :body body
                     :throw-entire-message? true})
-      {:success true :paths paths}
+      (merge {:success true} share)
       (catch map? e
         (log/error "nibblonian error: " e)
-        {:success false,
-         :error (read-json (:body e))
-         :paths paths}))))
+        (merge {:success false,
+                :error (read-json (:body e))}
+               share)))))
 
 (defn- foward-nibblonian-unshare
-  "Forwards a Nibblonian unshare request from a client unshare request."
-  [unshare]
-  (let [body (json-str (unshare-obj->nibb-unshare-req unshare))]
+  "Forwards a Nibblonian unshare request."
+  [user path]
+  (let [body (json-str (build-nibblonian-unshare-req user path))]
     (log/debug "foward-nibblonian-unshare: " body)
     (try+
       (client/post (nibblonian-url "unshare")
                    {:content-type :json
                     :body body
                     :throw-entire-message? true})
-      (merge {:success true} unshare)
+      {:success true
+       :path path}
       (catch map? e
         (log/error "nibblonian error: " e)
-        (merge {:success false,
-                :error (read-json (:body e))}
-               unshare)))))
+        {:success false,
+         :error (read-json (:body e))
+         :path path}))))
 
 (defn- send-sharing-notification
   "Sends an (un)sharing notification."
@@ -100,9 +101,7 @@
   "Sends share notifications to both the current user and shared user."
   [sharee shares]
   (let [sharer (:shortUsername current-user)
-        path-list (reduce #(concat %1 (paths-map->path-list (:paths %2)))
-                          []
-                          shares)
+        path-list (share-list->path-list shares)
         [share-count file-list] (path-list->file-list path-list)
         subject (str share-count " file(s)/folder(s) have been shared.")]
     (send-sharing-notification
@@ -122,10 +121,7 @@
 (defn- send-share-err-notification
   "Sends a share error notification to the current user."
   [sharee shares]
-  (let [path-list (reduce
-                    #(concat %1 (paths-map->path-list (:paths %2)))
-                    []
-                    shares)
+  (let [path-list (share-list->path-list shares)
         [share-count file-list] (path-list->file-list path-list)]
     (send-sharing-notification
       (:shortUsername current-user)
@@ -137,9 +133,9 @@
 
 (defn- send-unshare-notifications
   "Sends an unshare notification to only the current user."
-  [unshare]
-  (let [unsharee (:user unshare)
-        [share-count file-list] (path-list->file-list (:paths unshare))]
+  [unsharee unshares]
+  (let [path-list (share-list->path-list unshares)
+        [share-count file-list] (path-list->file-list path-list)]
     (send-sharing-notification
       (:shortUsername current-user)
       (str share-count " file(s)/folder(s) have been unshared with " unsharee)
@@ -150,9 +146,9 @@
 
 (defn- send-unshare-err-notification
   "Sends an unshare error notification to the current user."
-  [unshare]
-  (let [unsharee (:user unshare)
-        [share-count file-list] (path-list->file-list (:paths unshare))]
+  [unsharee unshares]
+  (let [path-list (share-list->path-list unshares)
+        [share-count file-list] (path-list->file-list path-list)]
     (send-sharing-notification
       (:shortUsername current-user)
       (str "Could not unshare " share-count " file(s)/folder(s) with " unsharee)
@@ -162,12 +158,13 @@
       (str "unable to send unshare error notification for " unsharee))))
 
 (defn- share-with-user
-  "Parses a share map, which is keyed by a username to an inner map keyed by
-   permissions to arrays of paths. Each user-permission-paths request is
-   forwarded to Nibblonian, then success notifications are sent to the users
-   involved, and any error notifications to the current user."
-  [[user shares]]
-  (let [user_share_results (map #(foward-nibblonian-share user %) shares)
+  "Forwards share requests to Nibblonian from the user and list of paths and
+   permissions in the given share map, sending any success notifications to the
+   users involved, and any error notifications to the current user."
+  [share]
+  (let [user (:user share)
+        paths (:paths share)
+        user_share_results (map #(foward-nibblonian-share user %) paths)
         successful_shares (filter #(:success %) user_share_results)
         unsuccessful_shares (remove #(:success %) user_share_results)]
     (when (seq successful_shares)
@@ -177,38 +174,32 @@
     {:user user :sharing user_share_results}))
 
 (defn- unshare-with-user
-  "Forwards an unshare object to Nibblonian, which contains a user and a list of
-   paths, then sends success notifications to the users involved, and any error
-   notifications to the current user."
+  "Forwards unshare requests to Nibblonian from the user and list of paths in
+   the given unshare map, sending any success notifications to the users
+   involved, and any error notifications to the current user."
   [unshare]
-  (let [unshare_results (foward-nibblonian-unshare unshare)]
-    (if (:success unshare_results)
-      (send-unshare-notifications unshare_results)
-      (send-unshare-err-notification unshare_results))
-    unshare_results))
-
-(defn- group-share-by-permissions
-  "Groups a user-share request by permission settings."
-  [share]
-  (let [user (:user share)
-        paths (:paths share)
-        shares (group-by :permissions paths)]
-    (log/debug "grouping share by permission:\n" shares)
-    {user shares}))
+  (let [user (:user unshare)
+        paths (:paths unshare)
+        unshare_results (map #(foward-nibblonian-unshare user %) paths)
+        successful_unshares (filter #(:success %) unshare_results)
+        unsuccessful_unshares (remove #(:success %) unshare_results)]
+    (when (seq successful_unshares)
+      (send-unshare-notifications user successful_unshares))
+    (when (seq unsuccessful_unshares)
+      (send-unshare-err-notification user unsuccessful_unshares))
+    {:user user :unshare unshare_results}))
 
 (defn share
   "Parses a batch share request, forwarding each user-share request to
    Nibblonian."
   [req]
-  (let [sharing (read-json (slurp (:body req)))
-        sharing (map #(group-share-by-permissions %) (:sharing sharing))]
-    (log/debug "shares grouped by permissions:\n" sharing)
-    (walk #(share-with-user (first %))
+  (let [sharing (read-json (slurp (:body req)))]
+    (walk #(share-with-user %)
           #(json-str {:sharing %})
-          sharing)))
+          (:sharing sharing))))
 
 (defn unshare
-  "Parses a batch unshare request, forwarding each user-paths request to
+  "Parses a batch unshare request, forwarding each user-unshare request to
    Nibblonian."
   [req]
   (let [unshare (read-json (slurp (:body req)))]
