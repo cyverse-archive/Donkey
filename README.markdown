@@ -3195,6 +3195,16 @@ $ curl -s "http://by-tor:8888/secured/copy-template/C720C42D-531A-164B-38CC-D2D6
 }
 ```
 
+#### Updating a Template
+
+Secured Endpoint: PUT /secured/update-template
+
+This is a slightly modified version of the unsecured `/update-template`
+service.  The only difference between this service and the unsecured service,
+other than the fact that this service is secured, is that the response body
+contains the identifier of the template that was updated.  Please refer to
+[Updating an Existing Template] for details.
+
 #### Submitting an Analysis for Public Use
 
 Secured Endpoint: POST /secured/make-analysis-public
@@ -3963,6 +3973,14 @@ $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&
     "status": "failure"
 }
 ```
+
+#### Obtaining Identifiers
+
+Unsecured Endpoint: /uuid
+
+In some cases, it's difficult for the UI client code to generate UUIDs for
+objects that require them.  This service returns a single UUID in the response
+body.  The UUID is returned as a plain text string.
 
 ### Searching User Data
 

@@ -21,7 +21,7 @@
     (if type
       (es-doc/search index type :query query :from from :size size)
       (es-doc/search-all-types index :query query :from from :size size))))
-    
+
 
 (defn- extract-result
   "Extracts the result of the Donkey search services from the results returned
@@ -30,7 +30,7 @@
   (letfn [(format-hit [hit] (dissoc (merge hit (:_source hit)) :_source))]
     {:total     (or (es-resp/total-hits resp) 0)
      :max_score (get-in resp [:hits :max_score])
-     :hits      (map format-hit (es-resp/hits-from resp))})) 
+     :hits      (map format-hit (es-resp/hits-from resp))}))
 
 
 (defn- mk-query
@@ -50,12 +50,12 @@
    Throws:
      :invalid-argument - This is thrown if the extracted type isn't valid."
   [params]
-  (if-let [type-val (:type params)] 
+  (if-let [type-val (:type params)]
     (let [type (string/lower-case type-val)]
       (when-not (contains? #{"folder" "file"} type)
-        (ss/throw+ {:type   :invalid-argument 
+        (ss/throw+ {:type   :invalid-argument
                     :reason "must be 'file' or 'folder'"
-                    :arg    :type 
+                    :arg    :type
                     :val    type-val}))
       type)))
 
@@ -64,7 +64,7 @@
   "Extracts a non-negative integer from the URL parameters
 
    Throws:
-     invalid-argument - This is thrown if the parameter value isn't a 
+     invalid-argument - This is thrown if the parameter value isn't a
        non-negative integer."
   [params name-key default]
   (letfn [(mk-exception [val] {:type   :invalid-argument
@@ -74,27 +74,27 @@
     (if-let [val-str (name-key params)]
       (ss/try+
         (let [val (Integer. val-str)]
-          (when (< val 0) 
+          (when (< val 0)
             (ss/throw+ (mk-exception val)))
           val)
         (catch NumberFormatException _
           (ss/throw+ (mk-exception val-str))))
       default)))
 
-  
+
 (defn search
   "Performs a search on the Elastic Search repository.  The value of the
    search-term query-string parameter is used as the name pattern to search for.
-   If search-term contains an asterisk or a question mark then it will be 
-   treated as a literal glob pattern.  Otherwise, an asterisk will be added to 
+   If search-term contains an asterisk or a question mark then it will be
+   treated as a literal glob pattern.  Otherwise, an asterisk will be added to
    the end of the search term and that value will be used as a glob pattern.
 
    Optionally, the type, from and size parameters may be provided in the query
-   string.  The type parameter is the type of entry to search, either file or 
+   string.  The type parameter is the type of entry to search, either file or
    folder.  If type isn't provided, all entries will be searched.  The from and
    size parameters are used for paging.  from indicates the number of entries to
    skip before returns matches.  size indicates the number of matches to return.
-   If from isn't provided, it defaults to 0.  If size isn't provided, it 
+   If from isn't provided, it defaults to 0.  If size isn't provided, it
    defaults to 10.
 
    Parameters:
@@ -105,7 +105,7 @@
      the response from Elastic Search"
   [params {user :shortUsername}]
   (when-not user
-    (throw (IllegalArgumentException. "no user provided for search")))  
+    (throw (IllegalArgumentException. "no user provided for search")))
   (let [search-term (svc/required-param params :search-term)
         type        (extract-type params)
         from        (extract-uint params :from 0)
