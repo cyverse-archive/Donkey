@@ -3149,32 +3149,90 @@ $ curl -sd '
 
 Secured Endpoint: GET /secured/edit-template/{analysis-id}
 
-This service can be used to make an analysis available for editing in Tito.
-If the user already owns the analysis then this service merely makes ensures
-that it is not marked as deleted.  If the user does not own the analysis then
-this service makes a copy of the analysis available in Tito so that the user
-may edit the copy.  The response body contains only the analysis identifier,
-which may be different from the analysis identifier that was provided:
+Tito uses this service to obtain the analysis description JSON so that the
+analysis can be edited.  The response body contains the analysis description in
+the format that is required by Tito.  Here's an example:
 
-```json
+```
+$ curl -s http://by-tor:8888/secured/edit-template/F29C156C-E286-4BBD-9033-0075C09E0D70?proxyToken=$(cas-ticket) | python -mjson.tool
 {
-    "analysis_id": analysis-id
-}
-```
-
-Here are some examples:
-
-```
-$ curl -s "http://by-tor:8888/secured/edit-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
-{
-    "analysis_id": "DED7E03E-B011-4F3E-8750-3F903FB28137"
-}
-```
-
-```
-$ curl -s "http://by-tor:8888/secured/edit-template/DED7E03E-B011-4F3E-8750-3F903FB28137?proxyToken=$(cas-ticket)" | python -m json.tool
-{
-    "analysis_id": "DED7E03E-B011-4F3E-8750-3F903FB28137"
+    "objects": [
+        {
+            "component": "cat",
+            "component_id": "c72c314d1eace461290b9b568d9feb86a",
+            "description": "",
+            "edited_date": "",
+            "groups": {
+                "description": "",
+                "groups": [
+                    {
+                        "description": "",
+                        "id": "524AD6B2-7093-A9E6-1F56-919C09E286F9",
+                        "isVisible": true,
+                        "label": "Advanced Arguments",
+                        "name": "",
+                        "properties": [
+                            {
+                                "description": "",
+                                "id": "37ADF623-36AD-31A1-3455-4F95F2108774",
+                                "isVisible": true,
+                                "label": "Advanced Options",
+                                "name": "",
+                                "omit_if_blank": false,
+                                "order": -1,
+                                "type": "Info",
+                                "value": ""
+                            },
+                            {
+                                "description": "This is an example of tool tip text that might be helpful ",
+                                "id": "A391A212-8261-3662-A812-68E5309D3A5A",
+                                "isVisible": true,
+                                "label": "Number blank lines",
+                                "name": "-b",
+                                "omit_if_blank": false,
+                                "order": -1,
+                                "type": "Flag",
+                                "value": "false"
+                            }
+                        ],
+                        "type": ""
+                    },
+                    {
+                        "description": "",
+                        "id": "4CC29EF5-E950-5177-B54A-C61C33637BD4",
+                        "isVisible": true,
+                        "label": "This is a group mechanism",
+                        "name": "",
+                        "properties": [
+                            {
+                                "description": "",
+                                "id": "23ABF631-8109-D3FA-0714-2378059BBBA1",
+                                "isVisible": true,
+                                "label": "Another argument",
+                                "name": "-e",
+                                "omit_if_blank": false,
+                                "order": -1,
+                                "type": "Flag",
+                                "value": "false"
+                            }
+                        ],
+                        "type": ""
+                    }
+                ],
+                "id": "--root-PropertyGroupContainer--",
+                "isVisible": true,
+                "label": "",
+                "name": ""
+            },
+            "id": "F29C156C-E286-4BBD-9033-0075C09E0D70",
+            "label": "Sample Cat",
+            "name": "Sample Cat",
+            "published_date": "",
+            "references": [],
+            "tito": "F29C156C-E286-4BBD-9033-0075C09E0D70",
+            "type": ""
+        }
+    ]
 }
 ```
 
@@ -3182,12 +3240,9 @@ $ curl -s "http://by-tor:8888/secured/edit-template/DED7E03E-B011-4F3E-8750-3F90
 
 Secured Endpoint: GET /secured/copy-template/{analysis-id}
 
-This service can be used to make a copy of an analysis available for editing
-in Tito.  The only difference between this service and the
-`/edit-template/{analysis-id}` service is that this service will always make a
-copy of an existing analysis, even if the user already owns the analysis.
-Here's an example:
-
+This service can be used to make a copy of an analysis in the user's workspace.
+The response body consists of a JSON object containing the ID of the new
+analysis.  Here's an example:
 ```
 $ curl -s "http://by-tor:8888/secured/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
 {
@@ -3242,8 +3297,7 @@ The response body is just an empty JSON object if the service call succeeds.
 
 Making an analysis public entails recording the additional inforamtion
 provided to the service, removing the analysis from all of its current
-analysis groups, adding the analysis to the _Beta_ group, and marking the
-analysis as public in Tito, which prevents future modification.
+analysis groups, adding the analysis to the _Beta_ group.
 
 Here's an example:
 
@@ -3985,8 +4039,8 @@ body.  The UUID is returned as a plain text string.
 ### Searching User Data
 
 Donkey provides a search endpoint that allow callers to search the data by name.
-It allows for partial matching, restricting to folders or files, and paging of 
-results.   
+It allows for partial matching, restricting to folders or files, and paging of
+results.
 
 #### Endpoints
 
@@ -3998,21 +4052,21 @@ The request is encoded as query string.  The following parameters are recognized
 
 `search-term=NAME-GLOB` is the search condition.  `NAME-GLOB` is a glob pattern
 indicating what entry names should be matched.  If the pattern has no wildcards
-(`*` or `?`), then an `*` wildcard will be appended to `NAME-GLOB` causing all 
-entries with names beginning with `NAME-GLOB` to be matched.  *This parameter is 
+(`*` or `?`), then an `*` wildcard will be appended to `NAME-GLOB` causing all
+entries with names beginning with `NAME-GLOB` to be matched.  *This parameter is
 required*.
 
-`type=folder|file` limits the search results to a certain type of entry.  This 
-may be set to `folder` for only matching folder names and `file` for only 
-matching file names.  *This parameter is optional.  When it isn't provided, all 
+`type=folder|file` limits the search results to a certain type of entry.  This
+may be set to `folder` for only matching folder names and `file` for only
+matching file names.  *This parameter is optional.  When it isn't provided, all
 types of entries are matched.*
 
-`from=N` causes the first `N` results to be skipped.  When combined with `size` 
-it allows for paging results.  *This parameter is optional.  When it isn't 
+`from=N` causes the first `N` results to be skipped.  When combined with `size`
+it allows for paging results.  *This parameter is optional.  When it isn't
 provided, no results will be skipped.*
 
-`size=N` limits the number of results to `N`.  When combined with `from` it 
-allows for paging results.  *This parameter is optional.  When it isn't provided, 
+`size=N` limits the number of results to `N`.  When combined with `from` it
+allows for paging results.  *This parameter is optional.  When it isn't provided,
 the number of results will be at most 10.*
 
 #### Response Body
@@ -4043,15 +4097,15 @@ form will be returned.
 
 The matches are in the array `hits`.  The field `total` is not the number of
 elements in this array; it is the total number of matches that could be
-returned. 
+returned.
 
-The fields in an element of the `hits` array are as follows.  The `_type` field 
-indicates the mapping type of the match.  Infosquito indexes files and folders 
-with different mapping types.  It uses the `file` mapping type for files and 
-`folder` for folders.  The `_id` field holds the unique identifier relative to 
-the mapping type for the match.  Infosquito identifies all files and folders 
-with their absolute paths in iRODS.  The `name` field holds the name being 
-matched.  Finally, the `viewers` field holds an array of user and group names 
+The fields in an element of the `hits` array are as follows.  The `_type` field
+indicates the mapping type of the match.  Infosquito indexes files and folders
+with different mapping types.  It uses the `file` mapping type for files and
+`folder` for folders.  The `_id` field holds the unique identifier relative to
+the mapping type for the match.  Infosquito identifies all files and folders
+with their absolute paths in iRODS.  The `name` field holds the name being
+matched.  Finally, the `viewers` field holds an array of user and group names
 that have at least read access to the matched file or folder.
 
 ##### Failed Response
@@ -4066,5 +4120,5 @@ When a request fails, a JSON document of the following form is returned.
 }
 ```
 
-*Finding no matches is not a failure.*  The `code` field has a short message 
+*Finding no matches is not a failure.*  The `code` field has a short message
 identifying the problem.  The `other-fields` depend on the error.
