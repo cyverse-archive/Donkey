@@ -12,6 +12,8 @@
             [clj-http.client :as client]
             [donkey.notifications :as dn]))
 
+(def file-list-threshold 10)
+
 (defn- nibblonian-url
   "Builds a URL to a Nibblonian service from the given relative URL path."
   [relative-url]
@@ -23,18 +25,11 @@
   (reduce #(conj %1 (:path %2)) [] paths))
 
 (defn- path-list->file-list
-  "Returns the count of path strings in the given list and a string
-   representaion of the list. The second string value may be a string that joins
-   the list by commas, or a string that just includes the count of paths if
-   there are more than a certain number."
+  "Returns a string that joins the given path list by commas."
   [path-list]
-  (let [share-count (count path-list)
-        file-list (if (>= share-count 10)
-                    (str share-count " file(s)/folder(s)")
-                    (->> path-list
-                      (map #(basename %))
-                      (join ", ")))]
-    [share-count file-list]))
+  (->> path-list
+    (map #(basename %))
+    (join ", ")))
 
 (defn- build-nibblonian-share-req
   "Builds a Nibblonian request object from a username and a client share
@@ -102,59 +97,94 @@
   [sharee shares]
   (let [sharer (:shortUsername current-user)
         path-list (share-list->path-list shares)
-        [share-count file-list] (path-list->file-list path-list)
-        subject (str share-count " file(s)/folder(s) have been shared.")]
+        share-count (count path-list)
+        file-list (path-list->file-list path-list)
+        sharer-summary (str share-count
+                            " file(s)/folder(s) have been shared with "
+                            sharee)
+        sharer-notification (if (< share-count file-list-threshold)
+                              (str "The following file(s)/folder(s) have been shared with "
+                                   sharee ": "
+                                   file-list)
+                              sharer-summary)
+        sharee-summary (str sharer
+                            " has shared "
+                            share-count
+                            " file(s)/folder(s) with you.")
+        sharee-notification (if (< share-count file-list-threshold)
+                              (str sharer
+                                   " has shared the following file(s)/folder(s) with you: "
+                                   file-list)
+                              sharee-summary)]
     (send-sharing-notification
       sharer
-      subject
-      (str "The following file(s)/folder(s) have been shared with "
-           sharee ": "
-           file-list)
+      sharer-summary
+      sharer-notification
       (str "unable to send share notification to " sharer " for " sharee))
     (send-sharing-notification
       sharee
-      subject
-      (str sharer " has shared the following file(s)/folder(s) with you: "
-           file-list)
+      sharee-summary
+      sharee-notification
       (str "unable to send share notification from " sharer " to " sharee))))
 
 (defn- send-share-err-notification
   "Sends a share error notification to the current user."
   [sharee shares]
   (let [path-list (share-list->path-list shares)
-        [share-count file-list] (path-list->file-list path-list)]
+        share-count (count path-list)
+        file-list (path-list->file-list path-list)
+        subject (str share-count
+                     " file(s)/folder(s) could not be shared with "
+                     sharee)
+        notification (if (< share-count file-list-threshold)
+                       (str "The following file(s)/folder(s) could not be shared with "
+                            sharee ": "
+                            file-list)
+                       subject)]
     (send-sharing-notification
       (:shortUsername current-user)
-      (str "Could not share " share-count " file(s)/folder(s) with " sharee)
-      (str "The following file(s)/folder(s) could not be shared with "
-           sharee ": "
-           file-list)
+      subject
+      notification
       (str "unable to send share error notification for " sharee))))
 
 (defn- send-unshare-notifications
   "Sends an unshare notification to only the current user."
   [unsharee unshares]
   (let [path-list (share-list->path-list unshares)
-        [share-count file-list] (path-list->file-list path-list)]
+        share-count (count path-list)
+        file-list (path-list->file-list path-list)
+        subject (str share-count
+                     " file(s)/folder(s) have been unshared with "
+                     unsharee)
+        notification (if (< share-count file-list-threshold)
+                       (str " The following file(s)/folder(s) have been unshared with "
+                            unsharee ": "
+                            file-list)
+                       subject)]
     (send-sharing-notification
       (:shortUsername current-user)
-      (str share-count " file(s)/folder(s) have been unshared with " unsharee)
-      (str " The following file(s)/folder(s) have been unshared with "
-           unsharee ": "
-           file-list)
+      subject
+      notification
       (str "unable to send unshare notification for " unsharee))))
 
 (defn- send-unshare-err-notification
   "Sends an unshare error notification to the current user."
   [unsharee unshares]
   (let [path-list (share-list->path-list unshares)
-        [share-count file-list] (path-list->file-list path-list)]
+        share-count (count path-list)
+        file-list (path-list->file-list path-list)
+        subject (str share-count
+                     " file(s)/folder(s) could not be unshared with "
+                     unsharee)
+        notification (if (< share-count file-list-threshold)
+                       (str "The following file(s)/folder(s) could not be unshared with "
+                            unsharee ": "
+                            file-list)
+                       subject)]
     (send-sharing-notification
       (:shortUsername current-user)
-      (str "Could not unshare " share-count " file(s)/folder(s) with " unsharee)
-      (str "The following file(s)/folder(s) could not be unshared with "
-           unsharee ": "
-           file-list)
+      subject
+      notification
       (str "unable to send unshare error notification for " unsharee))))
 
 (defn- share-with-user
