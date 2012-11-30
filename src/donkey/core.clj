@@ -64,6 +64,9 @@
   (POST "/notifications/delete" [:as req]
         (trap #(delete-notifications req)))
 
+  (DELETE "/notifications/delete-all" [:as {params :params}]
+          (trap #(delete-all-notifications params)))
+
   (POST "/notifications/seen" [:as req]
         (trap #(mark-notifications-as-seen req)))
 

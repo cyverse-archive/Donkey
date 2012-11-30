@@ -267,6 +267,13 @@
   (let [url (dn/notificationagent-url "delete")]
     (forward-post url req)))
 
+(defn delete-all-notifications
+  "This service forwards requests to the notification agent in order to delete
+   all notifications for the user."
+  [params]
+  (let [url (dn/notificationagent-url "delete-all" params)]
+    (forward-delete url params)))
+
 (defn mark-notifications-as-seen
   "This service forwards requests to the notification agent in order to mark
    notifications as seen by the user."
