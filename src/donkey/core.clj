@@ -67,6 +67,9 @@
   (POST "/notifications/seen" [:as req]
         (trap #(mark-notifications-as-seen req)))
 
+  (POST "/notifications/mark-all-seen" [:as req]
+        (trap #(mark-all-notifications-seen req)))
+
   (GET "/template/:app-id" [app-id :as req]
        (trap #(get-app-secured req app-id)))
 
