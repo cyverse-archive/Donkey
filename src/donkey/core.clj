@@ -1,13 +1,13 @@
 (ns donkey.core
   (:gen-class)
   (:use [clojure.java.io :only [file]]
+        [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.buggalo]
         [donkey.config]
         [donkey.file-listing]
         [donkey.metadactyl]
-        [donkey.middleware :only [wrap-lcase-params]]
         [donkey.service]
         [donkey.sharing]
         [donkey.user-attributes]

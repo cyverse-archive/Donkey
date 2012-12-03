@@ -8,7 +8,7 @@
                  [com.cemerick/url "0.0.7"]
                  [compojure "1.0.1"]
                  [org.iplantc/clj-cas "1.0.0-SNAPSHOT"]
-                 [org.iplantc/clojure-commons "1.3.0-SNAPSHOT"]
+                 [org.iplantc/clojure-commons "1.3.1-SNAPSHOT"]
                  [ring/ring-jetty-adapter "1.0.1"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [slingshot "0.10.1"]
