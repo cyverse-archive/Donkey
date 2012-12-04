@@ -3243,6 +3243,7 @@ Secured Endpoint: GET /secured/copy-template/{analysis-id}
 This service can be used to make a copy of an analysis in the user's workspace.
 The response body consists of a JSON object containing the ID of the new
 analysis.  Here's an example:
+
 ```
 $ curl -s "http://by-tor:8888/secured/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?proxyToken=$(cas-ticket)" | python -m json.tool
 {

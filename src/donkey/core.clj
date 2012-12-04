@@ -1,13 +1,13 @@
 (ns donkey.core
   (:gen-class)
   (:use [clojure.java.io :only [file]]
+        [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.buggalo]
         [donkey.config]
         [donkey.file-listing]
         [donkey.metadactyl]
-        [donkey.middleware :only [wrap-lcase-params]]
         [donkey.service]
         [donkey.sharing]
         [donkey.user-attributes]
@@ -64,8 +64,14 @@
   (POST "/notifications/delete" [:as req]
         (trap #(delete-notifications req)))
 
+  (DELETE "/notifications/delete-all" [:as {params :params}]
+          (trap #(delete-all-notifications params)))
+
   (POST "/notifications/seen" [:as req]
         (trap #(mark-notifications-as-seen req)))
+
+  (POST "/notifications/mark-all-seen" [:as req]
+        (trap #(mark-all-notifications-seen req)))
 
   (GET "/template/:app-id" [app-id :as req]
        (trap #(get-app-secured req app-id)))
