@@ -36,9 +36,10 @@
 (defn- mk-query
   "Builds a query."
   [name-glob user user-groups]
-  (let [pattern (if (re-find #"[*?]" name-glob)
-                  name-glob
-                  (str name-glob \*))
+  (let [pattern (string/lower-case
+                 (if (re-find #"[*?]" name-glob)
+                   name-glob
+                   (str name-glob \*)))
         viewers (conj user-groups user)]
     (es-query/filtered :query  (es-query/wildcard :name pattern)
                        :filter (es-query/term :viewers viewers))))
