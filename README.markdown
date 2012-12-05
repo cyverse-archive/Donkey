@@ -2408,6 +2408,30 @@ $ curl -sd '
 Note that the UUIDs provided in the request body must be obtained from the
 `message` -> `id` element of the notification the user wishes to delete.
 
+#### Marking All Notifications as Deleted
+
+Secured Endpoint: DELETE /secured/notifications/delete-all
+
+This endpoint allows the client to delete all notifications for the user.
+
+See https://github.com/iPlantCollaborativeOpenSource/NotificationAgent#deleting-all-notifications
+for details on accepted query parameters, with the exception of the "user"
+parameter. This endpoint will add or replace the "user" parameter in the request
+forwarded to the NotificationAgent with the username of the authenticated user
+making the request.
+
+The response body for this service is a simple JSON object that indicates
+whether or not the service call succeeded and contains the number of messages
+that are still marked as unseen.  Here's an example:
+
+```
+$ curl -s http://by-tor:8888/secured/notifications/delete-all | python -mjson.tool
+{
+    "success": true,
+    "count": 0
+}
+```
+
 #### Getting Analyses in the JSON Format Required by the DE
 
 Secured Endpoint: GET /secured/template/{analysis-id}
