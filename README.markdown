@@ -2343,6 +2343,31 @@ $ curl -sd '
 Note that the UUIDs provided in the request body must be obtained from the
 `message` -> `id` element of the notification the user wishes to mark as seen.
 
+#### Marking All Notifications as Seen
+
+Secured Endpoint: POST /secured/notifications/mark-all-seen
+
+This endpoint allows the client to acknowlege all notifications as seen for a
+particular user.
+
+See https://github.com/iPlantCollaborativeOpenSource/NotificationAgent#marking-all-notifications-as-seen
+for details on the format of the request body, with the exception of the "user"
+field. This endpoint will add or overwrite the "user" field in the request body
+forwarded to the NotificationAgent with the username of the authenticated user
+making the request.
+
+The response body for this service is a simple JSON object that indicates
+whether or not the service call succeeded and contains the number of messages
+that are still marked as unseen.  Here's an example:
+
+```
+$ curl -sd '{}' http://by-tor:8888/secured/notifications/mark-all-seen | python -mjson.tool
+{
+    "success": true,
+    "count": 0
+}
+```
+
 #### Marking Notifications as Deleted
 
 Secured Endpoint: POST /secured/notifications/delete
