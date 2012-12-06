@@ -1246,6 +1246,73 @@ $ curl -s http://by-tor:8888/get-analysis/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C |
 }
 ```
 
+#### Getting Analysis Details
+
+Unsecured Endpoint: GET /analysis-details/{analysis-id}
+
+This service is used by the DE to obtain high-level details about a single
+analysis.  The response body is in the following format:
+
+```json
+{
+    "component": component-name,
+    "component_id": component-id,
+    "description": analysis-description,
+    "edited_date": edited-date-milliseconds,
+    "id": analysis-id,
+    "label": analysis-label,
+    "name": analysis-name,
+    "published_date": published-date-milliseconds,
+    "references": [
+        reference-1,
+        reference-2,
+        ...,
+        reference-n
+    ],
+    "tito": analysis-id,
+    "type": component-type
+}
+```
+
+This service will fail if the analysis isn't found or is a pipeline (that is, it
+contains multiple steps).  Here are some examples:
+
+```
+$ curl -s http://by-tor:8888/analysis-details/t0eba98231a404e3a927245001b21aa25 | python -mjson.tool
+{
+    "component": "cat",
+    "component_id": "c72c314d1eace461290b9b568d9feb86a",
+    "description": "Test Description for CORE-3750",
+    "edited_date": "1354666971032",
+    "id": "t0eba98231a404e3a927245001b21aa25",
+    "label": "",
+    "name": "Test CORE-3750",
+    "published_date": "1354666971032",
+    "references": [
+        "test another ref",
+        "https://pods.iplantcollaborative.org/jira/browse/CORE-3750"
+    ],
+    "tito": "t0eba98231a404e3a927245001b21aa25",
+    "type": "executable"
+}
+```
+
+```
+$ curl -s http://by-tor:8888/analysis-details/foo | python -mjson.tool
+{
+    "reason": "app, foo, not found",
+    "success": false
+}
+```
+
+```
+$ curl -s http://by-tor:8888/analysis-details/009CECFD-0DF7-4B3D-98EF-82105C84835F | python -mjson.tool
+{
+    "reason": "pipeline, 009CECFD-0DF7-4B3D-98EF-82105C84835F, can't be displayed by this service",
+    "success": false
+}
+```
+
 #### Listing Analysis Groups
 
 Unsecured Endpoint: GET /get-only-analysis-groups/{workspace-token}

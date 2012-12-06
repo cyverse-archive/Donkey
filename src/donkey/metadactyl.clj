@@ -108,6 +108,12 @@
   (let [url (build-metadactyl-unprotected-url "get-analysis" app-id)]
     (forward-get url req)))
 
+(defn get-app-details
+  "A service used to get high-level details about an app."
+  [req app-id]
+  (let [url (build-metadactyl-unprotected-url "analysis-details" app-id)]
+    (forward-get url req)))
+
 (defn get-app-secured
   "A secured service used to get an app in the format required by the DE."
   [req app-id]
@@ -149,14 +155,14 @@
     (forward-post url req)))
 
 (defn preview-template
-  "This service will convert a JSON document in the format consumed by 
+  "This service will convert a JSON document in the format consumed by
    the import service into the format required by the DE."
   [req]
   (let [url (build-metadactyl-unprotected-url "preview-template")]
     (forward-post url req)))
 
 (defn preview-workflow
-  "This service will convert a JSON document in the format consumed by 
+  "This service will convert a JSON document in the format consumed by
    the import service into the format required by the DE."
   [req]
   (let [url (build-metadactyl-unprotected-url "preview-workflow")]
@@ -206,7 +212,7 @@
     (forward-post url req)))
 
 (defn force-update-workflow
-  "This service will either update an existing workflow or import a new workflow.  
+  "This service will either update an existing workflow or import a new workflow.
    Vetted workflows may be updated."
   [req]
   (let [url (build-unprotected-url-with-query req "force-update-workflow")]
