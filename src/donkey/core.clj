@@ -281,6 +281,9 @@
   (GET "/get-property-values/:job-id" [job-id :as req]
        (trap #(get-property-values req job-id)))
 
+  (GET "/analysis-rerun-info/:job-id" [job-id :as req]
+       (trap #(get-app-rerun-info req job-id)))
+
   (POST "/send-notification" [:as req]
         (trap #(send-notification req)))
 

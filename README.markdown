@@ -1894,8 +1894,10 @@ job.  The response body is in the following format:
 
 ```json
 {
+    "analysis_id": analysis-id,
     "parameters": [
         {
+            "full_param_id": fully-qualified-parameter-id,
             "param_id": parameter-id,
             "param_name": parameter-name,
             "param_value": parameter-value,
@@ -1928,12 +1930,14 @@ Here's an example:
 ```
 $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620f31553 | python -mjson.tool
 {
+    "analysis_id": "t55e2377c60724ecbbcfa1a39c9ef1eec",
     "parameters": [
         {
             "data_format": "Unspecified",
             "info_type": "File",
             "is_default_value": false,
             "is_visible": true,
+            "full_param_id": "step1_38950035-8F31-0A27-1BE1-8E55F5C30B54",
             "param_id": "38950035-8F31-0A27-1BE1-8E55F5C30B54",
             "param_name": "Select an SRA or SRAlite file:",
             "param_type": "Input",
@@ -1944,6 +1948,7 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": true,
+            "full_param_id": "step1_B962E548-4023-E40C-48E5-6484AF55E5DD",
             "param_id": "B962E548-4023-E40C-48E5-6484AF55E5DD",
             "param_name": "Optional accession override",
             "param_type": "Text",
@@ -1954,6 +1959,7 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": true,
+            "full_param_id": "step1_DCFC3CD9-FB31-E0F8-C4CB-78F66FF368D2",
             "param_id": "DCFC3CD9-FB31-E0F8-C4CB-78F66FF368D2",
             "param_name": "File contains paired-end data",
             "param_type": "Flag",
@@ -1964,6 +1970,7 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": true,
+            "full_param_id": "step1_0E21A202-EC8A-7BFD-913B-FA73FE86F58E",
             "param_id": "0E21A202-EC8A-7BFD-913B-FA73FE86F58E",
             "param_name": "Offset to use for quality scale conversion",
             "param_type": "Number",
@@ -1974,6 +1981,7 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": true,
+            "full_param_id": "step1_F9AD602D-38E3-8C90-9DD7-E1BB4971CD70",
             "param_id": "F9AD602D-38E3-8C90-9DD7-E1BB4971CD70",
             "param_name": "Emit only FASTA records without quality scores",
             "param_type": "Flag",
@@ -1984,12 +1992,105 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": false,
+            "full_param_id": "step1_6BAD8D7F-3EE2-A52A-93D1-1329D1565E4F",
             "param_id": "6BAD8D7F-3EE2-A52A-93D1-1329D1565E4F",
             "param_name": "Verbose",
             "param_type": "Flag",
             "param_value": "true"
         }
     ]
+}
+```
+
+#### Obtaining Information to Rerun a Job
+
+Unsecured Endpoint: GET /analysis-rerun-info/{job-id}
+
+It's occasionally nice to be able to rerun a job that was prevously executed,
+possibly with some tweaked values.  The UI uses this service to obtain analysis
+information in the same format as the `/get-analysis/{analysis-id}` service with
+the property values from a specific job plugged in.  Here's an example:
+
+```
+$ curl -s http://by-tor:8888/analysis-rerun-info/j41bef770-f68c-40a2-8da4-2f53e22d4a9b | python -mjson.tool
+{
+    "groups": [
+        {
+            "id": "3C17C860-AF27-468F-A8F2-64894B31DA23",
+            "label": "Input and Output",
+            "name": "",
+            "properties": [
+                {
+                    "description": "Select the files to concatenate.",
+                    "id": "Puma_733743D0-42BB-471A-BC53-63E0DBD5F41D",
+                    "isVisible": true,
+                    "label": "Input Files",
+                    "name": "",
+                    "type": "MultiFileSelector",
+                    "validator": {
+                        "label": "",
+                        "name": "",
+                        "required": true
+                    },
+                    "value": [
+                        "/iplant/home/snow-dog/AllButRootHaveDistanceToParent.newick",
+                        "/iplant/home/snow-dog/allNodesNamed.newick"
+                    ]
+                },
+                {
+                    "description": "Specify the name of the output file.",
+                    "id": "Puma_5C540330-9858-460F-B1D4-CD760B99D85F",
+                    "isVisible": true,
+                    "label": "Output File",
+                    "name": "",
+                    "type": "Output",
+                    "validator": {
+                        "label": "",
+                        "name": "",
+                        "required": true
+                    },
+                    "value": "puma.txt"
+                },
+                {
+                    "description": "Specify the name of the error output file.",
+                    "id": "Puma_902B0804-17B7-456F-94D2-D09DC2D2ADE2",
+                    "isVisible": true,
+                    "label": "Error Output File",
+                    "name": "",
+                    "type": "Output",
+                    "validator": {
+                        "label": "",
+                        "name": "",
+                        "required": true
+                    },
+                    "value": "puma.err"
+                }
+            ],
+            "type": ""
+        },
+        {
+            "id": "90B15DA1-9DFF-463C-AA4A-6EB0DE1DA022",
+            "label": "Options",
+            "name": "",
+            "properties": [
+                {
+                    "description": "Indicate whether lines should be numbered in the output file.",
+                    "id": "Puma_FE1F8E52-FECC-462C-B5F8-5E4A8EAC6FBC",
+                    "isVisible": true,
+                    "label": "Number Lines",
+                    "name": "-n",
+                    "type": "Flag",
+                    "value": "true"
+                }
+            ],
+            "type": ""
+        }
+    ],
+    "id": "t55e2377c60724ecbbcfa1a39c9ef1eec",
+    "label": "Puma",
+    "name": "Puma",
+    "success": true,
+    "type": ""
 }
 ```
 
