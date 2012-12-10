@@ -2768,131 +2768,35 @@ $ curl -XPUT -sd '
 Secured Endpoint: GET /secured/workspaces/{workspace-id}/executions/list
 
 Information about the status of jobs that have previously been submitted for
-execution can be obtained using this service.  The DE uses this service to
-populate the _Analyses_ window.  The response body for this service is in the
-following format:
+execution can be obtained using this service.  This request is forwarded to the
+metadactyl service.
 
-```json
+See https://github.com/iPlantCollaborativeOpenSource/metadactyl-clj#listing-jobs
+for more details.
+
+Here's a simple example:
+
+```
+$ curl -s "http://by-tor:8888/secured/workspaces/46/executions/list?proxyToken=$(cas-ticket)&limit=1" | python -mjson.tool
 {
     "analyses": [
         {
-            "analysis_details": analysis-description,
-            "analysis_id": analysis-id,
-            "analysis_name": analysis-name,
-            "description": job-description,
-            "enddate": end-date-as-milliseconds-since-epoch,
-            "id": job-id,
-            "name": job-name,
-            "resultfolderid": path-to-result-folder,
-            "startdate": start-date-as-milliseconds-since-epoch,
-            "status": job-status-code,
-            "wiki_url": analysis-documentation-link
-        },
-        ...
-    ]
-}
-```
-
-With no query string parameters aside from `user` and `email`, this service
-returns information about all jobs ever run by the user that haven't been marked
-as deleted in descending order by start time (that is, the `startdate` field in
-the result).  Several query-string parameters are available to alter the way
-this service behaves:
-
-<table border="1">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Default</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>limit</td>
-            <td>
-                The maximum number of results to return.  If this value is zero
-                or negative then all results will be returned.
-            </td>
-            <td>0</td>
-        </tr>
-        <tr>
-            <td>offset</td>
-            <td>The index of the first result to return.</td>
-            <td>0</td>
-        </tr>
-        <tr>
-            <td>filter</td>
-            <td>
-                Allows results to be filtered based on the value of a single
-                result field.  The format of this parameter is `field=value`,
-                where `field` is the mame of the field on which the filter is
-                based and `value` is the desired value to include in the result
-                set.  For example, to obtain the list of all jobs that were
-                executed using the application, `CACE`, you the parameter value
-                would be `analysis_name=CACE`.  Equality is the only type of
-                comparison available for this field at this time.
-            </td>
-            <td>No filtering</td>
-        </tr>
-        <tr>
-            <td>sort-field</td>
-            <td>The name of the field that results are sorted by.</td>
-            <td>startdate</td>
-        </tr>
-        <tr>
-            <td>sort-order</td>
-            <td>`asc` for ascending or `desc` for descending.</td>
-            <td>desc</td>
-        </tr>
-    </tbody>
-</table>
-
-Here's an example using no parameters:
-
-```
-$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "analyses": [
-        {
-            "analysis_details": "Find significant changes in transcript expression, splicing, and promoter use across RNAseq alignment data files",
-            "analysis_id": "516ED301-E250-40BC-B2BC-31DD7B64D3BA",
-            "analysis_name": "CuffDiff",
-            "description": "Selecting a non-default file for output. ",
-            "enddate": "1329252482000",
-            "id": "BD421AF3-2C6E-4A92-A215-D380CD6FECC8",
-            "name": "CuffDiffTest1",
-            "resultfolderid": "/iplant/home/nobody/analyses/CuffDiff/",
-            "startdate": "1329252412998",
-            "status": "Failed",
-            "wiki_url": "https://pods.iplantcollaborative.org/wiki/some/doc/link/CuffDiff"
-        },
-        ...
-    ]
-}
-```
-
-Here's an example of a filtered search with a limit of one result:
-
-```
-$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)&filter=analysis_name=CACE&limit=1" | python -mjson.tool
-{
-    "analyses": [
-        {
-            "analysis_details": "Maximum likelihood ancestral character estimation for continuous traits",
-            "analysis_id": "4BA117B1-0BFB-F4B2-C5B0-AABE56CF8406",
-            "analysis_name": "CACE",
+            "analysis_details": "An even cooler cat!",
+            "analysis_id": "9AAE91FE-99DF-4085-A952-F241FAABFA1E",
+            "analysis_name": "Lynx",
             "description": "",
-            "enddate": 1346444723000,
-            "id": "j34b7dd71-1a72-45fb-9569-c68a71f0b58d",
-            "name": "analysis1",
-            "resultfolderid": "/iplant/home/ipctest/analyses/analysis1-2012-08-31-13-25-03.493",
-            "startdate": 1346444703493,
-            "status": "Failed",
-            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/CACE"
+            "enddate": "1355178050000",
+            "id": "j9ea61d72-06a0-4d09-971b-ab9f728f7fa9",
+            "name": "lynx-12101520",
+            "resultfolderid": "/iplant/home/ipctest/analyses/lynx-12101520-2012-12-10-15-20-34.524",
+            "startdate": "1355178034524",
+            "status": "Completed",
+            "wiki_url": "http://pods.iplantcollaborative.org/wiki/display/DEappsDev/Lynx"
         }
     ],
-    "success": true
+    "success": true,
+    "timestamp": "1355180520441",
+    "total": 1
 }
 ```
 
