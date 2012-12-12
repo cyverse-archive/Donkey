@@ -36,7 +36,7 @@
    (f)
    (catch [:type :error-status] {:keys [res]} res)
    (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
-   (catch [:type :invalid-argument] {:keys [arg val reason]} 
+   (catch [:type :invalid-argument] {:keys [arg val reason]}
      (invalid-arg-response arg val reason))
    (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
    (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
@@ -227,6 +227,9 @@
   (GET "/get-analysis/:app-id" [app-id :as req]
        (trap #(get-app req app-id)))
 
+  (GET "/analysis-details/:app-id" [app-id :as req]
+       (trap #(get-app-details req app-id)))
+
   (GET "/get-only-analysis-groups/:workspace-id" [workspace-id :as req]
        (trap #(get-only-analysis-groups req workspace-id)))
 
@@ -277,6 +280,9 @@
 
   (GET "/get-property-values/:job-id" [job-id :as req]
        (trap #(get-property-values req job-id)))
+
+  (GET "/analysis-rerun-info/:job-id" [job-id :as req]
+       (trap #(get-app-rerun-info req job-id)))
 
   (POST "/send-notification" [:as req]
         (trap #(send-notification req)))

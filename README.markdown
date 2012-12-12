@@ -1246,6 +1246,73 @@ $ curl -s http://by-tor:8888/get-analysis/9BCCE2D3-8372-4BA5-A0CE-96E513B2693C |
 }
 ```
 
+#### Getting Analysis Details
+
+Unsecured Endpoint: GET /analysis-details/{analysis-id}
+
+This service is used by the DE to obtain high-level details about a single
+analysis.  The response body is in the following format:
+
+```json
+{
+    "component": component-name,
+    "component_id": component-id,
+    "description": analysis-description,
+    "edited_date": edited-date-milliseconds,
+    "id": analysis-id,
+    "label": analysis-label,
+    "name": analysis-name,
+    "published_date": published-date-milliseconds,
+    "references": [
+        reference-1,
+        reference-2,
+        ...,
+        reference-n
+    ],
+    "tito": analysis-id,
+    "type": component-type
+}
+```
+
+This service will fail if the analysis isn't found or is a pipeline (that is, it
+contains multiple steps).  Here are some examples:
+
+```
+$ curl -s http://by-tor:8888/analysis-details/t0eba98231a404e3a927245001b21aa25 | python -mjson.tool
+{
+    "component": "cat",
+    "component_id": "c72c314d1eace461290b9b568d9feb86a",
+    "description": "Test Description for CORE-3750",
+    "edited_date": "1354666971032",
+    "id": "t0eba98231a404e3a927245001b21aa25",
+    "label": "",
+    "name": "Test CORE-3750",
+    "published_date": "1354666971032",
+    "references": [
+        "test another ref",
+        "https://pods.iplantcollaborative.org/jira/browse/CORE-3750"
+    ],
+    "tito": "t0eba98231a404e3a927245001b21aa25",
+    "type": "executable"
+}
+```
+
+```
+$ curl -s http://by-tor:8888/analysis-details/foo | python -mjson.tool
+{
+    "reason": "app, foo, not found",
+    "success": false
+}
+```
+
+```
+$ curl -s http://by-tor:8888/analysis-details/009CECFD-0DF7-4B3D-98EF-82105C84835F | python -mjson.tool
+{
+    "reason": "pipeline, 009CECFD-0DF7-4B3D-98EF-82105C84835F, can't be displayed by this service",
+    "success": false
+}
+```
+
 #### Listing Analysis Groups
 
 Unsecured Endpoint: GET /get-only-analysis-groups/{workspace-token}
@@ -1827,8 +1894,10 @@ job.  The response body is in the following format:
 
 ```json
 {
+    "analysis_id": analysis-id,
     "parameters": [
         {
+            "full_param_id": fully-qualified-parameter-id,
             "param_id": parameter-id,
             "param_name": parameter-name,
             "param_value": parameter-value,
@@ -1861,12 +1930,14 @@ Here's an example:
 ```
 $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620f31553 | python -mjson.tool
 {
+    "analysis_id": "t55e2377c60724ecbbcfa1a39c9ef1eec",
     "parameters": [
         {
             "data_format": "Unspecified",
             "info_type": "File",
             "is_default_value": false,
             "is_visible": true,
+            "full_param_id": "step1_38950035-8F31-0A27-1BE1-8E55F5C30B54",
             "param_id": "38950035-8F31-0A27-1BE1-8E55F5C30B54",
             "param_name": "Select an SRA or SRAlite file:",
             "param_type": "Input",
@@ -1877,6 +1948,7 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": true,
+            "full_param_id": "step1_B962E548-4023-E40C-48E5-6484AF55E5DD",
             "param_id": "B962E548-4023-E40C-48E5-6484AF55E5DD",
             "param_name": "Optional accession override",
             "param_type": "Text",
@@ -1887,6 +1959,7 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": true,
+            "full_param_id": "step1_DCFC3CD9-FB31-E0F8-C4CB-78F66FF368D2",
             "param_id": "DCFC3CD9-FB31-E0F8-C4CB-78F66FF368D2",
             "param_name": "File contains paired-end data",
             "param_type": "Flag",
@@ -1897,6 +1970,7 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": true,
+            "full_param_id": "step1_0E21A202-EC8A-7BFD-913B-FA73FE86F58E",
             "param_id": "0E21A202-EC8A-7BFD-913B-FA73FE86F58E",
             "param_name": "Offset to use for quality scale conversion",
             "param_type": "Number",
@@ -1907,6 +1981,7 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": true,
+            "full_param_id": "step1_F9AD602D-38E3-8C90-9DD7-E1BB4971CD70",
             "param_id": "F9AD602D-38E3-8C90-9DD7-E1BB4971CD70",
             "param_name": "Emit only FASTA records without quality scores",
             "param_type": "Flag",
@@ -1917,12 +1992,105 @@ $ curl -s http://by-tor:8888/get-property-values/jebf8120d-0ccb-45d1-bae6-849620
             "info_type": "",
             "is_default_value": true,
             "is_visible": false,
+            "full_param_id": "step1_6BAD8D7F-3EE2-A52A-93D1-1329D1565E4F",
             "param_id": "6BAD8D7F-3EE2-A52A-93D1-1329D1565E4F",
             "param_name": "Verbose",
             "param_type": "Flag",
             "param_value": "true"
         }
     ]
+}
+```
+
+#### Obtaining Information to Rerun a Job
+
+Unsecured Endpoint: GET /analysis-rerun-info/{job-id}
+
+It's occasionally nice to be able to rerun a job that was prevously executed,
+possibly with some tweaked values.  The UI uses this service to obtain analysis
+information in the same format as the `/get-analysis/{analysis-id}` service with
+the property values from a specific job plugged in.  Here's an example:
+
+```
+$ curl -s http://by-tor:8888/analysis-rerun-info/j41bef770-f68c-40a2-8da4-2f53e22d4a9b | python -mjson.tool
+{
+    "groups": [
+        {
+            "id": "3C17C860-AF27-468F-A8F2-64894B31DA23",
+            "label": "Input and Output",
+            "name": "",
+            "properties": [
+                {
+                    "description": "Select the files to concatenate.",
+                    "id": "Puma_733743D0-42BB-471A-BC53-63E0DBD5F41D",
+                    "isVisible": true,
+                    "label": "Input Files",
+                    "name": "",
+                    "type": "MultiFileSelector",
+                    "validator": {
+                        "label": "",
+                        "name": "",
+                        "required": true
+                    },
+                    "value": [
+                        "/iplant/home/snow-dog/AllButRootHaveDistanceToParent.newick",
+                        "/iplant/home/snow-dog/allNodesNamed.newick"
+                    ]
+                },
+                {
+                    "description": "Specify the name of the output file.",
+                    "id": "Puma_5C540330-9858-460F-B1D4-CD760B99D85F",
+                    "isVisible": true,
+                    "label": "Output File",
+                    "name": "",
+                    "type": "Output",
+                    "validator": {
+                        "label": "",
+                        "name": "",
+                        "required": true
+                    },
+                    "value": "puma.txt"
+                },
+                {
+                    "description": "Specify the name of the error output file.",
+                    "id": "Puma_902B0804-17B7-456F-94D2-D09DC2D2ADE2",
+                    "isVisible": true,
+                    "label": "Error Output File",
+                    "name": "",
+                    "type": "Output",
+                    "validator": {
+                        "label": "",
+                        "name": "",
+                        "required": true
+                    },
+                    "value": "puma.err"
+                }
+            ],
+            "type": ""
+        },
+        {
+            "id": "90B15DA1-9DFF-463C-AA4A-6EB0DE1DA022",
+            "label": "Options",
+            "name": "",
+            "properties": [
+                {
+                    "description": "Indicate whether lines should be numbered in the output file.",
+                    "id": "Puma_FE1F8E52-FECC-462C-B5F8-5E4A8EAC6FBC",
+                    "isVisible": true,
+                    "label": "Number Lines",
+                    "name": "-n",
+                    "type": "Flag",
+                    "value": "true"
+                }
+            ],
+            "type": ""
+        }
+    ],
+    "id": "t55e2377c60724ecbbcfa1a39c9ef1eec",
+    "label": "Puma",
+    "name": "Puma",
+    "success": true,
+    "type": ""
 }
 ```
 
@@ -2343,6 +2511,31 @@ $ curl -sd '
 Note that the UUIDs provided in the request body must be obtained from the
 `message` -> `id` element of the notification the user wishes to mark as seen.
 
+#### Marking All Notifications as Seen
+
+Secured Endpoint: POST /secured/notifications/mark-all-seen
+
+This endpoint allows the client to acknowlege all notifications as seen for a
+particular user.
+
+See https://github.com/iPlantCollaborativeOpenSource/NotificationAgent#marking-all-notifications-as-seen
+for details on the format of the request body, with the exception of the "user"
+field. This endpoint will add or overwrite the "user" field in the request body
+forwarded to the NotificationAgent with the username of the authenticated user
+making the request.
+
+The response body for this service is a simple JSON object that indicates
+whether or not the service call succeeded and contains the number of messages
+that are still marked as unseen.  Here's an example:
+
+```
+$ curl -sd '{}' http://by-tor:8888/secured/notifications/mark-all-seen | python -mjson.tool
+{
+    "success": true,
+    "count": 0
+}
+```
+
 #### Marking Notifications as Deleted
 
 Secured Endpoint: POST /secured/notifications/delete
@@ -2382,6 +2575,30 @@ $ curl -sd '
 
 Note that the UUIDs provided in the request body must be obtained from the
 `message` -> `id` element of the notification the user wishes to delete.
+
+#### Marking All Notifications as Deleted
+
+Secured Endpoint: DELETE /secured/notifications/delete-all
+
+This endpoint allows the client to delete all notifications for the user.
+
+See https://github.com/iPlantCollaborativeOpenSource/NotificationAgent#deleting-all-notifications
+for details on accepted query parameters, with the exception of the "user"
+parameter. This endpoint will add or replace the "user" parameter in the request
+forwarded to the NotificationAgent with the username of the authenticated user
+making the request.
+
+The response body for this service is a simple JSON object that indicates
+whether or not the service call succeeded and contains the number of messages
+that are still marked as unseen.  Here's an example:
+
+```
+$ curl -s http://by-tor:8888/secured/notifications/delete-all | python -mjson.tool
+{
+    "success": true,
+    "count": 0
+}
+```
 
 #### Getting Analyses in the JSON Format Required by the DE
 
@@ -2551,131 +2768,35 @@ $ curl -XPUT -sd '
 Secured Endpoint: GET /secured/workspaces/{workspace-id}/executions/list
 
 Information about the status of jobs that have previously been submitted for
-execution can be obtained using this service.  The DE uses this service to
-populate the _Analyses_ window.  The response body for this service is in the
-following format:
+execution can be obtained using this service.  This request is forwarded to the
+metadactyl service.
 
-```json
+See https://github.com/iPlantCollaborativeOpenSource/metadactyl-clj#listing-jobs
+for more details.
+
+Here's a simple example:
+
+```
+$ curl -s "http://by-tor:8888/secured/workspaces/46/executions/list?proxyToken=$(cas-ticket)&limit=1" | python -mjson.tool
 {
     "analyses": [
         {
-            "analysis_details": analysis-description,
-            "analysis_id": analysis-id,
-            "analysis_name": analysis-name,
-            "description": job-description,
-            "enddate": end-date-as-milliseconds-since-epoch,
-            "id": job-id,
-            "name": job-name,
-            "resultfolderid": path-to-result-folder,
-            "startdate": start-date-as-milliseconds-since-epoch,
-            "status": job-status-code,
-            "wiki_url": analysis-documentation-link
-        },
-        ...
-    ]
-}
-```
-
-With no query string parameters aside from `user` and `email`, this service
-returns information about all jobs ever run by the user that haven't been marked
-as deleted in descending order by start time (that is, the `startdate` field in
-the result).  Several query-string parameters are available to alter the way
-this service behaves:
-
-<table border="1">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Default</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>limit</td>
-            <td>
-                The maximum number of results to return.  If this value is zero
-                or negative then all results will be returned.
-            </td>
-            <td>0</td>
-        </tr>
-        <tr>
-            <td>offset</td>
-            <td>The index of the first result to return.</td>
-            <td>0</td>
-        </tr>
-        <tr>
-            <td>filter</td>
-            <td>
-                Allows results to be filtered based on the value of a single
-                result field.  The format of this parameter is `field=value`,
-                where `field` is the mame of the field on which the filter is
-                based and `value` is the desired value to include in the result
-                set.  For example, to obtain the list of all jobs that were
-                executed using the application, `CACE`, you the parameter value
-                would be `analysis_name=CACE`.  Equality is the only type of
-                comparison available for this field at this time.
-            </td>
-            <td>No filtering</td>
-        </tr>
-        <tr>
-            <td>sort-field</td>
-            <td>The name of the field that results are sorted by.</td>
-            <td>startdate</td>
-        </tr>
-        <tr>
-            <td>sort-order</td>
-            <td>`asc` for ascending or `desc` for descending.</td>
-            <td>desc</td>
-        </tr>
-    </tbody>
-</table>
-
-Here's an example using no parameters:
-
-```
-$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "analyses": [
-        {
-            "analysis_details": "Find significant changes in transcript expression, splicing, and promoter use across RNAseq alignment data files",
-            "analysis_id": "516ED301-E250-40BC-B2BC-31DD7B64D3BA",
-            "analysis_name": "CuffDiff",
-            "description": "Selecting a non-default file for output. ",
-            "enddate": "1329252482000",
-            "id": "BD421AF3-2C6E-4A92-A215-D380CD6FECC8",
-            "name": "CuffDiffTest1",
-            "resultfolderid": "/iplant/home/nobody/analyses/CuffDiff/",
-            "startdate": "1329252412998",
-            "status": "Failed",
-            "wiki_url": "https://pods.iplantcollaborative.org/wiki/some/doc/link/CuffDiff"
-        },
-        ...
-    ]
-}
-```
-
-Here's an example of a filtered search with a limit of one result:
-
-```
-$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)&filter=analysis_name=CACE&limit=1" | python -mjson.tool
-{
-    "analyses": [
-        {
-            "analysis_details": "Maximum likelihood ancestral character estimation for continuous traits",
-            "analysis_id": "4BA117B1-0BFB-F4B2-C5B0-AABE56CF8406",
-            "analysis_name": "CACE",
+            "analysis_details": "An even cooler cat!",
+            "analysis_id": "9AAE91FE-99DF-4085-A952-F241FAABFA1E",
+            "analysis_name": "Lynx",
             "description": "",
-            "enddate": 1346444723000,
-            "id": "j34b7dd71-1a72-45fb-9569-c68a71f0b58d",
-            "name": "analysis1",
-            "resultfolderid": "/iplant/home/ipctest/analyses/analysis1-2012-08-31-13-25-03.493",
-            "startdate": 1346444703493,
-            "status": "Failed",
-            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/CACE"
+            "enddate": "1355178050000",
+            "id": "j9ea61d72-06a0-4d09-971b-ab9f728f7fa9",
+            "name": "lynx-12101520",
+            "resultfolderid": "/iplant/home/ipctest/analyses/lynx-12101520-2012-12-10-15-20-34.524",
+            "startdate": "1355178034524",
+            "status": "Completed",
+            "wiki_url": "http://pods.iplantcollaborative.org/wiki/display/DEappsDev/Lynx"
         }
     ],
-    "success": true
+    "success": true,
+    "timestamp": "1355180520441",
+    "total": 1
 }
 ```
 
@@ -3150,91 +3271,10 @@ $ curl -sd '
 Secured Endpoint: GET /secured/edit-template/{analysis-id}
 
 Tito uses this service to obtain the analysis description JSON so that the
-analysis can be edited.  The response body contains the analysis description in
-the format that is required by Tito.  Here's an example:
+analysis can be edited.  This request is forwarded to the metadactyl service.
 
-```
-$ curl -s http://by-tor:8888/secured/edit-template/F29C156C-E286-4BBD-9033-0075C09E0D70?proxyToken=$(cas-ticket) | python -mjson.tool
-{
-    "objects": [
-        {
-            "component": "cat",
-            "component_id": "c72c314d1eace461290b9b568d9feb86a",
-            "description": "",
-            "edited_date": "",
-            "groups": {
-                "description": "",
-                "groups": [
-                    {
-                        "description": "",
-                        "id": "524AD6B2-7093-A9E6-1F56-919C09E286F9",
-                        "isVisible": true,
-                        "label": "Advanced Arguments",
-                        "name": "",
-                        "properties": [
-                            {
-                                "description": "",
-                                "id": "37ADF623-36AD-31A1-3455-4F95F2108774",
-                                "isVisible": true,
-                                "label": "Advanced Options",
-                                "name": "",
-                                "omit_if_blank": false,
-                                "order": -1,
-                                "type": "Info",
-                                "value": ""
-                            },
-                            {
-                                "description": "This is an example of tool tip text that might be helpful ",
-                                "id": "A391A212-8261-3662-A812-68E5309D3A5A",
-                                "isVisible": true,
-                                "label": "Number blank lines",
-                                "name": "-b",
-                                "omit_if_blank": false,
-                                "order": -1,
-                                "type": "Flag",
-                                "value": "false"
-                            }
-                        ],
-                        "type": ""
-                    },
-                    {
-                        "description": "",
-                        "id": "4CC29EF5-E950-5177-B54A-C61C33637BD4",
-                        "isVisible": true,
-                        "label": "This is a group mechanism",
-                        "name": "",
-                        "properties": [
-                            {
-                                "description": "",
-                                "id": "23ABF631-8109-D3FA-0714-2378059BBBA1",
-                                "isVisible": true,
-                                "label": "Another argument",
-                                "name": "-e",
-                                "omit_if_blank": false,
-                                "order": -1,
-                                "type": "Flag",
-                                "value": "false"
-                            }
-                        ],
-                        "type": ""
-                    }
-                ],
-                "id": "--root-PropertyGroupContainer--",
-                "isVisible": true,
-                "label": "",
-                "name": ""
-            },
-            "id": "F29C156C-E286-4BBD-9033-0075C09E0D70",
-            "label": "Sample Cat",
-            "name": "Sample Cat",
-            "published_date": "",
-            "references": [],
-            "tito": "F29C156C-E286-4BBD-9033-0075C09E0D70",
-            "type": ""
-        }
-    ]
-}
-```
+See http://github.com/iPlantCollaborativeOpenSource/metadactyl-clj#making-an-analysis-available-for-editing-in-tito
+for more details.
 
 #### Making a Copy of an Analysis Available for Editing in Tito
 
