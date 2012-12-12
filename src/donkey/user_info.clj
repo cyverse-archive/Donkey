@@ -17,7 +17,8 @@
   (let [res (client/get (user-search-url type search-string)
                         {:insecure? true
                          :throw-exceptions false
-                         :headers {"range" (str "records=" start "-" end)}})
+                         :headers {"range" (str "records=" start "-" end)}
+                         :basic-auth [(userinfo-key) (userinfo-secret)]})
         status (:status res)]
     (when (not (#{200 206 404} status))
       (throw (Exception. (str "user info service returned status " status))))
