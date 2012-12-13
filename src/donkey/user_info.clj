@@ -11,6 +11,14 @@
   [type search-string]
   (str (url (userinfo-base-url) "users" type search-string)))
 
+(defn- extract-range
+  "Extracts a range of results from a list of results."
+  [start end results]
+  (let [max-count (- end start)]
+    (if (> (count results) max-count)
+      (take max-count (drop start results))
+      results)))
+
 (defn- search
   "Performs a user search and returns the results as a vector of maps."
   [type search-string start end]
@@ -22,7 +30,8 @@
         status (:status res)]
     (when (not (#{200 206 404} status))
       (throw (Exception. (str "user info service returned status " status))))
-    (assoc (read-json (:body res)) :truncated (= status 206))))
+    {:users (extract-range start end (:users (read-json (:body res))))
+     :truncated (= status 206)}))
 
 (def
   ^{:private true
