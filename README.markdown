@@ -52,6 +52,8 @@ donkey.search-history.bucket = search-history
 
 # User information lookup settings.
 donkey.userinfo.base-url             = https://localhost/api/v1
+donkey.userinfo.client-key           = ada77dcd71b561ba
+donkey.userinfo.password             = 8ded4a9f67e258fee07b171c08761e10
 donkey.userinfo.default-search-limit = 50
 
 # Nibblonian connection settings
@@ -67,9 +69,10 @@ donkey.scruffian.base-url = http://localhost:65013/
 donkey.tree-viewer.base-url              = http://localhost/parseTree
 donkey.tree-viewer.buggalo-path          = /usr/local/bin/buggalo
 donkey.tree-viewer.accepted-tree-formats = nexml, rnaaln, aaaln, relaxedphyliptree, nexus
+donkey.tree-viewer.bucket                = tree-urls
 
-# Infosquito settings
-donkey.infosquito.es-url = http://localhost:65019
+# Elastic Search settings
+donkey.infosquito.es-url = http://services-2.iplantcollaborative.org:31338
 ```
 
 Generally, the service connection settings will have to be updated for each
