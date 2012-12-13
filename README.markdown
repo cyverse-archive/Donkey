@@ -2596,7 +2596,7 @@ whether or not the service call succeeded and contains the number of messages
 that are still marked as unseen.  Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/secured/notifications/delete-all?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -X DELETE -s "http://by-tor:8888/secured/notifications/delete-all?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true,
     "count": 0
