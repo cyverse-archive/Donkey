@@ -3090,6 +3090,7 @@ Here's an example:
 ```
 $ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)&limit=1&sortField=name" | python -mjson.tool
 {
+    "can_run": true,
     "description": "",
     "id": "C3DED4E2-EC99-4A54-B0D8-196112D1BB7B",
     "is_public": true,
