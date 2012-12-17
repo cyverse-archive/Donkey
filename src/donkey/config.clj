@@ -118,7 +118,7 @@
 
 (def ^:dynamic refgens (atom nil))
 
-(INT listen-port 
+(INT listen-port
   "The port that donkey listens to."
   "donkey.app.listen-port")
 
@@ -166,6 +166,14 @@
 (STR userinfo-base-url
   "The base URL for the user info API."
   "donkey.userinfo.base-url")
+
+(STR userinfo-key
+  "The key to use when authenticating to the user info API."
+  "donkey.userinfo.client-key")
+
+(STR userinfo-secret
+  "The secret to use when authenticating to the user info API."
+  "donkey.userinfo.password")
 
 (STR jex-base-url
   "The base URL for the JEX."

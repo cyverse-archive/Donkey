@@ -52,6 +52,8 @@ donkey.search-history.bucket = search-history
 
 # User information lookup settings.
 donkey.userinfo.base-url             = https://localhost/api/v1
+donkey.userinfo.client-key           = ada77dcd71b561ba
+donkey.userinfo.password             = 8ded4a9f67e258fee07b171c08761e10
 donkey.userinfo.default-search-limit = 50
 
 # Nibblonian connection settings
@@ -67,9 +69,10 @@ donkey.scruffian.base-url = http://localhost:65013/
 donkey.tree-viewer.base-url              = http://localhost/parseTree
 donkey.tree-viewer.buggalo-path          = /usr/local/bin/buggalo
 donkey.tree-viewer.accepted-tree-formats = nexml, rnaaln, aaaln, relaxedphyliptree, nexus
+donkey.tree-viewer.bucket                = tree-urls
 
-# Infosquito settings
-donkey.infosquito.es-url = http://localhost:65019
+# Elastic Search settings
+donkey.infosquito.es-url = http://services-2.iplantcollaborative.org:31338
 ```
 
 Generally, the service connection settings will have to be updated for each
@@ -2501,7 +2504,7 @@ $ curl -sd '
         "C15763CF-A5C9-48F5-BE4F-9FB3CB1897EB"
     ]
 }
-' http://by-tor:8888/secured/notifications/seen | python -mjson.tool
+' "http://by-tor:8888/secured/notifications/seen?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true,
     "count": 0
@@ -2529,7 +2532,7 @@ whether or not the service call succeeded and contains the number of messages
 that are still marked as unseen.  Here's an example:
 
 ```
-$ curl -sd '{}' http://by-tor:8888/secured/notifications/mark-all-seen | python -mjson.tool
+$ curl -sd '{}' "http://by-tor:8888/secured/notifications/mark-all-seen?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true,
     "count": 0
@@ -2567,7 +2570,7 @@ $ curl -sd '
         "C15763CF-A5C9-48F5-BE4F-9FB3CB1897EB"
     ]
 }
-' http://by-tor:8888/secured/notifications/delete | python -mjson.tool
+' "http://by-tor:8888/secured/notifications/delete?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
 }
@@ -2593,7 +2596,7 @@ whether or not the service call succeeded and contains the number of messages
 that are still marked as unseen.  Here's an example:
 
 ```
-$ curl -s http://by-tor:8888/secured/notifications/delete-all | python -mjson.tool
+$ curl -X DELETE -s "http://by-tor:8888/secured/notifications/delete-all?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true,
     "count": 0
@@ -2746,7 +2749,7 @@ $ curl -XPUT -sd '
  "create_output_subdir": true,
  "description": ""
 }
-' http://by-tor:8888/secured/workspaces/4/newexperiment?proxyToken=($cas-ticket) | python -mjson.tool
+' "http://by-tor:8888/secured/workspaces/4/newexperiment?proxyToken=($cas-ticket)" | python -mjson.tool
 {
    "analysis_details": "Extracts a specified number of lines from the beginning of file",
    "analysis_id": "aa54b4fd9b56545db978fff4398c5ce81",
@@ -3087,6 +3090,7 @@ Here's an example:
 ```
 $ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9CAB-DD12A1046D9A?proxyToken=$(cas-ticket)&limit=1&sortField=name" | python -mjson.tool
 {
+    "can_run": true,
     "description": "",
     "id": "C3DED4E2-EC99-4A54-B0D8-196112D1BB7B",
     "is_public": true,
@@ -3156,7 +3160,7 @@ analysis.  The response body is in the following format:
 Here's an example:
 
 ```
-$ curl -s http://by-tor:8888/secured/get-components-in-analysis/0BA04303-F0CB-4A34-BACE-7090F869B332?proxyToken=$(cas-ticket) | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/get-components-in-analysis/0BA04303-F0CB-4A34-BACE-7090F869B332?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "deployed_components": [
         {
@@ -3357,7 +3361,7 @@ $ curl -sd '
     "desc": "The foo is in the bar.",
     "wiki_url": "https://wiki.iplantcollaborative.org/docs/Foo+Foo"
 }
-' http://by-tor:8888/secured/make-analysis-public?proxyToken=$(cas-ticket)
+' "http://by-tor:8888/secured/make-analysis-public?proxyToken=$(cas-ticket)"
 {}
 ```
 
@@ -3372,7 +3376,7 @@ the same URL.
 Here's an example:
 
 ```
-$ curl -sd data http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)
+$ curl -sd data "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)"
 ```
 
 ### Retrieving User Session Data
@@ -3385,7 +3389,7 @@ previously saved by sending a POST request to the same service.
 Here's an example:
 
 ```
-$ curl http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)
+$ curl "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)"
 data
 ```
 
@@ -3401,7 +3405,7 @@ state.
 Here's an example:
 
 ```
-$ curl -XDELETE http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket) | python -mjson.tool
+$ curl -XDELETE "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
 }
@@ -3421,7 +3425,7 @@ request to the same URL.
 Example:
 
 ```
-$ curl -sd data http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
+$ curl -sd data "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
 data
 ```
 
@@ -3434,7 +3438,7 @@ This service can be used to retrieve a user's preferences.
 Example:
 
 ```
-$ curl -s http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
+$ curl -s "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
 data
 ```
 
@@ -3447,7 +3451,7 @@ This service can be used to remove a user's preferences.
 Example:
 
 ```
-$ curl -X DELETE http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)
+$ curl -X DELETE "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
 {
     "success" : true
 }
@@ -3466,7 +3470,7 @@ request to the same URL.
 Example:
 
 ```
-$ curl -sd data http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)
+$ curl -sd data "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
 data
 ```
 
@@ -3479,7 +3483,7 @@ This service can be used to retrieve a user's search history.
 Example:
 
 ```
-$ curl -s http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)
+$ curl -s "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
 data
 ```
 
@@ -3490,7 +3494,7 @@ This service can be used to delete a user's search history.
 Example:
 
 ```
-$ curl -XDELETE -s http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)
+$ curl -XDELETE -s "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
 {
     "success" : true
 }
@@ -3522,7 +3526,7 @@ user.  The response body is in the following format:
 Here's an example:
 
 ```
-$ curl -s http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket) | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true,
     "users": [
@@ -3582,7 +3586,7 @@ $ curl -sd '
         }
     ]
 }
-' http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket) | python -mjson.tool
+' "http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
 }
@@ -3626,7 +3630,7 @@ $ curl -sd '
         }
     ]
 }
-' http://by-tor:8888/secured/remove-collaborators?proxyToken=$(cas-ticket) | python -mjson.tool
+' "http://by-tor:8888/secured/remove-collaborators?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
 }
@@ -3689,7 +3693,7 @@ $ curl -sd '
         }
     ]
 }
-' http://by-tor:8888/secured/share?proxyToken=$(cas-ticket)
+' "http://by-tor:8888/secured/share?proxyToken=$(cas-ticket)"
 ```
 
 The service will respond with a success or failure message per user and resource:
@@ -3791,7 +3795,7 @@ $ curl -sd '
         }
     ]
 }
-' http://by-tor:8888/secured/unshare?proxyToken=$(cas-ticket)
+' "http://by-tor:8888/secured/unshare?proxyToken=$(cas-ticket)"
 ```
 
 The service will respond with a success or failure message per user:
@@ -3951,7 +3955,7 @@ discovery environment.
 Here's an example:
 
 ```
-$ curl -s http://by-tor:8888/secured/reference-genomes?proxyToken=$(cas-ticket) | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/reference-genomes?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "genomes": [
         {
@@ -4001,7 +4005,7 @@ $ curl -X PUT -sd '
         }
     ]
 }
-' http://by-tor:8888/secured/reference-genomes?proxyToken=$(cas-ticket) | python -mjson.tool
+' "http://by-tor:8888/secured/reference-genomes?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
 }
