@@ -8,19 +8,32 @@
             [clojurewerkz.elastisch.rest.response :as es-resp]
             [slingshot.slingshot :as ss]
             [clojure-commons.client :as client]
+            [clojure-commons.error-codes :as ec]
             [clojure-commons.nibblonian :as nibblonian]
             [donkey.config :as cfg]
-            [donkey.service :as svc]))
+            [donkey.service :as svc])
+  (:import [java.net ConnectException]))
 
 
-(defn- send-request
-  "Sends the search request to Elastic Search."
+(defn send-request
+  "Sends the search request to Elastic Search.
+
+   Throws:  
+     This throws ERR_CONFIG_INVALID when there it fails to connect to Elastic 
+     Search or when it detects that Elastic Search hasn't been initialized."
   [query from size type]
   (let [index "iplant"]
-    (es/connect! (cfg/es-url))
-    (if type
-      (es-doc/search index type :query query :from from :size size)
-      (es-doc/search-all-types index :query query :from from :size size))))
+    (ss/try+ 
+      (es/connect! (cfg/es-url))
+      (if type
+        (es-doc/search index type :query query :from from :size size)
+        (es-doc/search-all-types index :query query :from from :size size))
+      (catch ConnectException _
+        (ss/throw+ {:error_code ec/ERR_CONFIG_INVALID
+                    :reason     "cannot connect to Elastic Search"}))
+      (catch [:status 404] {:keys []}
+        (ss/throw+ {:error_code ec/ERR_CONFIG_INVALID
+                    :reason     "Elastic Search has not been initialized"})))))
 
 
 (defn- extract-result
