@@ -8,7 +8,6 @@
             [clojurewerkz.elastisch.rest.response :as es-resp]
             [slingshot.slingshot :as ss]
             [clojure-commons.client :as client]
-            [clojure-commons.error-codes :as ec]
             [clojure-commons.nibblonian :as nibblonian]
             [donkey.config :as cfg]
             [donkey.service :as svc])
@@ -29,11 +28,9 @@
         (es-doc/search index type :query query :from from :size size)
         (es-doc/search-all-types index :query query :from from :size size))
       (catch ConnectException _
-        (ss/throw+ {:error_code ec/ERR_CONFIG_INVALID
-                    :reason     "cannot connect to Elastic Search"}))
+        (throw (Exception. "cannot connect to Elastic Search")))
       (catch [:status 404] {:keys []}
-        (ss/throw+ {:error_code ec/ERR_CONFIG_INVALID
-                    :reason     "Elastic Search has not been initialized"})))))
+        (throw (Exception. "Elastic Search has not been initialized"))))))
 
 
 (defn- extract-result
@@ -67,7 +64,7 @@
   (if-let [type-val (:type params)]
     (let [type (string/lower-case type-val)]
       (when-not (contains? #{"folder" "file"} type)
-        (ss/throw+ {:type   :invalid-argument
+        (ss/throw+ {:error_code :invalid-argument
                     :reason "must be 'file' or 'folder'"
                     :arg    :type
                     :val    type-val}))
@@ -119,7 +116,7 @@
      the response from Elastic Search"
   [params {user :shortUsername}]
   (when-not user
-    (throw (IllegalArgumentException. "no user provided for search")))
+    (throw (Exception. "no user provided for search")))
   (let [search-term (svc/required-param params :search-term)
         type        (extract-type params)
         from        (extract-uint params :from 0)
