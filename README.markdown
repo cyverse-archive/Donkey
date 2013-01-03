@@ -4153,6 +4153,41 @@ with their absolute paths in iRODS.  The `name` field holds the name being
 matched.  Finally, the `viewers` field holds an array of user and group names
 that have at least read access to the matched file or folder.
 
+Here's an example of a successful response.
+
+```
+$ curl -XGET "http://by-tor:8888/secured/search?proxyToken=$(cas-ticket)&search-term=?e*&type=file&from=1&size=2" | python -mjson.tool
+{ 
+    "hits": [
+        { 
+            "viewers": [
+                "ipctest", 
+                "rodsadmin"
+            ],
+            "name": "read1_10k.fq",
+            "_index": "iplant",
+            "_type": "file",
+            "_id": "\/iplant\/home\/ipctest\/analyses\/fc_01300857-2012-01-30-08-58-00.090\/read1_10k.fq",
+            "_score": 1.0 
+        },
+        { 
+            "viewers": [
+                "ipctest", 
+                "rodsadmin"
+            ],
+            "name": "read1_10k.fq",
+            "_index": "iplant",
+            "_type": "file",
+            "_id": "\/iplant\/home\/ipctest\/analyses\/ft_01251621-2012-01-26-16-21-46.602\/read1_10k.fq",
+            "_score": 1.0 
+        }
+    ],
+    "max_score": 1.0,
+    "total": 7,
+    "success": true
+}
+```
+
 ##### Failed Response
 
 When a request fails, a JSON document of the following form is returned.
@@ -4167,3 +4202,14 @@ When a request fails, a JSON document of the following form is returned.
 
 *Finding no matches is not a failure.*  The `code` field has a short message
 identifying the problem.  The `other-fields` depend on the error.
+
+Here's an example of an unsuccessful response.
+
+```
+curl -XGET "http://by-tor:8888/secured/search?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "success": false,
+    "code": "MISSING-REQUIRED-ARGUMENT",
+    "arg": "search-term"
+}
+```
