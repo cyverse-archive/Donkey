@@ -1,5 +1,5 @@
 (ns donkey.buggalo
-  (:use [clojure.java.io :only [copy file]]
+  (:use [clojure.java.io :only [copy file reader]]
         [clojure-commons.file-utils :only [with-temp-dir-in]]
         [donkey.config
          :only [tree-parser-url scruffian-base-url nibblonian-base-url riak-base-url
@@ -16,9 +16,13 @@
             [clojure-commons.nibblonian :as nibblonian]
             [clojure-commons.scruffian :as scruffian])
   (:import [java.security MessageDigest DigestInputStream]
+           [javax.xml XMLConstants]
+           [javax.xml.transform.stream StreamSource]
+           [javax.xml.validation SchemaFactory]
            [org.forester.io.parsers.util ParserUtils]
            [org.forester.io.writers PhylogenyWriter]
-           [org.forester.phylogeny PhylogenyMethods]))
+           [org.forester.phylogeny PhylogenyMethods]
+           [org.xml.sax ErrorHandler]))
 
 (defn- metaurl-for
   "Builds the meta-URL for to use when saving tree files in Riak.  The SHA1 hash
@@ -133,12 +137,66 @@
     (.toNewHampshire writer tree false true out-file)
     out-file))
 
-(defn- extract-trees
-  "Extracts trees from a tree file."
+(defn- get-resource
+  "Loads a resource from the classpath."
+  [resource-name]
+  (-> (Thread/currentThread)
+      (.getContextClassLoader)
+      (.getResource resource-name)))
+
+(defn xsd-error-handler
+  "Creates an error handler that can be used during the validation of an XML document."
+  [is-valid?]
+  (reify ErrorHandler
+    (error [this e]
+      (log/debug "XML schema validation error:" e)
+      (reset! is-valid? false))
+    (fatalError [this e]
+      (log/debug "fatal XML schema validation error:" e)
+      (reset! is-valid? false))
+    (warning [this e]
+      (log/debug "XML schema validation warning:" e))))
+
+(defn- load-schema
+  "Loads an XML schema from a file somewhere on the classpath."
+  [path]
+  (.newSchema (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)
+              (StreamSource. (file (get-resource path)))))
+
+(defn- first-line
+  "Loads the firt non-blank line from a file."
+  [f]
+  (with-open [rdr (reader f)]
+    (first (remove string/blank? (line-seq rdr)))))
+
+(defn- is-nexml?
+  "Determines if a file is a NeXML file."
+  [infile]
+  (when (re-find #"^<" (first-line infile))
+    (let [schema    (load-schema "nexml/xsd/nexml.xsd")
+          is-valid? (atom true)
+          validator (.newValidator schema)]
+      (.setErrorHandler validator (xsd-error-handler is-valid?))
+      (.validate validator (StreamSource. infile))
+      @is-valid?)))
+
+(defn- extract-trees-from-nexml
+  [_ _]
+  (throw (IllegalArgumentException. "NeXML is not currently supported")))
+
+(defn- extract-trees-from-other
+  "Extracts trees from all supported formats except for NeXML."
   [dir infile]
   (let [parser (ParserUtils/createParserDependingFileContents infile false)
         trees  (seq (PhylogenyMethods/readPhylogenies parser infile))]
     (mapv (partial save-tree-file dir) (range) trees)))
+
+(defn- extract-trees
+  "Extracts trees from a tree file."
+  [dir infile]
+  (if (is-nexml? infile)
+    (extract-trees-from-nexml dir infile)
+    (extract-trees-from-other dir infile)))
 
 (defn- get-tree-viewer-urls
   "Obtains the tree viewer URLs for the contents of a tree file."
