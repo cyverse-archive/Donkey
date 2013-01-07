@@ -7,6 +7,7 @@
                  [clj-http "0.5.7"]
                  [com.cemerick/url "0.0.7"]
                  [compojure "1.0.1"]
+                 [org/forester "1.005" ]
                  [org.iplantc/clj-cas "1.0.0-SNAPSHOT"]
                  [org.iplantc/clojure-commons "1.3.1-SNAPSHOT"]
                  [ring/ring-jetty-adapter "1.0.1"]
@@ -30,4 +31,7 @@
                :config-path "conf/main"}
   :uberjar-exclusions [#"BCKEY.SF"]
   :repositories {"iplantCollaborative"
-                 "http://projects.iplantcollaborative.org/archiva/repository/internal/"})
+                 "http://projects.iplantcollaborative.org/archiva/repository/internal/"
+
+                 "biojava"
+                 "http://www.biojava.org/download/maven/"})
