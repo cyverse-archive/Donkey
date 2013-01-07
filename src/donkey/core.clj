@@ -125,31 +125,31 @@
         (trap #(make-app-public req)))
 
   (GET "/sessions" []
-       (trap #(user-session)))
+       (trap user-session))
 
   (POST "/sessions" [:as {body :body}]
         (trap #(user-session (slurp body))))
 
   (DELETE "/sessions" []
-          (trap #(remove-session)))
+          (trap remove-session))
 
   (GET "/preferences" []
-       (trap #(user-prefs)))
+       (trap user-prefs))
 
   (POST "/preferences" [:as {body :body}]
         (trap #(user-prefs (slurp body))))
 
   (DELETE "/preferences" []
-          (trap #(remove-prefs)))
+          (trap remove-prefs))
 
   (GET "/search-history" []
-       (trap #(search-history)))
+       (trap search-history))
 
   (POST "/search-history" [:as {body :body}]
         (trap #(search-history (slurp body))))
 
   (DELETE "/search-history" []
-          (trap #(clear-search-history)))
+          (trap clear-search-history))
 
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
@@ -294,7 +294,7 @@
        (string/upper-case (str (UUID/randomUUID))))
 
   (context "/secured" []
-           (store-current-user secured-routes #(cas-server) #(server-name)))
+           (store-current-user secured-routes cas-server server-name))
 
   (route/not-found (unrecognized-path-response)))
 
@@ -322,7 +322,7 @@
   (println "zk-url =" zk-url)
   (cl/with-zk
     (zk-url)
-    (when (not (cl/can-run?))
+    (when-not (cl/can-run?)
       (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
       (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
       (System/exit 1))
@@ -340,7 +340,7 @@
   (site-handler donkey-routes))
 
 (defn -main
-  [& args]
+  [& _]
   (load-configuration-from-zookeeper)
   (log/warn "Listening on" (listen-port))
   (jetty/run-jetty app {:port (listen-port)}))

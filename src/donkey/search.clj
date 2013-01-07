@@ -75,7 +75,7 @@
     (if-let [val-str (name-key params)]
       (ss/try+
         (let [val (Integer. val-str)]
-          (when (< val 0)
+          (when (neg? val)
             (ss/throw+ (mk-exception val)))
           val)
         (catch NumberFormatException _

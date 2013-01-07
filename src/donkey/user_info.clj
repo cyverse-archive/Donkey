@@ -28,7 +28,7 @@
                          :headers {"range" (str "records=" start "-" end)}
                          :basic-auth [(userinfo-key) (userinfo-secret)]})
         status (:status res)]
-    (when (not (#{200 206 404} status))
+    (when-not (#{200 206 404} status)
       (throw (Exception. (str "user info service returned status " status))))
     {:users (extract-range start end (:users (read-json (:body res))))
      :truncated (= status 206)}))
@@ -66,7 +66,7 @@
     [0 (default-user-search-result-limit)]
     (let [[units begin-str end-str] (split value #"[=-]")
           [begin end] (map to-int [begin-str end-str])]
-      (if (or (not= "records" units) (< begin 0) (< end 0) (>= begin end))
+      (if (or (not= "records" units) (neg? begin) (neg? end) (>= begin end))
         (throw (IllegalArgumentException.
                 "invalid Range header value: should be records=0-50")))
       [begin end])))
@@ -80,7 +80,7 @@
      (apply user-search search-string (parse-range range-setting)))
   ([search-string start end]
      (let [results (map #(% search-string start end) search-fns)
-           users (remove-duplicates (apply concat (map #(:users %) results)))
+           users (remove-duplicates (mapcat :users results))
            truncated (if (some :truncated results) true false)]
        (json-str {:users users :truncated truncated}))))
 

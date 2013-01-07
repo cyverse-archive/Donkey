@@ -1,10 +1,8 @@
 (ns donkey.buggalo
   (:use [clojure.java.io :only [copy file]]
-        [clojure.java.shell :only [sh]]
         [clojure-commons.file-utils :only [with-temp-dir-in]]
         [donkey.config
-         :only [buggalo-path supported-tree-formats tree-parser-url
-                scruffian-base-url nibblonian-base-url riak-base-url
+         :only [tree-parser-url scruffian-base-url nibblonian-base-url riak-base-url
                 tree-url-bucket]]
         [donkey.service :only [success-response]]
         [donkey.user-attributes :only [current-user]]
@@ -17,8 +15,7 @@
             [clojure-commons.error-codes :as ce]
             [clojure-commons.nibblonian :as nibblonian]
             [clojure-commons.scruffian :as scruffian])
-  (:import [java.io FilenameFilter]
-           [java.security MessageDigest DigestInputStream]
+  (:import [java.security MessageDigest DigestInputStream]
            [org.forester.io.parsers.util ParserUtils]
            [org.forester.io.writers PhylogenyWriter]
            [org.forester.phylogeny PhylogenyMethods]))
@@ -39,12 +36,6 @@
            :parent parent
            :prefix prefix
            :base   base}))
-
-(defn- list-tree-files
-  "Lists the tree files in the provided directory."
-  [dir]
-  (sort (filter #(re-find #".tre$" (.getName %))
-                (seq (.listFiles dir)))))
 
 (defn- tree-parser-error
   "Throws an exception indicating that the tree parser encountered an error."

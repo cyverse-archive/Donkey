@@ -31,12 +31,12 @@
 (defn- add-app-details-to-messages
   "Adds application details to a list of messages."
   [msgs]
-  (map #(add-app-details-to-message %) msgs))
+  (map add-app-details-to-message msgs))
 
 (defn- add-app-details-to-map
   "Adds application details to a map."
   [m]
-  (assoc m :messages (add-app-details-to-messages (:messages m))))
+  (update-in m [:messages] add-app-details-to-messages))
 
 (defn add-app-details
   "Adds application details to notifications in a response from the

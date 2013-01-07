@@ -8,7 +8,7 @@
 (defn object->json-str
   "Converts a Java object to a JSON string."
   [obj]
-  (.toString (JSONObject/fromObject obj)))
+  (str (JSONObject/fromObject obj)))
 
 (defn object->json-obj
   "Converts a Java object to a JSON object."

@@ -50,7 +50,7 @@
 (defn- home-dir
   "Determines the home folder for the current user."
   []
-  (nibblonian-get {} #(:body %) "home"))
+  (nibblonian-get {} :body "home"))
 
 (defn- create
   "Creates a directory."
@@ -122,7 +122,7 @@
   [dirname]
   (let [prefs (read-json (user-prefs))
         path  (:defaultOutputFolder prefs)]
-    (if (not (string/blank? path))
+    (if-not (string/blank? path)
       (success-response {:path (validate-output-dir path)})
       (let [base  (build-path (home-dir) dirname)]
         (success-response {:path (generate-output-dir base)})))))

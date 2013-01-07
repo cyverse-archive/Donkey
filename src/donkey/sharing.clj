@@ -27,9 +27,7 @@
 (defn- path-list->file-list
   "Returns a string that joins the given path list by commas."
   [path-list]
-  (->> path-list
-    (map #(basename %))
-    (join ", ")))
+  (join ", " (map basename path-list)))
 
 (defn- build-nibblonian-share-req
   "Builds a Nibblonian request object from a username and a client share
@@ -195,8 +193,8 @@
   (let [user (:user share)
         paths (:paths share)
         user_share_results (map #(foward-nibblonian-share user %) paths)
-        successful_shares (filter #(:success %) user_share_results)
-        unsuccessful_shares (remove #(:success %) user_share_results)]
+        successful_shares (filter :success user_share_results)
+        unsuccessful_shares (remove :success user_share_results)]
     (when (seq successful_shares)
       (send-share-notifications user successful_shares))
     (when (seq unsuccessful_shares)
@@ -211,8 +209,8 @@
   (let [user (:user unshare)
         paths (:paths unshare)
         unshare_results (map #(foward-nibblonian-unshare user %) paths)
-        successful_unshares (filter #(:success %) unshare_results)
-        unsuccessful_unshares (remove #(:success %) unshare_results)]
+        successful_unshares (filter :success unshare_results)
+        unsuccessful_unshares (remove :success unshare_results)]
     (when (seq successful_unshares)
       (send-unshare-notifications user successful_unshares))
     (when (seq unsuccessful_unshares)
@@ -224,7 +222,7 @@
    Nibblonian."
   [req]
   (let [sharing (read-json (slurp (:body req)))]
-    (walk #(share-with-user %)
+    (walk share-with-user
           #(json-str {:sharing %})
           (:sharing sharing))))
 
@@ -233,6 +231,6 @@
    Nibblonian."
   [req]
   (let [unshare (read-json (slurp (:body req)))]
-    (walk #(unshare-with-user %)
+    (walk unshare-with-user
           #(json-str {:unshare %})
           (:unshare unshare))))
