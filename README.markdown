@@ -67,8 +67,6 @@ donkey.scruffian.base-url = http://localhost:65013/
 
 # Tree viewer settings
 donkey.tree-viewer.base-url              = http://localhost/parseTree
-donkey.tree-viewer.buggalo-path          = /usr/local/bin/buggalo
-donkey.tree-viewer.accepted-tree-formats = nexml, rnaaln, aaaln, relaxedphyliptree, nexus
 donkey.tree-viewer.bucket                = tree-urls
 
 # Elastic Search settings
@@ -4157,29 +4155,29 @@ Here's an example of a successful response.
 
 ```
 $ curl -XGET "http://by-tor:8888/secured/search?proxyToken=$(cas-ticket)&search-term=?e*&type=file&from=1&size=2" | python -mjson.tool
-{ 
+{
     "hits": [
-        { 
+        {
             "viewers": [
-                "ipctest", 
+                "ipctest",
                 "rodsadmin"
             ],
             "name": "read1_10k.fq",
             "_index": "iplant",
             "_type": "file",
             "_id": "\/iplant\/home\/ipctest\/analyses\/fc_01300857-2012-01-30-08-58-00.090\/read1_10k.fq",
-            "_score": 1.0 
+            "_score": 1.0
         },
-        { 
+        {
             "viewers": [
-                "ipctest", 
+                "ipctest",
                 "rodsadmin"
             ],
             "name": "read1_10k.fq",
             "_index": "iplant",
             "_type": "file",
             "_id": "\/iplant\/home\/ipctest\/analyses\/ft_01251621-2012-01-26-16-21-46.602\/read1_10k.fq",
-            "_score": 1.0 
+            "_score": 1.0
         }
     ],
     "max_score": 1.0,
