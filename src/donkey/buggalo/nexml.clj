@@ -59,10 +59,10 @@
   (let [children   (sort-by #(.getId %) (.getOutNodes tree node))
         subnodes   (mapv (partial format-node tree node) children)
         label      (.getLabel node)
-        branch-len (if (nil? parent) nil (.getLength (.getEdge tree parent node)))
+        branch-len (when-not (nil? parent) (.getLength (.getEdge tree parent node)))
         full-label (if (nil? branch-len) [label] [label ":" branch-len])]
     (if-not (empty? subnodes)
-      (into [] (concat ["("] (flatten (interpose [","] subnodes)) [")"] full-label))
+      (vec (concat ["("] (flatten (interpose [","] subnodes)) [")"] full-label))
       full-label)))
 
 (defn- to-newick
