@@ -2,7 +2,8 @@
   (:use [clojure.java.io :only [file reader]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log])
-  (:import [javax.xml XMLConstants]
+  (:import [java.io PrintWriter]
+           [javax.xml XMLConstants]
            [javax.xml.transform.stream StreamSource]
            [javax.xml.validation SchemaFactory]
            [org.nexml.model DocumentFactory Tree]
@@ -51,19 +52,45 @@
       (.validate validator (StreamSource. infile))
       @is-valid?)))
 
-(defn- to-newick
-  [node]
-  (log/warn node))
+(defn format-node
+  "Converts a single node in a NeXML tree into a vector representing a Newick
+   string that represents the tree."
+  [tree parent node]
+  (let [children   (sort-by #(.getId %) (.getOutNodes tree node))
+        subnodes   (mapv (partial format-node tree node) children)
+        label      (.getLabel node)
+        branch-len (if (nil? parent) nil (.getLength (.getEdge tree parent node)))
+        full-label (if (nil? branch-len) [label] [label ":" branch-len])]
+    (if-not (empty? subnodes)
+      (into [] (concat ["("] (flatten (interpose [","] subnodes)) [")"] full-label))
+      full-label)))
 
-(defn- extract-tree
+(defn- to-newick
+  "Generates a newick string representing a NeXML tree."
+  [tree]
+  (let [count-parents #(count (seq (.getInNodes tree %)))
+        root (or (.getRoot tree)
+                 (first (filter #(zero? (count-parents %)) (.getNodes tree))))]
+    (apply str (conj (format-node tree nil root) ";"))))
+
+(defn- save-tree-file
+  "Saves a NeXML tree to a Newick file."
   [dir index tree]
-  (to-newick
-   (or (.getRoot tree)
-       (first (filter #(zero? (count (seq (.getInNodes tree %)))) (.getNodes tree))))))
+  (let [label    (.getLabel tree)
+        filename (if (string/blank? label)
+                   (str "tree_" index ".tre")
+                   (str label ".tre"))
+        out-file (file dir filename)
+        newick   (to-newick tree)]
+    (with-open [out (PrintWriter. out-file)]
+      (.println out newick))
+    out-file))
 
 (defn extract-trees-from-nexml
+  "Extracts all trees from a NeXML file."
   [dir infile]
   (let [networks (mapcat seq (.getTreeBlockList (DocumentFactory/parse infile)))
         trees    (filter (partial instance? Tree) networks)]
-    (dorun (map (partial extract-tree dir) (range) trees)))
-  (throw (IllegalArgumentException. "NeXML is not currently supported")))
+    (when (empty? trees)
+      (throw (IllegalArgumentException. (str "no trees found in NeXML file"))))
+    (mapv (partial save-tree-file dir) (range) trees)))

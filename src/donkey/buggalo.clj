@@ -165,13 +165,13 @@
   ([dir infile sha1]
      (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
            metaurl (metaurl-for sha1)]
-       #_(save-tree-urls urls metaurl)
+       (save-tree-urls urls metaurl)
        urls))
   ([path user dir infile sha1]
      (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
            metaurl (metaurl-for sha1)]
-       #_(save-tree-urls urls metaurl)
-       #_(save-tree-metaurl user path metaurl)
+       (save-tree-urls urls metaurl)
+       (save-tree-metaurl user path metaurl)
        urls)))
 
 (defn tree-viewer-urls-for

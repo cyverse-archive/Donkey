@@ -37,4 +37,5 @@
                   "http://www.biojava.org/download/maven"]
                  ["nexml"
                   {:url "http://nexml-dev.nescent.org/.m2/repository"
-                   :checksum :ignore}]])
+                   :checksum :ignore
+                   :update :daily}]])
