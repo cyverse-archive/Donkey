@@ -1,9 +1,8 @@
 (ns donkey.buggalo.nexml
-  (:use [clojure.java.io :only [file reader]])
+  (:use [clojure.java.io :only [file reader writer]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log])
-  (:import [java.io PrintWriter]
-           [javax.xml XMLConstants]
+  (:import [javax.xml XMLConstants]
            [javax.xml.transform.stream StreamSource]
            [javax.xml.validation SchemaFactory]
            [org.nexml.model DocumentFactory Tree]
@@ -53,25 +52,32 @@
       @is-valid?)))
 
 (defn format-node
-  "Converts a single node in a NeXML tree into a vector representing a Newick
-   string that represents the tree."
-  [tree parent node]
+  "Serializes a NeXML tree node as a Newick string and writes the resulting
+   string to a writer."
+  [out tree parent node]
   (let [children   (sort-by #(.getId %) (.getOutNodes tree node))
-        subnodes   (mapv (partial format-node tree node) children)
         label      (.getLabel node)
-        branch-len (when-not (nil? parent) (.getLength (.getEdge tree parent node)))
-        full-label (if (nil? branch-len) [label] [label ":" branch-len])]
-    (if-not (empty? subnodes)
-      (vec (concat ["("] (flatten (interpose [","] subnodes)) [")"] full-label))
-      full-label)))
+        branch-len (when-not (nil? parent) (.getLength (.getEdge tree parent node)))]
+    (when-not (empty? children)
+      (.write out "(")
+      (loop [[child & more] children]
+        (format-node out tree parent child)
+        (when more
+          (.write out ",")
+          (recur more)))
+      (.write out ")"))
+    (.write out label)
+    (when-not (nil? branch-len)
+      (.write out ":")
+      (.write out (str branch-len)))))
 
 (defn- to-newick
-  "Generates a newick string representing a NeXML tree."
-  [tree]
+  "Writes a newick string for a NeXML tree to a writer."
+  [out tree]
   (let [count-parents #(count (seq (.getInNodes tree %)))
         root (or (.getRoot tree)
                  (first (filter #(zero? (count-parents %)) (.getNodes tree))))]
-    (apply str (conj (format-node tree nil root) ";"))))
+    (format-node out tree nil root)))
 
 (defn- save-tree-file
   "Saves a NeXML tree to a Newick file."
@@ -80,10 +86,11 @@
         filename (if (string/blank? label)
                    (str "tree_" index ".tre")
                    (str label ".tre"))
-        out-file (file dir filename)
-        newick   (to-newick tree)]
-    (with-open [out (PrintWriter. out-file)]
-      (.println out newick))
+        out-file (file dir filename)]
+    (with-open [out (writer out-file)]
+      (to-newick out tree)
+      (.write out ";")
+      (.write out (System/getProperty "line.separator")))
     out-file))
 
 (defn extract-trees-from-nexml
@@ -92,5 +99,5 @@
   (let [networks (mapcat seq (.getTreeBlockList (DocumentFactory/parse infile)))
         trees    (filter (partial instance? Tree) networks)]
     (when (empty? trees)
-      (throw (IllegalArgumentException. (str "no trees found in NeXML file"))))
+      (throw (IllegalArgumentException. "no trees found in NeXML file")))
     (mapv (partial save-tree-file dir) (range) trees)))
