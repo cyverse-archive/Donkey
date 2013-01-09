@@ -2152,22 +2152,6 @@ $ curl -s --data-binary @Aquilegia.nex http://by-tor:8888/tree-viewer-urls | pyt
 }
 ```
 
-Here's an example of an unsuccessful call:
-
-```
-$ curl -s --data-binary @AminoAcid.nex http://by-tor:8888/tree-viewer-urls | python -mjson.tool
-{
-    "details": {
-        "aaaln": "Nexus Parsing error: Expecting file to start \"CLUSTAL\" found \"#\" at line 1 column 0\n",
-        "nexus": "storing implied block: TAXA\nstoring read block: DATA\nterminate called after throwing an instance of 'no_trees_exception'\n  what():  the file was parsed successfully, but no trees were found\n",
-        "relaxedphyliptree": "Nexus Parsing error: Expecting a tree description, but found \"#NEXUS\" instead at line 0 column 0\n",
-        "rnaaln": "Nexus Parsing error: Expecting file to start \"CLUSTAL\" found \"#\" at line 1 column 0\n"
-    },
-    "error_code": "ERR-TREE-FILE-PARSE",
-    "success": false
-}
-```
-
 #### Initializing a User's Workspace
 
 Secured Endpoint: GET /secured/bootstrap
@@ -4057,17 +4041,6 @@ $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&
             "url": "http://by-tor/view/tree/d0f44d9cc8cd27ad060fbc2616ba2247"
         }
     ]
-}
-```
-
-Here's an example of an unsuccessful service call:
-
-```
-$ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&path=/iplant/home/nobody/missing.newick" | python -mjson.tool
-{
-    "body": "{\"status\":\"failure\",\"action\":\"file-download\",\"error_code\":\"ERR_DOES_NOT_EXIST\",\"path\":\"\\/iplant\\/home\\/ipctest\\/missing.newick\"}",
-    "error_code": "ERR_REQUEST_FAILED",
-    "status": "failure"
 }
 ```
 
