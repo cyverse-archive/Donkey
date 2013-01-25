@@ -107,3 +107,30 @@
     (catch Exception e
       (log/error e (str "username search for '" username "' failed"))
       (empty-user-info username))))
+
+(defn- add-user-info
+  "Adds the information for a single user to a user-info lookup result."
+  [[status result] [username user-info]]
+  (if (nil? user-info)
+    [404 result]
+    [status (assoc result username user-info)]))
+
+(defn- get-user-info
+  "Gets the information for a single user, returning a vector in which the first
+   element is the username and the second element is either the user info or nil
+   if the user doesn't exist."
+  [username]
+  (->> (search "username" username 0 100)
+       (:users)
+       (filter #(= (:username %) username))
+       (first)
+       (vector username)))
+
+(defn user-info
+  "Performs a user search for one or more usernames, returning a response whose
+   body consists of a JSON object indexed by username."
+  [usernames]
+  (let [[status body] (reduce add-user-info [200 {}] (map get-user-info usernames))]
+    {:status       status
+     :body         (json-str body)
+     :content-type :json}))
