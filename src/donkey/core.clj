@@ -14,7 +14,7 @@
         [donkey.user-info]
         [donkey.user-sessions]
         [donkey.user-prefs]
-        [ring.middleware keyword-params nested-params]
+        [ring.middleware keyword-params]
         [slingshot.slingshot :only [try+]])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
@@ -44,6 +44,13 @@
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))
    (catch Throwable t (error-response t))))
+
+(defn- as-vector
+  "Returns the given parameter inside a vector if it's not a vector already."
+  [p]
+  (cond (nil? p)    []
+        (vector? p) p
+        :else       [p]))
 
 (defroutes secured-routes
   (GET "/bootstrap" [:as req]
@@ -153,6 +160,9 @@
 
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
+
+  (GET "/user-info" [:as {params :params}]
+       (trap #(user-info (as-vector (:username params)))))
 
   (GET "/collaborators" [:as req]
        (trap #(get-collaborators req)))
@@ -333,7 +343,6 @@
   (-> routes
       wrap-keyword-params
       wrap-lcase-params
-      wrap-nested-params
       wrap-query-params))
 
 (def app
