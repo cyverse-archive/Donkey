@@ -36,8 +36,7 @@
 (def
   ^{:private true
     :doc "The list of functions to use in a generalized search."}
-  search-fns [(partial search "username") (partial search "name")
-              (partial search "email")])
+  search-fns [(partial search "name") (partial search "email")])
 
 (defn- remove-duplicates
   "Removes duplicate user records from the merged search results.  We use
