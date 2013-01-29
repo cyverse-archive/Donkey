@@ -410,8 +410,9 @@
 (defn get-app-rerun-info
   "Gets the information required to rerun a previously executed app."
   [req job-id]
-  (-> (build-metadactyl-unprotected-url "analysis-rerun-info" job-id)
-      (forward-get req)))
+  (forward-get
+   (build-metadactyl-unprotected-url "analysis-rerun-info" job-id)
+   req))
 
 (defn- add-user-details
   "Adds user details to the results from a request to obtain a list of

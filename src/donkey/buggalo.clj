@@ -1,11 +1,10 @@
 (ns donkey.buggalo
   (:use [clojure.java.io :only [copy file]]
-        [clojure.java.shell :only [sh]]
         [clojure-commons.file-utils :only [with-temp-dir-in]]
         [donkey.config
-         :only [buggalo-path supported-tree-formats tree-parser-url
-                scruffian-base-url nibblonian-base-url riak-base-url
+         :only [tree-parser-url scruffian-base-url nibblonian-base-url riak-base-url
                 tree-url-bucket]]
+        [donkey.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]
         [donkey.service :only [success-response]]
         [donkey.user-attributes :only [current-user]]
         [slingshot.slingshot :only [throw+ try+]])
@@ -17,8 +16,10 @@
             [clojure-commons.error-codes :as ce]
             [clojure-commons.nibblonian :as nibblonian]
             [clojure-commons.scruffian :as scruffian])
-  (:import [java.io FilenameFilter]
-           [java.security MessageDigest DigestInputStream]))
+  (:import [java.security MessageDigest DigestInputStream]
+           [org.forester.io.parsers.util ParserUtils]
+           [org.forester.io.writers PhylogenyWriter]
+           [org.forester.phylogeny PhylogenyMethods]))
 
 (defn- metaurl-for
   "Builds the meta-URL for to use when saving tree files in Riak.  The SHA1 hash
@@ -36,12 +37,6 @@
            :parent parent
            :prefix prefix
            :base   base}))
-
-(defn- list-tree-files
-  "Lists the tree files in the provided directory."
-  [dir]
-  (sort (filter #(re-find #".tre$" (.getName %))
-                (seq (.listFiles dir)))))
 
 (defn- tree-parser-error
   "Throws an exception indicating that the tree parser encountered an error."
@@ -127,21 +122,37 @@
          (save-tree-metaurl user path metaurl)
          urls))))
 
+(defn- save-tree-file
+  "Saves a tree file in the local file system."
+  [dir index tree]
+  (let [writer    (PhylogenyWriter/createPhylogenyWriter)
+        tree-name (.getName tree)
+        file-name (if (string/blank? tree-name)
+                    (str "tree_" index ".tre")
+                    (str tree-name ".tre"))
+        out-file  (file dir file-name)]
+    (.toNewHampshire writer tree false true out-file)
+    out-file))
+
+(defn- extract-trees-from-other
+  "Extracts trees from all supported formats except for NeXML."
+  [dir infile]
+  (let [parser (ParserUtils/createParserDependingFileContents infile false)
+        trees  (seq (PhylogenyMethods/readPhylogenies parser infile))]
+    (mapv (partial save-tree-file dir) (range) trees)))
+
+(defn- extract-trees
+  "Extracts trees from a tree file."
+  [dir infile]
+  (if (is-nexml? infile)
+    (extract-trees-from-nexml dir infile)
+    (extract-trees-from-other dir infile)))
+
 (defn- get-tree-viewer-urls
   "Obtains the tree viewer URLs for the contents of a tree file."
   [dir infile]
   (log/debug "getting new tree URLs")
-  (let [buggalo   (buggalo-path)
-        inpath    (.getPath infile)
-        parse-fmt #(assoc (sh buggalo "-i" inpath "-f" % :dir dir) :fmt %)
-        results   (map parse-fmt (supported-tree-formats))
-        success   #(first (filter (comp zero? :exit) results))
-        details   #(into {} (map (fn [{:keys [fmt err]}] [fmt err]) results))]
-    (if (success)
-      (mapv get-tree-viewer-url (list-tree-files dir))
-      (do (log/error "unable to get tree viewer URLs:" details)
-          (throw+ {:type    :tree-file-parse-err
-                   :details (details)})))))
+  (mapv get-tree-viewer-url (extract-trees dir infile)))
 
 (defn- build-response-map
   "Builds the map to use when formatting the response body."
@@ -149,8 +160,8 @@
   (assoc (nibblonian/format-tree-urls urls) :action "tree_manifest"))
 
 (defn- get-and-save-tree-viewer-urls
-  "Gets the tree-viewer URLs for a file, stores them in Riak and stores the Riak
-   URL in the AVUs for the file."
+  "Gets the tree-viewer URLs for a file and stores them in Riak.  If the username and path to the
+   file are also provided then the Riak URL will also be storeed in the AVUs for the file."
   ([dir infile sha1]
      (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
            metaurl (metaurl-for sha1)]

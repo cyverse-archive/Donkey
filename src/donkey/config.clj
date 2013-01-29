@@ -198,14 +198,6 @@
   "The URL for the tree parser service."
   "donkey.tree-viewer.base-url")
 
-(STR buggalo-path
-  "The path to the buggalo executable file."
-  "donkey.tree-viewer.buggalo-path")
-
-(VEC supported-tree-formats
-  "The list of supported tree formats."
-  "donkey.tree-viewer.accepted-tree-formats")
-
 (STR tree-url-bucket
   "The bucket in Riak to use for the storage of tree viewer URLs."
   "donkey.tree-viewer.bucket")

@@ -67,8 +67,6 @@ donkey.scruffian.base-url = http://localhost:65013/
 
 # Tree viewer settings
 donkey.tree-viewer.base-url              = http://localhost/parseTree
-donkey.tree-viewer.buggalo-path          = /usr/local/bin/buggalo
-donkey.tree-viewer.accepted-tree-formats = nexml, rnaaln, aaaln, relaxedphyliptree, nexus
 donkey.tree-viewer.bucket                = tree-urls
 
 # Elastic Search settings
@@ -2154,22 +2152,6 @@ $ curl -s --data-binary @Aquilegia.nex http://by-tor:8888/tree-viewer-urls | pyt
 }
 ```
 
-Here's an example of an unsuccessful call:
-
-```
-$ curl -s --data-binary @AminoAcid.nex http://by-tor:8888/tree-viewer-urls | python -mjson.tool
-{
-    "details": {
-        "aaaln": "Nexus Parsing error: Expecting file to start \"CLUSTAL\" found \"#\" at line 1 column 0\n",
-        "nexus": "storing implied block: TAXA\nstoring read block: DATA\nterminate called after throwing an instance of 'no_trees_exception'\n  what():  the file was parsed successfully, but no trees were found\n",
-        "relaxedphyliptree": "Nexus Parsing error: Expecting a tree description, but found \"#NEXUS\" instead at line 0 column 0\n",
-        "rnaaln": "Nexus Parsing error: Expecting file to start \"CLUSTAL\" found \"#\" at line 1 column 0\n"
-    },
-    "error_code": "ERR-TREE-FILE-PARSE",
-    "success": false
-}
-```
-
 #### Initializing a User's Workspace
 
 Secured Endpoint: GET /secured/bootstrap
@@ -4062,15 +4044,70 @@ $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&
 }
 ```
 
-Here's an example of an unsuccessful service call:
+#### Obtaining User Info
+
+Secured Endpoint: /secured/user-info
+
+This endpoint allows the caller to search for information about users with
+specific usernames.  Each username is specified using the `username` query
+string parameter, which can be specified multiple times to search for
+information about more than one user.  The response body is in the following
+format:
+
+```json
+{
+    username-1: {
+        "email": email-address-1,
+        "firstname": first-name-1,
+        "id": id-1,
+        "institution": institution-1,
+        "lastname": last-name-1,
+        "position": position-1,
+        "username": username-1
+    },
+    ...,
+    username-n: {
+        "email": email-address-n,
+        "firstname": first-name-n,
+        "id": id-n,
+        "institution": institution-n,
+        "lastname": last-name-n,
+        "position": position-n,
+        "username": username-n
+    }
+}
+```
+
+Assuming the service doesn't encounter an error, the status code will either be
+200 or 404.  If all requested usernames are found then the status code will be
+200.  Otherwise, the status code will be 404.  In both cases, the format of the
+response body is the same.  In the case where some of the users are not found,
+only users that actually were found will appear in the response body.  In the
+case where _none_ of the users are found, the response body will be an empty
+JSON object.
+
+Here's an example with a match:
 
 ```
-$ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&path=/iplant/home/nobody/missing.newick" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/user-info?proxyToken=$(cas-ticket)&username=nobody" | python -mjson.tool
 {
-    "body": "{\"status\":\"failure\",\"action\":\"file-download\",\"error_code\":\"ERR_DOES_NOT_EXIST\",\"path\":\"\\/iplant\\/home\\/ipctest\\/missing.newick\"}",
-    "error_code": "ERR_REQUEST_FAILED",
-    "status": "failure"
+    "nobody": {
+        "email": "nobody@iplantcollaborative.org",
+        "firstname": "Nobody",
+        "id": "3618",
+        "institution": "iplant collaborative",
+        "lastname": "Inparticular",
+        "position": null,
+        "username": "nobody"
+    }
 }
+```
+
+Here's an example with no matches:
+
+```
+$ curl -s "http://by-tor:8888/secured/user-info?proxyToken=$(cas-ticket)&username=foo" | python -mjson.tool
+{}
 ```
 
 #### Obtaining Identifiers
@@ -4157,29 +4194,29 @@ Here's an example of a successful response.
 
 ```
 $ curl -XGET "http://by-tor:8888/secured/search?proxyToken=$(cas-ticket)&search-term=?e*&type=file&from=1&size=2" | python -mjson.tool
-{ 
+{
     "hits": [
-        { 
+        {
             "viewers": [
-                "ipctest", 
+                "ipctest",
                 "rodsadmin"
             ],
             "name": "read1_10k.fq",
             "_index": "iplant",
             "_type": "file",
             "_id": "\/iplant\/home\/ipctest\/analyses\/fc_01300857-2012-01-30-08-58-00.090\/read1_10k.fq",
-            "_score": 1.0 
+            "_score": 1.0
         },
-        { 
+        {
             "viewers": [
-                "ipctest", 
+                "ipctest",
                 "rodsadmin"
             ],
             "name": "read1_10k.fq",
             "_index": "iplant",
             "_type": "file",
             "_id": "\/iplant\/home\/ipctest\/analyses\/ft_01251621-2012-01-26-16-21-46.602\/read1_10k.fq",
-            "_score": 1.0 
+            "_score": 1.0
         }
     ],
     "max_score": 1.0,

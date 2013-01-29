@@ -28,7 +28,7 @@
                          :headers {"range" (str "records=" start "-" end)}
                          :basic-auth [(userinfo-key) (userinfo-secret)]})
         status (:status res)]
-    (when (not (#{200 206 404} status))
+    (when-not (#{200 206 404} status)
       (throw (Exception. (str "user info service returned status " status))))
     {:users (extract-range start end (:users (read-json (:body res))))
      :truncated (= status 206)}))
@@ -36,8 +36,7 @@
 (def
   ^{:private true
     :doc "The list of functions to use in a generalized search."}
-  search-fns [(partial search "username") (partial search "name")
-              (partial search "email")])
+  search-fns [(partial search "name") (partial search "email")])
 
 (defn- remove-duplicates
   "Removes duplicate user records from the merged search results.  We use
@@ -66,7 +65,7 @@
     [0 (default-user-search-result-limit)]
     (let [[units begin-str end-str] (split value #"[=-]")
           [begin end] (map to-int [begin-str end-str])]
-      (if (or (not= "records" units) (< begin 0) (< end 0) (>= begin end))
+      (if (or (not= "records" units) (neg? begin) (neg? end) (>= begin end))
         (throw (IllegalArgumentException.
                 "invalid Range header value: should be records=0-50")))
       [begin end])))
@@ -80,7 +79,7 @@
      (apply user-search search-string (parse-range range-setting)))
   ([search-string start end]
      (let [results (map #(% search-string start end) search-fns)
-           users (remove-duplicates (apply concat (map #(:users %) results)))
+           users (remove-duplicates (mapcat :users results))
            truncated (if (some :truncated results) true false)]
        (json-str {:users users :truncated truncated}))))
 
@@ -107,3 +106,30 @@
     (catch Exception e
       (log/error e (str "username search for '" username "' failed"))
       (empty-user-info username))))
+
+(defn- add-user-info
+  "Adds the information for a single user to a user-info lookup result."
+  [[status result] [username user-info]]
+  (if (nil? user-info)
+    [404 result]
+    [status (assoc result username user-info)]))
+
+(defn- get-user-info
+  "Gets the information for a single user, returning a vector in which the first
+   element is the username and the second element is either the user info or nil
+   if the user doesn't exist."
+  [username]
+  (->> (search "username" username 0 100)
+       (:users)
+       (filter #(= (:username %) username))
+       (first)
+       (vector username)))
+
+(defn user-info
+  "Performs a user search for one or more usernames, returning a response whose
+   body consists of a JSON object indexed by username."
+  [usernames]
+  (let [[status body] (reduce add-user-info [200 {}] (map get-user-info usernames))]
+    {:status       status
+     :body         (json-str body)
+     :content-type :json}))

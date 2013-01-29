@@ -55,7 +55,7 @@
 (defn temp-dir-failure-response [{:keys [parent prefix base]}]
   (log/error "unable to create a temporary directory in" parent
              "using base name" base)
-  {:status       500 
+  {:status       500
    :content-type :json
    :body         (json-str {:success    false
                             :error_code "ERR-TEMP-DIR-CREATION"
@@ -94,7 +94,7 @@
   "Builds a URL from a base URL and one or more URL components.  Any query
    string parameters that are provided will be included in the result."
   [base query & components]
-  (str (assoc (apply url base (map #(url-encode %) components)) :query query)))
+  (str (assoc (apply url base (map url-encode components)) :query query)))
 
 (defn build-url
   "Builds a URL from a base URL and one or more URL components."
