@@ -1,12 +1,12 @@
 (ns donkey.metadactyl
-  (:use [clojure.data.json :only [read-json json-str]]
-        [donkey.config]
+  (:use [donkey.config]
         [donkey.service]
         [donkey.transformers]
         [donkey.user-attributes]
         [donkey.user-info :only [get-user-details]]
         [ring.util.codec :only [url-encode]])
-  (:require [clojure.string :as string]
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [donkey.notifications :as dn]))
 
@@ -186,7 +186,7 @@
    components are successfully imported."
   [req]
   (let [json-string (slurp (:body req))
-        json-obj    (read-json json-string)
+        json-obj    (cheshire/decode json-string true)
         url (build-metadactyl-unprotected-url "import-tools")]
     (forward-post url req json-string)
     (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
@@ -292,7 +292,7 @@
    notifications as seen for the user."
   [req]
   (let [url (dn/notificationagent-url "mark-all-seen")]
-    (forward-post url req (json-str (add-current-user-to-map {})))))
+    (forward-post url req (cheshire/encode (add-current-user-to-map {})))))
 
 (defn send-notification
   "This service forwards a notifiction to the notification agent's general
@@ -428,7 +428,7 @@
         response (forward-get url req)
         status   (:status response)]
     (if-not (or (< status 200) (> status 299))
-      (success-response (add-user-details (read-json (slurp (:body response)))))
+      (success-response (add-user-details (decode-stream (:body response))))
       response)))
 
 (defn- extract-usernames
@@ -441,16 +441,14 @@
   "Adds users to the list of collaborators for the current user."
   [req]
   (let [url   (build-metadactyl-secured-url "collaborators")
-        body  (slurp (:body req))
-        users (json-str (extract-usernames (read-json body)))]
+        users (cheshire/encode (extract-usernames (decode-stream (:body req))))]
     (forward-post url req users)))
 
 (defn remove-collaborators
   "Adds users to the list of collaborators for the current user."
   [req]
   (let [url   (build-metadactyl-secured-url "remove-collaborators")
-        body  (slurp (:body req))
-        users (json-str (extract-usernames (read-json body)))]
+        users (cheshire/encode (extract-usernames (decode-stream (:body req))))]
     (forward-post url req users)))
 
 (defn list-reference-genomes

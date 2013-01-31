@@ -1,10 +1,10 @@
 (ns donkey.notifications
-  (:use [clojure.data.json :only [json-str read-json]]
-        [donkey.config :only
+  (:use [donkey.config :only
          [notificationagent-base-url metadactyl-unprotected-base-url]]
-        [donkey.service :only [build-url build-url-with-query]]
+        [donkey.service :only [build-url build-url-with-query decode-stream]]
         [donkey.transformers :only [add-current-user-to-map]])
-  (:require [clj-http.client :as client]
+  (:require [cheshire.core :as cheshire]
+            [clj-http.client :as client]
             [clojure.tools.logging :as log]))
 
 (defn- app-description-url
@@ -42,9 +42,9 @@
   "Adds application details to notifications in a response from the
    notification agent."
   [res]
-  (let [m (read-json (slurp (:body res)))]
+  (let [m (decode-stream (:body res))]
     (log/debug "adding app details to notifications:" m)
-    (json-str (add-app-details-to-map m))))
+    (cheshire/encode (add-app-details-to-map m))))
 
 (defn notificationagent-url
   "Builds a URL that can be used to connect to the notification agent."
@@ -59,7 +59,7 @@
   [m]
   (client/post (notificationagent-url "notification")
                {:content-type :json
-                :body (json-str m)}))
+                :body (cheshire/encode m)}))
 
 (defn send-tool-notification
   "Sends notification of tool deployment to a user if notification information
