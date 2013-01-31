@@ -1,9 +1,9 @@
 (ns donkey.user-info
   (:use [cemerick.url :only [url]]
-        [clojure.data.json :only [json-str read-json]]
         [clojure.string :only [split]]
         [donkey.config])
-  (:require [clj-http.client :as client]
+  (:require [cheshire.core :as cheshire]
+            [clj-http.client :as client]
             [clojure.tools.logging :as log]))
 
 (defn- user-search-url
@@ -30,7 +30,7 @@
         status (:status res)]
     (when-not (#{200 206 404} status)
       (throw (Exception. (str "user info service returned status " status))))
-    {:users (extract-range start end (:users (read-json (:body res))))
+    {:users (extract-range start end (:users (cheshire/decode (:body res) true)))
      :truncated (= status 206)}))
 
 (def
@@ -81,7 +81,7 @@
      (let [results (map #(% search-string start end) search-fns)
            users (remove-duplicates (mapcat :users results))
            truncated (if (some :truncated results) true false)]
-       (json-str {:users users :truncated truncated}))))
+       (cheshire/encode {:users users :truncated truncated}))))
 
 (defn- empty-user-info
   "Returns an empty user-info record for the given username."
@@ -131,5 +131,5 @@
   [usernames]
   (let [[status body] (reduce add-user-info [200 {}] (map get-user-info usernames))]
     {:status       status
-     :body         (json-str body)
+     :body         (cheshire/encode body)
      :content-type :json}))
