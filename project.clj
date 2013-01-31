@@ -8,7 +8,7 @@
                  [compojure "1.0.1"]
                  [org/forester "1.005" ]
                  [org.iplantc/clj-cas "1.0.0-SNAPSHOT"]
-                 [org.iplantc/clojure-commons "1.3.1-SNAPSHOT"]
+                 [org.iplantc/clojure-commons "1.4.0-SNAPSHOT"]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [ring/ring-jetty-adapter "1.0.1"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
