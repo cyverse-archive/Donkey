@@ -1316,15 +1316,14 @@ $ curl -s http://by-tor:8888/analysis-details/009CECFD-0DF7-4B3D-98EF-82105C8483
 
 #### Listing Analysis Groups
 
-Unsecured Endpoint: GET /get-only-analysis-groups/{workspace-token}
+Unsecured Endpoint: GET /get-only-analysis-groups/{workspace-id}
 
 This service is used by the DE and (indirectly) by Tito to obtain the list of
 analysis groups that are visible to the user.  This list includes analysis
-groups that are in the user's workspace along with any analysis groups that
-are in a workspace that is marked as public in the database.  The
-`workspace-token` argument can either be the workspace ID or the user's fully
-qualified username.  (The DE sends the workspace ID; Tito sends the username.)
-The response is in the following format:
+groups that are in the user's workspace along with any analysis groups that are
+in a workspace that is marked as public in the database.  The `workspace-id`
+argument is the user's numeric workspace ID.  The response is in the following
+format:
 
 ```json
 {
@@ -1346,44 +1345,10 @@ The response is in the following format:
 Note that this data structure is recursive; each analysis group may contain
 zero or more other analysis groups.
 
-Here's an example using a workspace ID:
+Here's an example:
 
 ```
 $ curl -s http://by-tor:8888/get-only-analysis-groups/4 | python -mjson.tool
-{
-    "groups": [
-        {
-            "description": "",
-            "groups": [
-                {
-                    "description": "",
-                    "id": "b9a1a3b8-fef6-4576-bbfe-9ad17eb4c2ab",
-                    "is_public": false,
-                    "name": "Apps Under Development",
-                    "template_count": 0
-                },
-                {
-                    "description": "",
-                    "id": "2948ed96-9564-489f-ad73-e099b171a9a5",
-                    "is_public": false,
-                    "name": "Favorite Apps",
-                    "template_count": 0
-                }
-            ],
-            "id": "57a39832-3577-4ee3-8ff4-3fc9d1cf9e34",
-            "is_public": false,
-            "name": "Workspace",
-            "template_count": 0
-        },
-        ...
-    ]
-}
-```
-
-Here's an example using a username:
-
-```
-$ curl -s http://by-tor:8888/get-only-analysis-groups/nobody@iplantcollaborative.org | python -mjson.tool
 {
     "groups": [
         {
