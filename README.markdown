@@ -4078,13 +4078,10 @@ format:
 }
 ```
 
-Assuming the service doesn't encounter an error, the status code will either be
-200 or 404.  If all requested usernames are found then the status code will be
-200.  Otherwise, the status code will be 404.  In both cases, the format of the
-response body is the same.  In the case where some of the users are not found,
-only users that actually were found will appear in the response body.  In the
-case where _none_ of the users are found, the response body will be an empty
-JSON object.
+Assuming the service doesn't encounter an error, the status code will be 200 and
+the response body will contain the information for all of the users who were
+found.  If none of the users were found then the response body will consist of
+an empty JSON object.
 
 Here's an example with a match:
 

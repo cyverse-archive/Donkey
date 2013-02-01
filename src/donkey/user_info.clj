@@ -109,10 +109,10 @@
 
 (defn- add-user-info
   "Adds the information for a single user to a user-info lookup result."
-  [[status result] [username user-info]]
+  [result [username user-info]]
   (if (nil? user-info)
-    [404 result]
-    [status (assoc result username user-info)]))
+    result
+    (assoc result username user-info)))
 
 (defn- get-user-info
   "Gets the information for a single user, returning a vector in which the first
@@ -129,7 +129,7 @@
   "Performs a user search for one or more usernames, returning a response whose
    body consists of a JSON object indexed by username."
   [usernames]
-  (let [[status body] (reduce add-user-info [200 {}] (map get-user-info usernames))]
-    {:status       status
+  (let [body (reduce add-user-info {} (map get-user-info usernames))]
+    {:status       200
      :body         (json-str body)
      :content-type :json}))
