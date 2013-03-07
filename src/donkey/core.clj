@@ -198,6 +198,12 @@
   (GET "/search" [:as {params :params}]
        (trap #(search/search params current-user)))
 
+  (PUT "/tool-request" [:as req]
+       (trap #(submit-tool-request req)))
+
+  (GET "/tool-requests" [:as req]
+       (trap #(list-tool-requests req)))
+
   (route/not-found (unrecognized-path-response)))
 
 (defroutes donkey-routes
@@ -302,6 +308,12 @@
 
   (GET "/uuid" []
        (string/upper-case (str (UUID/randomUUID))))
+
+  (POST "/tool-request" [:as req]
+        (trap #(update-tool-request req)))
+
+  (GET "/tool-request/:uuid" [uuid :as req]
+       (trap #(get-tool-request req uuid)))
 
   (context "/secured" []
            (store-current-user secured-routes cas-server server-name))

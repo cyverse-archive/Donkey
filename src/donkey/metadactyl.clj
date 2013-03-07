@@ -463,3 +463,31 @@
   [req]
   (let [url  (build-metadactyl-secured-url "reference-genomes")]
     (forward-put url req)))
+
+(defn submit-tool-request
+  "Submits a tool request on behalf of the authenticated user."
+  [req]
+  (forward-put
+   (build-metadactyl-secured-url "tool-request")
+   req))
+
+(defn list-tool-requests
+  "Lists the tool requests that were submitted by the authenticated user."
+  [req]
+  (forward-get
+   (build-metadactyl-secured-url-with-query (:params req) "tool-requests")
+   req))
+
+(defn update-tool-request
+  "Updates a tool request with comments and possibly a new status."
+  [req]
+  (forward-post
+   (build-metadactyl-unprotected-url "tool-request")
+   req))
+
+(defn get-tool-request
+  "Lists details about a specific tool request."
+  [req uuid]
+  (forward-get
+   (build-metadactyl-unprotected-url "tool-request" uuid)
+   req))
