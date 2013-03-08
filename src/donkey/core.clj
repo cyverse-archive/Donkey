@@ -201,6 +201,9 @@
   (PUT "/tool-request" [:as req]
        (trap #(submit-tool-request req)))
 
+  (POST "/tool-request" [:as req]
+        (trap #(update-tool-request-secured req)))
+
   (GET "/tool-requests" [:as req]
        (trap #(list-tool-requests req)))
 

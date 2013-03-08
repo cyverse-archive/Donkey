@@ -485,6 +485,13 @@
    (build-metadactyl-unprotected-url "tool-request")
    req))
 
+(defn update-tool-request-secured
+  "Updates a tool request on behalf of the authenticated user."
+  [req]
+  (forward-post
+   (build-metadactyl-secured-url "tool-request")
+   req))
+
 (defn get-tool-request
   "Lists details about a specific tool request."
   [req uuid]
