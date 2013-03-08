@@ -5,7 +5,6 @@
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.buggalo]
-        [donkey.config]
         [donkey.file-listing]
         [donkey.metadactyl]
         [donkey.service]
@@ -24,6 +23,7 @@
             [clojure-commons.props :as cp]
             [clojure-commons.error-codes :as ce]
             [ring.adapter.jetty :as jetty]
+            [donkey.config :as config]
             [donkey.jex :as jex]
             [donkey.search :as search])
   (:import [java.util UUID]))
@@ -319,40 +319,19 @@
        (trap #(get-tool-request req uuid)))
 
   (context "/secured" []
-           (store-current-user secured-routes cas-server server-name))
+           (store-current-user secured-routes config/cas-server config/server-name))
 
   (route/not-found (unrecognized-path-response)))
-
-(defn init-service
-  "Initializes the service after the configuration settings have been loaded."
-  []
-  (dorun (map (fn [[k v]] (log/warn "CONFIG:" k "=" v)) (sort-by key @props)))
-  (when-not (configuration-valid)
-    (log/warn "THE CONFIGURATION IS INVALID - EXITING NOW")
-    (System/exit 1)))
 
 (defn load-configuration-from-file
   "Loads the configuration properties from a file."
   []
-  (let [filename "donkey.properties"
-        conf-dir (System/getenv "IPLANT_CONF_DIR")]
-    (if (nil? conf-dir)
-      (reset! props (cp/read-properties (file filename)))
-      (reset! props (cp/read-properties (file conf-dir filename)))))
-  (init-service))
+  (config/load-config-from-file))
 
 (defn load-configuration-from-zookeeper
   "Loads the configuration properties from Zookeeper."
   []
-  (println "zk-url =" zk-url)
-  (cl/with-zk
-    (zk-url)
-    (when-not (cl/can-run?)
-      (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
-      (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
-      (System/exit 1))
-    (reset! props (cl/properties "donkey")))
-  (init-service))
+  (config/load-config-from-zookeeper))
 
 (defn site-handler [routes]
   (-> routes
@@ -366,5 +345,5 @@
 (defn -main
   [& _]
   (load-configuration-from-zookeeper)
-  (log/warn "Listening on" (listen-port))
-  (jetty/run-jetty app {:port (listen-port)}))
+  (log/warn "Listening on" (config/listen-port))
+  (jetty/run-jetty app {:port (config/listen-port)}))
