@@ -1,5 +1,6 @@
 (ns donkey.metadactyl
   (:use [donkey.config]
+        [donkey.email]
         [donkey.service]
         [donkey.transformers]
         [donkey.user-attributes]
@@ -461,15 +462,20 @@
   "Replaces the reference genomes in the database with a new set of reference
    genomes."
   [req]
-  (let [url  (build-metadactyl-secured-url "reference-genomes")]
+  (let [url (build-metadactyl-secured-url "reference-genomes")]
     (forward-put url req)))
 
 (defn submit-tool-request
   "Submits a tool request on behalf of the authenticated user."
   [req]
-  (forward-put
-   (build-metadactyl-secured-url "tool-request")
-   req))
+  (let [tool-req     (-> (build-metadactyl-secured-url "tool-request")
+                         (forward-put req)
+                         (cheshire/decode-stream true))
+        username     (string/replace (:submitted_by tool-req) #"@.*" "")
+        user-details (get-user-details username)]
+    (send-tool-request-email tool-req user-details)
+    #_(send-tool-request-notification tool-req user-details)
+    (success-response tool-req)))
 
 (defn list-tool-requests
   "Lists the tool requests that were submitted by the authenticated user."

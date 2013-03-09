@@ -20,6 +20,26 @@
   [props config-valid configs]
   "donkey.app.listen-port")
 
+(cc/defprop-str environment-name
+  "The name of the environment that this instance of Donkey belongs to."
+  [props config-valid configs]
+  "donkey.app.environment-name")
+
+(cc/defprop-str iplant-email-base-url
+  "The base URL to use when connnecting to the iPlant email service."
+  [props config-valid configs]
+  "donkey.email.base-url")
+
+(cc/defprop-str tool-request-dest-addr
+  "The destination email address for tool request messages."
+  [props config-valid configs]
+  "donkey.email.tool-request-dest")
+
+(cc/defprop-str tool-request-src-addr
+  "The source email address for tool request messages."
+  [props config-valid configs]
+  "donkey.email.tool-request-src")
+
 (cc/defprop-str metadactyl-base-url
   "The base URL to use when connecting to secured Metadactyl services."
   [props config-valid configs]

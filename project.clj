@@ -3,7 +3,7 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [cheshire "5.0.1"]
-                 [clj-http "0.5.7"]
+                 [clj-http "0.6.5"]
                  [com.cemerick/url "0.0.7"]
                  [compojure "1.0.1"]
                  [org/forester "1.005" ]
