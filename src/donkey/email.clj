@@ -28,5 +28,5 @@
    :template  "tool_request"
    :values    {:username           (str firstname " " lastname)
                :environment        (config/environment-name)
-               :uuid               (tool-req)
+               :toolrequestid      (:uuid tool-req)
                :toolrequestdetails (cheshire/encode tool-req {:pretty true})}))

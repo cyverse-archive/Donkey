@@ -1,5 +1,6 @@
 (ns donkey.metadactyl
-  (:use [donkey.config]
+  (:use [clojure.java.io :only [reader]]
+        [donkey.config]
         [donkey.email]
         [donkey.service]
         [donkey.transformers]
@@ -465,17 +466,26 @@
   (let [url (build-metadactyl-secured-url "reference-genomes")]
     (forward-put url req)))
 
+(defn- postprocess-tool-request
+  "Postprocesses a tool request update or submission. The postprocessing function
+   should take the tool request and user details as arguments."
+  [res f]
+  (if (<= 200 (:status res) 299)
+    (let [tool-req     (cheshire/decode-stream (reader (:body res)) true)
+          username     (string/replace (:submitted_by tool-req) #"@.*" "")
+          user-details (get-user-details username)]
+      (f tool-req user-details))
+    res))
+
 (defn submit-tool-request
   "Submits a tool request on behalf of the authenticated user."
   [req]
-  (let [tool-req     (-> (build-metadactyl-secured-url "tool-request")
-                         (forward-put req)
-                         (cheshire/decode-stream true))
-        username     (string/replace (:submitted_by tool-req) #"@.*" "")
-        user-details (get-user-details username)]
-    (send-tool-request-email tool-req user-details)
-    #_(send-tool-request-notification tool-req user-details)
-    (success-response tool-req)))
+  (postprocess-tool-request
+   (forward-put (build-metadactyl-secured-url "tool-request") req)
+   (fn [tool-req user-details]
+     (send-tool-request-email tool-req user-details)
+     (dn/send-tool-request-notification tool-req user-details)
+     (success-response tool-req))))
 
 (defn list-tool-requests
   "Lists the tool requests that were submitted by the authenticated user."
@@ -487,9 +497,11 @@
 (defn update-tool-request
   "Updates a tool request with comments and possibly a new status."
   [req]
-  (forward-post
-   (build-metadactyl-unprotected-url "tool-request")
-   req))
+  (postprocess-tool-request
+   (forward-post (build-metadactyl-unprotected-url "tool-request") req)
+   (fn [tool-req user-details]
+     (dn/send-tool-request-update-notification tool-req user-details)
+     (success-response tool-req))))
 
 (defn update-tool-request-secured
   "Updates a tool request on behalf of the authenticated user."
