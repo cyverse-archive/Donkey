@@ -58,11 +58,9 @@
 (defn send-notification
   "Sends a notification to a user."
   [m]
-  (log/warn "sending notification" m)
   (let [res (client/post (notificationagent-url "notification")
                          {:content-type :json
                           :body (cheshire/encode m)})]
-    (log/warn "response body" (slurp (:body res)))
     res))
 
 (defn send-tool-notification
