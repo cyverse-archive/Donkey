@@ -87,21 +87,26 @@
 (defn send-tool-request-notification
   "Sends notification of a successful tool request submission to the user."
   [tool-req user-details]
-  (try
-    (send-notification {:type    "tool_request"
-                        :user    (:username user-details)
-                        :subject (str "Tool Request Submitted")
-                        :email   false
-                        :payload (assoc tool-req
-                                   :email_address (:email user-details)
-                                   :toolname      (:name tool-req))})
-    (catch Exception e
-      (log/warn e "unable to send tool request submission notification for" tool-req))))
+  (let [this-update (last (:history tool-req))
+        comments    (:comments this-update)]
+    (try
+      (send-notification {:type    "tool_request"
+                          :user    (:username user-details)
+                          :subject (str "Tool Request Submitted")
+                          :email   false
+                          :payload (assoc tool-req
+                                     :email_address (:email user-details)
+                                     :toolname      (:name tool-req)
+                                     :comments      comments)})
+      (catch Exception e
+        (log/warn e "unable to send tool request submission notification for" tool-req)))))
 
 (defn send-tool-request-update-notification
   "Sends notification of a tool request status change to the user."
   [tool-req user-details]
-  (let [status (:status (last (:history tool-req)))]
+  (let [this-update (last (:history tool-req))
+        status      (:status this-update)
+        comments    (:comments this-update)]
     (try
       (send-notification {:type           "tool_request"
                           :user           (:username user-details)
@@ -110,6 +115,7 @@
                           :email_template (str "tool_request_" (string/lower-case status))
                           :payload        (assoc tool-req
                                             :email_address (:email user-details)
-                                            :toolname      (:name tool-req))})
+                                            :toolname      (:name tool-req)
+                                            :comments      comments)})
       (catch Exception e
         (log/warn e "unable to send tool request update notification for" tool-req)))))
