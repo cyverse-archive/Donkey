@@ -13,12 +13,12 @@ inside Donkey instead.  The Mule services no longer exist.
 * [Security](doc/security.md)
 * [Errors](doc/errors.md)
 * [Endpoints](doc/endpoints.md)
-** [Miscellaneous Endpoints](doc/endpoints/misc.md)
-** [App Metadata Endpoints](doc/endpoints/app-metadata.md)
-** [App Execution Endpoints](doc/endpoints/app-execution.md)
-** [Phylogenetic Tree Rendering Endpoints](doc/endpoints/tree-viewing.md)
-** [Notification Endpoints](doc/endpoints/notifications.md)
-** [Collaborator List Management Endpoints](doc/endpoints/collaborators.md)
+* * [Miscellaneous Endpoints](doc/endpoints/misc.md)
+* * [App Metadata Endpoints](doc/endpoints/app-metadata.md)
+* * [App Execution Endpoints](doc/endpoints/app-execution.md)
+* * [Phylogenetic Tree Rendering Endpoints](doc/endpoints/tree-viewing.md)
+* * [Notification Endpoints](doc/endpoints/notifications.md)
+* * [Collaborator List Management Endpoints](doc/endpoints/collaborators.md)
 
 ### Sharing User Data
 
