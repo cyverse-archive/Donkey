@@ -182,7 +182,7 @@ Unsecured Endpoint: POST /import-workflow
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-### Importing Deployed Components
+## Importing Deployed Components
 
 Unsecured Endpoint: POST /import-tools
 
