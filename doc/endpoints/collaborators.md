@@ -146,6 +146,62 @@ $ curl -sd '
 }
 ```
 
+## Searching for Users
+
+Secured Endpoint: /secured/user-search/{search-string}
+
+This endpoint allows the caller to search for user information by username,
+email address and actual name. The search search string provided in the URL
+should be URL encoded before being sent to the service. The response body is in
+the following format:
+
+```json
+{
+    username-1: {
+        "email": "email-address-1",
+        "firstname": "first-name-1",
+        "id": "id-1",
+        "institution": "institution-1",
+        "lastname": "last-name-1",
+        "position": "position-1",
+        "username": "username-1"
+    },
+    username-n: {
+        "email": "email-address-n",
+        "firstname": "first-name-n",
+        "id": "id-n",
+        "institution": "institution-n",
+        "lastname": "last-name-n",
+        "position": "position-n",
+        "username": "username-n"
+    }
+}
+```
+
+Assuming an error doesn't occur, the status code will be 200 and the response
+body will contain up to the first fifty users whose username matched the search
+string, up to the first fifty users whose actual name matched the search string,
+and up to the first fifty users whose email address matched the search
+string. Here's an example:
+
+```
+$ curl -s "http://by-tor:8888/secured/user-search/nobody?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "truncated": false,
+    "users": [
+        {
+            "email": "nobody@iplantcollaborative.org,
+            "firstname": Nobody",
+            "id": "725",
+            "institution": null,
+            "lastname": "Atall",
+            "position": null,
+            "username": "nobody"
+        }
+    ]
+}
+```
+
 ## Obtaining User Info
 
 Secured Endpoint: /secured/user-info
@@ -158,23 +214,22 @@ more than one user. The response body is in the following format:
 ```json
 {
     username-1: {
-        "email": email-address-1,
-        "firstname": first-name-1,
-        "id": id-1,
-        "institution": institution-1,
-        "lastname": last-name-1,
-        "position": position-1,
-        "username": username-1
+        "email": "email-address-1",
+        "firstname": "first-name-1",
+        "id": "id-1",
+        "institution": "institution-1",
+        "lastname": "last-name-1",
+        "position": "position-1",
+        "username": "username-1"
     },
-    ...,
     username-n: {
-        "email": email-address-n,
-        "firstname": first-name-n,
-        "id": id-n,
-        "institution": institution-n,
-        "lastname": last-name-n,
-        "position": position-n,
-        "username": username-n
+        "email": "email-address-n",
+        "firstname": "first-name-n",
+        "id": "id-n",
+        "institution": "institution-n",
+        "lastname": "last-name-n",
+        "position": "position-n",
+        "username": "username-n"
     }
 }
 ```

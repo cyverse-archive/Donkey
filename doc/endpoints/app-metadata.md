@@ -30,7 +30,7 @@ path. Please see the metadactyl documentation for more information.
 
 ## Valiating Analyses for Pipelines
 
-Unsecured Endpoint: GET /validate-analysis-for-pipeline/{analysis-id}
+Unsecured Endpoint: GET /validate-analysis-for-pipelines/{analysis-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -65,7 +65,7 @@ path. Please see the metadactyl documentation for more information.
 
 ## Adding Analyses to Analysis Groups
 
-Unsecured Endpoint: POST /add-analyses-to-group
+Unsecured Endpoint: POST /add-analysis-to-group
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -391,3 +391,43 @@ Secured Endpoint: POST /secured/make-analysis-public
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
+
+## Requesting Installation of a Tool
+
+Secured Endpoint: PUT /secured/tool-request
+
+This service is primarily a passthrough to the metadactyl endpoint using the
+same path. The only difference is that this endpoint also sends a message to the
+tool request email address and generates a notification for the new tool request
+indicating that the tool request was successfully submitted. Please see the
+metadactyl documentation for more details.
+
+## Updating a Tool Installation Request (User)
+
+Secured Endpoint: POST /secured/tool-request
+
+This service is a passthrough to the metadactyl endpoint using the same
+path. Please se the metadactyl documentation for more details.
+
+## Updating a Tool Installation Request (Administrator)
+
+Unsecured Endpoint: POST /tool-request
+
+This service is primarily a passthrough to the metadactyl endpoint using the
+same path. The only difference is that this endpoint also generates a
+notification for the tool request status update. Please see the metadactyl
+documentation for more details.
+
+## Listing Tool Installation Requests
+
+Secured Endpoint: GET /secured/tool-requests
+
+This service is a passthrough to the metadactyl endpoint using the same
+path. Please se the metadactyl documentation for more details.
+
+## Listing Tool Installation Request Details
+
+Unsecured Endpoint: GET /tool-request/{tool-request-id}
+
+This service is a passthrough to the metadactyl endpoint using the same
+path. Please se the metadactyl documentation for more details.

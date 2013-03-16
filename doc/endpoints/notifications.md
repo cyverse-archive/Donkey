@@ -413,3 +413,10 @@ $ curl -X DELETE -s "http://by-tor:8888/secured/notifications/delete-all?proxyTo
     "count": 0
 }
 ```
+
+## Sending an Arbitrary Notification
+
+Unsecured Endpoint: POST /send-notification.
+
+This endpoint is a passthrough to the notification agent's `/notification`
+endpoint. Please see the notification agent documentation for more details.
