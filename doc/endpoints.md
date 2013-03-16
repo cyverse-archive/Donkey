@@ -20,3 +20,6 @@ but instead listed as hyphen-separated names without enclosing quotes.
 * [Phylogenetic Tree Rendering Endpoints](endpoints/tree-viewing.md)
 * [Notification Endpoints](endpoints/notifications.md)
 * [Collaborator List Management Endpoints](endpoints/collaborators.md)
+* [Sharing Endpoints](endpoints/sharing.md)
+* [Reference Genome Endpoints](endpoints/reference-genomes.md)
+* [Data Search Endpoints](endpoints/data-search.md)

@@ -41,3 +41,10 @@ Secured Endpoint: PUT /secured/workspaces/{workspace-id}/executions/delete
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
+
+### Stopping a Running Analysis
+
+Secured Endpoint: DELETE /secured/stop-analysis/{job-id}
+
+This endpoint is a passthrough to the JEX endpoint, `/stop/{job-id}`. Please see
+the JEX documentation for more details.

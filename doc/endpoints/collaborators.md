@@ -145,3 +145,65 @@ $ curl -sd '
     "success": true
 }
 ```
+
+## Obtaining User Info
+
+Secured Endpoint: /secured/user-info
+
+This endpoint allows the caller to search for information about users with
+specific usernames. Each username is specified using the `username` query string
+parameter, which can be specified multiple times to search for information about
+more than one user. The response body is in the following format:
+
+```json
+{
+    username-1: {
+        "email": email-address-1,
+        "firstname": first-name-1,
+        "id": id-1,
+        "institution": institution-1,
+        "lastname": last-name-1,
+        "position": position-1,
+        "username": username-1
+    },
+    ...,
+    username-n: {
+        "email": email-address-n,
+        "firstname": first-name-n,
+        "id": id-n,
+        "institution": institution-n,
+        "lastname": last-name-n,
+        "position": position-n,
+        "username": username-n
+    }
+}
+```
+
+Assuming the service doesn't encounter an error, the status code will be 200 and
+the response body will contain the information for all of the users who were
+found. If none of the users were found then the response body will consist of an
+empty JSON object.
+
+Here's an example with a match:
+
+```
+$ curl -s "http://by-tor:8888/secured/user-info?proxyToken=$(cas-ticket)&username=nobody" | python -mjson.tool
+{
+    "nobody": {
+        "email": "nobody@iplantcollaborative.org",
+        "firstname": "Nobody",
+        "id": "3618",
+        "institution": "iplant collaborative",
+        "lastname": "Inparticular",
+        "position": null,
+        "username": "nobody"
+    }
+}
+```
+
+Here's an example with no matches:
+
+```
+$ curl -s "http://by-tor:8888/secured/user-info?proxyToken=$(cas-ticket)&username=foo" | python -mjson.tool
+{}
+```
