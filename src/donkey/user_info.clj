@@ -1,9 +1,9 @@
 (ns donkey.user-info
   (:use [cemerick.url :only [url]]
-        [clojure.data.json :only [json-str read-json]]
         [clojure.string :only [split]]
         [donkey.config])
-  (:require [clj-http.client :as client]
+  (:require [cheshire.core :as cheshire]
+            [clj-http.client :as client]
             [clojure.tools.logging :as log]))
 
 (defn- user-search-url
@@ -28,16 +28,15 @@
                          :headers {"range" (str "records=" start "-" end)}
                          :basic-auth [(userinfo-key) (userinfo-secret)]})
         status (:status res)]
-    (when (not (#{200 206 404} status))
+    (when-not (#{200 206 404} status)
       (throw (Exception. (str "user info service returned status " status))))
-    {:users (extract-range start end (:users (read-json (:body res))))
+    {:users (extract-range start end (:users (cheshire/decode (:body res) true)))
      :truncated (= status 206)}))
 
 (def
   ^{:private true
     :doc "The list of functions to use in a generalized search."}
-  search-fns [(partial search "username") (partial search "name")
-              (partial search "email")])
+  search-fns [(partial search "name") (partial search "email")])
 
 (defn- remove-duplicates
   "Removes duplicate user records from the merged search results.  We use
@@ -66,7 +65,7 @@
     [0 (default-user-search-result-limit)]
     (let [[units begin-str end-str] (split value #"[=-]")
           [begin end] (map to-int [begin-str end-str])]
-      (if (or (not= "records" units) (< begin 0) (< end 0) (>= begin end))
+      (if (or (not= "records" units) (neg? begin) (neg? end) (>= begin end))
         (throw (IllegalArgumentException.
                 "invalid Range header value: should be records=0-50")))
       [begin end])))
@@ -80,9 +79,9 @@
      (apply user-search search-string (parse-range range-setting)))
   ([search-string start end]
      (let [results (map #(% search-string start end) search-fns)
-           users (remove-duplicates (apply concat (map #(:users %) results)))
+           users (remove-duplicates (mapcat :users results))
            truncated (if (some :truncated results) true false)]
-       (json-str {:users users :truncated truncated}))))
+       (cheshire/encode {:users users :truncated truncated}))))
 
 (defn- empty-user-info
   "Returns an empty user-info record for the given username."
@@ -107,3 +106,30 @@
     (catch Exception e
       (log/error e (str "username search for '" username "' failed"))
       (empty-user-info username))))
+
+(defn- add-user-info
+  "Adds the information for a single user to a user-info lookup result."
+  [result [username user-info]]
+  (if (nil? user-info)
+    result
+    (assoc result username user-info)))
+
+(defn- get-user-info
+  "Gets the information for a single user, returning a vector in which the first
+   element is the username and the second element is either the user info or nil
+   if the user doesn't exist."
+  [username]
+  (->> (search "username" username 0 100)
+       (:users)
+       (filter #(= (:username %) username))
+       (first)
+       (vector username)))
+
+(defn user-info
+  "Performs a user search for one or more usernames, returning a response whose
+   body consists of a JSON object indexed by username."
+  [usernames]
+  (let [body (reduce add-user-info {} (map get-user-info usernames))]
+    {:status       200
+     :body         (cheshire/encode body)
+     :content-type :json}))

@@ -5,7 +5,6 @@
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.buggalo]
-        [donkey.config]
         [donkey.file-listing]
         [donkey.metadactyl]
         [donkey.service]
@@ -14,7 +13,7 @@
         [donkey.user-info]
         [donkey.user-sessions]
         [donkey.user-prefs]
-        [ring.middleware keyword-params nested-params]
+        [ring.middleware keyword-params]
         [slingshot.slingshot :only [try+]])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
@@ -24,6 +23,7 @@
             [clojure-commons.props :as cp]
             [clojure-commons.error-codes :as ce]
             [ring.adapter.jetty :as jetty]
+            [donkey.config :as config]
             [donkey.jex :as jex]
             [donkey.search :as search])
   (:import [java.util UUID]))
@@ -44,6 +44,13 @@
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))
    (catch Throwable t (error-response t))))
+
+(defn- as-vector
+  "Returns the given parameter inside a vector if it's not a vector already."
+  [p]
+  (cond (nil? p)    []
+        (vector? p) p
+        :else       [p]))
 
 (defroutes secured-routes
   (GET "/bootstrap" [:as req]
@@ -125,34 +132,37 @@
         (trap #(make-app-public req)))
 
   (GET "/sessions" []
-       (trap #(user-session)))
+       (trap user-session))
 
   (POST "/sessions" [:as {body :body}]
         (trap #(user-session (slurp body))))
 
   (DELETE "/sessions" []
-          (trap #(remove-session)))
+          (trap remove-session))
 
   (GET "/preferences" []
-       (trap #(user-prefs)))
+       (trap user-prefs))
 
   (POST "/preferences" [:as {body :body}]
         (trap #(user-prefs (slurp body))))
 
   (DELETE "/preferences" []
-          (trap #(remove-prefs)))
+          (trap remove-prefs))
 
   (GET "/search-history" []
-       (trap #(search-history)))
+       (trap search-history))
 
   (POST "/search-history" [:as {body :body}]
         (trap #(search-history (slurp body))))
 
   (DELETE "/search-history" []
-          (trap #(clear-search-history)))
+          (trap clear-search-history))
 
   (GET "/user-search/:search-string" [search-string :as req]
        (trap #(user-search search-string (get-in req [:headers "range"]))))
+
+  (GET "/user-info" [:as {params :params}]
+       (trap #(user-info (as-vector (:username params)))))
 
   (GET "/collaborators" [:as req]
        (trap #(get-collaborators req)))
@@ -187,6 +197,15 @@
 
   (GET "/search" [:as {params :params}]
        (trap #(search/search params current-user)))
+
+  (PUT "/tool-request" [:as req]
+       (trap #(submit-tool-request req)))
+
+  (POST "/tool-request" [:as req]
+        (trap #(update-tool-request-secured req)))
+
+  (GET "/tool-requests" [:as req]
+       (trap #(list-tool-requests req)))
 
   (route/not-found (unrecognized-path-response)))
 
@@ -293,54 +312,38 @@
   (GET "/uuid" []
        (string/upper-case (str (UUID/randomUUID))))
 
+  (POST "/tool-request" [:as req]
+        (trap #(update-tool-request req)))
+
+  (GET "/tool-request/:uuid" [uuid :as req]
+       (trap #(get-tool-request req uuid)))
+
   (context "/secured" []
-           (store-current-user secured-routes #(cas-server) #(server-name)))
+           (store-current-user secured-routes config/cas-server config/server-name))
 
   (route/not-found (unrecognized-path-response)))
-
-(defn init-service
-  "Initializes the service after the configuration settings have been loaded."
-  []
-  (dorun (map (fn [[k v]] (log/warn "CONFIG:" k "=" v)) (sort-by key @props)))
-  (when-not (configuration-valid)
-    (log/warn "THE CONFIGURATION IS INVALID - EXITING NOW")
-    (System/exit 1)))
 
 (defn load-configuration-from-file
   "Loads the configuration properties from a file."
   []
-  (let [filename "donkey.properties"
-        conf-dir (System/getenv "IPLANT_CONF_DIR")]
-    (if (nil? conf-dir)
-      (reset! props (cp/read-properties (file filename)))
-      (reset! props (cp/read-properties (file conf-dir filename)))))
-  (init-service))
+  (config/load-config-from-file))
 
 (defn load-configuration-from-zookeeper
   "Loads the configuration properties from Zookeeper."
   []
-  (println "zk-url =" zk-url)
-  (cl/with-zk
-    (zk-url)
-    (when (not (cl/can-run?))
-      (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
-      (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
-      (System/exit 1))
-    (reset! props (cl/properties "donkey")))
-  (init-service))
+  (config/load-config-from-zookeeper))
 
 (defn site-handler [routes]
   (-> routes
       wrap-keyword-params
       wrap-lcase-params
-      wrap-nested-params
       wrap-query-params))
 
 (def app
   (site-handler donkey-routes))
 
 (defn -main
-  [& args]
+  [& _]
   (load-configuration-from-zookeeper)
-  (log/warn "Listening on" (listen-port))
-  (jetty/run-jetty app {:port (listen-port)}))
+  (log/warn "Listening on" (config/listen-port))
+  (jetty/run-jetty app {:port (config/listen-port)}))

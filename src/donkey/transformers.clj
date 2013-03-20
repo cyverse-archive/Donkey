@@ -1,14 +1,14 @@
 (ns donkey.transformers
   (:use [cemerick.url :only [url]]
-        [clojure.data.json :only [json-str read-json]]
+        [donkey.service :only [decode-stream]]
         [donkey.user-attributes])
-  (:require [clojure.tools.logging :as log])
+  (:require [cheshire.core :as cheshire])
   (:import [net.sf.json JSONObject]))
 
 (defn object->json-str
   "Converts a Java object to a JSON string."
   [obj]
-  (.toString (JSONObject/fromObject obj)))
+  (str (JSONObject/fromObject obj)))
 
 (defn object->json-obj
   "Converts a Java object to a JSON object."
@@ -19,9 +19,9 @@
   "Adds the name of the currently authenticated user to a JSON object in the
    body of a request, and returns only the updated body."
   [req]
-  (let [m (read-json (slurp (:body req)))
+  (let [m (decode-stream (:body req))
         username (get-in req [:user-attributes "uid"])]
-    (json-str (assoc m :user username))))
+    (cheshire/encode (assoc m :user username))))
 
 (defn add-current-user-to-map
   "Adds the name and e-mail address of the currently authenticated user to a

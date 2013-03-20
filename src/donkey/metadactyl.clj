@@ -1,12 +1,14 @@
 (ns donkey.metadactyl
-  (:use [clojure.data.json :only [read-json json-str]]
+  (:use [clojure.java.io :only [reader]]
         [donkey.config]
+        [donkey.email]
         [donkey.service]
         [donkey.transformers]
         [donkey.user-attributes]
         [donkey.user-info :only [get-user-details]]
         [ring.util.codec :only [url-encode]])
-  (:require [clojure.string :as string]
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [donkey.notifications :as dn]))
 
@@ -186,7 +188,7 @@
    components are successfully imported."
   [req]
   (let [json-string (slurp (:body req))
-        json-obj    (read-json json-string)
+        json-obj    (cheshire/decode json-string true)
         url (build-metadactyl-unprotected-url "import-tools")]
     (forward-post url req json-string)
     (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
@@ -292,7 +294,7 @@
    notifications as seen for the user."
   [req]
   (let [url (dn/notificationagent-url "mark-all-seen")]
-    (forward-post url req (json-str (add-current-user-to-map {})))))
+    (forward-post url req (cheshire/encode (add-current-user-to-map {})))))
 
 (defn send-notification
   "This service forwards a notifiction to the notification agent's general
@@ -410,8 +412,9 @@
 (defn get-app-rerun-info
   "Gets the information required to rerun a previously executed app."
   [req job-id]
-  (-> (build-metadactyl-unprotected-url "analysis-rerun-info" job-id)
-      (forward-get req)))
+  (forward-get
+   (build-metadactyl-unprotected-url "analysis-rerun-info" job-id)
+   req))
 
 (defn- add-user-details
   "Adds user details to the results from a request to obtain a list of
@@ -427,7 +430,7 @@
         response (forward-get url req)
         status   (:status response)]
     (if-not (or (< status 200) (> status 299))
-      (success-response (add-user-details (read-json (slurp (:body response)))))
+      (success-response (add-user-details (decode-stream (:body response))))
       response)))
 
 (defn- extract-usernames
@@ -440,16 +443,14 @@
   "Adds users to the list of collaborators for the current user."
   [req]
   (let [url   (build-metadactyl-secured-url "collaborators")
-        body  (slurp (:body req))
-        users (json-str (extract-usernames (read-json body)))]
+        users (cheshire/encode (extract-usernames (decode-stream (:body req))))]
     (forward-post url req users)))
 
 (defn remove-collaborators
   "Adds users to the list of collaborators for the current user."
   [req]
   (let [url   (build-metadactyl-secured-url "remove-collaborators")
-        body  (slurp (:body req))
-        users (json-str (extract-usernames (read-json body)))]
+        users (cheshire/encode (extract-usernames (decode-stream (:body req))))]
     (forward-post url req users)))
 
 (defn list-reference-genomes
@@ -462,5 +463,56 @@
   "Replaces the reference genomes in the database with a new set of reference
    genomes."
   [req]
-  (let [url  (build-metadactyl-secured-url "reference-genomes")]
+  (let [url (build-metadactyl-secured-url "reference-genomes")]
     (forward-put url req)))
+
+(defn- postprocess-tool-request
+  "Postprocesses a tool request update or submission. The postprocessing function
+   should take the tool request and user details as arguments."
+  [res f]
+  (if (<= 200 (:status res) 299)
+    (let [tool-req     (cheshire/decode-stream (reader (:body res)) true)
+          username     (string/replace (:submitted_by tool-req) #"@.*" "")
+          user-details (get-user-details username)]
+      (f tool-req user-details))
+    res))
+
+(defn submit-tool-request
+  "Submits a tool request on behalf of the authenticated user."
+  [req]
+  (postprocess-tool-request
+   (forward-put (build-metadactyl-secured-url "tool-request") req)
+   (fn [tool-req user-details]
+     (send-tool-request-email tool-req user-details)
+     (dn/send-tool-request-notification tool-req user-details)
+     (success-response tool-req))))
+
+(defn list-tool-requests
+  "Lists the tool requests that were submitted by the authenticated user."
+  [req]
+  (forward-get
+   (build-metadactyl-secured-url-with-query (:params req) "tool-requests")
+   req))
+
+(defn update-tool-request
+  "Updates a tool request with comments and possibly a new status."
+  [req]
+  (postprocess-tool-request
+   (forward-post (build-metadactyl-unprotected-url "tool-request") req)
+   (fn [tool-req user-details]
+     (dn/send-tool-request-update-notification tool-req user-details)
+     (success-response tool-req))))
+
+(defn update-tool-request-secured
+  "Updates a tool request on behalf of the authenticated user."
+  [req]
+  (forward-post
+   (build-metadactyl-secured-url "tool-request")
+   req))
+
+(defn get-tool-request
+  "Lists details about a specific tool request."
+  [req uuid]
+  (forward-get
+   (build-metadactyl-unprotected-url "tool-request" uuid)
+   req))

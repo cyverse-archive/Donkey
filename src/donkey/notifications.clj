@@ -1,10 +1,11 @@
 (ns donkey.notifications
-  (:use [clojure.data.json :only [json-str read-json]]
-        [donkey.config :only
+  (:use [donkey.config :only
          [notificationagent-base-url metadactyl-unprotected-base-url]]
-        [donkey.service :only [build-url build-url-with-query]]
+        [donkey.service :only [build-url build-url-with-query decode-stream]]
         [donkey.transformers :only [add-current-user-to-map]])
-  (:require [clj-http.client :as client]
+  (:require [cheshire.core :as cheshire]
+            [clj-http.client :as client]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]))
 
 (defn- app-description-url
@@ -31,20 +32,20 @@
 (defn- add-app-details-to-messages
   "Adds application details to a list of messages."
   [msgs]
-  (map #(add-app-details-to-message %) msgs))
+  (map add-app-details-to-message msgs))
 
 (defn- add-app-details-to-map
   "Adds application details to a map."
   [m]
-  (assoc m :messages (add-app-details-to-messages (:messages m))))
+  (update-in m [:messages] add-app-details-to-messages))
 
 (defn add-app-details
   "Adds application details to notifications in a response from the
    notification agent."
   [res]
-  (let [m (read-json (slurp (:body res)))]
+  (let [m (decode-stream (:body res))]
     (log/debug "adding app details to notifications:" m)
-    (json-str (add-app-details-to-map m))))
+    (cheshire/encode (add-app-details-to-map m))))
 
 (defn notificationagent-url
   "Builds a URL that can be used to connect to the notification agent."
@@ -57,9 +58,10 @@
 (defn send-notification
   "Sends a notification to a user."
   [m]
-  (client/post (notificationagent-url "notification")
-               {:content-type :json
-                :body (json-str m)}))
+  (let [res (client/post (notificationagent-url "notification")
+                         {:content-type :json
+                          :body (cheshire/encode m)})]
+    res))
 
 (defn send-tool-notification
   "Sends notification of tool deployment to a user if notification information
@@ -81,3 +83,39 @@
                                       :toolversion (:version m)}})
         (catch Exception e
           (log/warn e "unable to send tool deployment notification for" m))))))
+
+(defn send-tool-request-notification
+  "Sends notification of a successful tool request submission to the user."
+  [tool-req user-details]
+  (let [this-update (last (:history tool-req))
+        comments    (:comments this-update)]
+    (try
+      (send-notification {:type    "tool_request"
+                          :user    (:username user-details)
+                          :subject (str "Tool Request Submitted")
+                          :email   false
+                          :payload (assoc tool-req
+                                     :email_address (:email user-details)
+                                     :toolname      (:name tool-req)
+                                     :comments      comments)})
+      (catch Exception e
+        (log/warn e "unable to send tool request submission notification for" tool-req)))))
+
+(defn send-tool-request-update-notification
+  "Sends notification of a tool request status change to the user."
+  [tool-req user-details]
+  (let [this-update (last (:history tool-req))
+        status      (:status this-update)
+        comments    (:comments this-update)]
+    (try
+      (send-notification {:type           "tool_request"
+                          :user           (:username user-details)
+                          :subject        (str "Tool Request Status Changed to " status)
+                          :email          true
+                          :email_template (str "tool_request_" (string/lower-case status))
+                          :payload        (assoc tool-req
+                                            :email_address (:email user-details)
+                                            :toolname      (:name tool-req)
+                                            :comments      comments)})
+      (catch Exception e
+        (log/warn e "unable to send tool request update notification for" tool-req)))))

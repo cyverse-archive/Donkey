@@ -1,14 +1,14 @@
 (ns donkey.sharing
-  (:use [clojure.data.json :only [json-str read-json]]
-        [clojure.walk]
+  (:use [clojure.walk]
         [clojure.string :only [join]]
         [slingshot.slingshot :only [try+]]
         [clojure-commons.file-utils :only [basename]]
         [donkey.config :only [nibblonian-base-url]]
-        [donkey.service :only [build-url]]
+        [donkey.service :only [build-url decode-stream]]
         [donkey.transformers :only [add-current-user-to-url]]
         [donkey.user-attributes])
-  (:require [clojure.tools.logging :as log]
+  (:require [cheshire.core :as cheshire]
+            [clojure.tools.logging :as log]
             [clj-http.client :as client]
             [donkey.notifications :as dn]))
 
@@ -27,9 +27,7 @@
 (defn- path-list->file-list
   "Returns a string that joins the given path list by commas."
   [path-list]
-  (->> path-list
-    (map #(basename %))
-    (join ", ")))
+  (join ", " (map basename path-list)))
 
 (defn- build-nibblonian-share-req
   "Builds a Nibblonian request object from a username and a client share
@@ -48,7 +46,7 @@
 (defn- foward-nibblonian-share
   "Forwards a Nibblonian share request."
   [user share]
-  (let [body (json-str (build-nibblonian-share-req user share))]
+  (let [body (cheshire/encode (build-nibblonian-share-req user share))]
     (log/debug "foward-nibblonian-share: " body)
     (try+
       (client/post (nibblonian-url "share")
@@ -59,13 +57,13 @@
       (catch map? e
         (log/error "nibblonian error: " e)
         (merge {:success false,
-                :error (read-json (:body e))}
+                :error (cheshire/decode (:body e) true)}
                share)))))
 
 (defn- foward-nibblonian-unshare
   "Forwards a Nibblonian unshare request."
   [user path]
-  (let [body (json-str (build-nibblonian-unshare-req user path))]
+  (let [body (cheshire/encode (build-nibblonian-unshare-req user path))]
     (log/debug "foward-nibblonian-unshare: " body)
     (try+
       (client/post (nibblonian-url "unshare")
@@ -77,7 +75,7 @@
       (catch map? e
         (log/error "nibblonian error: " e)
         {:success false,
-         :error (read-json (:body e))
+         :error (cheshire/decode (:body e) true)
          :path path}))))
 
 (defn- send-sharing-notification
@@ -195,8 +193,8 @@
   (let [user (:user share)
         paths (:paths share)
         user_share_results (map #(foward-nibblonian-share user %) paths)
-        successful_shares (filter #(:success %) user_share_results)
-        unsuccessful_shares (remove #(:success %) user_share_results)]
+        successful_shares (filter :success user_share_results)
+        unsuccessful_shares (remove :success user_share_results)]
     (when (seq successful_shares)
       (send-share-notifications user successful_shares))
     (when (seq unsuccessful_shares)
@@ -211,8 +209,8 @@
   (let [user (:user unshare)
         paths (:paths unshare)
         unshare_results (map #(foward-nibblonian-unshare user %) paths)
-        successful_unshares (filter #(:success %) unshare_results)
-        unsuccessful_unshares (remove #(:success %) unshare_results)]
+        successful_unshares (filter :success unshare_results)
+        unsuccessful_unshares (remove :success unshare_results)]
     (when (seq successful_unshares)
       (send-unshare-notifications user successful_unshares))
     (when (seq unsuccessful_unshares)
@@ -223,16 +221,16 @@
   "Parses a batch share request, forwarding each user-share request to
    Nibblonian."
   [req]
-  (let [sharing (read-json (slurp (:body req)))]
-    (walk #(share-with-user %)
-          #(json-str {:sharing %})
+  (let [sharing (decode-stream (:body req))]
+    (walk share-with-user
+          #(cheshire/encode {:sharing %})
           (:sharing sharing))))
 
 (defn unshare
   "Parses a batch unshare request, forwarding each user-unshare request to
    Nibblonian."
   [req]
-  (let [unshare (read-json (slurp (:body req)))]
-    (walk #(unshare-with-user %)
-          #(json-str {:unshare %})
+  (let [unshare (decode-stream (:body req))]
+    (walk unshare-with-user
+          #(cheshire/encode {:unshare %})
           (:unshare unshare))))

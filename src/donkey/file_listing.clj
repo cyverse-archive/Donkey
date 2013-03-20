@@ -1,12 +1,12 @@
 (ns donkey.file-listing
-  (:use [clojure.data.json :only [json-str read-json]]
-        [donkey.config]
+  (:use [donkey.config]
         [donkey.service
-         :only [build-url-with-query required-param success-response]]
+         :only [decode-stream build-url-with-query required-param success-response]]
         [donkey.transformers :only [add-current-user-to-map]]
         [donkey.user-prefs :only [user-prefs]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clj-http.client :as client]
+  (:require [cheshire.core :as cheshire]
+            [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]))
 
@@ -42,7 +42,7 @@
   "Forwards a POST request to Nibblonian."
   [query body-map f & components]
   (let [url (apply nibblonian-url query components)
-        res (client/post url {:body             (json-str body-map)
+        res (client/post url {:body             (cheshire/encode body-map)
                               :content-type     :json
                               :throw-exceptions false})]
     (handle-nibblonian-resp res f)))
@@ -50,14 +50,14 @@
 (defn- home-dir
   "Determines the home folder for the current user."
   []
-  (nibblonian-get {} #(:body %) "home"))
+  (nibblonian-get {} :body "home"))
 
 (defn- create
   "Creates a directory."
   [path]
   (let [query {}
         body  {:path path}
-        f     #(:path (read-json (:body %)))]
+        f     #(:path (cheshire/decode (:body %) true))]
     (nibblonian-post query body f "directory" "create")))
 
 (defn- exists?
@@ -65,7 +65,7 @@
   [path]
   (let [query {}
         body  {:paths [path]}
-        f     #(get-in (read-json (:body %)) [:paths (keyword path)])]
+        f     #(get-in (cheshire/decode (:body %) true) [:paths (keyword path)])]
     (nibblonian-post query body f "exists")))
 
 (defn- stat
@@ -74,15 +74,15 @@
   (when (exists? path)
     (let [query {}
           body  {:paths [path]}
-          f     #(get-in (read-json (:body %)) [:paths (keyword path)])]
+          f     #(get-in (cheshire/decode (:body %) true) [:paths (keyword path)])]
       (nibblonian-post query body f "stat"))))
 
 (defn- save-default-output-dir
   "Saves the path to the user's default output folder in the user's prefs."
   [path]
   (user-prefs
-   (json-str (assoc (read-json (user-prefs))
-               :defaultOutputFolder path))))
+   (cheshire/encode (assoc (cheshire/decode (user-prefs) true)
+                      :defaultOutputFolder path))))
 
 (defn- get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
@@ -120,9 +120,9 @@
 (defn get-default-output-dir
   "Determines whether or not the default directory name exists for a user."
   [dirname]
-  (let [prefs (read-json (user-prefs))
+  (let [prefs (cheshire/decode (user-prefs) true)
         path  (:defaultOutputFolder prefs)]
-    (if (not (string/blank? path))
+    (if-not (string/blank? path)
       (success-response {:path (validate-output-dir path)})
       (let [base  (build-path (home-dir) dirname)]
         (success-response {:path (generate-output-dir base)})))))
@@ -130,6 +130,6 @@
 (defn reset-default-output-dir
   "Resets the default output directory for a user."
   [body]
-  (let [path (required-param (read-json (slurp body)) :path)]
+  (let [path (required-param (decode-stream body) :path)]
     (success-response
      {:path (generate-output-dir (build-path (home-dir) path))})))
