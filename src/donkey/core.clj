@@ -122,6 +122,9 @@
   (GET "/edit-template/:app-id" [app-id :as req]
        (trap #(edit-app req app-id)))
 
+  (GET "/edit-workflow/:app-id" [app-id :as req]
+       (trap #(edit-workflow req app-id)))
+
   (GET "/copy-template/:app-id" [app-id :as req]
        (trap #(copy-app req app-id)))
 
