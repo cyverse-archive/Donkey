@@ -9,10 +9,7 @@ known property types, you can access the URL,
 `/get-workflow-elements/property-types`. On the other hand, all examples use
 fully qualified URLs.
 
-Request and response bodies are in JSON format unless otherwise noted. To avoid
-confusion between the braces used to denote JSON objects and the braces used to
-denote example values, example values in JSON bodies are not enclosed in braces,
-but instead listed as hyphen-separated names without enclosing quotes.
+Request and response bodies are in JSON format unless otherwise noted.
 
 * [Miscellaneous Endpoints](endpoints/misc.md)
 * [App Metadata Endpoints](endpoints/app-metadata.md)
