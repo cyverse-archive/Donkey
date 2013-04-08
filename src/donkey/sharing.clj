@@ -80,13 +80,15 @@
 
 (defn- send-sharing-notification
   "Sends an (un)sharing notification."
-  [user subject message error-message]
+  [user subject message action path-list error-message]
   (log/debug "sending sharing notification to" user ":" subject)
   (try
     (dn/send-notification {:type "data"
                            :user user
                            :subject subject
-                           :message message})
+                           :message message
+                           :payload {:action action
+                                     :paths path-list}})
     (catch Exception e
       (log/warn e error-message))))
 
@@ -118,11 +120,15 @@
       sharer
       sharer-summary
       sharer-notification
+      "share"
+      path-list
       (str "unable to send share notification to " sharer " for " sharee))
     (send-sharing-notification
       sharee
       sharee-summary
       sharee-notification
+      "share"
+      path-list
       (str "unable to send share notification from " sharer " to " sharee))))
 
 (defn- send-share-err-notification
@@ -143,6 +149,8 @@
       (:shortUsername current-user)
       subject
       notification
+      "share"
+      path-list
       (str "unable to send share error notification for " sharee))))
 
 (defn- send-unshare-notifications
@@ -163,6 +171,8 @@
       (:shortUsername current-user)
       subject
       notification
+      "unshare"
+      path-list
       (str "unable to send unshare notification for " unsharee))))
 
 (defn- send-unshare-err-notification
@@ -183,6 +193,8 @@
       (:shortUsername current-user)
       subject
       notification
+      "unshare"
+      path-list
       (str "unable to send unshare error notification for " unsharee))))
 
 (defn- share-with-user
