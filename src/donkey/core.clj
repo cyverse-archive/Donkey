@@ -128,6 +128,9 @@
   (GET "/copy-template/:app-id" [app-id :as req]
        (trap #(copy-app req app-id)))
 
+  (GET "/copy-workflow/:app-id" [app-id :as req]
+       (trap #(copy-workflow req app-id)))
+
   (PUT "/update-template" [:as req]
        (trap #(update-template-secured req)))
 

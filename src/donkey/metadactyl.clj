@@ -396,6 +396,12 @@
   (let [url (build-metadactyl-secured-url "copy-template" app-id)]
     (forward-get url req)))
 
+(defn copy-workflow
+  "This service makes a copy of a workflow available for editing in the client."
+  [req app-id]
+  (let [url (build-metadactyl-secured-url "copy-workflow" app-id)]
+    (forward-get url req)))
+
 (defn update-template-secured
   "This service will import an app into or update an app in the DE."
   [req]
