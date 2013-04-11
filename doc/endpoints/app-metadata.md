@@ -392,6 +392,13 @@ Secured Endpoint: POST /secured/make-analysis-public
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
+## Making a Pipeline Available for Editing
+
+Secured Endpoint: GET /secured/edit-workflow/{analysis-id}
+
+This endpoint is a passthrough to the metadactyl endpoint using the same
+path. Please see the metadactyl documentation for more information.
+
 ## Requesting Installation of a Tool
 
 Secured Endpoint: PUT /secured/tool-request
