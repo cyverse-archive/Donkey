@@ -420,3 +420,11 @@ Unsecured Endpoint: POST /send-notification.
 
 This endpoint is a passthrough to the notification agent's `/notification`
 endpoint. Please see the notification agent documentation for more details.
+
+## Endpoints for System Messages (a.k.a. System Notifications)
+
+The endpoints for the system messages are straight pass throughs to the
+corresponding calls in the Notification Agent. The only difference is that
+the endpoints in Donkey are prefixed with /notifications and that endpoints
+that require the 'user' query string parameter instead take the 'proxyToken'
+parameter and its corresponding ticket string.
