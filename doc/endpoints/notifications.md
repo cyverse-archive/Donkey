@@ -425,6 +425,58 @@ endpoint. Please see the notification agent documentation for more details.
 
 The endpoints for the system messages are straight pass throughs to the
 corresponding calls in the Notification Agent. The only difference is that
-the endpoints in Donkey are prefixed with /notifications and that endpoints
-that require the 'user' query string parameter instead take the 'proxyToken'
+the endpoints in Donkey are prefixed with __/secured/notifications__ and that endpoints
+that require the __user__ query string parameter instead take the __proxyToken__
 parameter and its corresponding ticket string.
+
+<table>
+    <thead>
+        <tr><th>Donkey Endpoint</th><th>Notification Agent Endpoint</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>/secured/notifications/system/messages</td>
+            <td>/system/messages</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/system/unseen-messages</td>
+            <td>/system/unseen-messages</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/system/seen</td>
+            <td>/system/seen</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/system/mark-all-seen</td>
+            <td>/system/mark-all-seen</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/system/delete</td>
+            <td>/system/delete</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/system/delete-all</td>
+            <td>/system/delete-all</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/admin/system</td>
+            <td>/admin/system</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/admin/system/:uuid</td>
+            <td>/admin/system/:uuid</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/admin/system/:uuid</td>
+            <td>/admin/system/:uuid</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/admin/system/:uuid</td>
+            <td>/admin/system/:uuid</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/admin/system-types</td>
+            <td>/admin/system-types</td>
+        </tr>
+    </tbody>
+</table>
