@@ -90,7 +90,7 @@
         (trap #(mark-system-messages-seen req)))
   
   (POST "/notifications/system/mark-all-seen" [:as req]
-        (trap #(mark-system-messages-seen req)))
+        (trap #(mark-all-system-messages-seen req)))
   
   (POST "/notifications/system/delete" [:as req]
         (trap #(delete-system-messages req)))

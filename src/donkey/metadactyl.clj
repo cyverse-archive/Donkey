@@ -20,9 +20,9 @@
          (add-current-user-to-map {}) components))
 
 (defn- secured-notification-url
-  [& components]
-  (apply build-url-with-query (dn/notificationagent-url)
-         (add-current-user-to-map {}) components))
+  [req & components]
+  (apply build-url-with-query (notificationagent-base-url)
+         (add-current-user-to-map (:params req)) components))
 
 (defn- build-metadactyl-secured-url-with-query
   "Adds the name and email of the currently authenticated user to the secured
@@ -312,63 +312,62 @@
   "This service forwards a notification to the notification agent's endpoint
    for retrieving system messages."
   [req]
-  (let [url (dn/notificationagent-url "system/messages" (:params req))]
-    (forward-get url req)))
+  (forward-get (secured-notification-url req "system" "messages") req))
 
 (defn get-unseen-system-messages
   "Forwards a request to the notification agent's endpoint for getting
    unseen system messages."
   [req]
-  (forward-get (secured-notification-url "system/unseen-messages") req))
+  (forward-get (secured-notification-url req "system" "unseen-messages") req))
 
 (defn mark-system-messages-seen
   "Forwards a request to the notification to mark a set of system notifications
    as seen."
   [req]
-  (forward-post (secured-notification-url "system/seen") req))
+  (forward-post (secured-notification-url req "system" "seen") req))
 
 (defn mark-all-system-messages-seen
   "Forwards a request to the notification-agent to mark all system notifications as seen."
   [req]
-  (forward-post (secured-notification-url "system/mark-all-seen") req))
+  (forward-post (secured-notification-url req "system" "mark-all-seen") req))
 
 (defn delete-system-messages
   "Forwards a request to the notification-agent to soft-delete a set of system messages."
   [req]
-  (forward-post (secured-notification-url "system/delete") req))
+  (forward-post (secured-notification-url req "system" "delete") req))
 
 (defn delete-all-system-messages
   "Forwards a request to to the notification-agent to soft-delete all system messages for a
    set of users."
   [req]
-  (forward-delete (secured-notification-url "system/delete-all") req))
+  (forward-delete (secured-notification-url req "system" "delete-all") req))
 
 (defn admin-add-system-message
   "Forwards a request to the notification-agent to allow an admin to add a new system
    message."
   [req]
-  (forward-put (secured-notification-url "admin/system") req))
+  (forward-put (secured-notification-url req "admin" "system") req))
 
 (defn admin-list-system-types
   "Forwards a request to the notification-agent to allow an admin to list the current
    list of system notification types."
   [req]
-  (forward-get (secured-notification-url "admin/system-types")))
+  (forward-get (secured-notification-url req "admin" "system-types") req))
 
 (defn admin-get-system-message
   "Forwards a request to the notification-agent to get a system notification for an admin."
   [req uuid]
-  (forward-get (secured-notification-url "admin/system" uuid) req))
+  (forward-get (secured-notification-url req "admin" "system" uuid) req))
 
 (defn admin-update-system-message
   "Forwards a request to the notification-agent to update a system notification for an admin."
   [req uuid]
-  (forward-post (secured-notification-url "admin/system" uuid) req))
+  (forward-post (secured-notification-url req "admin" "system" uuid) req))
 
 (defn admin-delete-system-message
   "Forwards a request to the notification-agent to delete a system notification for an admin."
   [req uuid]
-  (forward-delete (secured-notification-url "admin/system" uuid) req))
+  (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
 (defn run-experiment
   "This service accepts a job submission from a user then reformats it and
