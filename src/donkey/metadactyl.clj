@@ -225,6 +225,13 @@
   (let [url (build-unprotected-url-with-query req "force-update-workflow")]
     (forward-post url req)))
 
+(defn update-app-labels
+  "This service updates the labels in a single-step app. Both vetted and unvetted apps can be
+   modified using this service."
+  [req]
+  (let [url (build-unprotected-url-with-query req "update-app-labels")]
+    (forward-post url req)))
+
 (defn delete-workflow
   "This service will logically remove a workflow from the DE."
   [req]

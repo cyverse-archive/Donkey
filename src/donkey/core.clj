@@ -79,37 +79,37 @@
 
   (POST "/notifications/mark-all-seen" [:as req]
         (trap #(mark-all-notifications-seen req)))
-  
+
   (GET "/notifications/system/messages" [:as req]
        (trap #(get-system-messages req)))
-  
+
   (GET "/notifications/system/unseen-messages" [:as req]
        (trap #(get-unseen-system-messages req)))
-  
+
   (POST "/notifications/system/seen" [:as req]
         (trap #(mark-system-messages-seen req)))
-  
+
   (POST "/notifications/system/mark-all-seen" [:as req]
         (trap #(mark-all-system-messages-seen req)))
-  
+
   (POST "/notifications/system/delete" [:as req]
         (trap #(delete-system-messages req)))
-  
+
   (DELETE "/notifications/system/delete-all" [:as req]
           (trap #(delete-all-system-messages req)))
-  
+
   (PUT "/notifications/admin/system" [:as req]
        (trap #(admin-add-system-message req)))
-  
+
   (GET "/notifications/admin/system/:uuid" [uuid :as req]
        (trap #(admin-get-system-message req uuid)))
-  
+
   (POST "/notifications/admin/system/:uuid" [uuid :as req]
         (trap #(admin-update-system-message req uuid)))
-  
+
   (DELETE "/notifications/admin/system/:uuid" [uuid :as req]
           (trap #(admin-delete-system-message req uuid)))
-  
+
   (GET "/notifications/admin/system-types" [:as req]
        (trap #(admin-list-system-types req)))
 
@@ -323,6 +323,9 @@
 
   (POST "/update-workflow" [:as req]
         (trap #(update-workflow req)))
+
+  (POST "/update-app-labels" [:as req]
+        (trap #(update-app-labels req)))
 
   (POST "/import-template" [:as req]
         (trap #(import-template req)))

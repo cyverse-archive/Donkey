@@ -168,6 +168,13 @@ Unsecured Endpoint: POST /force-update-workflow
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
+## Updating App Labels
+
+Unsecured Endpoint: POST /update-app-labels
+
+This endpoint is a passthrough to the metadactyl endpoint using the same
+path. Please see the metadactyl documentation for more information.
+
 ## Importing a Template
 
 Unsecured Endpoint: POST /import-template
