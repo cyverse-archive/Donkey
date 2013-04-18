@@ -127,6 +127,13 @@
   (let [url (build-metadactyl-secured-url "template" app-id)]
     (forward-get url req)))
 
+(defn get-app-new-format
+  "This service gets an app in the format required by the DE as of version 1.8."
+  [req app-id]
+  (forward-get
+   (build-metadactyl-secured-url "template" app-id)
+   req))
+
 (defn get-only-analysis-groups
   "Retrieves the list of public analyses."
   [req workspace-id]

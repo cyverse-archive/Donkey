@@ -116,6 +116,9 @@
   (GET "/template/:app-id" [app-id :as req]
        (trap #(get-app-secured req app-id)))
 
+  (GET "/app/:app-id" [app-id :as req]
+       (trap #(get-app-new-format req app-id)))
+
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as req]
        (trap #(run-experiment req workspace-id)))
 
