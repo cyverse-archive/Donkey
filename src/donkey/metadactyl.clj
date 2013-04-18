@@ -471,6 +471,15 @@
   (let [url (build-metadactyl-secured-url "edit-template" app-id)]
     (forward-get url req)))
 
+(defn edit-app-new-format
+  "This service makes an app available in Tito for editing and returns a
+   representation of the app in the JSON format required by the DE as of
+   version 1.8."
+  [req app-id]
+  (forward-get
+   (build-metadactyl-secured-url "edit-app" app-id)
+   req))
+
 (defn edit-workflow
   "This service makes a workflow available for editing in the client."
   [req app-id]
