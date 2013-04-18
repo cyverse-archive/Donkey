@@ -149,6 +149,13 @@
   (let [url (build-metadactyl-unprotected-url "export-template" template-id)]
     (forward-get url req)))
 
+(defn export-app
+  "This service will export the single-step app with the given identifier."
+  [req app-id]
+  (forward-get
+   (build-metadactyl-unprotected-url "export-app" app-id)
+   req))
+
 (defn export-workflow
   "This service will export a workflow with the given identifier."
   [req app-id]
@@ -479,6 +486,12 @@
   "This service will import an app into or update an app in the DE."
   [req]
   (let [url (build-metadactyl-secured-url "update-template")]
+    (forward-put url req)))
+
+(defn update-app-secured
+  "This service will import a single-step app into or update an existing app in the DE."
+  [req]
+  (let [url (build-metadactyl-secured-url "update-app")]
     (forward-put url req)))
 
 (defn make-app-public

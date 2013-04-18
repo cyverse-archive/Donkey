@@ -167,6 +167,9 @@
   (PUT "/update-template" [:as req]
        (trap #(update-template-secured req)))
 
+  (PUT "/update-app" [:as req]
+       (trap #(update-app-secured req)))
+
   (POST "/make-analysis-public" [:as req]
         (trap #(make-app-public req)))
 
@@ -296,6 +299,9 @@
 
   (GET "/export-template/:template-id" [template-id :as req]
        (trap #(export-template req template-id)))
+
+  (GET "/export-app/:app-id" [app-id :as req]
+       (trap #(export-app req app-id)))
 
   (GET "/export-workflow/:app-id" [app-id :as req]
        (trap #(export-workflow req app-id)))
