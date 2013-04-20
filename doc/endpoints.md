@@ -13,6 +13,7 @@ Request and response bodies are in JSON format unless otherwise noted.
 
 * [Miscellaneous Endpoints](endpoints/misc.md)
 * [App Metadata Endpoints](endpoints/app-metadata.md)
+* [Updated App Metadata Endpoints](endpoints/updated-app-metadata.md)
 * [App Execution Endpoints](endpoints/app-execution.md)
 * [Phylogenetic Tree Rendering Endpoints](endpoints/tree-viewing.md)
 * [Notification Endpoints](endpoints/notifications.md)

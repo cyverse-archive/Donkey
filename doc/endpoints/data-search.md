@@ -1,3 +1,12 @@
+# Table of Contents
+
+* [Searching User Data](#searching-user-data)
+    * [Endpoints](#endpoints)
+    * [Search Request](#search-request)
+    * [Response Body](#response-body)
+        * [Successful Response](#successful-response)
+        * [Failed Response](#failed-response)
+
 # Searching User Data
 
 Donkey provides a search endpoint that allow callers to search the data by name.

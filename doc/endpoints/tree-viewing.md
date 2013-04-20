@@ -1,3 +1,9 @@
+# Table of Contents
+
+* [Phylogenetic Tree Rendering Endpoints](#phylogenetic-tree-rendering-endpoints)
+    * [Obtaining Tree Viewer URLs for a POST Body](#obtaining-tree-viewer-urls-for-a-post-body)
+    * [Obtaining Tree Viewer URLs](#obtaining-tree-viewer-urls)
+
 # Phylogenetic Tree Rendering Endpoints
 
 ## Obtaining Tree Viewer URLs for a POST Body

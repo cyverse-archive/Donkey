@@ -1,3 +1,21 @@
+# Table of Contents
+
+* [Miscellaneous Donkey Endpoints](#miscellaneous-donkey-endpoints)
+    * [Verifying that Donkey is Running](#verifying-that-donkey-is-running)
+    * [Initializing a User's Workspace](#initializing-a-users-workspace)
+    * [Saving User Session Data](#saving-user-session-data)
+    * [Retrieving User Session Data](#retrieving-user-session-data)
+    * [Removing User Seession Data](#removing-user-seession-data)
+    * [Saving User Preferences](#saving-user-preferences)
+    * [Retrieving User Preferences](#retrieving-user-preferences)
+    * [Removing User Preferences](#removing-user-preferences)
+    * [Saving User Search History](#saving-user-search-history)
+    * [Retrieving User Search History](#retrieving-user-search-history)
+    * [Deleting User Search History](#deleting-user-search-history)
+    * [Determining a User's Default Output Directory](#determining-a-users-default-output-directory)
+    * [Resetting a user's default output directory.](#resetting-a-users-default-output-directory.)
+    * [Obtaining Identifiers](#obtaining-identifiers)
+
 # Miscellaneous Donkey Endpoints
 
 ## Verifying that Donkey is Running

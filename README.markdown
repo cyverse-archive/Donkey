@@ -15,6 +15,7 @@ inside Donkey instead.  The Mule services no longer exist.
 * [Endpoints](doc/endpoints.md)
     * [Miscellaneous Endpoints](doc/endpoints/misc.md)
     * [App Metadata Endpoints](doc/endpoints/app-metadata.md)
+    * [Updated App Metadata Endpoints](doc/endpoints/updated-app-metadata.md)
     * [App Execution Endpoints](doc/endpoints/app-execution.md)
     * [Phylogenetic Tree Rendering Endpoints](doc/endpoints/tree-viewing.md)
     * [Notification Endpoints](doc/endpoints/notifications.md)

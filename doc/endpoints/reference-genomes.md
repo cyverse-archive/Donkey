@@ -1,3 +1,9 @@
+# Table of Contents
+
+* [Reference Genome endpoints](#reference-genome-endpoints)
+    * [Exporting Reference Genomes](#exporting-reference-genomes)
+    * [Importing Reference Genomes](#importing-reference-genomes)
+
 # Reference Genome endpoints
 
 ## Exporting Reference Genomes

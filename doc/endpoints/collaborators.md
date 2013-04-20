@@ -1,3 +1,12 @@
+# Table of Contents
+
+* [Collaborator List Management Endpoints](#collaborator-list-management-endpoints)
+    * [Listing Collaborators](#listing-collaborators)
+    * [Adding Collaborators](#adding-collaborators)
+    * [Removing Collaborators](#removing-collaborators)
+    * [Searching for Users](#searching-for-users)
+    * [Obtaining User Info](#obtaining-user-info)
+
 # Collaborator List Management Endpoints
 
 ## Listing Collaborators

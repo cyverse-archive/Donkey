@@ -1,3 +1,17 @@
+# Table of Contents
+
+* [Notification Endpoints](#notification-endpoints)
+    * [Obtaining Notifications](#obtaining-notifications)
+    * [Obtaining Notification Counts](#obtaining-notification-counts)
+    * [Obtaining Unseen Notifications](#obtaining-unseen-notifications)
+    * [Obtaining the Ten Most Recent Notifications](#obtaining-the-ten-most-recent-notifications)
+    * [Marking Notifications as Seen](#marking-notifications-as-seen)
+    * [Marking All Notifications as Seen](#marking-all-notifications-as-seen)
+    * [Marking Notifications as Deleted](#marking-notifications-as-deleted)
+    * [Marking All Notifications as Deleted](#marking-all-notifications-as-deleted)
+    * [Sending an Arbitrary Notification](#sending-an-arbitrary-notification)
+    * [Endpoints for System Messages (a.k.a. System Notifications)](#endpoints-for-system-messages-(a.k.a.-system-notifications))
+
 # Notification Endpoints
 
 ## Obtaining Notifications
