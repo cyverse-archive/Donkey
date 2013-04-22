@@ -357,6 +357,9 @@
   (GET "/analysis-rerun-info/:job-id" [job-id :as req]
        (trap #(get-app-rerun-info req job-id)))
 
+  (GET "/app-rerun-info/:job-id" [job-id :as req]
+       (trap #(get-new-app-rerun-info req job-id)))
+
   (POST "/send-notification" [:as req]
         (trap #(send-notification req)))
 
