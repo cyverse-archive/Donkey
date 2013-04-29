@@ -638,3 +638,10 @@
   (forward-get
    (build-metadactyl-unprotected-url "tool-request" uuid)
    req))
+
+(defn preview-args
+  "Previews the command-line arguments for a job request."
+  [req]
+  (forward-post
+   (build-metadactyl-unprotected-url "arg-preview")
+   req))

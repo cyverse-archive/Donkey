@@ -375,6 +375,9 @@
   (GET "/tool-request/:uuid" [uuid :as req]
        (trap #(get-tool-request req uuid)))
 
+  (POST "/arg-preview" [:as req]
+        (trap #(preview-args req)))
+
   (context "/secured" []
            (store-current-user secured-routes config/cas-server config/server-name))
 
