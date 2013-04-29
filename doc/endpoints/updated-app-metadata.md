@@ -5,6 +5,7 @@
     * [Exporting a Single-Step App](#exporting-a-single-step-app)
     * [Obtaining an App Representation for Editing](#obtaining-an-app-representation-for-editing)
     * [Obtaining App Information for Job Submission](#obtaining-app-information-for-job-submission)
+    * [Previewing Command Line Arguments](#previewing-command-line-arguments)
 
 # Updated Application Metadata Endpoints
 
@@ -32,6 +33,13 @@ path. Please see the metadactyl documentation for more information.
 ## Obtaining App Information for Job Submission
 
 *Secured Endpoint:* GET /secured/app/{app-id}
+
+This endpoint is a passthrough to the metadactyl endpoint using the same
+path. Please see the metadactyl documentation for more information.
+
+## Previewing Command Line Arguments
+
+*Unsecured Endpoint:* POST /arg-preview
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
