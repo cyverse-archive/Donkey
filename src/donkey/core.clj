@@ -7,6 +7,7 @@
         [donkey.buggalo]
         [donkey.file-listing]
         [donkey.metadactyl]
+        [donkey.parsely]
         [donkey.service]
         [donkey.sharing]
         [donkey.user-attributes]
@@ -254,6 +255,9 @@
 
   (GET "/tool-requests" [:as req]
        (trap #(list-tool-requests req)))
+  
+  (GET "/triples" [:as req]
+       (trap #(triples req (:params req))))
 
   (route/not-found (unrecognized-path-response)))
 
@@ -377,6 +381,9 @@
 
   (POST "/arg-preview" [:as req]
         (trap #(preview-args req)))
+  
+  (GET "/triples" [:as req]
+       (trap #(triples req (:params req))))
 
   (context "/secured" []
            (store-current-user secured-routes config/cas-server config/server-name))

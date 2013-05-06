@@ -144,6 +144,11 @@
   [props config-valid configs]
   "donkey.infosquito.es-url")
 
+(cc/defprop-str parsely-url
+  "The base URL for interacting with parsely."
+  [props config-valid configs]
+  "donkey.parsely.base-url")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []
