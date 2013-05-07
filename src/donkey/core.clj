@@ -271,6 +271,9 @@
   
   (POST "/parsely/type" [:as req]
         (trap #(parsely/add-type req (:params req))))
+  
+  (GET "/parsely/type/paths" [:as req]
+       (trap #(parsely/find-typed-paths req (:params req))))
 
   (route/not-found (unrecognized-path-response)))
 

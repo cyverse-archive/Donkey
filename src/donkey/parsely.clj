@@ -23,3 +23,8 @@
   (svc/forward-get
     (secured-parsely-url req params "type") req))
 
+(defn find-typed-paths
+  [req params]
+  (svc/forward-get
+    (secured-parsely-url req params "type" "paths") req))
+
