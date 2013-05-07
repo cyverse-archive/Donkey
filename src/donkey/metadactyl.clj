@@ -645,3 +645,9 @@
   (forward-post
    (build-metadactyl-unprotected-url "arg-preview")
    req))
+
+(defn provide-user-feedback
+  "Forwards feedback from the user to iPlant."
+  [body]
+  (send-feedback-email (cheshire/decode-stream (reader body)))
+  (success-response))

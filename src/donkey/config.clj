@@ -40,6 +40,11 @@
   [props config-valid configs]
   "donkey.email.tool-request-src")
 
+(cc/defprop-str feedback-dest-addr
+  "The destination email address for DE feedback messages."
+  [props config-valid configs]
+  "donkey.email.feedback-dest")
+
 (cc/defprop-str metadactyl-base-url
   "The base URL to use when connecting to secured Metadactyl services."
   [props config-valid configs]

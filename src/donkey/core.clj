@@ -255,9 +255,12 @@
 
   (GET "/tool-requests" [:as req]
        (trap #(list-tool-requests req)))
-  
+
   (GET "/triples" [:as req]
        (trap #(triples req (:params req))))
+
+  (PUT "/feedback" [:as {body :body}]
+       (trap #(provide-user-feedback body)))
 
   (route/not-found (unrecognized-path-response)))
 
@@ -381,7 +384,7 @@
 
   (POST "/arg-preview" [:as req]
         (trap #(preview-args req)))
-  
+
   (GET "/triples" [:as req]
        (trap #(triples req (:params req))))
 
