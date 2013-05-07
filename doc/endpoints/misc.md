@@ -267,8 +267,42 @@ $ curl -sd '
 
 ## Obtaining Identifiers
 
-Unsecured Endpoint: /uuid
+Unsecured Endpoint: GET /uuid
 
 In some cases, it's difficult for the UI client code to generate UUIDs for
 objects that require them. This service returns a single UUID in the response
 body. The UUID is returned as a plain text string.
+
+## Submitting User Feedback
+
+Secured Endpoint: PUT /secured/feedback
+
+This endpoint submits feedback from the user to a configurable iPlant email
+address. The destination email address is stored in the configuration settting,
+`donkey.email.feedback-dest`. The request body is a simple JSON object with the
+question text in the keys and the answer or answers in the values. The answers
+can either be strings or lists of strings:
+
+```json
+{
+    "question 1": "question 1 answer 1",
+    "question 2": [
+        "question 2 answer 1",
+        "question 2 answer 2"
+    ]
+}
+```
+
+Here's an example:
+
+```
+$ curl -XPUT -s "http://by-tor:8888/secured/feedback?proxyToken=$(cas-ticket)" -d '
+{
+    "What is the circumference of the Earth?": "Roughly 25000 miles.",
+    "What are your favorite programming languages?": [ "Clojure", "Scala", "Perl" ]
+}
+' | python -mjson.tool
+{
+    "success": true
+}
+```
