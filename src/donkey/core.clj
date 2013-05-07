@@ -26,7 +26,8 @@
             [ring.adapter.jetty :as jetty]
             [donkey.config :as config]
             [donkey.jex :as jex]
-            [donkey.search :as search])
+            [donkey.search :as search]
+            [donkey.parsely :as parsely])
   (:import [java.util UUID]))
 
 (defn- trap
@@ -261,6 +262,15 @@
 
   (PUT "/feedback" [:as {body :body}]
        (trap #(provide-user-feedback body)))
+  
+  (GET "/parsely/triples" [:as req]
+       (trap #(parsely/triples req (:params req))))
+  
+  (GET "/parsely/type" [:as req]
+       (trap #(parsely/get-types req (:params req))))
+  
+  (POST "/parsely/type" [:as req]
+        (trap #(parsely/add-type req (:params req))))
 
   (route/not-found (unrecognized-path-response)))
 
@@ -384,9 +394,6 @@
 
   (POST "/arg-preview" [:as req]
         (trap #(preview-args req)))
-
-  (GET "/triples" [:as req]
-       (trap #(triples req (:params req))))
 
   (context "/secured" []
            (store-current-user secured-routes config/cas-server config/server-name))
