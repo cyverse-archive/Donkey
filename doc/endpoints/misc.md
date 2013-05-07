@@ -15,6 +15,7 @@
     * [Determining a User's Default Output Directory](#determining-a-users-default-output-directory)
     * [Resetting a user's default output directory.](#resetting-a-users-default-output-directory.)
     * [Obtaining Identifiers](#obtaining-identifiers)
+    * [Submitting User Feedback](#submitting-user-feedback)
 
 # Miscellaneous Donkey Endpoints
 
