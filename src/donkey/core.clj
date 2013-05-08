@@ -5,9 +5,10 @@
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.buggalo]
+        [donkey.data-routes]
         [donkey.file-listing]
         [donkey.metadactyl]
-        [donkey.parsely]
+        [donkey.notification-routes]
         [donkey.service]
         [donkey.sharing]
         [donkey.user-attributes]
@@ -26,8 +27,7 @@
             [ring.adapter.jetty :as jetty]
             [donkey.config :as config]
             [donkey.jex :as jex]
-            [donkey.search :as search]
-            [donkey.parsely :as parsely])
+            [donkey.search :as search])
   (:import [java.util UUID]))
 
 (def secured-routes
@@ -37,62 +37,7 @@
       (GET "/bootstrap" [:as req]
            (trap #(bootstrap req)))
 
-      (GET "/notifications/messages" [:as req]
-           (trap #(get-messages req)))
-
-      (GET "/notifications/unseen-messages" [:as req]
-           (trap #(get-unseen-messages req)))
-
-      (GET "/notifications/last-ten-messages" [:as req]
-           (trap #(last-ten-messages req)))
-
-      (GET "/notifications/count-messages" [:as req]
-           (trap #(count-messages req)))
-
-      (POST "/notifications/delete" [:as req]
-            (trap #(delete-notifications req)))
-
-      (DELETE "/notifications/delete-all" [:as {params :params}]
-              (trap #(delete-all-notifications params)))
-
-      (POST "/notifications/seen" [:as req]
-            (trap #(mark-notifications-as-seen req)))
-
-      (POST "/notifications/mark-all-seen" [:as req]
-            (trap #(mark-all-notifications-seen req)))
-
-      (GET "/notifications/system/messages" [:as req]
-           (trap #(get-system-messages req)))
-
-      (GET "/notifications/system/unseen-messages" [:as req]
-           (trap #(get-unseen-system-messages req)))
-
-      (POST "/notifications/system/seen" [:as req]
-            (trap #(mark-system-messages-seen req)))
-
-      (POST "/notifications/system/mark-all-seen" [:as req]
-            (trap #(mark-all-system-messages-seen req)))
-
-      (POST "/notifications/system/delete" [:as req]
-            (trap #(delete-system-messages req)))
-
-      (DELETE "/notifications/system/delete-all" [:as req]
-              (trap #(delete-all-system-messages req)))
-
-      (PUT "/notifications/admin/system" [:as req]
-           (trap #(admin-add-system-message req)))
-
-      (GET "/notifications/admin/system/:uuid" [uuid :as req]
-           (trap #(admin-get-system-message req uuid)))
-
-      (POST "/notifications/admin/system/:uuid" [uuid :as req]
-            (trap #(admin-update-system-message req uuid)))
-
-      (DELETE "/notifications/admin/system/:uuid" [uuid :as req]
-              (trap #(admin-delete-system-message req uuid)))
-
-      (GET "/notifications/admin/system-types" [:as req]
-           (trap #(admin-list-system-types req)))
+      (secured-notification-routes)
 
       (GET "/template/:app-id" [app-id :as req]
            (trap #(get-app-secured req app-id)))
@@ -202,12 +147,6 @@
       (POST "/remove-collaborators" [:as req]
             (trap #(remove-collaborators req)))
 
-      (POST "/share" [:as req]
-            (trap #(share req)))
-
-      (POST "/unshare" [:as req]
-            (trap #(unshare req)))
-
       (GET "/default-output-dir" [:as {params :params}]
            (trap #(get-default-output-dir (required-param params :name))))
 
@@ -236,23 +175,10 @@
       (GET "/tool-requests" [:as req]
            (trap #(list-tool-requests req)))
 
-      (GET "/triples" [:as req]
-           (trap #(triples req (:params req))))
-
       (PUT "/feedback" [:as {body :body}]
            (trap #(provide-user-feedback body)))
 
-      (GET "/parsely/triples" [:as req]
-           (trap #(parsely/triples req (:params req))))
-
-      (GET "/parsely/type" [:as req]
-           (trap #(parsely/get-types req (:params req))))
-
-      (POST "/parsely/type" [:as req]
-            (trap #(parsely/add-type req (:params req))))
-
-      (GET "/parsely/type/paths" [:as req]
-           (trap #(parsely/find-typed-paths req (:params req))))
+      (secured-data-routes)
 
       (route/not-found (unrecognized-path-response))))))
 
@@ -362,8 +288,7 @@
       (GET "/app-rerun-info/:job-id" [job-id :as req]
            (trap #(get-new-app-rerun-info req job-id)))
 
-      (POST "/send-notification" [:as req]
-            (trap #(send-notification req)))
+      (unsecured-notification-routes)
 
       (POST "/tree-viewer-urls" [:as {body :body}]
             (trap #(tree-viewer-urls-for body)))
