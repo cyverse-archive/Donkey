@@ -14,8 +14,8 @@
         [donkey.user-info]
         [donkey.user-sessions]
         [donkey.user-prefs]
-        [ring.middleware keyword-params]
-        [slingshot.slingshot :only [try+]])
+        [donkey.util]
+        [ring.middleware keyword-params])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.string :as string]
@@ -29,30 +29,6 @@
             [donkey.search :as search]
             [donkey.parsely :as parsely])
   (:import [java.util UUID]))
-
-(defn- trap
-  "Traps any exception thrown by a service and returns an appropriate
-   repsonse."
-  [f]
-  (try+
-   (f)
-   (catch [:type :error-status] {:keys [res]} res)
-   (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
-   (catch [:type :invalid-argument] {:keys [arg val reason]}
-     (invalid-arg-response arg val reason))
-   (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
-   (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
-   (catch ce/error? err (common-error-code &throw-context))
-   (catch IllegalArgumentException e (failure-response e))
-   (catch IllegalStateException e (failure-response e))
-   (catch Throwable t (error-response t))))
-
-(defn- as-vector
-  "Returns the given parameter inside a vector if it's not a vector already."
-  [p]
-  (cond (nil? p)    []
-        (vector? p) p
-        :else       [p]))
 
 (defroutes secured-routes
   (GET "/bootstrap" [:as req]
@@ -262,16 +238,16 @@
 
   (PUT "/feedback" [:as {body :body}]
        (trap #(provide-user-feedback body)))
-  
+
   (GET "/parsely/triples" [:as req]
        (trap #(parsely/triples req (:params req))))
-  
+
   (GET "/parsely/type" [:as req]
        (trap #(parsely/get-types req (:params req))))
-  
+
   (POST "/parsely/type" [:as req]
         (trap #(parsely/add-type req (:params req))))
-  
+
   (GET "/parsely/type/paths" [:as req]
        (trap #(parsely/find-typed-paths req (:params req))))
 
