@@ -4,11 +4,14 @@
         [donkey.metadactyl]
         [donkey.service]
         [donkey.util])
-  (:require [donkey.jex :as jex]))
+  (:require [donkey.config :as config]
+            [donkey.jex :as jex]))
 
 (defn secured-metadata-routes
   []
-  (routes
+  (optional-routes
+   [config/metadata-routes-enabled]
+
    (GET "/bootstrap" [:as req]
         (trap #(bootstrap req)))
 
@@ -104,7 +107,9 @@
 
 (defn unsecured-metadata-routes
   []
-  (routes
+  (optional-routes
+   [config/metadata-routes-enabled]
+
    (GET "/get-workflow-elements/:element-type" [element-type :as req]
         (trap #(get-workflow-elements req element-type)))
 

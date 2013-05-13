@@ -25,6 +25,46 @@
   [props config-valid configs]
   "donkey.app.environment-name")
 
+(cc/defprop-optboolean notification-routes-enabled
+  "Enables or disables notification endpoints."
+  [props config-valid configs]
+  "donkey.routes.notifications" true)
+
+(cc/defprop-optboolean metadata-routes-enabled
+  "Enables or disables metadata endpoints."
+  [props config-valid configs]
+  "donkey.routes.metadata" true)
+
+(cc/defprop-optboolean pref-routes-enabled
+  "Enables or disables preferences endpoints."
+  [props config-valid configs]
+  "donkey.routes.prefs" true)
+
+(cc/defprop-optboolean user-info-routes-enabled
+  "Enables or disables user-info endpoints."
+  [props config-valid configs]
+  "donkey.routes.user-info" true)
+
+(cc/defprop-optboolean data-routes-enabled
+  "Enables or disables data endpoints."
+  [props config-valid configs]
+  "donkey.routes.data" true)
+
+(cc/defprop-optboolean tree-viewer-routes-enabled
+  "Enables or disables tree-viewer endpoints."
+  [props config-valid configs]
+  "donkey.routes.tree-viewer" true)
+
+(cc/defprop-optboolean session-routes-enabled
+  "Enables or disables user session endpoints."
+  [props config-valid configs]
+  "donkey.routes.session" true)
+
+(cc/defprop-optboolean collaborator-routes-enabled
+  "Enables or disables collaborator routes."
+  [props config-valid configs]
+  "donkey.routes.collaborator" true)
+
 (cc/defprop-str iplant-email-base-url
   "The base URL to use when connnecting to the iPlant email service."
   [props config-valid configs]

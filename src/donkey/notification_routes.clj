@@ -1,11 +1,14 @@
 (ns donkey.notification-routes
   (:use [compojure.core]
         [donkey.metadactyl]
-        [donkey.util]))
+        [donkey.util])
+  (:require [donkey.config :as config]))
 
 (defn secured-notification-routes
   []
-  (routes
+  (optional-routes
+
+   [config/notification-routes-enabled]
    (GET "/notifications/messages" [:as req]
         (trap #(get-messages req)))
 
@@ -65,6 +68,8 @@
 
 (defn unsecured-notification-routes
   []
-  (routes
+  (optional-routes
+   [config/notification-routes-enabled]
+
    (POST "/send-notification" [:as req]
          (trap #(send-notification req)))))

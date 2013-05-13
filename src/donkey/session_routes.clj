@@ -1,11 +1,14 @@
 (ns donkey.session-routes
   (:use [compojure.core]
         [donkey.user-sessions]
-        [donkey.util]))
+        [donkey.util])
+  (:require [donkey.config :as config]))
 
 (defn secured-session-routes
   []
-  (routes
+  (optional-routes
+   [config/session-routes-enabled]
+
    (GET "/sessions" []
         (trap user-session))
 

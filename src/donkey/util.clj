@@ -1,7 +1,8 @@
 (ns donkey.util
   "Utility functions for defining services in Donkey. This namespace is used by donkey.core and
    several other top-level service definition namespaces."
-  (:use [donkey.service]
+  (:use [compojure.core]
+        [donkey.service]
         [slingshot.slingshot :only [try+]])
   (:require [clojure-commons.error-codes :as ce]))
 
@@ -28,3 +29,9 @@
   (cond (nil? p)    []
         (vector? p) p
         :else       [p]))
+
+(defn optional-routes
+  "Creates a set of optionally defined routes."
+  [[option-fn] & handlers]
+  (when (option-fn)
+    (apply routes handlers)))

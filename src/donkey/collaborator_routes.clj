@@ -1,11 +1,14 @@
 (ns donkey.collaborator-routes
   (:use [compojure.core]
         [donkey.metadactyl]
-        [donkey.util]))
+        [donkey.util])
+  (:require [donkey.config :as config]))
 
-(def secured-collaborator-routes
+(defn secured-collaborator-routes
   []
-  (routes
+  (optional-routes
+   [config/collaborator-routes-enabled]
+
    (GET "/collaborators" [:as req]
         (trap #(get-collaborators req)))
 

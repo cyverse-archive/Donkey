@@ -14,38 +14,42 @@
         [donkey.tree-viewer-routes]
         [donkey.user-attributes]
         [donkey.user-info-routes]
+        [donkey.collaborator-routes]
         [ring.middleware keyword-params])
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
             [donkey.config :as config]))
 
-(def secured-routes
-  (memoize
-   (fn []
-     (routes
-      (secured-notification-routes)
-      (secured-metadata-routes)
-      (secured-pref-routes)
-      (secured-user-info-routes)
-      (secured-tree-viewer-routes)
-      (secured-data-routes)
-      (secured-session-routes)
-      (route/not-found (unrecognized-path-response))))))
+(defn- disablable-routes
+  [& handlers]
+  (apply routes (remove nil? handlers)))
 
-(def donkey-routes
-  (memoize
-   (fn []
-     (routes
-      (unsecured-misc-routes)
-      (unsecured-notification-routes)
-      (unsecured-metadata-routes)
-      (unsecured-tree-viewer-routes)
+(defn secured-routes
+  []
+  (disablable-routes
+   (secured-notification-routes)
+   (secured-metadata-routes)
+   (secured-pref-routes)
+   (secured-collaborator-routes)
+   (secured-user-info-routes)
+   (secured-tree-viewer-routes)
+   (secured-data-routes)
+   (secured-session-routes)
+   (route/not-found (unrecognized-path-response))))
 
-      (context "/secured" []
-               (store-current-user (secured-routes) config/cas-server config/server-name))
+(defn donkey-routes
+  []
+  (disablable-routes
+   (unsecured-misc-routes)
+   (unsecured-notification-routes)
+   (unsecured-metadata-routes)
+   (unsecured-tree-viewer-routes)
 
-      (route/not-found (unrecognized-path-response))))))
+   (context "/secured" []
+            (store-current-user (secured-routes) config/cas-server config/server-name))
+
+   (route/not-found (unrecognized-path-response))))
 
 (defn load-configuration-from-file
   "Loads the configuration properties from a file."
@@ -57,8 +61,15 @@
   []
   (config/load-config-from-zookeeper))
 
-(defn site-handler [routes-fn]
-  (-> (routes-fn)
+(defn delayed-handler
+  [routes-fn]
+  (fn [req]
+    (let [handler ((memoize routes-fn))]
+      (handler req))))
+
+(defn site-handler
+  [routes-fn]
+  (-> (delayed-handler donkey-routes)
       wrap-keyword-params
       wrap-lcase-params
       wrap-query-params))

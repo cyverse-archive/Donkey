@@ -4,13 +4,16 @@
         [donkey.sharing :only [share unshare]]
         [donkey.user-attributes]
         [donkey.util])
-  (:require [donkey.parsely :as parsely]
+  (:require [donkey.config :as config]
+            [donkey.parsely :as parsely]
             [donkey.search :as search]))
 
 (defn secured-data-routes
   "The routes for data sharing endpoints."
   []
-  (routes
+  (optional-routes
+   [config/data-routes-enabled]
+
    (GET "/parsely/triples" [:as req]
         (trap #(parsely/triples req (:params req))))
 

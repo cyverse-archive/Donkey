@@ -1,11 +1,14 @@
 (ns donkey.pref-routes
   (:use [compojure.core]
         [donkey.user-prefs]
-        [donkey.util]))
+        [donkey.util])
+  (:require [donkey.config :as config]))
 
 (defn secured-pref-routes
   []
-  (routes
+  (optional-routes
+   [config/pref-routes-enabled]
+
    (GET "/preferences" []
         (trap user-prefs))
 
