@@ -7,8 +7,8 @@
 (defn secured-notification-routes
   []
   (optional-routes
-
    [config/notification-routes-enabled]
+
    (GET "/notifications/messages" [:as req]
         (trap #(get-messages req)))
 
