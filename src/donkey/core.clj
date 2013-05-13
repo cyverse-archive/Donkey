@@ -21,13 +21,13 @@
             [ring.adapter.jetty :as jetty]
             [donkey.config :as config]))
 
-(defn- disablable-routes
+(defn- flagged-routes
   [& handlers]
   (apply routes (remove nil? handlers)))
 
 (defn secured-routes
   []
-  (disablable-routes
+  (flagged-routes
    (secured-notification-routes)
    (secured-metadata-routes)
    (secured-pref-routes)
@@ -40,7 +40,7 @@
 
 (defn donkey-routes
   []
-  (disablable-routes
+  (flagged-routes
    (unsecured-misc-routes)
    (unsecured-notification-routes)
    (unsecured-metadata-routes)
