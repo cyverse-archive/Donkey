@@ -1,11 +1,11 @@
-(ns donkey.metadactyl
+(ns donkey.services.metadactyl
   (:use [clojure.java.io :only [reader]]
         [donkey.config]
-        [donkey.email]
-        [donkey.util.service]
         [donkey.transformers]
         [donkey.user-attributes]
         [donkey.user-info :only [get-user-details]]
+        [donkey.util.email]
+        [donkey.util.service]
         [ring.util.codec :only [url-encode]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]

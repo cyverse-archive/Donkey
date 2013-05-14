@@ -1,6 +1,6 @@
 (ns donkey.routes.tree-viewer
   (:use [compojure.core]
-        [donkey.buggalo]
+        [donkey.services.buggalo]
         [donkey.util.service]
         [donkey.user-attributes]
         [donkey.util])
