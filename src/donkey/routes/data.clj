@@ -1,6 +1,6 @@
 (ns donkey.routes.data
   (:use [compojure.core]
-        [donkey.file-listing]
+        [donkey.services.file-listing]
         [donkey.sharing :only [share unshare]]
         [donkey.user-attributes]
         [donkey.util])

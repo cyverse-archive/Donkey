@@ -1,4 +1,4 @@
-(ns donkey.file-listing
+(ns donkey.services.file-listing
   (:use [donkey.config]
         [donkey.util.service
          :only [decode-stream build-url-with-query required-param success-response]]

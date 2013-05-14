@@ -1,6 +1,6 @@
 (ns donkey.routes.metadata
   (:use [compojure.core]
-        [donkey.file-listing]
+        [donkey.services.file-listing]
         [donkey.services.metadactyl]
         [donkey.util.service]
         [donkey.util])
