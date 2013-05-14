@@ -2,7 +2,7 @@
   "Utility functions for defining services in Donkey. This namespace is used by donkey.core and
    several other top-level service definition namespaces."
   (:use [compojure.core]
-        [donkey.service]
+        [donkey.util.service]
         [slingshot.slingshot :only [try+]])
   (:require [clojure-commons.error-codes :as ce]))
 

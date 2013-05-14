@@ -1,5 +1,5 @@
 (ns donkey.parsely
-  (:require [donkey.service :as svc]
+  (:require [donkey.util.service :as svc]
             [donkey.config :as cfg]
             [donkey.transformers :as xforms]))
 

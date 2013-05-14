@@ -1,7 +1,7 @@
 (ns donkey.notifications
   (:use [donkey.config :only
          [notificationagent-base-url metadactyl-unprotected-base-url]]
-        [donkey.service :only [build-url build-url-with-query decode-stream]]
+        [donkey.util.service :only [build-url build-url-with-query decode-stream]]
         [donkey.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]

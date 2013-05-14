@@ -5,7 +5,7 @@
          :only [tree-parser-url scruffian-base-url nibblonian-base-url riak-base-url
                 tree-url-bucket]]
         [donkey.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]
-        [donkey.service :only [success-response]]
+        [donkey.util.service :only [success-response]]
         [donkey.user-attributes :only [current-user]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]

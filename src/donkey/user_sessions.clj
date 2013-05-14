@@ -2,7 +2,7 @@
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
         [donkey.config]
-        [donkey.service]
+        [donkey.util.service]
         [donkey.user-attributes])
   (:require [clj-http.client :as cl]
             [clojure.string :as string]

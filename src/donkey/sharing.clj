@@ -4,7 +4,7 @@
         [slingshot.slingshot :only [try+]]
         [clojure-commons.file-utils :only [basename]]
         [donkey.config :only [nibblonian-base-url]]
-        [donkey.service :only [build-url decode-stream]]
+        [donkey.util.service :only [build-url decode-stream]]
         [donkey.transformers :only [add-current-user-to-url]]
         [donkey.user-attributes])
   (:require [cheshire.core :as cheshire]

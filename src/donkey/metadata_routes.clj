@@ -2,7 +2,7 @@
   (:use [compojure.core]
         [donkey.file-listing]
         [donkey.metadactyl]
-        [donkey.service]
+        [donkey.util.service]
         [donkey.util])
   (:require [donkey.config :as config]
             [donkey.jex :as jex]))

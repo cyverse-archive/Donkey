@@ -1,6 +1,6 @@
 (ns donkey.file-listing
   (:use [donkey.config]
-        [donkey.service
+        [donkey.util.service
          :only [decode-stream build-url-with-query required-param success-response]]
         [donkey.transformers :only [add-current-user-to-map]]
         [donkey.user-prefs :only [user-prefs]]

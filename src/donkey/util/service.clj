@@ -1,4 +1,4 @@
-(ns donkey.service
+(ns donkey.util.service
   (:use [cemerick.url :only [url]]
         [ring.util.codec :only [url-encode]]
         [clojure.java.io :only [reader]]

@@ -9,7 +9,7 @@
         [donkey.misc-routes]
         [donkey.notification-routes]
         [donkey.pref-routes]
-        [donkey.service]
+        [donkey.util.service]
         [donkey.session-routes]
         [donkey.tree-viewer-routes]
         [donkey.user-attributes]

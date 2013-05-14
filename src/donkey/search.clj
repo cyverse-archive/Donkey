@@ -10,7 +10,7 @@
             [clojure-commons.client :as client]
             [clojure-commons.nibblonian :as nibblonian]
             [donkey.config :as cfg]
-            [donkey.service :as svc])
+            [donkey.util.service :as svc])
   (:import [java.net ConnectException]))
 
 

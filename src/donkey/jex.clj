@@ -1,5 +1,5 @@
 (ns donkey.jex
-  (:require [donkey.service :as svc]
+  (:require [donkey.util.service :as svc]
             [donkey.config :as cfg]))
 
 (defn stop-analysis
