@@ -22,6 +22,12 @@
 
    (POST "/parsely/type" [:as req]
          (trap #(parsely/add-type req (:params req))))
+   
+   (DELETE "/parsely/type" [:as req]
+           (trap #(parsely/delete-type req (:params req))))
+   
+   (GET "/parsely/type-list" [:as req]
+        (trap #(parsely/get-type-list req (:params req))))
 
    (GET "/parsely/type/paths" [:as req]
         (trap #(parsely/find-typed-paths req (:params req))))
