@@ -156,3 +156,10 @@
   "Decodes a stream containing a JSON object."
   [stream]
   (cheshire/decode-stream (reader stream) true))
+
+(defn decode-json
+  "Decodes JSON from either a string or an input stream."
+  [source]
+  (if (string? source)
+    (cheshire/decode source true)
+    (cheshire/decode-stream (reader source) true)))
