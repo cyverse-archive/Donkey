@@ -1,4 +1,4 @@
-(ns donkey.pref-routes
+(ns donkey.routes.pref
   (:use [compojure.core]
         [donkey.user-prefs]
         [donkey.util])

@@ -1,4 +1,4 @@
-(ns donkey.tree-viewer-routes
+(ns donkey.routes.tree-viewer
   (:use [compojure.core]
         [donkey.buggalo]
         [donkey.util.service]

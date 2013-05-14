@@ -1,4 +1,4 @@
-(ns donkey.notification-routes
+(ns donkey.routes.notification
   (:use [compojure.core]
         [donkey.metadactyl]
         [donkey.util])

@@ -1,4 +1,4 @@
-(ns donkey.data-routes
+(ns donkey.routes.data
   (:use [compojure.core]
         [donkey.file-listing]
         [donkey.sharing :only [share unshare]]
@@ -22,10 +22,10 @@
 
    (POST "/parsely/type" [:as req]
          (trap #(parsely/add-type req (:params req))))
-   
+
    (DELETE "/parsely/type" [:as req]
            (trap #(parsely/delete-type req (:params req))))
-   
+
    (GET "/parsely/type-list" [:as req]
         (trap #(parsely/get-type-list req (:params req))))
 

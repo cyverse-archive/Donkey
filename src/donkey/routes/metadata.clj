@@ -1,4 +1,4 @@
-(ns donkey.metadata-routes
+(ns donkey.routes.metadata
   (:use [compojure.core]
         [donkey.file-listing]
         [donkey.metadactyl]

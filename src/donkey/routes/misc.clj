@@ -1,4 +1,4 @@
-(ns donkey.misc-routes
+(ns donkey.routes.misc
   (:use [compojure.core]
         [donkey.util])
   (:require [clojure.string :as string])

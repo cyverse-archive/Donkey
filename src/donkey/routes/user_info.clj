@@ -1,4 +1,4 @@
-(ns donkey.user-info-routes
+(ns donkey.routes.user-info
   (:use [compojure.core]
         [donkey.user-info]
         [donkey.util])

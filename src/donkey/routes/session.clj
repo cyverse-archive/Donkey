@@ -1,4 +1,4 @@
-(ns donkey.session-routes
+(ns donkey.routes.session
   (:use [compojure.core]
         [donkey.user-sessions]
         [donkey.util])

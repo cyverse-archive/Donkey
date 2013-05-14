@@ -1,4 +1,4 @@
-(ns donkey.collaborator-routes
+(ns donkey.routes.collaborator
   (:use [compojure.core]
         [donkey.metadactyl]
         [donkey.util])
