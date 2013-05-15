@@ -4,7 +4,9 @@
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
-            [clj-http.client :as client]))
+            [clj-http.client :as client]
+            [clojure.string :as string]
+            [clojure.tools.logging :as log]))
 
 (defn- nibblonian-url
   "Builds a URL that can be used to send a request to Nibblonian."
