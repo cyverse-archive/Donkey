@@ -1,7 +1,7 @@
 (ns donkey.services.parsely
   (:require [donkey.util.service :as svc]
             [donkey.config :as cfg]
-            [donkey.transformers :as xforms]))
+            [donkey.util.transformers :as xforms]))
 
 (defn- secured-parsely-url
   [req params & components]

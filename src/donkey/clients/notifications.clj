@@ -2,7 +2,7 @@
   (:use [donkey.config :only
          [notificationagent-base-url metadactyl-unprotected-base-url]]
         [donkey.util.service :only [build-url build-url-with-query decode-stream]]
-        [donkey.transformers :only [add-current-user-to-map]])
+        [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure.string :as string]

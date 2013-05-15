@@ -1,4 +1,4 @@
-(ns donkey.transformers
+(ns donkey.util.transformers
   (:use [cemerick.url :only [url]]
         [donkey.util.service :only [decode-stream]]
         [donkey.user-attributes])

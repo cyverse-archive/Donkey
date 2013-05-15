@@ -2,7 +2,7 @@
   (:use [donkey.config]
         [donkey.util.service
          :only [decode-stream build-url-with-query required-param success-response]]
-        [donkey.transformers :only [add-current-user-to-map]]
+        [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.user-prefs :only [user-prefs]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]

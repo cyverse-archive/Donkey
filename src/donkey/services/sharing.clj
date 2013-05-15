@@ -5,7 +5,7 @@
         [clojure-commons.file-utils :only [basename]]
         [donkey.config :only [nibblonian-base-url]]
         [donkey.util.service :only [build-url decode-stream]]
-        [donkey.transformers :only [add-current-user-to-url]]
+        [donkey.util.transformers :only [add-current-user-to-url]]
         [donkey.user-attributes])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
