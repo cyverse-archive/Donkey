@@ -5,7 +5,7 @@
         [donkey.user-attributes]
         [donkey.util])
   (:require [donkey.config :as config]
-            [donkey.parsely :as parsely]
+            [donkey.services.parsely :as parsely]
             [donkey.search :as search]))
 
 (defn secured-data-routes
