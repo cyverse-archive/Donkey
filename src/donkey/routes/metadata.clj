@@ -81,8 +81,8 @@
    (POST "/make-analysis-public" [:as req]
          (trap #(make-app-public req)))
 
-   (GET "/default-output-dir" [:as {params :params}]
-        (trap #(get-default-output-dir (required-param params :name))))
+   (GET "/default-output-dir" []
+        (trap #(get-default-output-dir)))
 
    (POST "/default-output-dir" [:as {body :body}]
          (trap #(reset-default-output-dir body)))

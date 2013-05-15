@@ -1,27 +1,19 @@
 (ns donkey.services.file-listing
   (:use [donkey.clients.nibblonian]
-        [donkey.services.user-prefs :only [user-prefs]]
         [donkey.util.config]
         [donkey.util.service :only [decode-stream required-param success-response]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]))
-
-(defn- save-default-output-dir
-  "Saves the path to the user's default output folder in the user's prefs."
-  [path]
-  (user-prefs
-   (cheshire/encode (assoc (cheshire/decode (user-prefs) true)
-                      :defaultOutputFolder path))))
+            [clojure.tools.logging :as log]
+            [donkey.services.user-prefs :as prefs]))
 
 (defn- generate-output-dir
-  "Automatically generates the default output directory based on the default
-   name sent to the service."
+  "Automatically generates the default output directory based on a default name."
   [base]
   (log/debug "generating output directory: base =" base)
   (let [path (gen-output-dir base)]
-    (save-default-output-dir path)
+    (prefs/save-default-output-dir path)
     path))
 
 (defn- validate-output-dir
@@ -36,13 +28,8 @@
 
 (defn get-default-output-dir
   "Determines whether or not the default directory name exists for a user."
-  [dirname]
-  (let [prefs (cheshire/decode (user-prefs) true)
-        path  (:defaultOutputFolder prefs)]
-    (if-not (string/blank? path)
-      (success-response {:path (validate-output-dir path)})
-      (let [base  (build-path (home-dir) dirname)]
-        (success-response {:path (generate-output-dir base)})))))
+  []
+  (success-response {:path (validate-output-dir (prefs/get-default-output-dir))}))
 
 (defn reset-default-output-dir
   "Resets the default output directory for a user."

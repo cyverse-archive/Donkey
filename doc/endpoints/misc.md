@@ -181,8 +181,9 @@ Secured Endpoint: GET /secured/default-output-dir
 
 This endoint determines the default output directory in iRODS for the currently
 authenticated user. Aside from the `proxyToken` parameter, this endpoint
-requires one other query-string parameter: `name`, which specifies the default
-name of the output directory.
+requires no query-string parameters. The default default output directory name
+is passed to Donkey in the `donkey.job-exec.default-output-folder` configuration
+parameter.
 
 This service works in conjunction with user preferences. If a default output
 directory has been selected already (either by the user or automatically) then
@@ -194,14 +195,15 @@ will create the directory and return the path.
 
 If the default output directory has not been selected yet then this service will
 automatically generate the path to the directory based on the name that was
-given to it in the `name` query-string parameter. The value of this parameter is
-treated as being relative to the user's home directory in iRODS.  If the path
-exists and is a directory then the path is saved in the user's preferences and
-returned. If the path does not exist then the directory is created and the path
-is saved in the user's preferences and returned. If the path exists and is a
-regular file then the service will generate a unique path (by repeatedly trying
-the same name with a hyphen and an integer appended to it) and update the
-preferences and return the path when a unique path is found.
+given to Donkey in the `donkey.job-exec.default-output-folder` configuration
+setting. The value of this configuration setting is treated as being relative to
+the user's home directory in iRODS. If the path exists and is a directory then
+the path is saved in the user's preferences and returned. If the path does not
+exist then the directory is created and the path is saved in the user's
+preferences and returned. If the path exists and is a regular file then the
+service will generate a unique path (by repeatedly trying the same name with a
+hyphen and an integer appended to it) and update the preferences and return the
+path when a unique path is found.
 
 Upon success, the JSON object returned in the response body contains a flag
 indicating that the service call was successfull along with the full path to the
@@ -209,29 +211,15 @@ default output directory. Upon failure, the response body contains a flag
 indicating that the service call was not successful along with some information
 about why the service call failed.
 
-Here are some examples:
+Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)&name=analyses" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "path": "/iplant/home/ipctest/analyses",
     "success": true
 }
 ```
-
-```
-$ curl -s "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "arg": "name",
-    "code": "MISSING-REQUIRED-ARGUMENT",
-    "success": false
-}
-```
-
-At the time of this writing, if the path exists but points to a regular file
-rather than a directory, then the directory will not be created and no error
-will be logged. This will be fixed when a service exists that determines whether
-a path points to a file or a directory.
 
 ## Resetting a user's default output directory.
 

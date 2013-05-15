@@ -194,6 +194,11 @@
   [props config-valid configs]
   "donkey.parsely.base-url")
 
+(cc/defprop-str default-output-dir
+  "The default name of the default job output directory."
+  [props config-valid configs]
+  "donkey.job-exec.default-output-folder")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []

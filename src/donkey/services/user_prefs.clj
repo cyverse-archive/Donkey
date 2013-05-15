@@ -1,13 +1,17 @@
 (ns donkey.services.user-prefs
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
+        [donkey.clients.nibblonian]
         [donkey.util.config]
         [donkey.util.service]
         [donkey.auth.user-attributes])
-  (:require [clj-http.client :as cl]
+  (:require [cheshire.core :as cheshire]
+            [clj-http.client :as cl]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]))
+
+(def default-output-dir-key :defaultOutputFolder)
 
 (defn- key-url
   [bucket-fn user]
@@ -57,7 +61,51 @@
           (<= 200 (:status resp) 299) (success-response)
           :else                       (request-failed resp))))
 
-(def user-prefs (partial settings riak-prefs-bucket))
+(defn- add-default-output-dir
+  "Adds the default output directory to a set of user preferences."
+  [prefs path]
+  (assoc prefs
+    default-output-dir-key path))
+
+(defn- extract-default-output-dir
+  "Gets the default output directory from a set of user preferences."
+  [prefs]
+  (default-output-dir-key prefs))
+
+(defn- generate-default-output-dir
+  "Generates a default output directory for the user and stores it in the preferences."
+  [prefs]
+  (let [base  (build-path (home-dir) (default-output-dir))
+        prefs (add-default-output-dir prefs (gen-output-dir base))]
+    (settings riak-prefs-bucket (cheshire/encode prefs))
+    prefs))
+
+(defn user-prefs
+  "Retrieves or saves the user's preferences."
+  ([]
+     (let [prefs      (cheshire/decode (settings riak-prefs-bucket) true)
+           output-dir (extract-default-output-dir prefs)]
+       (cheshire/encode
+        (if (string/blank? output-dir)
+          (generate-default-output-dir prefs)
+          prefs))))
+  ([prefs]
+     (settings riak-prefs-bucket prefs)))
+
 (def remove-prefs (partial remove-settings riak-prefs-bucket))
 (def search-history (partial settings riak-search-hist-bucket))
 (def clear-search-history (partial remove-settings riak-search-hist-bucket))
+
+(defn save-default-output-dir
+  "Saves the path to the user's default output folder in the user's preferences."
+  [path]
+  (-> (user-prefs)
+      (cheshire/decode true)
+      (add-default-output-dir path)
+      (cheshire/encode)
+      (user-prefs)))
+
+(defn get-default-output-dir
+  "Gets the path to the user's default output folder from the user's preferences."
+  []
+  (extract-default-output-dir (cheshire/decode (user-prefs) true)))
