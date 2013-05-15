@@ -10,7 +10,7 @@
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
-            [donkey.notifications :as dn]))
+            [donkey.clients.notifications :as dn]))
 
 (def file-list-threshold 10)
 

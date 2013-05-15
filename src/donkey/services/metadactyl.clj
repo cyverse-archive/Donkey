@@ -10,7 +10,7 @@
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [donkey.notifications :as dn]))
+            [donkey.clients.notifications :as dn]))
 
 (defn- build-metadactyl-secured-url
   "Adds the name and email of the currently authenticated user to the secured
