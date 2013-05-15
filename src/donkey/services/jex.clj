@@ -1,6 +1,6 @@
-(ns donkey.jex
-  (:require [donkey.service :as svc]
-            [donkey.config :as cfg]))
+(ns donkey.services.jex
+  (:require [donkey.util.service :as svc]
+            [donkey.util.config :as cfg]))
 
 (defn stop-analysis
   [request uuid]

@@ -1,4 +1,4 @@
-(ns donkey.buggalo.nexml
+(ns donkey.services.buggalo.nexml
   (:use [clojure.java.io :only [file reader writer]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log])
