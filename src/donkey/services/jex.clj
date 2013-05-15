@@ -1,4 +1,4 @@
-(ns donkey.jex
+(ns donkey.services.jex
   (:require [donkey.util.service :as svc]
             [donkey.config :as cfg]))
 
