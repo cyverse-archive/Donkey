@@ -1,6 +1,6 @@
 (ns donkey.services.metadactyl
   (:use [clojure.java.io :only [reader]]
-        [donkey.config]
+        [donkey.util.config]
         [donkey.util.transformers]
         [donkey.auth.user-attributes]
         [donkey.services.user-info :only [get-user-details]]

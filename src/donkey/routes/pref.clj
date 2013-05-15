@@ -2,7 +2,7 @@
   (:use [compojure.core]
         [donkey.services.user-prefs]
         [donkey.util])
-  (:require [donkey.config :as config]))
+  (:require [donkey.util.config :as config]))
 
 (defn secured-pref-routes
   []

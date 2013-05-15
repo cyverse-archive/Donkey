@@ -4,7 +4,7 @@
         [donkey.services.metadactyl]
         [donkey.util.service]
         [donkey.util])
-  (:require [donkey.config :as config]
+  (:require [donkey.util.config :as config]
             [donkey.services.jex :as jex]))
 
 (defn secured-metadata-routes

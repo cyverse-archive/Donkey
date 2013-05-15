@@ -1,5 +1,5 @@
 (ns donkey.clients.notifications
-  (:use [donkey.config :only
+  (:use [donkey.util.config :only
          [notificationagent-base-url metadactyl-unprotected-base-url]]
         [donkey.util.service :only [build-url build-url-with-query decode-stream]]
         [donkey.util.transformers :only [add-current-user-to-map]])

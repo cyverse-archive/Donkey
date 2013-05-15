@@ -3,7 +3,7 @@
         [clojure.string :only [join]]
         [slingshot.slingshot :only [try+]]
         [clojure-commons.file-utils :only [basename]]
-        [donkey.config :only [nibblonian-base-url]]
+        [donkey.util.config :only [nibblonian-base-url]]
         [donkey.util.service :only [build-url decode-stream]]
         [donkey.util.transformers :only [add-current-user-to-url]]
         [donkey.auth.user-attributes])

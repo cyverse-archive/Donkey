@@ -1,7 +1,7 @@
 (ns donkey.services.user-sessions
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
-        [donkey.config]
+        [donkey.util.config]
         [donkey.util.service]
         [donkey.auth.user-attributes])
   (:require [clj-http.client :as cl]

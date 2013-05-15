@@ -4,7 +4,7 @@
         [donkey.util.service]
         [donkey.auth.user-attributes]
         [donkey.util])
-  (:require [donkey.config :as config]))
+  (:require [donkey.util.config :as config]))
 
 (defn secured-tree-viewer-routes
   []

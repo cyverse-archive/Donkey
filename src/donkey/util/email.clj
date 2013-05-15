@@ -3,7 +3,7 @@
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure.string :as string]
-            [donkey.config :as config]))
+            [donkey.util.config :as config]))
 
 (defn send-email
   "Sends an e-mail message via the iPlant e-mail service."

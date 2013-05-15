@@ -2,7 +2,7 @@
   (:use [compojure.core]
         [donkey.services.user-sessions]
         [donkey.util])
-  (:require [donkey.config :as config]))
+  (:require [donkey.util.config :as config]))
 
 (defn secured-session-routes
   []

@@ -4,7 +4,7 @@
         [donkey.services.sharing :only [share unshare]]
         [donkey.auth.user-attributes]
         [donkey.util])
-  (:require [donkey.config :as config]
+  (:require [donkey.util.config :as config]
             [donkey.services.parsely :as parsely]
             [donkey.services.search :as search]))
 

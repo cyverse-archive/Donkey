@@ -1,4 +1,4 @@
-(ns donkey.config
+(ns donkey.util.config
   (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]))

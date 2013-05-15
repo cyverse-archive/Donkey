@@ -1,7 +1,7 @@
 (ns donkey.services.buggalo
   (:use [clojure.java.io :only [copy file]]
         [clojure-commons.file-utils :only [with-temp-dir-in]]
-        [donkey.config
+        [donkey.util.config
          :only [tree-parser-url scruffian-base-url nibblonian-base-url riak-base-url
                 tree-url-bucket]]
         [donkey.services.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]

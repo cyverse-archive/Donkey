@@ -1,7 +1,7 @@
 (ns donkey.services.user-info
   (:use [cemerick.url :only [url]]
         [clojure.string :only [split]]
-        [donkey.config])
+        [donkey.util.config])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure.tools.logging :as log]))
