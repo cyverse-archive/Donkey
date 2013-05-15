@@ -1,6 +1,6 @@
 (ns donkey.routes.user-info
   (:use [compojure.core]
-        [donkey.user-info]
+        [donkey.services.user-info]
         [donkey.util])
   (:require [donkey.config :as config]))
 

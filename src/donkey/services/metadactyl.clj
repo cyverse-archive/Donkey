@@ -3,7 +3,7 @@
         [donkey.config]
         [donkey.util.transformers]
         [donkey.auth.user-attributes]
-        [donkey.user-info :only [get-user-details]]
+        [donkey.services.user-info :only [get-user-details]]
         [donkey.util.email]
         [donkey.util.service]
         [ring.util.codec :only [url-encode]])

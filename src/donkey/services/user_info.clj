@@ -1,4 +1,4 @@
-(ns donkey.user-info
+(ns donkey.services.user-info
   (:use [cemerick.url :only [url]]
         [clojure.string :only [split]]
         [donkey.config])
