@@ -2,7 +2,7 @@
   (:use [compojure.core]
         [donkey.services.file-listing]
         [donkey.services.sharing :only [share unshare]]
-        [donkey.user-attributes]
+        [donkey.auth.user-attributes]
         [donkey.util])
   (:require [donkey.config :as config]
             [donkey.services.parsely :as parsely]

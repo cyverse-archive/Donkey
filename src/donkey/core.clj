@@ -13,7 +13,7 @@
         [donkey.routes.tree-viewer]
         [donkey.routes.user-info]
         [donkey.routes.collaborator]
-        [donkey.user-attributes]
+        [donkey.auth.user-attributes]
         [donkey.util.service]
         [ring.middleware keyword-params])
   (:require [compojure.route :as route]

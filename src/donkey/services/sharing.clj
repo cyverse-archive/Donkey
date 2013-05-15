@@ -6,7 +6,7 @@
         [donkey.config :only [nibblonian-base-url]]
         [donkey.util.service :only [build-url decode-stream]]
         [donkey.util.transformers :only [add-current-user-to-url]]
-        [donkey.user-attributes])
+        [donkey.auth.user-attributes])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clj-http.client :as client]

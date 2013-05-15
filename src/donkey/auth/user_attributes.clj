@@ -1,4 +1,4 @@
-(ns donkey.user-attributes
+(ns donkey.auth.user-attributes
   (:use [clj-cas.cas-proxy-auth :only (validate-cas-proxy-ticket)]
         [donkey.config])
   (:require [clojure.tools.logging :as log]))

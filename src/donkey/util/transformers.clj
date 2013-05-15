@@ -1,7 +1,7 @@
 (ns donkey.util.transformers
   (:use [cemerick.url :only [url]]
         [donkey.util.service :only [decode-stream]]
-        [donkey.user-attributes])
+        [donkey.auth.user-attributes])
   (:require [cheshire.core :as cheshire])
   (:import [net.sf.json JSONObject]))
 

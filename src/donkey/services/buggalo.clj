@@ -6,7 +6,7 @@
                 tree-url-bucket]]
         [donkey.services.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]
         [donkey.util.service :only [success-response]]
-        [donkey.user-attributes :only [current-user]]
+        [donkey.auth.user-attributes :only [current-user]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]

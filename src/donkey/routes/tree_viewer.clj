@@ -2,7 +2,7 @@
   (:use [compojure.core]
         [donkey.services.buggalo]
         [donkey.util.service]
-        [donkey.user-attributes]
+        [donkey.auth.user-attributes]
         [donkey.util])
   (:require [donkey.config :as config]))
 

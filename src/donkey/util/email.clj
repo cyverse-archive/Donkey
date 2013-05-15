@@ -1,5 +1,5 @@
 (ns donkey.util.email
-  (:use [donkey.user-attributes :only [current-user]])
+  (:use [donkey.auth.user-attributes :only [current-user]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure.string :as string]

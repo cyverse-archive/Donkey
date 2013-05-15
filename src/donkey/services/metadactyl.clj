@@ -2,7 +2,7 @@
   (:use [clojure.java.io :only [reader]]
         [donkey.config]
         [donkey.util.transformers]
-        [donkey.user-attributes]
+        [donkey.auth.user-attributes]
         [donkey.user-info :only [get-user-details]]
         [donkey.util.email]
         [donkey.util.service]

@@ -3,7 +3,7 @@
         [clojure-commons.error-codes]
         [donkey.config]
         [donkey.util.service]
-        [donkey.user-attributes])
+        [donkey.auth.user-attributes])
   (:require [clj-http.client :as cl]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
