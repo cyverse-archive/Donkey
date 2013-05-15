@@ -1,4 +1,4 @@
-(ns donkey.search
+(ns donkey.services.search
   "provides the functions that forward search requests to Elastic Search"
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]

@@ -1,12 +1,12 @@
 (ns donkey.routes.data
   (:use [compojure.core]
         [donkey.services.file-listing]
-        [donkey.sharing :only [share unshare]]
+        [donkey.services.sharing :only [share unshare]]
         [donkey.user-attributes]
         [donkey.util])
   (:require [donkey.config :as config]
             [donkey.services.parsely :as parsely]
-            [donkey.search :as search]))
+            [donkey.services.search :as search]))
 
 (defn secured-data-routes
   "The routes for data sharing endpoints."

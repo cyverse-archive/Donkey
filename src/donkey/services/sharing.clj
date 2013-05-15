@@ -1,4 +1,4 @@
-(ns donkey.sharing
+(ns donkey.services.sharing
   (:use [clojure.walk]
         [clojure.string :only [join]]
         [slingshot.slingshot :only [try+]]
