@@ -1,21 +1,20 @@
-(defproject donkey "1.3.1-SNAPSHOT"
+(defproject donkey "1.3.2-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
-  :dependencies [[org.clojure/clojure "1.4.0"]
+  :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.3"]
-                 [org.clojure/data.json "0.1.2"]
-                 [cheshire "4.0.3"]
-                 [clj-http "0.5.7"]
+                 [cheshire "5.0.1"]
+                 [clj-http "0.6.5"]
                  [com.cemerick/url "0.0.7"]
                  [compojure "1.0.1"]
+                 [org.iplantc/clj-cas "1.0.1-SNAPSHOT"]
+                 [org.iplantc/clojure-commons "1.4.1-SNAPSHOT"]
                  [org/forester "1.005" ]
-                 [org.iplantc/clj-cas "1.0.0-SNAPSHOT"]
-                 [org.iplantc/clojure-commons "1.3.1-SNAPSHOT"]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [ring/ring-jetty-adapter "1.0.1"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [slingshot "0.10.1"]
                  [clojurewerkz/elastisch "1.0.2"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "1.4.0-SNAPSHOT"]
+  :plugins [[org.iplantc/lein-iplant-rpm "1.4.1-SNAPSHOT"]
             [lein-ring "0.7.4"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}

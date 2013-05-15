@@ -1,9 +1,9 @@
-(ns donkey.user-prefs
+(ns donkey.services.user-prefs
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
-        [donkey.config]
-        [donkey.service]
-        [donkey.user-attributes])
+        [donkey.util.config]
+        [donkey.util.service]
+        [donkey.auth.user-attributes])
   (:require [clj-http.client :as cl]
             [clojure.string :as string]
             [clojure.tools.logging :as log]

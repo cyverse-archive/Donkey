@@ -1,14 +1,16 @@
-(ns donkey.metadactyl
-  (:use [clojure.data.json :only [read-json json-str]]
-        [donkey.config]
-        [donkey.service]
-        [donkey.transformers]
-        [donkey.user-attributes]
-        [donkey.user-info :only [get-user-details]]
+(ns donkey.services.metadactyl
+  (:use [clojure.java.io :only [reader]]
+        [donkey.util.config]
+        [donkey.util.transformers]
+        [donkey.auth.user-attributes]
+        [donkey.services.user-info :only [get-user-details]]
+        [donkey.util.email]
+        [donkey.util.service]
         [ring.util.codec :only [url-encode]])
-  (:require [clojure.string :as string]
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [donkey.notifications :as dn]))
+            [donkey.clients.notifications :as dn]))
 
 (defn- build-metadactyl-secured-url
   "Adds the name and email of the currently authenticated user to the secured
@@ -16,6 +18,11 @@
   [& components]
   (apply build-url-with-query (metadactyl-base-url)
          (add-current-user-to-map {}) components))
+
+(defn- secured-notification-url
+  [req & components]
+  (apply build-url-with-query (notificationagent-base-url)
+         (add-current-user-to-map (:params req)) components))
 
 (defn- build-metadactyl-secured-url-with-query
   "Adds the name and email of the currently authenticated user to the secured
@@ -120,6 +127,13 @@
   (let [url (build-metadactyl-secured-url "template" app-id)]
     (forward-get url req)))
 
+(defn get-app-new-format
+  "This service gets an app in the format required by the DE as of version 1.8."
+  [req app-id]
+  (forward-get
+   (build-metadactyl-secured-url "app" app-id)
+   req))
+
 (defn get-only-analysis-groups
   "Retrieves the list of public analyses."
   [req workspace-id]
@@ -141,6 +155,13 @@
   [req template-id]
   (let [url (build-metadactyl-unprotected-url "export-template" template-id)]
     (forward-get url req)))
+
+(defn export-app
+  "This service will export the single-step app with the given identifier."
+  [req app-id]
+  (forward-get
+   (build-metadactyl-unprotected-url "export-app" app-id)
+   req))
 
 (defn export-workflow
   "This service will export a workflow with the given identifier."
@@ -186,7 +207,7 @@
    components are successfully imported."
   [req]
   (let [json-string (slurp (:body req))
-        json-obj    (read-json json-string)
+        json-obj    (cheshire/decode json-string true)
         url (build-metadactyl-unprotected-url "import-tools")]
     (forward-post url req json-string)
     (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
@@ -216,6 +237,13 @@
    Vetted workflows may be updated."
   [req]
   (let [url (build-unprotected-url-with-query req "force-update-workflow")]
+    (forward-post url req)))
+
+(defn update-app-labels
+  "This service updates the labels in a single-step app. Both vetted and unvetted apps can be
+   modified using this service."
+  [req]
+  (let [url (build-unprotected-url-with-query req "update-app-labels")]
     (forward-post url req)))
 
 (defn delete-workflow
@@ -292,7 +320,7 @@
    notifications as seen for the user."
   [req]
   (let [url (dn/notificationagent-url "mark-all-seen")]
-    (forward-post url req (json-str (add-current-user-to-map {})))))
+    (forward-post url req (cheshire/encode (add-current-user-to-map {})))))
 
 (defn send-notification
   "This service forwards a notifiction to the notification agent's general
@@ -300,6 +328,67 @@
   [req]
   (let [url (dn/notificationagent-url "notification")]
     (forward-post url req)))
+
+(defn get-system-messages
+  "This service forwards a notification to the notification agent's endpoint
+   for retrieving system messages."
+  [req]
+  (forward-get (secured-notification-url req "system" "messages") req))
+
+(defn get-unseen-system-messages
+  "Forwards a request to the notification agent's endpoint for getting
+   unseen system messages."
+  [req]
+  (forward-get (secured-notification-url req "system" "unseen-messages") req))
+
+(defn mark-system-messages-seen
+  "Forwards a request to the notification to mark a set of system notifications
+   as seen."
+  [req]
+  (forward-post (secured-notification-url req "system" "seen") req))
+
+(defn mark-all-system-messages-seen
+  "Forwards a request to the notification-agent to mark all system notifications as seen."
+  [req]
+  (forward-post (secured-notification-url req "system" "mark-all-seen") req))
+
+(defn delete-system-messages
+  "Forwards a request to the notification-agent to soft-delete a set of system messages."
+  [req]
+  (forward-post (secured-notification-url req "system" "delete") req))
+
+(defn delete-all-system-messages
+  "Forwards a request to to the notification-agent to soft-delete all system messages for a
+   set of users."
+  [req]
+  (forward-delete (secured-notification-url req "system" "delete-all") req))
+
+(defn admin-add-system-message
+  "Forwards a request to the notification-agent to allow an admin to add a new system
+   message."
+  [req]
+  (forward-put (secured-notification-url req "admin" "system") req))
+
+(defn admin-list-system-types
+  "Forwards a request to the notification-agent to allow an admin to list the current
+   list of system notification types."
+  [req]
+  (forward-get (secured-notification-url req "admin" "system-types") req))
+
+(defn admin-get-system-message
+  "Forwards a request to the notification-agent to get a system notification for an admin."
+  [req uuid]
+  (forward-get (secured-notification-url req "admin" "system" uuid) req))
+
+(defn admin-update-system-message
+  "Forwards a request to the notification-agent to update a system notification for an admin."
+  [req uuid]
+  (forward-post (secured-notification-url req "admin" "system" uuid) req))
+
+(defn admin-delete-system-message
+  "Forwards a request to the notification-agent to delete a system notification for an admin."
+  [req uuid]
+  (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
 (defn run-experiment
   "This service accepts a job submission from a user then reformats it and
@@ -382,16 +471,43 @@
   (let [url (build-metadactyl-secured-url "edit-template" app-id)]
     (forward-get url req)))
 
+(defn edit-app-new-format
+  "This service makes an app available in Tito for editing and returns a
+   representation of the app in the JSON format required by the DE as of
+   version 1.8."
+  [req app-id]
+  (forward-get
+   (build-metadactyl-secured-url "edit-app" app-id)
+   req))
+
+(defn edit-workflow
+  "This service makes a workflow available for editing in the client."
+  [req app-id]
+  (let [url (build-metadactyl-secured-url "edit-workflow" app-id)]
+    (forward-get url req)))
+
 (defn copy-app
   "This service makes a copy of an app available in Tito for editing."
   [req app-id]
   (let [url (build-metadactyl-secured-url "copy-template" app-id)]
     (forward-get url req)))
 
+(defn copy-workflow
+  "This service makes a copy of a workflow available for editing in the client."
+  [req app-id]
+  (let [url (build-metadactyl-secured-url "copy-workflow" app-id)]
+    (forward-get url req)))
+
 (defn update-template-secured
   "This service will import an app into or update an app in the DE."
   [req]
   (let [url (build-metadactyl-secured-url "update-template")]
+    (forward-put url req)))
+
+(defn update-app-secured
+  "This service will import a single-step app into or update an existing app in the DE."
+  [req]
+  (let [url (build-metadactyl-secured-url "update-app")]
     (forward-put url req)))
 
 (defn make-app-public
@@ -414,6 +530,14 @@
    (build-metadactyl-unprotected-url "analysis-rerun-info" job-id)
    req))
 
+(defn get-new-app-rerun-info
+  "Gets the information required to rerun a previously executed app in the new format required
+   by the DE."
+  [req job-id]
+  (forward-get
+   (build-metadactyl-unprotected-url "app-rerun-info" job-id)
+   req))
+
 (defn- add-user-details
   "Adds user details to the results from a request to obtain a list of
    collaborators."
@@ -428,7 +552,7 @@
         response (forward-get url req)
         status   (:status response)]
     (if-not (or (< status 200) (> status 299))
-      (success-response (add-user-details (read-json (slurp (:body response)))))
+      (success-response (add-user-details (decode-stream (:body response))))
       response)))
 
 (defn- extract-usernames
@@ -441,16 +565,14 @@
   "Adds users to the list of collaborators for the current user."
   [req]
   (let [url   (build-metadactyl-secured-url "collaborators")
-        body  (slurp (:body req))
-        users (json-str (extract-usernames (read-json body)))]
+        users (cheshire/encode (extract-usernames (decode-stream (:body req))))]
     (forward-post url req users)))
 
 (defn remove-collaborators
   "Adds users to the list of collaborators for the current user."
   [req]
   (let [url   (build-metadactyl-secured-url "remove-collaborators")
-        body  (slurp (:body req))
-        users (json-str (extract-usernames (read-json body)))]
+        users (cheshire/encode (extract-usernames (decode-stream (:body req))))]
     (forward-post url req users)))
 
 (defn list-reference-genomes
@@ -463,5 +585,69 @@
   "Replaces the reference genomes in the database with a new set of reference
    genomes."
   [req]
-  (let [url  (build-metadactyl-secured-url "reference-genomes")]
+  (let [url (build-metadactyl-secured-url "reference-genomes")]
     (forward-put url req)))
+
+(defn- postprocess-tool-request
+  "Postprocesses a tool request update or submission. The postprocessing function
+   should take the tool request and user details as arguments."
+  [res f]
+  (if (<= 200 (:status res) 299)
+    (let [tool-req     (cheshire/decode-stream (reader (:body res)) true)
+          username     (string/replace (:submitted_by tool-req) #"@.*" "")
+          user-details (get-user-details username)]
+      (f tool-req user-details))
+    res))
+
+(defn submit-tool-request
+  "Submits a tool request on behalf of the authenticated user."
+  [req]
+  (postprocess-tool-request
+   (forward-put (build-metadactyl-secured-url "tool-request") req)
+   (fn [tool-req user-details]
+     (send-tool-request-email tool-req user-details)
+     (dn/send-tool-request-notification tool-req user-details)
+     (success-response tool-req))))
+
+(defn list-tool-requests
+  "Lists the tool requests that were submitted by the authenticated user."
+  [req]
+  (forward-get
+   (build-metadactyl-secured-url-with-query (:params req) "tool-requests")
+   req))
+
+(defn update-tool-request
+  "Updates a tool request with comments and possibly a new status."
+  [req]
+  (postprocess-tool-request
+   (forward-post (build-metadactyl-unprotected-url "tool-request") req)
+   (fn [tool-req user-details]
+     (dn/send-tool-request-update-notification tool-req user-details)
+     (success-response tool-req))))
+
+(defn update-tool-request-secured
+  "Updates a tool request on behalf of the authenticated user."
+  [req]
+  (forward-post
+   (build-metadactyl-secured-url "tool-request")
+   req))
+
+(defn get-tool-request
+  "Lists details about a specific tool request."
+  [req uuid]
+  (forward-get
+   (build-metadactyl-unprotected-url "tool-request" uuid)
+   req))
+
+(defn preview-args
+  "Previews the command-line arguments for a job request."
+  [req]
+  (forward-post
+   (build-metadactyl-unprotected-url "arg-preview")
+   req))
+
+(defn provide-user-feedback
+  "Forwards feedback from the user to iPlant."
+  [body]
+  (send-feedback-email (cheshire/decode-stream (reader body)))
+  (success-response))

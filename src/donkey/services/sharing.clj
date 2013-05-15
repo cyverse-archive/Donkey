@@ -1,16 +1,16 @@
-(ns donkey.sharing
-  (:use [clojure.data.json :only [json-str read-json]]
-        [clojure.walk]
+(ns donkey.services.sharing
+  (:use [clojure.walk]
         [clojure.string :only [join]]
         [slingshot.slingshot :only [try+]]
         [clojure-commons.file-utils :only [basename]]
-        [donkey.config :only [nibblonian-base-url]]
-        [donkey.service :only [build-url]]
-        [donkey.transformers :only [add-current-user-to-url]]
-        [donkey.user-attributes])
-  (:require [clojure.tools.logging :as log]
+        [donkey.util.config :only [nibblonian-base-url]]
+        [donkey.util.service :only [build-url decode-stream]]
+        [donkey.util.transformers :only [add-current-user-to-url]]
+        [donkey.auth.user-attributes])
+  (:require [cheshire.core :as cheshire]
+            [clojure.tools.logging :as log]
             [clj-http.client :as client]
-            [donkey.notifications :as dn]))
+            [donkey.clients.notifications :as dn]))
 
 (def file-list-threshold 10)
 
@@ -46,7 +46,7 @@
 (defn- foward-nibblonian-share
   "Forwards a Nibblonian share request."
   [user share]
-  (let [body (json-str (build-nibblonian-share-req user share))]
+  (let [body (cheshire/encode (build-nibblonian-share-req user share))]
     (log/debug "foward-nibblonian-share: " body)
     (try+
       (client/post (nibblonian-url "share")
@@ -57,13 +57,13 @@
       (catch map? e
         (log/error "nibblonian error: " e)
         (merge {:success false,
-                :error (read-json (:body e))}
+                :error (cheshire/decode (:body e) true)}
                share)))))
 
 (defn- foward-nibblonian-unshare
   "Forwards a Nibblonian unshare request."
   [user path]
-  (let [body (json-str (build-nibblonian-unshare-req user path))]
+  (let [body (cheshire/encode (build-nibblonian-unshare-req user path))]
     (log/debug "foward-nibblonian-unshare: " body)
     (try+
       (client/post (nibblonian-url "unshare")
@@ -75,7 +75,7 @@
       (catch map? e
         (log/error "nibblonian error: " e)
         {:success false,
-         :error (read-json (:body e))
+         :error (cheshire/decode (:body e) true)
          :path path}))))
 
 (defn- send-sharing-notification
@@ -233,16 +233,16 @@
   "Parses a batch share request, forwarding each user-share request to
    Nibblonian."
   [req]
-  (let [sharing (read-json (slurp (:body req)))]
+  (let [sharing (decode-stream (:body req))]
     (walk share-with-user
-          #(json-str {:sharing %})
+          #(cheshire/encode {:sharing %})
           (:sharing sharing))))
 
 (defn unshare
   "Parses a batch unshare request, forwarding each user-unshare request to
    Nibblonian."
   [req]
-  (let [unshare (read-json (slurp (:body req)))]
+  (let [unshare (decode-stream (:body req))]
     (walk unshare-with-user
-          #(json-str {:unshare %})
+          #(cheshire/encode {:unshare %})
           (:unshare unshare))))
