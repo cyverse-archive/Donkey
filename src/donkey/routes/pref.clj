@@ -1,6 +1,6 @@
 (ns donkey.routes.pref
   (:use [compojure.core]
-        [donkey.user-prefs]
+        [donkey.services.user-prefs]
         [donkey.util])
   (:require [donkey.config :as config]))
 
