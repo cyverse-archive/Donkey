@@ -1,6 +1,6 @@
 (ns donkey.routes.session
   (:use [compojure.core]
-        [donkey.user-sessions]
+        [donkey.services.user-sessions]
         [donkey.util])
   (:require [donkey.config :as config]))
 

@@ -1,4 +1,4 @@
-(ns donkey.user-sessions
+(ns donkey.services.user-sessions
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
         [donkey.config]
