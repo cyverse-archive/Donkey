@@ -1,7 +1,8 @@
 (ns donkey.services.parsely
   (:require [donkey.util.service :as svc]
             [donkey.util.config :as cfg]
-            [donkey.util.transformers :as xforms]))
+            [donkey.util.transformers :as xforms]
+            [clojure.tools.logging :as log]))
 
 (defn- secured-parsely-url
   [req params & components]
@@ -43,4 +44,17 @@
   [req params]
   (svc/forward-get
     (secured-parsely-url req params "type" "paths") req))
+
+(defn set-auto-type
+  "The POST /auto-type handler for parsely."
+  [req params]
+  (log/warn "SET_AUTO_TYPE: " (get-in req [:content-type]))
+  (svc/forward-post
+    (secured-parsely-url req params "auto-type") req))
+
+(defn get-auto-type
+  "The GET /auto-type handler for parsely."
+  [req params]
+  (svc/forward-get
+    (secured-parsely-url req params "auto-type") req))
 

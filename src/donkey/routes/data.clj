@@ -31,6 +31,12 @@
 
    (GET "/parsely/type/paths" [:as req]
         (trap #(parsely/find-typed-paths req (:params req))))
+   
+   (GET "/parsely/auto-type" [:as req]
+        (trap #(parsely/get-auto-type req (:params req))))
+   
+   (POST "/parsely/auto-type" [:as req]
+         (trap #(parsely/set-auto-type req (:params req))))
 
    (GET "/triples" [:as req]
         (trap #(parsely/triples req (:params req))))
