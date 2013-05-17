@@ -1,7 +1,9 @@
 (ns donkey.util.config
   (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.config :as cc]
-            [clojure-commons.error-codes :as ce]))
+            [clojure-commons.error-codes :as ce]
+            [clojure.core.memoize :as memo]
+            [clj-jargon.jargon :as jg]))
 
 (def ^:private props
   "A ref for storing the configuration properties."
@@ -155,6 +157,58 @@
   "The base URL for the JEX."
   [props config-valid configs]
   "donkey.jex.base-url")
+
+;;;iRODS connection information
+(cc/defprop-str irods-home
+  "Returns the path to the home directory in iRODS. Usually /iplant/home"
+  [props config-valid configs]
+  "donkey.irods.home")
+
+(cc/defprop-str irods-user
+  "Returns the user that porklock should connect as."
+  [props config-valid configs]
+  "donkey.irods.user")
+
+(cc/defprop-str irods-pass
+  "Returns the iRODS user's password."
+  [props config-valid configs]
+  "donkey.irods.pass")
+
+(cc/defprop-str irods-host
+  "Returns the iRODS hostname/IP address."
+  [props config-valid configs]
+  "donkey.irods.host")
+
+(cc/defprop-str irods-port
+  "Returns the iRODS port."
+  [props config-valid configs]
+  "donkey.irods.port")
+
+(cc/defprop-str irods-zone
+  "Returns the iRODS zone."
+  [props config-valid configs]
+  "donkey.irods.zone")
+
+(cc/defprop-optstr irods-resc
+  "Returns the iRODS resource."
+  [props config-valid configs]
+  "donkey.irods.resc")
+
+(def jargon-cfg
+  (memo/memo #(jg/init (irods-host)
+                       (irods-port)
+                       (irods-user)
+                       (irods-pass)
+                       (irods-home)
+                       (irods-zone)
+                       (irods-resc))))
+
+;;; Garnish configuration
+(cc/defprop-str garnish-type-attribute
+  "The value that goes in the attribute column for AVUs that define a file type."
+  [props config-valid configs]
+  "donkey.garnish.type-attribute")
+;;; End of Garnish configuration
 
 (cc/defprop-int default-user-search-result-limit
   "The default limit for the number of results for a user info search.  Note
