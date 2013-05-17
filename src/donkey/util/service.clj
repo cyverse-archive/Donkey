@@ -105,7 +105,8 @@
 (defn prepare-forwarded-request
   "Prepares a request to be forwarded to a remote service."
   ([request body]
-     {:content-type (get-in request [:headers :content-type])
+    {:content-type (or (get-in request [:headers :content-type]) 
+                       (get-in request [:content-type]))
       :headers (dissoc
                 (:headers request)
                 "content-length"
