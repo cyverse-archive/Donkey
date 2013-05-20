@@ -18,6 +18,14 @@
    :email (get user-attributes "email"),
    :shortUsername (get user-attributes "uid")})
 
+(defn fake-user-from-attributes
+  "Creates a real map of fake values for a user base on environment variables."
+  [placeholder & args]
+  {:username (System/getenv "IPLANT_CAS_USER")
+   :password (System/getenv "IPLANT_CAS_PASS")
+   :email    (System/getenv "IPLANT_CAS_EMAIL")
+   :shortUsername (System/getenv "IPLANT_CAS_SHORT")})
+
 (defn store-current-user
   "Authenticates the user using validate-cas-proxy-ticket and binds
    current-user to a map that is built from the user attributes that
@@ -28,3 +36,10 @@
       (binding [current-user (user-from-attributes request)]
         (handler request)))
     cas-server-fn server-name-fn))
+
+(defn fake-store-current-user
+  "Fake storage of a user"
+  [handler cas-server-fn server-name-fn]
+  (fn [req]
+    (binding [current-user (fake-user-from-attributes req)]
+      (handler req))))

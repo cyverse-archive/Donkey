@@ -38,6 +38,12 @@
    (secured-session-routes)
    (route/not-found (unrecognized-path-response))))
 
+(defn cas-store-user
+  [routes cas-server server-name]
+  (if (System/getenv "IPLANT_CAS_FAKE")
+    (fake-store-current-user (secured-routes) config/cas-server config/server-name)
+    (store-current-user (secured-routes) config/cas-server config/server-name)))
+
 (defn donkey-routes
   []
   (flagged-routes
@@ -46,9 +52,12 @@
    (unsecured-metadata-routes)
    (unsecured-tree-viewer-routes)
 
-   (context "/secured" []
+   #_(context "/secured" []
             (store-current-user (secured-routes) config/cas-server config/server-name))
 
+   (context "/secured" []
+            (cas-store-user (secured-routes) config/cas-server config/server-name))
+   
    (route/not-found (unrecognized-path-response))))
 
 (defn load-configuration-from-file
