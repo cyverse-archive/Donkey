@@ -3,12 +3,61 @@
         [clj-jargon.jargon]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [throw+]])
-  (:require [hoot.rdf :as rdf]
+  (:require [cheshire.core :as json] 
+            [hoot.rdf :as rdf]
             [hoot.csv :as csv]
-            [clojure-commons.file-utils :as ft])
+            [clojure.java.shell :as sh]
+            [clojure.java.io :as io]
+            [clojure-commons.file-utils :as ft]
+            [donkey.util.config :as cfg])
   (:import [org.apache.tika Tika]))
 
 (def all-types (set (concat rdf/accepted-languages csv/csv-types)))
+
+(defn tmp-file
+  []
+  (java.io.File/createTempFile "donkey-" ".kick"))
+
+(defn chunk-input-stream
+  [istream max-size]
+  (let [curr-size (atom 0)]
+    (proxy [java.io.InputStream] []
+      (available [] (.available istream))
+      (mark [readlimit] (.mark istream readlimit))
+      (markSupported [] (.markSupported istream))
+      (read
+        ([] (if (>= @curr-size max-size) 
+              -1 
+              (do (reset! curr-size (inc @curr-size))
+                (.read istream))))
+        ([b] (if (>= @curr-size max-size)
+               -1
+               (do (reset! curr-size (+ @curr-size (count b)))
+                 (.read istream b))))
+        ([b off len] (if (>= @curr-size max-size)
+                       -1
+                       (do (reset! curr-size (+ @curr-size len))
+                         (.read istream b off len)))))
+      (reset [] (.reset istream))
+      (skip [] (.skip istream))
+      (close []
+        (.close istream)))))
+
+(defn copy-to-temp
+  [cm path]
+  (let [tmpf (tmp-file)] 
+    (with-open [ins  (chunk-input-stream (input-stream cm path) (cfg/filetype-read-amount))
+                outs (io/output-stream tmpf)]
+      (println (str tmpf))
+      (io/copy ins outs)
+      (str tmpf))))
+
+(defn type-from-script
+  [cm path]
+  (let [tmp-path (copy-to-temp cm path)
+        result   (sh/sh "perl" (cfg/filetype-script) "-f" tmp-path)
+        outstr   (:out result)]
+    (:ipc-media-type (json/parse-string outstr true))))
 
 (defn add-type
   [user path type]
@@ -76,7 +125,7 @@
                :path path}))
     
     {:path path
-     :type (content-type cm path)}))
+     :type #_(content-type cm path) (type-from-script cm path)}))
 
 (defn get-avus
   [cm dir-path attr val]

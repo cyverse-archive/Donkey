@@ -129,9 +129,6 @@
     (json/generate-string
       (prods/auto-add-type (:user params) (:path body)))))
 
-(defn auto-type []
-  (json/parse-string (:out (sh/sh ["perl" (cfg/filetype-script)]))))
-
 (defn preview-auto-type
   [req-params]
   (let [params (add-current-user-to-map req-params)] 

@@ -214,6 +214,11 @@
   "The path to a perl script that detects filetypes."
   [props config-valid configs data-routes-enabled]
   "donkey.garnish.filetype-script")
+
+(cc/defprop-long filetype-read-amount
+  "The size, in bytes as a long, of the sample read from iRODS"
+  [props config-valid configs data-routes-enabled]
+  "donkey.garnish.filetype-read-amount")
 ;;; End of Garnish configuration
 
 (cc/defprop-int default-user-search-result-limit
