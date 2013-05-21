@@ -19,7 +19,7 @@
                  [clojurewerkz/elastisch "1.0.2"]
                  [hoot "0.1.0-SNAPSHOT"]
                  [com.novemberain/validateur "1.4.0"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "1.4.1-SNAPSHOT"]
+  :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
             [lein-ring "0.7.4"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
