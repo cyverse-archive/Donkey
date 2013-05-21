@@ -14,25 +14,25 @@
   (optional-routes
    [config/data-routes-enabled]
 
-   (GET "/garnish/type" [:as req]
+   (GET "/filetypes/type" [:as req]
         (trap #(garnish/get-types (:params req))))
 
-   (POST "/garnish/type" [:as req]
+   (POST "/filetypes/type" [:as req]
          (trap #(garnish/add-type req (:body req) (:params req))))
 
-   (DELETE "/garnish/type" [:as req]
+   (DELETE "/filetypes/type" [:as req]
            (trap #(garnish/delete-type (:params req))))
 
-   (GET "/garnish/type-list" []
+   (GET "/filetypes/type-list" []
         (trap #(garnish/get-type-list)))
 
-   (GET "/garnish/type/paths" [:as req]
+   (GET "/filetypes/type/paths" [:as req]
         (trap #(garnish/find-typed-paths (:params req))))
    
-   (GET "/garnish/auto-type" [:as req]
+   (GET "/filetypes/auto-type" [:as req]
         (trap #(garnish/preview-auto-type (:params req))))
    
-   (POST "/garnish/auto-type" [:as req]
+   (POST "/filetypes/auto-type" [:as req]
          (trap #(garnish/set-auto-type (:body req) (:params req))))
 
    (POST "/share" [:as req]

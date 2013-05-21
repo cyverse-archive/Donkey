@@ -9,6 +9,43 @@
             [clojure.tools.logging :as log]
             [donkey.services.garnish.irods :as prods]))
 
+(def script-types 
+  ["ace"
+   "blast"
+   "bowtie"
+   "clustalw"
+   "codata"
+   "csv"
+   "embl"
+   "fasta"
+   "fastq"
+   "fastxy"
+   "game"
+   "gcg"
+   "gcgblast"
+   "gcgfasta"
+   "gde"
+   "genbank"
+   "genscan"
+   "gff"
+   "hmmer"
+   "nexus"
+   "mase"
+   "mega"
+   "msf"
+   "phrap"
+   "pir"
+   "pfam"
+   "phylip"
+   "prodom"
+   "raw"
+   "rsf"
+   "selex"
+   "stockholm"
+   "swiss"
+   "tab"
+   "vcf"])
+
 (defn check-missing-params
   [params required-keys]
   (let [not-valid? #(not (contains? params %))]
@@ -73,7 +110,7 @@
 
 (defn get-type-list 
   [] 
-  (json/generate-string {:types csv/csv-types}))
+  (json/generate-string {:types (seq (set (concat csv/csv-types script-types)))}))
 
 (defn set-auto-type
   [req-body req-params]
