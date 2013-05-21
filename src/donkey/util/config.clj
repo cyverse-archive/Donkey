@@ -209,6 +209,11 @@
   "The value that goes in the attribute column for AVUs that define a file type."
   [props config-valid configs data-routes-enabled]
   "donkey.garnish.type-attribute")
+
+(cc/defprop-str filetype-script
+  "The path to a perl script that detects filetypes."
+  [props config-valid configs data-routes-enabled]
+  "donkey.garnish.filetype-script")
 ;;; End of Garnish configuration
 
 (cc/defprop-int default-user-search-result-limit

@@ -6,8 +6,11 @@
             [hoot.rdf :as rdf]
             [hoot.csv :as csv]
             [clojure.core.memoize :as memo]
+            [clojure.java.shell :as sh]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [donkey.services.garnish.irods :as prods]))
+            [donkey.services.garnish.irods :as prods]
+            [donkey.util.config :as cfg]))
 
 (def script-types 
   ["ace"
@@ -50,8 +53,8 @@
   [params required-keys]
   (let [not-valid? #(not (contains? params %))]
     (if (some not-valid? required-keys)
-    (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-             :fields (filter not-valid? required-keys)}))))
+      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+               :fields     (filter not-valid? required-keys)}))))
 
 (defn parse-body
   [body]
@@ -59,7 +62,7 @@
     (json/parse-string body true)
     (catch Exception e
       (throw+ {:error_code ERR_INVALID_JSON
-               :message (str e)}))))
+               :message    (str e)}))))
 
 (defn check-params-valid
   [params func-map]
@@ -83,21 +86,25 @@
   (let [body   (parse-body (slurp req-body))
         params (add-current-user-to-map req-params)]
     (validate-params params {:user string?})
-    (validate-params body {:path string? :type #(contains? (accepted-types) %)})
+    (validate-params body {:path string? 
+                           :type #(contains? (accepted-types) %)})
     (json/generate-string
       (prods/add-type (:user params) (:path body) (:type body)))))
 
 (defn delete-type
   [req-params]
   (let [params (add-current-user-to-map req-params)] 
-    (validate-params params {:user string? :type #(contains? (accepted-types) %) :path string?})
+    (validate-params params {:user string? 
+                             :type #(contains? (accepted-types) %) 
+                             :path string?})
     (json/generate-string
       (prods/delete-type (:user params) (:path params) (:type params)))))
 
 (defn get-types
   [req-params]
   (let [params (add-current-user-to-map req-params)] 
-    (validate-params params {:path string? :user string?})
+    (validate-params params {:path string? 
+                             :user string?})
     (json/generate-string
       {:types (prods/get-types (:user params) (:path params))})))
 
@@ -121,6 +128,9 @@
     (validate-params body {:path string?})
     (json/generate-string
       (prods/auto-add-type (:user params) (:path body)))))
+
+(defn auto-type []
+  (json/parse-string (:out (sh/sh ["perl" (cfg/filetype-script)]))))
 
 (defn preview-auto-type
   [req-params]
