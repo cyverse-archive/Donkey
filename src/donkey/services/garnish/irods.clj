@@ -50,21 +50,33 @@
   "Copies a leading section of 'path' from iRODS into a temp file. Returns the path to the temp file."
   [cm path]
   (let [tmpf (tmp-file)] 
-    (with-open [ins  (chunk-input-stream (input-stream cm path) (cfg/filetype-read-amount))
-                outs (io/output-stream tmpf)]
-      (log/info "Created temp file " (str tmpf) " containing chunk of " path " from iRODS.")
-      (io/copy ins outs)
-      (str tmpf))))
+    (try
+      (with-open [ins  (chunk-input-stream (input-stream cm path) (cfg/filetype-read-amount))
+                  outs (io/output-stream tmpf)]
+        (log/info "Created temp file " (str tmpf) " containing chunk of " path " from iRODS.")
+        (io/copy ins outs)
+        (str tmpf))
+      (catch Exception e
+        (log/error "Error copying to temp file " tmpf)
+        (when (.exists (io/file tmpf))
+          (log/warn "Deleting temp file because of error: " tmpf)
+          (io/delete-file tmpf))
+        (throw e)))))
 
 (defn type-from-script
   "Attempts to determine the type of a file from a script. Returns a type on success, an empty string
    if the script doesn't know the type, and a nil if there's an error. The error is logged."
   [cm path]
-  (try+
+  (try
     (let [tmp-path (copy-to-temp cm path)
-          result   (sh/sh "perl" (cfg/filetype-script) "-f" tmp-path)
+          result   (sh/sh "perl" (cfg/filetype-script) "-f" tmp-path)   
           outstr   (:out result)]
-      (:ipc-media-type (json/parse-string outstr true)))
+      (try
+        (:ipc-media-type (json/parse-string outstr true))
+        (finally
+          (when (.exists (io/file tmp-path))
+            (log/info "Normal removal of temp file " tmp-path)
+            (io/delete-file tmp-path)))))
     (catch Exception e
       (log/error "Error determining type from file path:\n" (format-exception e))
       nil)))
