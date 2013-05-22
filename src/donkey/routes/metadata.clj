@@ -1,7 +1,7 @@
 (ns donkey.routes.metadata
   (:use [compojure.core]
         [donkey.services.file-listing]
-        [donkey.services.metadactyl]
+        [donkey.services.metadata.metadactyl]
         [donkey.util.service]
         [donkey.util])
   (:require [donkey.util.config :as config]

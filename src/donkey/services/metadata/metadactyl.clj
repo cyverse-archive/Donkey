@@ -1,4 +1,4 @@
-(ns donkey.services.metadactyl
+(ns donkey.services.metadata.metadactyl
   (:use [clojure.java.io :only [reader]]
         [donkey.util.config]
         [donkey.util.transformers]

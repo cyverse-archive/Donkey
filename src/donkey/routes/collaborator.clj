@@ -1,6 +1,6 @@
 (ns donkey.routes.collaborator
   (:use [compojure.core]
-        [donkey.services.metadactyl]
+        [donkey.services.metadata.metadactyl]
         [donkey.util])
   (:require [donkey.util.config :as config]))
 
