@@ -2,12 +2,13 @@
   (:use [donkey.util.config]
         [clj-jargon.jargon]
         [clojure-commons.error-codes]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as json] 
             [hoot.rdf :as rdf]
             [hoot.csv :as csv]
             [clojure.java.shell :as sh]
             [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [donkey.util.config :as cfg])
   (:import [org.apache.tika Tika]))
@@ -48,16 +49,28 @@
   (let [tmpf (tmp-file)] 
     (with-open [ins  (chunk-input-stream (input-stream cm path) (cfg/filetype-read-amount))
                 outs (io/output-stream tmpf)]
-      (println (str tmpf))
+      (log/info "Created temp file " (str tmpf) " containing chunk of " path " from iRODS.")
       (io/copy ins outs)
       (str tmpf))))
 
 (defn type-from-script
   [cm path]
-  (let [tmp-path (copy-to-temp cm path)
-        result   (sh/sh "perl" (cfg/filetype-script) "-f" tmp-path)
-        outstr   (:out result)]
-    (:ipc-media-type (json/parse-string outstr true))))
+  (try+
+    (let [tmp-path (copy-to-temp cm path)
+          result   (sh/sh "perl" (cfg/filetype-script) "-f" tmp-path)
+          outstr   (:out result)]
+      (:ipc-media-type (json/parse-string outstr true)))
+    (catch Exception e
+      (log/error "Error determining type from file path:\n" (format-exception e))
+      nil)))
+
+(defn content-type
+  [cm path]
+  (let [script-type (type-from-script cm path)]
+    (log/info "Path " path " has a type of " script-type " from the script.")
+    (if (or (nil? script-type) (empty? script-type))
+      (.detect (Tika.) (input-stream cm path))
+      script-type)))
 
 (defn add-type
   [user path type]
@@ -78,14 +91,10 @@
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    
     (set-metadata cm path (garnish-type-attribute) type "")
+    (log/info "Added type " type " to " path " for " user ".")
     {:path path
      :type type}))
-
-(defn content-type
-  [cm path]
-  (.detect (Tika.) (input-stream cm path)))
 
 (defn auto-add-type
   [user path]
@@ -103,8 +112,9 @@
                :user user
                :path path}))
     
-    (let [type (content-type cm path)] 
+    (let [type (content-type cm path)]
       (set-metadata cm path (garnish-type-attribute) type "")
+      (log/info "Auto-added type " type " to " path " for " user ".")
       {:path path
        :type type})))
 
@@ -124,8 +134,10 @@
                :user user
                :path path}))
     
-    {:path path
-     :type #_(content-type cm path) (type-from-script cm path)}))
+    (let [ct (content-type cm path)]
+      (log/info "Preview type of " path " for " user " is " ct ".")
+      {:path path
+       :type (content-type cm path)})))
 
 (defn get-avus
   [cm dir-path attr val]
@@ -153,6 +165,7 @@
                :user user
                :path path}))
     (delete-avus cm path (get-avus cm path (garnish-type-attribute) type))
+    (log/info "Deleted type " type " from " path " for " user ".")
     {:path path
      :type type
      :user user}))
@@ -172,7 +185,9 @@
       (throw+ {:error_code ERR_NOT_READABLE
                :user user
                :path path}))
-    (mapv :value (get-attribute cm path (garnish-type-attribute)))))
+    (let [path-types (get-attribute cm path (garnish-type-attribute))]
+      (log/info "Retrieved types " path-types " from " path " for " user ".")
+      (mapv :value path-types))))
 
 (defn home-dir
   [cm user]
@@ -183,9 +198,11 @@
   (with-jargon (jargon-cfg) [cm]
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
+               :user       user}))
     
-    (list-everything-in-tree-with-attr cm 
-      (home-dir cm user) 
-      {:name (garnish-type-attribute) :value type})))
+    (let [paths-with-type (list-everything-in-tree-with-attr cm 
+                            (home-dir cm user) 
+                            {:name (garnish-type-attribute) :value type})]
+      (log/info "Looked up all paths with a type of " type " for " user "\n" paths-with-type)
+      paths-with-type)))
 
