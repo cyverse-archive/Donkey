@@ -1,6 +1,7 @@
 (ns donkey.services.garnish.controllers
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
+        [donkey.util.validators]
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as json]
             [hoot.rdf :as rdf]
@@ -49,34 +50,6 @@
    "tab"
    "vcf"])
 
-(defn check-missing-params
-  [params required-keys]
-  (let [not-valid? #(not (contains? params %))]
-    (if (some not-valid? required-keys)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :fields     (filter not-valid? required-keys)}))))
-
-(defn parse-body
-  [body]
-  (try+
-    (json/parse-string body true)
-    (catch Exception e
-      (throw+ {:error_code ERR_INVALID_JSON
-               :message    (str e)}))))
-
-(defn check-params-valid
-  [params func-map]
-  (let [not-valid? #(not ((last %1) (get params (first %1))))
-        field-seq  (seq func-map)]
-    (when (some not-valid? field-seq)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :fields     (mapv first (filter not-valid? field-seq))}))))
-
-(defn validate-params
-  [params func-map]
-  (check-missing-params params (keys func-map))
-  (check-params-valid params func-map))
-
 (defn accepted-types
   []
   (set (concat rdf/accepted-languages csv/csv-types)))
@@ -85,8 +58,8 @@
   [req-body req-params]
   (let [body   (parse-body (slurp req-body))
         params (add-current-user-to-map req-params)]
-    (validate-params params {:user string?})
-    (validate-params body {:path string? 
+    (validate-map params {:user string?})
+    (validate-map body {:path string? 
                            :type #(contains? (accepted-types) %)})
     (json/generate-string
       (prods/add-type (:user params) (:path body) (:type body)))))
@@ -94,7 +67,7 @@
 (defn delete-type
   [req-params]
   (let [params (add-current-user-to-map req-params)] 
-    (validate-params params {:user string? 
+    (validate-map params {:user string? 
                              :type #(contains? (accepted-types) %) 
                              :path string?})
     (json/generate-string
@@ -103,7 +76,7 @@
 (defn get-types
   [req-params]
   (let [params (add-current-user-to-map req-params)] 
-    (validate-params params {:path string? 
+    (validate-map params {:path string? 
                              :user string?})
     (json/generate-string
       {:types (prods/get-types (:user params) (:path params))})))
@@ -111,7 +84,7 @@
 (defn find-typed-paths
   [req-params]
   (let [params (add-current-user-to-map req-params)] 
-    (validate-params params {:user string? :type string?})
+    (validate-map params {:user string? :type string?})
     (json/generate-string
       {:paths (prods/find-paths-with-type (:user params) (:type params))})))
 
@@ -124,14 +97,14 @@
   (let [body   (parse-body (slurp req-body))
         params (add-current-user-to-map req-params)]
     (log/warn body)
-    (validate-params params {:user string?})
-    (validate-params body {:path string?})
+    (validate-map params {:user string?})
+    (validate-map body {:path string?})
     (json/generate-string
       (prods/auto-add-type (:user params) (:path body)))))
 
 (defn preview-auto-type
   [req-params]
   (let [params (add-current-user-to-map req-params)] 
-    (validate-params params {:user string? :path string?})
+    (validate-map params {:user string? :path string?})
     (json/generate-string
       (prods/preview-auto-type (:user params) (:path params)))))
