@@ -6,6 +6,7 @@
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
+            [donkey.services.fileio.controllers :as fileio]
             [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]

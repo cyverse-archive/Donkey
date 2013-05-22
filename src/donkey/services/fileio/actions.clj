@@ -3,14 +3,15 @@
         [donkey.util.config]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
-  (:require [cheshire.core :as json]
+  (:require [cemerick.url :as url] 
+            [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
-            [ring.util.response :as rsp-utils]
             [clojure.string :as string]
             [clj-http.client :as client]
-            [cemerick.url :as url]))
+            [donkey.services.garnish.irods :as filetype]
+            [ring.util.response :as rsp-utils]))
 
 (defn set-meta
   [path attr value unit]
@@ -25,7 +26,8 @@
       (finally
         (.close istream)
         (.close ostream)
-        (set-owner cm dest-path user)))
+        (set-owner cm dest-path user)
+        (filetype/auto-add-type cm user dest-path)))
     {:status      "success"
      :id          dest-path
      :permissions (dataobject-perm-map cm user dest-path)}))

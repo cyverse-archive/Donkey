@@ -93,8 +93,11 @@
 
 (defn add-type
   "Adds the type to a file in iRODS at path for the specified user."
-  [user path type]
-  (with-jargon (jargon-cfg) [cm]
+  ([user path type]
+    (with-jargon (jargon-cfg) [cm]
+      (add-type cm user path type)))
+  
+  ([cm user path type]
     (when-not (contains? all-types type)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :type type}))
@@ -111,6 +114,7 @@
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
+    
     (set-metadata cm path (garnish-type-attribute) type "")
     (log/info "Added type " type " to " path " for " user ".")
     {:path path
@@ -118,8 +122,11 @@
 
 (defn auto-add-type
   "Uses (content-type) to guess at a file type and associates it with the file."
-  [user path]
-  (with-jargon (jargon-cfg) [cm]
+  ([user path]
+    (with-jargon (jargon-cfg) [cm]
+      (auto-add-type cm user path)))
+  
+  ([cm user path]
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
@@ -134,7 +141,7 @@
                :path path}))
     
     (let [type (content-type cm path)]
-      (set-metadata cm path (garnish-type-attribute) type "")
+      (add-metadata cm path (garnish-type-attribute) type "")
       (log/info "Auto-added type " type " to " path " for " user ".")
       {:path path
        :type type})))

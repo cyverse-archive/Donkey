@@ -201,13 +201,15 @@
   "donkey.irods.resc")
 
 (def jargon-cfg
-  (memo/memo #(jg/init (irods-host)
-                       (irods-port)
-                       (irods-user)
-                       (irods-pass)
-                       (irods-home)
-                       (irods-zone)
-                       (irods-resc))))
+  (memo/memo 
+    #(jg/init 
+       (irods-host)
+       (irods-port)
+       (irods-user)
+       (irods-pass)
+       (irods-home)
+       (irods-zone)
+       (irods-resc))))
 
 ;;; Garnish configuration
 (cc/defprop-str garnish-type-attribute
