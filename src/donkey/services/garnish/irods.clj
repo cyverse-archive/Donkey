@@ -16,10 +16,12 @@
 (def all-types (set (concat rdf/accepted-languages csv/csv-types)))
 
 (defn tmp-file
+  "Creates a temp file with a prefix of donkey- and a suffix of .kick"
   []
   (java.io.File/createTempFile "donkey-" ".kick"))
 
 (defn chunk-input-stream
+  "Creates an input-stream that only reads a chunk from the beginning of a file."
   [istream max-size]
   (let [curr-size (atom 0)]
     (proxy [java.io.InputStream] []
@@ -45,6 +47,7 @@
         (.close istream)))))
 
 (defn copy-to-temp
+  "Copies a leading section of 'path' from iRODS into a temp file. Returns the path to the temp file."
   [cm path]
   (let [tmpf (tmp-file)] 
     (with-open [ins  (chunk-input-stream (input-stream cm path) (cfg/filetype-read-amount))
@@ -54,6 +57,8 @@
       (str tmpf))))
 
 (defn type-from-script
+  "Attempts to determine the type of a file from a script. Returns a type on success, an empty string
+   if the script doesn't know the type, and a nil if there's an error. The error is logged."
   [cm path]
   (try+
     (let [tmp-path (copy-to-temp cm path)
@@ -65,6 +70,8 @@
       nil)))
 
 (defn content-type
+  "Determines the filetype of path. Reads in a chunk, writes it to a temp file, runs it
+   against the configured script. If the script can't identify it, it's passed to Tika."
   [cm path]
   (let [script-type (type-from-script cm path)]
     (log/info "Path " path " has a type of " script-type " from the script.")
@@ -73,6 +80,7 @@
       script-type)))
 
 (defn add-type
+  "Adds the type to a file in iRODS at path for the specified user."
   [user path type]
   (with-jargon (jargon-cfg) [cm]
     (when-not (contains? all-types type)
@@ -97,6 +105,7 @@
      :type type}))
 
 (defn auto-add-type
+  "Uses (content-type) to guess at a file type and associates it with the file."
   [user path]
   (with-jargon (jargon-cfg) [cm]
     (when-not (exists? cm path)
@@ -119,6 +128,7 @@
        :type type})))
 
 (defn preview-auto-type
+  "Returns the auto-type that (auto-add-type) would have associated with the file."
   [user path]
   (with-jargon (jargon-cfg) [cm]
     (when-not (exists? cm path)
@@ -140,8 +150,8 @@
        :type (content-type cm path)})))
 
 (defn get-avus
-  [cm dir-path attr val]
   "Returns a list of avu maps for set of attributes associated with dir-path"
+  [cm dir-path attr val]
   (validate-path-lengths dir-path)
   (filter
     #(and (= (:attr %1) attr) 
@@ -149,21 +159,26 @@
     (get-metadata cm dir-path)))
 
 (defn delete-type
+  "Removes the association of type with path for the specified user."
   [user path type]
   (with-jargon (jargon-cfg) [cm]
     (when-not (contains? all-types type)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :type type}))
+    
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
+    
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
+    
     (when-not (owns? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
+    
     (delete-avus cm path (get-avus cm path (garnish-type-attribute) type))
     (log/info "Deleted type " type " from " path " for " user ".")
     {:path path
@@ -171,6 +186,7 @@
      :user user}))
 
 (defn get-types
+  "Gets all of the filetypes associated with path."
   [user path]
   (with-jargon (jargon-cfg) [cm]
     (when-not (exists? cm path)
@@ -190,10 +206,13 @@
       (mapv :value path-types))))
 
 (defn home-dir
+  "Returns the path to the user's home directory."
   [cm user]
   (ft/path-join "/" (:zone cm) "home" user))
   
 (defn find-paths-with-type
+  "Returns all of the paths under the user's home directory that have the specified type
+   associated with it."
   [user type]
   (with-jargon (jargon-cfg) [cm]
     (when-not (user-exists? cm user)

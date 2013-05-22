@@ -113,7 +113,7 @@
   (let [params (add-current-user-to-map req-params)] 
     (validate-params params {:user string? :type string?})
     (json/generate-string
-      {:paths (prods/find-paths-with-type (:user params) (:path params))})))
+      {:paths (prods/find-paths-with-type (:user params) (:type params))})))
 
 (defn get-type-list 
   [] 
