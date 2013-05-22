@@ -5,6 +5,7 @@
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.routes.data]
+        [donkey.routes.fileio]
         [donkey.routes.metadata]
         [donkey.routes.misc]
         [donkey.routes.notification]
@@ -15,11 +16,12 @@
         [donkey.routes.collaborator]
         [donkey.auth.user-attributes]
         [donkey.util.service]
-        [ring.middleware keyword-params])
+        [ring.middleware keyword-params multipart-params])
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
-            [donkey.util.config :as config]))
+            [donkey.util.config :as config]
+            [donkey.services.fileio.controllers :as fileio]))
 
 (defn- flagged-routes
   [& handlers]
@@ -36,6 +38,7 @@
    (secured-tree-viewer-routes)
    (secured-data-routes)
    (secured-session-routes)
+   (secured-fileio-routes)
    (route/not-found (unrecognized-path-response))))
 
 (defn cas-store-user
@@ -51,9 +54,6 @@
    (unsecured-notification-routes)
    (unsecured-metadata-routes)
    (unsecured-tree-viewer-routes)
-
-   #_(context "/secured" []
-            (store-current-user (secured-routes) config/cas-server config/server-name))
 
    (context "/secured" []
             (cas-store-user (secured-routes) config/cas-server config/server-name))
@@ -79,6 +79,7 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler donkey-routes)
+      (wrap-multipart-params {:store fileio/store-irods})
       wrap-keyword-params
       wrap-lcase-params
       wrap-query-params))

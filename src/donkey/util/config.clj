@@ -83,6 +83,11 @@
   [props config-valid configs]
   "donkey.routes.collaborator" true)
 
+(cc/defprop-optboolean fileio-routes-enabled
+  "Enables or disables the fileio routes."
+  [props config-valid configs]
+  "donkey.routes.fileio" true)
+
 (cc/defprop-str iplant-email-base-url
   "The base URL to use when connnecting to the iPlant email service."
   [props config-valid configs metadata-routes-enabled]
@@ -220,6 +225,28 @@
   [props config-valid configs data-routes-enabled]
   "donkey.garnish.filetype-read-amount")
 ;;; End of Garnish configuration
+
+;;; File IO configuration
+(cc/defprop-str fileio-temp-dir
+  "The directory, in iRODS, to use as temp storage for uploads."
+  [props config-valid configs fileio-routes-enabled]
+  "donkey.fileio.temp-dir")
+
+(cc/defprop-str fileio-curl-path
+  "The path on the cluster to the curl tool."
+  [props config-valid configs fileio-routes-enabled]
+  "donkey.fileio.curl-path")
+
+(cc/defprop-vec fileio-admin-users
+  "The admin users in iRODS."
+  [props config-valid configs fileio-routes-enabled]
+  "donkey.fileio.admin-users")
+
+(cc/defprop-str fileio-service-name
+  "The old service name for fileio"
+  [props config-valid configs fileio-routes-enabled]
+  "donkey.fileio.service-name")
+;;; End File IO configuration
 
 (cc/defprop-int default-user-search-result-limit
   "The default limit for the number of results for a user info search.  Note
