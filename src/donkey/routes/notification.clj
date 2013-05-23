@@ -36,8 +36,14 @@
    (GET "/notifications/system/messages" [:as req]
         (trap #(get-system-messages req)))
 
+   (GET "/notifications/system/new-messages" [:as req]
+        (trap #(get-new-system-messages req)))
+
    (GET "/notifications/system/unseen-messages" [:as req]
         (trap #(get-unseen-system-messages req)))
+
+   (POST "/notifications/system/received" [:as req]
+         (trap #(mark-system-messages-received req)))
 
    (POST "/notifications/system/seen" [:as req]
          (trap #(mark-system-messages-seen req)))
