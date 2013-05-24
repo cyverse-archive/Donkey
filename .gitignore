@@ -11,6 +11,7 @@
 /.classpath
 /.project
 /.dir-locals.el
+/*.eld
 /target
 /donkey
 /donkey.spec
