@@ -17,3 +17,7 @@
       (:body)
       (service/decode-json)
       (:result)))
+
+(defn count-apps
+  []
+  (count (list-apps)))
