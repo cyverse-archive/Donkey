@@ -335,11 +335,21 @@
   [req]
   (forward-get (secured-notification-url req "system" "messages") req))
 
+(defn get-new-system-messages
+  "Forwards a request to the notification agent's endpoint for getting new system messages."
+  [req]
+  (forward-get (secured-notification-url req "system" "new-messages") req))
+
 (defn get-unseen-system-messages
   "Forwards a request to the notification agent's endpoint for getting
    unseen system messages."
   [req]
   (forward-get (secured-notification-url req "system" "unseen-messages") req))
+
+(defn mark-system-messages-received
+  "Forwards a request to the notification to mark a set of system notifications as received."
+  [req]
+  (forward-post (secured-notification-url req "system" "received") req))
 
 (defn mark-system-messages-seen
   "Forwards a request to the notification to mark a set of system notifications
