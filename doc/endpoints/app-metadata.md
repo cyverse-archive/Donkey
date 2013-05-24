@@ -137,10 +137,12 @@ path. Please see the metadactyl documentation for more information.
 
 ## Listing Analysis Groups
 
+Secured Endpoint: GET /secured/app-groups
+
 Unsecured Endpoint: GET /get-only-analysis-groups/{workspace-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+paths. Please see the metadactyl documentation for more information.
 
 ## Listing Individual Analyses
 
