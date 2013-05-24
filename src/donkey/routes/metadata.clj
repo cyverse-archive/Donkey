@@ -1,10 +1,11 @@
 (ns donkey.routes.metadata
   (:use [compojure.core]
         [donkey.services.file-listing]
-        [donkey.services.metadactyl]
+        [donkey.services.metadata.metadactyl]
         [donkey.util.service]
         [donkey.util])
   (:require [donkey.util.config :as config]
+            [donkey.services.metadata.app-listings :as app-listings]
             [donkey.services.jex :as jex]))
 
 (defn secured-metadata-routes
@@ -44,6 +45,9 @@
 
    (GET "/search-analyses" [:as req]
         (trap #(search-apps req)))
+
+   (GET "/app-groups" []
+        (trap #(app-listings/get-only-app-groups)))
 
    (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as req]
         (trap #(list-apps-in-group req app-group-id)))

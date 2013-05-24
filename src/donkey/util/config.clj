@@ -88,6 +88,16 @@
   [props config-valid configs]
   "donkey.routes.fileio" true)
 
+(cc/defprop-optboolean agave-enabled
+  "Enables or disables all features that require connections to Agave."
+  [props config-valid configs]
+  "donkey.features.agave" true)
+
+(cc/defprop-optboolean agave-jobs-enabled
+  "Enables or disables Agave job submission."
+  [props config-valid configs]
+  "donkey.features.agave.jobs" false)
+
 (cc/defprop-str iplant-email-base-url
   "The base URL to use when connnecting to the iPlant email service."
   [props config-valid configs metadata-routes-enabled]
@@ -201,8 +211,8 @@
   "donkey.irods.resc")
 
 (def jargon-cfg
-  (memo/memo 
-    #(jg/init 
+  (memo/memo
+    #(jg/init
        (irods-host)
        (irods-port)
        (irods-user)
@@ -283,6 +293,11 @@
   "The URL for Elastic Search"
   [props config-valid configs data-routes-enabled]
   "donkey.infosquito.es-url")
+
+(cc/defprop-str agave-base-url
+  "The base URL to use when connecting to Agave."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.base-url")
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
