@@ -3,6 +3,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.memoize "0.5.3"]
                  [org.clojure/tools.logging "0.2.3"]
+                 [org.clojure/data.codec "0.1.0"]
                  [org.apache.tika/tika-core "1.3"]
                  [org.iplantc/clj-cas "1.0.1-SNAPSHOT"]
                  [org.iplantc/clj-jargon "0.2.5-SNAPSHOT"]

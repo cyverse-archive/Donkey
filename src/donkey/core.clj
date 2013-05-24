@@ -14,6 +14,7 @@
         [donkey.routes.tree-viewer]
         [donkey.routes.user-info]
         [donkey.routes.collaborator]
+        [donkey.routes.filesystem]
         [donkey.auth.user-attributes]
         [donkey.util.service]
         [ring.middleware keyword-params multipart-params])
@@ -39,6 +40,7 @@
    (secured-data-routes)
    (secured-session-routes)
    (secured-fileio-routes)
+   (secured-filesystem-routes)
    (route/not-found (unrecognized-path-response))))
 
 (defn cas-store-user

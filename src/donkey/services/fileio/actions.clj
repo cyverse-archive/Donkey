@@ -88,7 +88,7 @@
     (let [new-fname (new-filename tmp-path)
           new-path  (ft/path-join final-path new-fname)]
       (if (exists? cm new-path) (delete cm new-path))
-      (move cm tmp-path new-path :user user :admin-users (fileio-admin-users) :skip-source-perms? true)
+      (move cm tmp-path new-path :user user :admin-users (irods-admins) :skip-source-perms? true)
       (set-owner cm new-path user)
       {:status "success"
        :file 

@@ -88,6 +88,11 @@
   [props config-valid configs]
   "donkey.routes.fileio" true)
 
+(cc/defprop-optboolean filesystem-routes-enabled
+  "Enables or disables the filesystem routes."
+  [props config-valid configs]
+  "donkey.routes.filesystem" true)
+
 (cc/defprop-optboolean agave-enabled
   "Enables or disables all features that require connections to Agave."
   [props config-valid configs]
@@ -210,6 +215,26 @@
   [props config-valid configs data-routes-enabled]
   "donkey.irods.resc")
 
+(cc/defprop-int irods-max-retries
+  "The number of retries for failed operations."
+  [props config-valid configs data-routes-enabled]
+  "donkey.irods.max-retries")
+
+(cc/defprop-int irods-retry-sleep
+  "The number of milliseconds to sleep between retries."
+  [props config-valid configs data-routes-enabled]
+  "donkey.irods.retry-sleep")
+
+(cc/defprop-boolean irods-use-trash
+  "Toggles whether to move deleted files to the trash first."
+  [props config-valid configs data-routes-enabled]
+  "donkey.irods.use-trash")
+
+(cc/defprop-vec irods-admins
+  "The admin users in iRODS."
+  [props config-valid configs fileio-routes-enabled]
+  "donkey.irods.admin-users")
+
 (def jargon-cfg
   (memo/memo
     #(jg/init
@@ -219,7 +244,10 @@
        (irods-pass)
        (irods-home)
        (irods-zone)
-       (irods-resc))))
+       (irods-resc)
+       :max-retries (irods-max-retries)
+       :retry-sleep (irods-retry-sleep)
+       :use-trash   (irods-use-trash))))
 
 ;;; Garnish configuration
 (cc/defprop-str garnish-type-attribute
@@ -249,16 +277,58 @@
   [props config-valid configs fileio-routes-enabled]
   "donkey.fileio.curl-path")
 
-(cc/defprop-vec fileio-admin-users
-  "The admin users in iRODS."
-  [props config-valid configs fileio-routes-enabled]
-  "donkey.fileio.admin-users")
-
 (cc/defprop-str fileio-service-name
   "The old service name for fileio"
   [props config-valid configs fileio-routes-enabled]
   "donkey.fileio.service-name")
 ;;; End File IO configuration
+
+;;; Filesystem configuration (a.k.a. Nibblonian).
+(cc/defprop-long fs-preview-size
+  "The size, in bytes, of the generated previews."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.preview-size")
+
+(cc/defprop-int fs-data-threshold
+  "Um...hmmm..."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.data-threshold")
+
+(cc/defprop-str fs-community-data
+  "The path to the root directory for community data."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.community-data")
+
+(cc/defprop-vec fs-filter-files
+  "The files to filter out of return values."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.filter-files")
+
+(cc/defprop-vec fs-perms-filter
+  "Hmmm..."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.perms-filter")
+
+(cc/defprop-str fs-copy-attribute
+  "The attribute to tag files with when they're a copy of another file."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.copy-key")
+
+(cc/defprop-str fs-riak-url
+  "The base URL to Riak."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.riak-base-url")
+
+(cc/defprop-str fs-tree-bucket
+  "The Riak bucket containing tree URLs."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.riak-trees-bucket")
+
+(cc/defprop-vec fs-filter-chars
+  "The characters that are considered invalid in iRODS dir- and filenames."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.filter-chars")
+;;; End Filesystem configuration
 
 (cc/defprop-int default-user-search-result-limit
   "The default limit for the number of results for a user info search.  Note
