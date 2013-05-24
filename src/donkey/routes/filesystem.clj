@@ -47,14 +47,11 @@
     (POST "/filesystem/move" [:as req]
           (trap #(do-move (:params req) (:body req))))
     
-    (GET "/filesystem/file/download" [:as req]
-         (trap #(do-download (:params req))))
-    
     (GET "/filesystem/file/preview" [:as req]
          (trap #(do-preview (:params req))))
     
     (GET "/filesystem/file/manifest" [:as req]
-         (trap #(do-manifest (:params req) (:body req))))
+         (trap #(do-manifest (:params req))))
     
     (GET "/filesystem/metadata" [:as req]
          (trap #(do-metadata-get (:params req))))
@@ -85,9 +82,6 @@
     
     (POST "/filesystem/restore" [:as req]
           (trap #(do-restore (:params req) (:body req))))
-    
-    (POST "/filesystem/copy" [:as req]
-          (trap #(do-copy (:params req) (:body req))))
     
     (POST "/filesystem/tickets" [:as req]
           (trap #(do-add-tickets (:params req) (:body req))))

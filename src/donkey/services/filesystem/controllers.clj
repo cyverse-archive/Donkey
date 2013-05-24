@@ -263,6 +263,10 @@
     (subs username 0 (.indexOf username "@"))
     username))
 
+(defn boolean?
+  [flag]
+  (or (true? flag) (false? flag)))
+
 (defn do-share
   [req-params req-body]
   (log/debug "do-share")
@@ -271,7 +275,7 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential? :permissions map?})
-    (validate-map (:permissions body) {:read string? :write string? :own string?})
+    (validate-map (:permissions body) {:read boolean? :write boolean? :own boolean?})
     (let [user        (fix-username (:user params))
           share-withs (map fix-username (:users body))]
       (json/generate-string
@@ -385,12 +389,11 @@
 (defn do-manifest
   "Returns a manifest consisting of preview and rawcontent fields for a
    file."
-  [req-params req-body]
+  [req-params]
   (log/debug "do-manifest")
-  (let [params (add-current-user-to-map req-params)
-        body   (parse-body (slurp req-body))]
+  (let [params (add-current-user-to-map req-params)]
     (json/generate-string
-      (irods-actions/manifest (:user params) (:path body) (fs-data-threshold)))))
+      (irods-actions/manifest (:user params) (:path params) (fs-data-threshold)))))
 
 (defn do-download
   [req-params req-body]
