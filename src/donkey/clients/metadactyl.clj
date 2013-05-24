@@ -3,7 +3,7 @@
   (:require [cemerick.url :as curl]
             [clj-http.client :as client]
             [donkey.util.config :as config]
-            [clojure.tools.logging :as log]))
+            [donkey.util.service :as service]))
 
 (defn- secured-params
   ([]
@@ -23,5 +23,16 @@
 
 (defn get-only-app-groups
   []
-  (client/get (secured-url "app-groups")
-              {:query-params (secured-params)}))
+  (-> (client/get (secured-url "app-groups")
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn apps-in-group
+  [group-id]
+  (-> (client/get (secured-url "get-analyses-in-group" group-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
