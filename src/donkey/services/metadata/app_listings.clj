@@ -15,7 +15,7 @@
    :id             hpc-group-id
    :is_public      true
    :name           hpc-group-name
-   :template_count (agave/count-apps)
+   :template_count -1
    :workspace_id   0})
 
 (defn- add-hpc-group
