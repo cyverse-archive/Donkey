@@ -1,5 +1,6 @@
 (ns donkey.services.metadata.app-listings
-  (:require [donkey.clients.agave :as agave]
+  (:require [clojure.tools.logging :as log]
+            [donkey.clients.agave :as agave]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.util.config :as config]
             [donkey.util.service :as service]))
@@ -30,16 +31,31 @@
       (add-hpc-group)
       (service/success-response)))
 
+(defn- agave-system-statuses
+  []
+  (let [system-listing (agave/list-systems)]
+    (service/log-runtime
+     ["extracting system statuses"]
+     (into {} (map (fn [m] [(:resource.id m) (:status m)]) system-listing)))))
+
+(defn- agave-app-enabled?
+  [system-statuses listing]
+  (and (config/agave-jobs-enabled)
+       (:available listing)
+       (= "up" (system-statuses (:executionHost listing)))))
+
 (defn- format-hpc-app-listing
-  [listing]
+  [system-statuses listing]
   (-> listing
-      (dissoc :inputs :modules :ontolog :outputs :parallelism :parameters :tags :templatePath
-              :testPath)
+      (dissoc :available :checkpointable :deploymentPath :executionHost :executionType
+              :helpURI :inputs :longDescription :modules :ontolog :outputs :parallelism
+              :parameters :public :revision :shortDescription :tags :templatePath
+              :testPath :version)
       (assoc
           :can_run              true
           :deleted              false
           :description          (:shortDescription listing)
-          :disabled             (not (and (config/agave-jobs-enabled) (:available listing)))
+          :disabled             (not (agave-app-enabled? system-statuses listing))
           :edited_date          (System/currentTimeMillis)
           :group_id             hpc-group-id
           :group_name           hpc-group-name
@@ -51,13 +67,17 @@
           :pipeline_eligibility {:is_valid false :reason "HPC App"}
           :rating               {:average 0.0}
           :step-count           1
-          :wiki_url             "")
-      (dissoc :available :checkpointable :deploymentPath :executionHost :executionType
-              :helpURI :longDescription :public :revision :shortDescription :version)))
+          :wiki_url             "")))
 
 (defn apps-in-group
   [group-id]
-  (service/success-response
-   (if (= group-id hpc-group-id)
-     (assoc (hpc-group) :templates (map format-hpc-app-listing (agave/list-apps)))
-     (metadactyl/apps-in-group group-id))))
+  (let [system-statuses (agave-system-statuses)
+        app-listing     (agave/list-apps)]
+    (service/log-runtime
+     ["formatting HPC app listing result"]
+     (service/success-response
+      (if (= group-id hpc-group-id)
+        (assoc (hpc-group)
+          :templates      (map (partial format-hpc-app-listing system-statuses) app-listing)
+          :template_count (count app-listing))
+        (metadactyl/apps-in-group group-id))))))

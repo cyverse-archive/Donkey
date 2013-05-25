@@ -93,6 +93,11 @@
   [props config-valid configs]
   "donkey.features.agave.jobs" false)
 
+(cc/defprop-optboolean log-runtimes
+  "Enables or disables the logging of runtimes for endpoints that support it."
+  [props config-valid configs]
+  "donkey.debug.log-runtimes" false)
+
 (cc/defprop-str iplant-email-base-url
   "The base URL to use when connnecting to the iPlant email service."
   [props config-valid configs metadata-routes-enabled]

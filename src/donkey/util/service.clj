@@ -7,7 +7,8 @@
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce])
+            [clojure-commons.error-codes :as ce]
+            [donkey.util.config :as config])
   (:import [clojure.lang IPersistentMap]))
 
 (defn empty-response []
@@ -105,7 +106,7 @@
 (defn prepare-forwarded-request
   "Prepares a request to be forwarded to a remote service."
   ([request body]
-    {:content-type (or (get-in request [:headers :content-type]) 
+    {:content-type (or (get-in request [:headers :content-type])
                        (get-in request [:content-type]))
       :headers (dissoc
                 (:headers request)
@@ -164,3 +165,12 @@
   (if (string? source)
     (cheshire/decode source true)
     (cheshire/decode-stream (reader source) true)))
+
+(defmacro log-runtime
+  [[msg] & body]
+  `(let [start#  (System/currentTimeMillis)
+         result# (do ~@body)
+         finish# (System/currentTimeMillis)]
+     (when (config/log-runtimes)
+       (log/warn ~msg "-" (- finish# start#) "milliseconds"))
+     result#))
