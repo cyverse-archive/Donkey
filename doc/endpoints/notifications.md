@@ -464,6 +464,10 @@ parameter and its corresponding ticket string.
             <td>/secured/notifications/system/received</td>
             <td>/system/received</td>
         </tr>
+         <tr>
+            <td>/secured/notifications/system/mark-all-received</td>
+            <td>/system/mark-all-received</td>
+        </tr>
         <tr>
             <td>/secured/notifications/system/seen</td>
             <td>/system/seen</td>

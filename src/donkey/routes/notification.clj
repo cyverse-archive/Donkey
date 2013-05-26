@@ -45,6 +45,9 @@
    (POST "/notifications/system/received" [:as req]
          (trap #(mark-system-messages-received req)))
 
+   (POST "/notifications/system/mark-all-received" [:as req]
+         (trap #(mark-all-system-messages-received req)))
+
    (POST "/notifications/system/seen" [:as req]
          (trap #(mark-system-messages-seen req)))
 

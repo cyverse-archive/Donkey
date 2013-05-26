@@ -351,6 +351,11 @@
   [req]
   (forward-post (secured-notification-url req "system" "received") req))
 
+(defn mark-all-system-messages-received
+  "Forwards a request to the notification-agent to mark all system notifications as received."
+  [req]
+  (forward-post (secured-notification-url req "system" "mark-all-received") req))
+
 (defn mark-system-messages-seen
   "Forwards a request to the notification to mark a set of system notifications
    as seen."
