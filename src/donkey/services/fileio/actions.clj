@@ -34,6 +34,7 @@
 
 (defn store
   [cm istream user dest-path]
+  (log/info "In store function for " user dest-path)
   (let [ddir (ft/dirname dest-path)]
     (when-not (exists? cm ddir)
       (mkdirs cm ddir))
@@ -44,6 +45,7 @@
                :path ddir} ))
 
     (scruffy-copy cm user istream dest-path)
+    (log/info "store function after copy.")
     dest-path))
 
 (defn- get-istream
@@ -72,6 +74,7 @@
 
 (defn upload
   [user tmp-path final-path]
+  (log/info "In upload for " user tmp-path final-path)
   (with-jargon (jargon-cfg) [cm]
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
