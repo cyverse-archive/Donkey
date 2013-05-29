@@ -13,8 +13,6 @@
             [donkey.util.config :as cfg])
   (:import [org.apache.tika Tika]))
 
-(def all-types (set (concat rdf/accepted-languages csv/csv-types)))
-
 (defn tmp-file
   "Creates a temp file with a prefix of donkey- and a suffix of .kick"
   []
@@ -98,10 +96,6 @@
       (add-type cm user path type)))
   
   ([cm user path type]
-    (when-not (contains? all-types type)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :type type}))
-    
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
@@ -181,10 +175,6 @@
   "Removes the association of type with path for the specified user."
   [user path type]
   (with-jargon (jargon-cfg) [cm]
-    (when-not (contains? all-types type)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :type type}))
-    
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))

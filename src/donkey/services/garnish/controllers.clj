@@ -67,8 +67,9 @@
 (defn delete-type
   [req-params]
   (log/info "(delete-type) request parameters:" req-params)
-  (let [params (add-current-user-to-map req-params)] 
-    (log/info "(delete-type request parameters after conversion:" params)
+  (let [params (add-current-user-to-map req-params)]
+    (log/info "(delete-type) request parameters after conversion:" params)
+    (log/info "(delete-type) contains accepted type" (contains? (accepted-types) (:type params)))
     (validate-map params {:user string? 
                           :type #(contains? (accepted-types) %) 
                           :path string?})
