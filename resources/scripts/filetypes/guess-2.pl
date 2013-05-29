@@ -1,7 +1,7 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl -w
 # guess_bioseq_content.pl is a script that utilizes parts of Bioperl 1.6
 # Nirav Merchant nirav@email.arizona.edu 05/03/2013
-# Ver 0.1b
+# Ver 0.2b
 # This simple utility based on Bioperl GuessSeqFormat
 # http://doc.bioperl.org/releases/bioperl-1.6.1/
 # It takes three arguments -file a file to read content from note this file is limited to max first 1000 bytes
@@ -14,7 +14,7 @@
 #  
 
 use Getopt::Long qw(:config pass_through);
-use Data::Dumper;
+# use Data::Dumper;
 # GuessSeqFormat is from Bioperl package I have commented specifics and just included the 
 # GuessSeqFormat.pm file 
 # use GuessSeqFormat;
@@ -24,18 +24,28 @@ my $content;
 my $size;
 my $limit = 1000;
 
+
 GetOptions( 'file=s' => \$file,'limit=i' => \$limit,'size=i' => \$size);
 # my $guesser = new Bio::Tools::GuessSeqFormat( -text =>$content);
 if (defined $file) {
 					open(FH,$file) or die "Cannot read $file for detecting content type" ;
-					$read_bytes = read FH,$content,$limit;
+					my $read_bytes = read FH,$content,$limit;
 			}  else  { die "Cannot operate without -file option"; }
 					
 my ($format,$sub_format) = guess($content,$size);
 # print "Found $format\n";
+# if we did not get format back we will not mess with subformat and print empty stuff
+if(!defined($format)) { 
+						$format = ""; 
+						$sub_format = "";	
+							} 
+# If that format does not have a sub format we will go with empty 
+if(defined($format) && !defined($sub_format)) {  
+						$sub_format = "";	
+							} 
+							
 print '{ "ipc-media-type": "'.$format.'" , "ipc-media-sub-type": "'.$sub_format.'" , "ipc-search-index": "", "ipc-search-index-method": "" }';
-
-
+					
 
 
 
@@ -65,6 +75,12 @@ sub guess
     my $size = shift;
     
 my %formats = (
+	tcsh        => { test => \&_possibly_tcsh       },
+	csh        	=> { test => \&_possibly_csh       	},
+	sh        	=> { test => \&_possibly_sh       	},
+	bash        => { test => \&_possibly_bash       },
+	perl        => { test => \&_possibly_perl       },
+	python      => { test => \&_possibly_python     },
     ace         => { test => \&_possibly_ace        },
     blast       => { test => \&_possibly_blast      },
     bowtie      => { test => \&_possibly_bowtie     },
@@ -109,7 +125,7 @@ my %formats = (
     
 
 
-    my $fh,%found;
+    my ($fh,%found);
     my $start_pos;
     my @lines;
     
@@ -134,7 +150,8 @@ my %formats = (
         chomp($line);
         $line =~ s/\r$//;   # Fix for DOS files on Unix.
         ++$lineno;
-my $val,$ver, $match;
+# my $val,$ver;
+# my $match;
 
         while (($fmt_key, $fmt) = each (%formats)) {
           
@@ -183,6 +200,81 @@ file of the type that they perform a test of.
 A zero return value does not mean that the line is not part
 of a certain type of file, just that the test did not find any
 characteristics of that type of file in the line.
+
+=head2 _possibly_csh
+
+csh shell script
+
+=cut
+
+sub _possibly_csh
+{
+    my ($line, $lineno) = (shift, shift);
+    return ($line =~ /^#.+\/csh/);
+}
+
+=head2 _possibly_tcsh
+
+tcsh shell script
+
+=cut
+
+sub _possibly_tcsh
+{
+    my ($line, $lineno) = (shift, shift);
+    return ($line =~ /^#.+\/tcsh/);
+}
+
+=head2 _possibly_sh
+
+sh shell script
+
+=cut
+
+sub _possibly_sh
+{
+    my ($line, $lineno) = (shift, shift);
+    return ($line =~ /^#.+\/sh/);
+}
+
+
+=head2 _possibly_bash
+
+bash shell script
+
+=cut
+
+
+
+sub _possibly_bash
+{
+    my ($line, $lineno) = (shift, shift);
+    return ($line =~ /^#.+\/bash/);
+}
+=head2 _possibly_perl
+
+perl script
+
+=cut
+
+sub _possibly_perl
+{
+    my ($line, $lineno) = (shift, shift);
+    return ($line =~ /^#.+perl/);
+}
+
+=head2 _possibly_python
+
+python script
+
+=cut
+
+sub _possibly_python
+{
+    my ($line, $lineno) = (shift, shift);
+    return ($line =~ /^#.+python/);
+}
+
 
 =head2 _possibly_ace
 
