@@ -52,7 +52,7 @@
 
 (defn accepted-types
   []
-  (set (concat rdf/accepted-languages csv/csv-types)))
+  (set (concat script-types rdf/accepted-languages csv/csv-types)))
 
 (defn add-type
   [req-body req-params]
@@ -60,16 +60,18 @@
         params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
     (validate-map body {:path string? 
-                           :type #(contains? (accepted-types) %)})
+                        :type #(contains? (accepted-types) %)})
     (json/generate-string
       (prods/add-type (:user params) (:path body) (:type body)))))
 
 (defn delete-type
   [req-params]
+  (log/info "(delete-type) request parameters:" req-params)
   (let [params (add-current-user-to-map req-params)] 
+    (log/info "(delete-type request parameters after conversion:" params)
     (validate-map params {:user string? 
-                             :type #(contains? (accepted-types) %) 
-                             :path string?})
+                          :type #(contains? (accepted-types) %) 
+                          :path string?})
     (json/generate-string
       (prods/delete-type (:user params) (:path params) (:type params)))))
 
@@ -77,7 +79,7 @@
   [req-params]
   (let [params (add-current-user-to-map req-params)] 
     (validate-map params {:path string? 
-                             :user string?})
+                          :user string?})
     (json/generate-string
       {:type (prods/get-types (:user params) (:path params))})))
 
