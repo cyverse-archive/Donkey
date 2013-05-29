@@ -79,7 +79,7 @@
     (validate-map params {:path string? 
                              :user string?})
     (json/generate-string
-      {:types (prods/get-types (:user params) (:path params))})))
+      {:type (prods/get-types (:user params) (:path params))})))
 
 (defn find-typed-paths
   [req-params]

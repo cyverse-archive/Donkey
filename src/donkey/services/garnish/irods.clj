@@ -206,8 +206,7 @@
 
 (defn get-types
   "Gets all of the filetypes associated with path."
-  [user path]
-  (with-jargon (jargon-cfg) [cm]
+  ([cm user path]
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
@@ -222,7 +221,11 @@
                :path path}))
     (let [path-types (get-attribute cm path (garnish-type-attribute))]
       (log/info "Retrieved types " path-types " from " path " for " user ".")
-      (mapv :value path-types))))
+      (or (:value (first path-types) ""))))
+  
+  ([user path]
+    (with-jargon (jargon-cfg) [cm]
+      (get-types cm user path))))
 
 (defn home-dir
   "Returns the path to the user's home directory."
