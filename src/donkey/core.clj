@@ -56,6 +56,7 @@
    (unsecured-notification-routes)
    (unsecured-metadata-routes)
    (unsecured-tree-viewer-routes)
+   (unsecured-fileio-routes)
 
    (context "/secured" []
             (cas-store-user (secured-routes) config/cas-server config/server-name))

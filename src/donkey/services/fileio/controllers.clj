@@ -53,14 +53,12 @@
 (defn upload
   [req-params req-multipart]
   (log/info "Detected params: " req-params)
-  (let [params (add-current-user-to-map req-params)]
-    (log/info "Detected params: " params)
-    (validate-map params {:user string? "dest" string?})
-    (validate-map req-multipart {"file" string?})
-    (let [user    (:user params)
-          dest    (get params "dest")
-          up-path (get req-multipart "file")]
-      (json/generate-string (actions/upload user up-path dest)))))
+  (validate-map req-params {:user string? "dest" string?})
+  (validate-map req-multipart {"file" string?})
+  (let [user    (:user req-params)
+        dest    (get req-params "dest")
+        up-path (get req-multipart "file")]
+    (json/generate-string (actions/upload user up-path dest))))
 
 (defn url-filename
   [address]

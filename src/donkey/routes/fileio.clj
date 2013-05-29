@@ -15,12 +15,18 @@
    (GET "/fileio/download" [:as req]
         (trap #(fio/download (:params req))))
 
-   (POST "/fileio/upload" [:as req]
-         (do (log/info "Request: " req)
-           (trap #(fio/upload (:params req) (:multipart-params req)))))
-
    (POST "/fileio/urlupload" [:as req]
            (trap #(fio/urlupload (:params req) (:body req))))
 
    (POST "/fileio/saveas" [:as req]
         (trap #(fio/saveas (:params req) (:body req))))))
+
+(defn unsecured-fileio-routes
+  "Routes for FileIO that bypass CAS."
+  []
+  (optional-routes
+    [config/data-routes-enabled]
+    
+    (POST "/fileio/upload" [:as req]
+          (do (log/info "Request: " req)
+            (trap #(fio/upload (:params req) (:multipart-params req)))))))
