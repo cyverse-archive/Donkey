@@ -41,24 +41,21 @@ __Error Codes__:
 
 __Curl Command__:
 
-    curl 'http://127.0.0.1:31370/download?proxyToken=notReal&path=/iplant/home/testuser/myfile.txt'
+    curl 'http://127.0.0.1:31370/secured/fileio/download?proxyToken=notReal&path=/iplant/home/testuser/myfile.txt'
 
 This will result is the file contents being printed out to stdout. Redirect to a file to actually get the file.
 
 
 ## Uploading
 
-__URL Path__: /secured/fileio/upload
+__URL Path__: /fileio/upload
 
 __HTTP Method__: POST
-
-__Request Query Paramters__:
-
-* proxyToken - A valid CAS ticket.
 
 __Request Form Fields__:
 
 * file - The contents of the file to be uploaded.
+* user - The iRODS user uploading the file.
 * dest - The destination directory for the file.
 
 __Error Codes__:
@@ -91,7 +88,7 @@ __Curl Command__:
 
 Uploading is handled through multipart requests:
 
-    curl -F file=@testfile.txt -F dest=/iplant/home/testuser/ http://127.0.0.1:31370/upload?proxyToken=notReal
+    curl -F file=@testfile.txt -F user=testuser -F dest=/iplant/home/testuser/ http://127.0.0.1:31370/fileio/upload
 
 Notice that the 'dest' value points to a directory and not a file.
 
@@ -157,9 +154,8 @@ If the URL passed in is incorrect, then the error message will look like this:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"dest" : "/iplant/home/testuser/", "address" : "http://www.google.com/index.html"}' http://127.0.0.1:31370/urlupload?user=testuser
+    curl -d '{"dest" : "/iplant/home/testuser/", "address" : "http://www.google.com/index.html"}' http://127.0.0.1:31370/secured/fileio/urlupload?proxyToken=notReal
 
-Adding the "Content-Type" header is required. You'll get JSON parsing or format errors otherwise.
 The 'dest' value in the JSON refers to the path to the directory in iRODS that the file will be saved off to. The filename of the file will be extracted from the path portion of the URL.
 
 
@@ -170,7 +166,7 @@ Uploads are staged in a temporary directory in iRODS before being moved to their
 
 ## Save As
 
-__URL Path__: /secured/fileio//saveas
+__URL Path__: /secured/fileio/saveas
 
 __HTTP Method__: POST
 
@@ -210,6 +206,6 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"content" : "This is the content for the file.", "dest" : "/iplant/home/testuser/savedfile.txt"}' http://127.0.0.1:31370/saveas?user=wregglej
+    curl -H "Content-Type:application/json" -d '{"content" : "This is the content for the file.", "dest" : "/iplant/home/testuser/savedfile.txt"}' 'http://127.0.0.1:31370/secured/fileio/saveas?proxyToken=notReal'
 
 
