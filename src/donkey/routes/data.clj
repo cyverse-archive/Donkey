@@ -18,7 +18,7 @@
         (trap #(garnish/get-types (:params req))))
 
    (POST "/filetypes/type" [:as req]
-         (trap #(garnish/add-type req (:body req) (:params req))))
+         (trap #(garnish/add-type (:body req) (:params req))))
 
    (DELETE "/filetypes/type" [:as req]
            (trap #(garnish/delete-type (:params req))))
