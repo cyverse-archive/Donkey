@@ -114,12 +114,12 @@ __Error Codes__: ERR_NOT_OWNER, ERR_BAD_OR_MISSING_FIELD,ERR_DOES_NOT_EXIST,ERR_
 
 __Request Query Parameters__:
 * proxyToken - A valid CAS proxy token.
-* type - File type.
 
 __Request Body__:
 
     {
-        "path" : "/path/to/irods/file"
+        "path" : "/path/to/irods/file",
+        "type" : "csv"
     }
 
 __Response Body__:
@@ -131,7 +131,7 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl -d '{"path" : "/path/to/irods/file"}' 'http://donkey.example.org:31325/secured/filetypes/type?proxyToken=notARealOne&type=csv'
+    curl -d '{"path" : "/path/to/irods/file","type":"csv"}' 'http://donkey.example.org:31325/secured/filetypes/type?proxyToken=notARealOne'
 
 
 Delete a file type from a file
