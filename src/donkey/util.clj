@@ -22,7 +22,7 @@
    
    (catch ce/error? err
      (log/error (ce/format-exception (:throwable &throw-context)))
-     (ce/err-resp (:object err)))
+     (ce/err-resp err))
    
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))
