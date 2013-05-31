@@ -134,6 +134,7 @@
                            :create_output_subdir  false
                            :uuid                  (str (java.util.UUID/randomUUID))
                            :monitor_transfer_logs false
+                           :skip-parent-meta      true
                            :username              user
                            :file-metadata 
                            [{:attr  "ipc-url-import"
