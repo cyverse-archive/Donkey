@@ -106,7 +106,7 @@ associated with the file.
 Add a file type to a file
 -------------------------
 
-__URL Path__: /secured/filetypes//type
+__URL Path__: /secured/filetypes/type
 
 __HTTP Method__: POST
 
