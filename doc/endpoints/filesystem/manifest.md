@@ -18,7 +18,8 @@ __Response Body__:
         "status" : "success",
         "content-type" : "text/plain",
         "preview":"file\/preview?user=johnw&path=\/iplant\/home\/johnw\/LICENSE.txt",
-        "tree-urls" : []
+        "tree-urls" : [],
+        "file-type" : "<a valid filetype>"
     }
 
 __Curl Command__:
