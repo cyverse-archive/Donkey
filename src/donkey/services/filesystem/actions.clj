@@ -70,7 +70,10 @@
   [stat]
   (str (.getObjSize stat)))
 
-(defn sharing? [abs] (= (irods-home) abs))
+(defn sharing? 
+  [abs]
+  (= (ft/rm-last-slash (irods-home)) 
+     (ft/rm-last-slash abs)))
 
 (defn community? [abs] (= (fs-community-data) abs))
 
