@@ -106,7 +106,7 @@ associated with the file.
 Add a file type to a file
 -------------------------
 
-__URL Path__: /type
+__URL Path__: /secured/filetypes//type
 
 __HTTP Method__: POST
 
@@ -137,7 +137,7 @@ __Curl Command__:
 Delete a file type from a file
 ------------------------------
 
-__URL Path__: /type
+__URL Path__: /secured/filetypes/type
 
 __HTTP Method__: DELETE
 
@@ -163,7 +163,7 @@ __Curl Command__:
 Look up paths in a user's home directory based on file type
 -----------------------------------------------------------
 
-__URL Path__: /type/paths
+__URL Path__: /secured/filetypes/type/paths
 
 __HTTP Method__: GET
 
