@@ -456,7 +456,7 @@
     (validators/path-exists cm path)
     (-> (stat cm path)
         (merge {:permissions (permissions cm user path)})
-        (merge {:type (filetypes/get-types cm user path)})
+        (merge {:file-type (filetypes/get-types cm user path)})
         (merge-shares cm user path)
         (merge-counts cm path))))
 
@@ -496,7 +496,7 @@
     {:action       "manifest"
      :content-type (content-type cm path)
      :tree-urls    (extract-tree-urls cm path)
-     :type         (filetypes/get-types cm user path)
+     :file-type         (filetypes/get-types cm user path)
      :preview      (preview-url user path)}))
 
 (defn download-file
