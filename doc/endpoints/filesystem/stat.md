@@ -49,7 +49,8 @@ __Response Body__:
                 "created": "1335289356000",
                 "modified": "1335289356000",
                 "size": 4,
-                "type": "file"
+                "type": "file",
+                "file-type" : "<a valid filetype>"
             }
         },
         "status": "success"
