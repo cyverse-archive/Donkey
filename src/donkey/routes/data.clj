@@ -5,7 +5,7 @@
         [donkey.auth.user-attributes]
         [donkey.util])
   (:require [donkey.util.config :as config]
-            [donkey.services.parsely :as parsely]
+            [donkey.services.garnish.controllers :as garnish]
             [donkey.services.search :as search]))
 
 (defn secured-data-routes
@@ -14,26 +14,26 @@
   (optional-routes
    [config/data-routes-enabled]
 
-   (GET "/parsely/triples" [:as req]
-        (trap #(parsely/triples req (:params req))))
+   (GET "/filetypes/type" [:as req]
+        (trap #(garnish/get-types (:params req))))
 
-   (GET "/parsely/type" [:as req]
-        (trap #(parsely/get-types req (:params req))))
+   (POST "/filetypes/type" [:as req]
+         (trap #(garnish/add-type (:body req) (:params req))))
 
-   (POST "/parsely/type" [:as req]
-         (trap #(parsely/add-type req (:params req))))
+   (DELETE "/filetypes/type" [:as req]
+           (trap #(garnish/delete-type (:params req))))
 
-   (DELETE "/parsely/type" [:as req]
-           (trap #(parsely/delete-type req (:params req))))
+   (GET "/filetypes/type-list" []
+        (trap #(garnish/get-type-list)))
 
-   (GET "/parsely/type-list" [:as req]
-        (trap #(parsely/get-type-list req (:params req))))
-
-   (GET "/parsely/type/paths" [:as req]
-        (trap #(parsely/find-typed-paths req (:params req))))
-
-   (GET "/triples" [:as req]
-        (trap #(parsely/triples req (:params req))))
+   (GET "/filetypes/type/paths" [:as req]
+        (trap #(garnish/find-typed-paths (:params req))))
+   
+   (GET "/filetypes/auto-type" [:as req]
+        (trap #(garnish/preview-auto-type (:params req))))
+   
+   (POST "/filetypes/auto-type" [:as req]
+         (trap #(garnish/set-auto-type (:body req) (:params req))))
 
    (POST "/share" [:as req]
          (trap #(share req)))

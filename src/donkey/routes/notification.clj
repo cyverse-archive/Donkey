@@ -1,6 +1,6 @@
 (ns donkey.routes.notification
   (:use [compojure.core]
-        [donkey.services.metadactyl]
+        [donkey.services.metadata.metadactyl]
         [donkey.util])
   (:require [donkey.util.config :as config]))
 
@@ -36,8 +36,17 @@
    (GET "/notifications/system/messages" [:as req]
         (trap #(get-system-messages req)))
 
+   (GET "/notifications/system/new-messages" [:as req]
+        (trap #(get-new-system-messages req)))
+
    (GET "/notifications/system/unseen-messages" [:as req]
         (trap #(get-unseen-system-messages req)))
+
+   (POST "/notifications/system/received" [:as req]
+         (trap #(mark-system-messages-received req)))
+
+   (POST "/notifications/system/mark-all-received" [:as req]
+         (trap #(mark-all-system-messages-received req)))
 
    (POST "/notifications/system/seen" [:as req]
          (trap #(mark-system-messages-seen req)))

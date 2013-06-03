@@ -453,8 +453,20 @@ parameter and its corresponding ticket string.
             <td>/system/messages</td>
         </tr>
         <tr>
+            <td>/secured/notifications/system/new-messages</td>
+            <td>/system/new-messages</td>
+        </tr>
+        <tr>
             <td>/secured/notifications/system/unseen-messages</td>
             <td>/system/unseen-messages</td>
+        </tr>
+        <tr>
+            <td>/secured/notifications/system/received</td>
+            <td>/system/received</td>
+        </tr>
+         <tr>
+            <td>/secured/notifications/system/mark-all-received</td>
+            <td>/system/mark-all-received</td>
         </tr>
         <tr>
             <td>/secured/notifications/system/seen</td>

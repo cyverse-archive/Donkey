@@ -5,6 +5,7 @@
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.routes.data]
+        [donkey.routes.fileio]
         [donkey.routes.metadata]
         [donkey.routes.misc]
         [donkey.routes.notification]
@@ -13,13 +14,15 @@
         [donkey.routes.tree-viewer]
         [donkey.routes.user-info]
         [donkey.routes.collaborator]
+        [donkey.routes.filesystem]
         [donkey.auth.user-attributes]
         [donkey.util.service]
-        [ring.middleware keyword-params])
+        [ring.middleware keyword-params multipart-params])
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
-            [donkey.util.config :as config]))
+            [donkey.util.config :as config]
+            [donkey.services.fileio.controllers :as fileio]))
 
 (defn- flagged-routes
   [& handlers]
@@ -36,7 +39,15 @@
    (secured-tree-viewer-routes)
    (secured-data-routes)
    (secured-session-routes)
+   (secured-fileio-routes)
+   (secured-filesystem-routes)
    (route/not-found (unrecognized-path-response))))
+
+(defn cas-store-user
+  [routes cas-server server-name]
+  (if (System/getenv "IPLANT_CAS_FAKE")
+    (fake-store-current-user (secured-routes) config/cas-server config/server-name)
+    (store-current-user (secured-routes) config/cas-server config/server-name)))
 
 (defn donkey-routes
   []
@@ -45,10 +56,11 @@
    (unsecured-notification-routes)
    (unsecured-metadata-routes)
    (unsecured-tree-viewer-routes)
+   (unsecured-fileio-routes)
 
    (context "/secured" []
-            (store-current-user (secured-routes) config/cas-server config/server-name))
-
+            (cas-store-user (secured-routes) config/cas-server config/server-name))
+   
    (route/not-found (unrecognized-path-response))))
 
 (defn load-configuration-from-file
@@ -70,6 +82,7 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler donkey-routes)
+      (wrap-multipart-params {:store fileio/store-irods})
       wrap-keyword-params
       wrap-lcase-params
       wrap-query-params))
