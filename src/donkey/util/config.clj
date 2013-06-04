@@ -329,7 +329,7 @@
   [props config-valid configs filesystem-routes-enabled]
   "donkey.fs.riak-trees-bucket")
 
-(cc/defprop-vec fs-filter-chars
+(cc/defprop-str fs-filter-chars
   "The characters that are considered invalid in iRODS dir- and filenames."
   [props config-valid configs filesystem-routes-enabled]
   "donkey.fs.filter-chars")

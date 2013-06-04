@@ -131,11 +131,10 @@
 
 (defn string-contains?
   [container-str str-to-check]
-  (pos? (count (set/intersection (set container-str) (set str-to-check)))))
+  (pos? (count (set/intersection (set (seq container-str)) (set (seq str-to-check))))))
 
 (defn good-string?
   [str-to-check]
-  (log/warn "filter-chars: " (fs-filter-chars))
   (not (string-contains? (fs-filter-chars) str-to-check)))
 
 (defn valid-file-map? [map-to-check] (good-string? (:id map-to-check)))
