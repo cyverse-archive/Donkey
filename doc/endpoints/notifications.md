@@ -230,13 +230,18 @@ parameters:
     </tbody>
 </table>
 
-The response body consists of a JSON object containing one field, `total`, which
-contains the number of messages that have not been marked as deleted and match
-the criteria specified in the query string:
+The response body consists of a JSON object containing four fields: `user-total`, contains the number of user messages 
+that have not been marked as deleted and match the criteria specified in the query string, `system-total` contains the
+number of system messages that are active and have not been dismissed by the user, `system-total-new` contains the 
+number of system messages that have not been marked as received by the user, and `system-total-unseen` contains the
+number of system messages that have not been marked as seen by the user.
 
 ```json
 {
-    "total": message-count
+    "user-total":          count,
+    "system-total":        count,
+    "system-total-new":    count,
+    "system-total-unseen": count
 }
 ```
 
@@ -245,7 +250,10 @@ Here are some examples:
 ```
 $ curl -s "http://by-tor:8888/secured/notifications/count-messages?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
-    "total": "409"
+    "user-total":          409,
+    "system-total":         10,
+    "system-total-new":      0,
+    "system-total-unseen":   1
 }
 ```
 
@@ -255,7 +263,10 @@ marked as deleted are counted.
 ```
 $ curl -s "http://by-tor:8888/secured/notifications/count-messages?proxyToken=$(cas-ticket)&filter=data" | python -mjson.tool
 {
-    "total": "91"
+    "user-total":          91,
+    "system-total":        10,
+    "system-total-new":     0,
+    "system-total-unseen":  1
 }
 ```
 
