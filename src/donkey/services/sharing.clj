@@ -10,7 +10,8 @@
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
-            [donkey.clients.notifications :as dn]))
+            [donkey.clients.notifications :as dn]
+            [donkey.services.filesystem.actions :as fs]))
 
 (def file-list-threshold 10)
 
@@ -43,11 +44,11 @@
   {:paths (list path),
    :users (list user)})
 
-(defn- foward-nibblonian-share
+(defn- forward-nibblonian-share
   "Forwards a Nibblonian share request."
   [user share]
   (let [body (cheshire/encode (build-nibblonian-share-req user share))]
-    (log/debug "foward-nibblonian-share: " body)
+    (log/debug "forward-nibblonian-share: " body)
     (try+
       (client/post (nibblonian-url "share")
                    {:content-type :json
@@ -60,11 +61,11 @@
                 :error (cheshire/decode (:body e) true)}
                share)))))
 
-(defn- foward-nibblonian-unshare
+(defn- forward-nibblonian-unshare
   "Forwards a Nibblonian unshare request."
   [user path]
   (let [body (cheshire/encode (build-nibblonian-unshare-req user path))]
-    (log/debug "foward-nibblonian-unshare: " body)
+    (log/debug "forward-nibblonian-unshare: " body)
     (try+
       (client/post (nibblonian-url "unshare")
                    {:content-type :json
@@ -204,7 +205,7 @@
   [share]
   (let [user (:user share)
         paths (:paths share)
-        user_share_results (map #(foward-nibblonian-share user %) paths)
+        user_share_results (map #(forward-nibblonian-share user %) paths)
         successful_shares (filter :success user_share_results)
         unsuccessful_shares (remove :success user_share_results)]
     (when (seq successful_shares)
@@ -220,7 +221,7 @@
   [unshare]
   (let [user (:user unshare)
         paths (:paths unshare)
-        unshare_results (map #(foward-nibblonian-unshare user %) paths)
+        unshare_results (map #(forward-nibblonian-unshare user %) paths)
         successful_unshares (filter :success unshare_results)
         unsuccessful_unshares (remove :success unshare_results)]
     (when (seq successful_unshares)
