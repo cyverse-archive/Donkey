@@ -47,13 +47,13 @@
 (defn- forward-nibblonian-share
   "Forwards a Nibblonian share request."
   [user share]
-  (let [body (cheshire/encode (build-nibblonian-share-req user share))]
-    (log/debug "forward-nibblonian-share: " body)
+  (let [paths       [(:path share)]
+        sharer      (:shortUsername current-user)
+        share-withs [user]
+        perms       (:permissions share)]
     (try+
-      (client/post (nibblonian-url "share")
-                   {:content-type :json
-                    :body body
-                    :throw-entire-message? true})
+      (log/warn "share" paths "with" share-withs "by" sharer)
+      (fs/share sharer share-withs paths perms)
       (merge {:success true} share)
       (catch map? e
         (log/error "nibblonian error: " e)
@@ -64,13 +64,11 @@
 (defn- forward-nibblonian-unshare
   "Forwards a Nibblonian unshare request."
   [user path]
-  (let [body (cheshire/encode (build-nibblonian-unshare-req user path))]
-    (log/debug "forward-nibblonian-unshare: " body)
+  (let [unsharer      (:shortUsername current-user)
+        unshare-withs [user]]
     (try+
-      (client/post (nibblonian-url "unshare")
-                   {:content-type :json
-                    :body body
-                    :throw-entire-message? true})
+      (log/warn "unshare" path "from" user "by" unsharer)
+      (fs/unshare unsharer unshare-withs (vector path))
       {:success true
        :path path}
       (catch map? e
