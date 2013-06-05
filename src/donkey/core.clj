@@ -4,7 +4,6 @@
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
-        [donkey.routes.admin]
         [donkey.routes.data]
         [donkey.routes.fileio]
         [donkey.routes.metadata]
@@ -62,7 +61,7 @@
 
    (context "/secured" []
             (cas-store-user (secured-routes) config/cas-server config/server-name))
-   
+
    (route/not-found (unrecognized-path-response))))
 
 (defn load-configuration-from-file
