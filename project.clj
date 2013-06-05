@@ -8,7 +8,7 @@
                  [org.apache.tika/tika-core "1.3"]
                  [org.iplantc/clj-cas "1.0.1-SNAPSHOT"]
                  [org.iplantc/clj-jargon "0.2.5-SNAPSHOT"]
-                 [org.iplantc/clojure-commons "1.4.4-SNAPSHOT"]
+                 [org.iplantc/clojure-commons "1.4.5-SNAPSHOT"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]

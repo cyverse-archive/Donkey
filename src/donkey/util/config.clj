@@ -17,6 +17,11 @@
   "A ref for storing the symbols used to get configuration settings."
   (ref []))
 
+(defn masked-config
+  "Returns a masked version of the Donkey config as a map."
+  []
+  (cc/mask-config props :filters [#"irods-pass" #"irods.pass" #"irods.user"]))
+
 (cc/defprop-int listen-port
   "The port that donkey listens to."
   [props config-valid configs]
@@ -42,6 +47,11 @@
    user identifier."
   [props config-valid configs]
   "donkey.uid.domain")
+
+(cc/defprop-optboolean admin-routes-enabled
+  "Enables or disables the administration routes."
+  [props config-valid configs]
+  "donkey.routes.admin" true)
 
 (cc/defprop-optboolean notification-routes-enabled
   "Enables or disables notification endpoints."
