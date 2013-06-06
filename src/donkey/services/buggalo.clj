@@ -14,8 +14,8 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
-            [clojure-commons.nibblonian :as nibblonian]
-            [clojure-commons.scruffian :as scruffian])
+            [donkey.util.nibblonian :as nibblonian]
+            [donkey.util.scruffian :as scruffian])
   (:import [java.security MessageDigest DigestInputStream]
            [org.forester.io.parsers.util ParserUtils]
            [org.forester.io.writers PhylogenyWriter]
@@ -95,10 +95,9 @@
 (defn- save-tree-metaurl
   "Saves the URL used to obtain the tree URLs in the AVUs for the file."
   [user path metaurl]
-  (let [base    (nibblonian-base-url)
-        urlpath (:path (curl/url metaurl))]
+  (let [urlpath (:path (curl/url metaurl))]
     (try+
-      (nibblonian/save-tree-metaurl base user path urlpath)
+      (nibblonian/save-tree-metaurl user path urlpath)
       (catch [:error_code ce/ERR_REQUEST_FAILED] {:keys [body]}
         (log/warn "unable to save the tree metaurl for" path "-"
                   (cheshire/generate-string (cheshire/parse-string body) {:pretty true})))
@@ -113,7 +112,7 @@
      (retrieve-tree-urls-from (metaurl-for sha1)))
   ([user path]
      (log/debug "searching for existing tree URLs for user" user "and path" path)
-     (when-let [metaurl (nibblonian/get-tree-metaurl (nibblonian-base-url) user path)]
+     (when-let [metaurl (nibblonian/get-tree-metaurl user path)]
        (retrieve-tree-urls-from metaurl)))
   ([sha1 user path]
      (log/debug "searching for existing tree URLs for SHA1 hash" sha1)
@@ -197,7 +196,7 @@
       (or (and (not refresh) (get-existing-tree-urls user path))
           (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
             (let [infile (file dir "data.txt")
-                  body   (scruffian/download (scruffian-base-url) user path)
+                  body   (scruffian/download user path)
                   sha1   (save-file body infile)]
               (or (and (not refresh) (get-existing-tree-urls sha1 user path))
                   (get-and-save-tree-viewer-urls path user dir infile sha1))))))))
