@@ -17,10 +17,15 @@
 (defn success-response
   ([]
      (success-response {}))
-  ([map]
-     {:status 200
-      :body (cheshire/encode (merge {:success true} map))
-      :content-type :json}))
+  ([retval]
+    (if (map? retval)
+      {:status       200
+       :body         (cheshire/encode (merge {:success true} retval))
+       :content-type :json}
+      {:status       200
+       :body         (if-not (string? retval)
+                       (.toString retval)
+                       retval)})))
 
 (defn error-body [e]
   (cheshire/encode {:success false :reason (.getMessage e)}))
@@ -33,9 +38,11 @@
 
 (defn error-response [e]
   (log/error e "internal error")
-  {:status       500
-   :body         (error-body e)
-   :content-type :json})
+  (if (map? e)
+    (cheshire/encode (merge {:success false} e))
+    {:status       500
+     :body         (error-body e)
+     :content-type :json}))
 
 (defn invalid-arg-response [arg val reason]
   {:status       400

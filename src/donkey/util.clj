@@ -12,7 +12,7 @@
    repsonse."
   [f]
   (try+
-   (f)
+   (success-response (f))
    (catch [:type :error-status] {:keys [res]} res)
    (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
    (catch [:type :invalid-argument] {:keys [arg val reason]}
@@ -22,7 +22,7 @@
    
    (catch ce/error? err
      (log/error (ce/format-exception (:throwable &throw-context)))
-     (ce/err-resp err))
+     (error-response err))
    
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))

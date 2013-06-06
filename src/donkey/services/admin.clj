@@ -6,11 +6,10 @@
 (defn config
   "Returns JSON containing Donkey's configuration, passwords filtered out."
   []
-  (json/generate-string (config/masked-config)))
+  (config/masked-config))
 
 (defn status
   "Returns JSON containing the Donkey's status."
   [request]
-  (json/generate-string
-    {"iRODS" "f00"}))
+  {"iRODS" "f00"})
 

@@ -57,7 +57,7 @@
   (let [user    (get req-params "user")
         dest    (get req-params "dest")
         up-path (get req-multipart "file")]
-    (json/generate-string (actions/upload user up-path dest))))
+    (actions/upload user up-path dest)))
 
 (defn url-filename
   [address]
@@ -89,7 +89,7 @@
       (log/warn (str "Dest: " dest))
       (log/warn (str "Fname: " fname))
       (log/warn (str "Addr: " addr))
-      (json/generate-string (actions/urlimport user addr fname dest)))))
+      (actions/urlimport user addr fname dest))))
 
 (defn saveas
   [req-params req-body]
@@ -119,12 +119,11 @@
         
         (with-in-str cont
           (actions/store cm *in* user dest)
-          (json/generate-string
-            {:status "success"
-             :file 
-             {:id dest
-              :label         (ft/basename dest)
-              :permissions   (dataobject-perm-map cm user dest)
-              :date-created  (created-date cm dest)
-              :date-modified (lastmod-date cm dest)
-              :file-size     (str (file-size cm dest))}}))))))
+          {:status "success"
+           :file 
+           {:id dest
+            :label         (ft/basename dest)
+            :permissions   (dataobject-perm-map cm user dest)
+            :date-created  (created-date cm dest)
+            :date-modified (lastmod-date cm dest)
+            :file-size     (str (file-size cm dest))}})))))

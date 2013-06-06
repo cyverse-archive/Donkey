@@ -50,8 +50,7 @@
   (log/debug "do-homedir")
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
-    (json/generate-string
-      (irods-actions/user-home-dir (irods-home) (:user params) false))))
+    (irods-actions/user-home-dir (irods-home) (:user params) false)))
 
 (defn- get-home-dir
   [user]
@@ -74,8 +73,7 @@
         user-dir        (utils/path-join (irods-home) user)
         public-dir      (utils/path-join (irods-home) "public")
         files-to-filter (conj (fs-filter-files) comm-dir user-dir public-dir)]
-    (json/generate-string
-      (irods-actions/shared-root-listing user (irods-home) inc-files files-to-filter))))
+    (irods-actions/shared-root-listing user (irods-home) inc-files files-to-filter)))
 
 (defn do-directory
   "Performs a list-dirs command.
@@ -97,24 +95,21 @@
             comm-f     (future (gen-comm-data user inc-files))
             share-f    (future (gen-sharing-data user inc-files))
             home-f     (future (dir-list user (get-home-dir user) inc-files))]
-        (json/generate-string
-          {:roots [@home-f @comm-f @share-f]}))
+        {:roots [@home-f @comm-f @share-f]})
       
       (= (utils/add-trailing-slash (:path params)) (irods-home))
-      (json/generate-string
-        (irods-actions/shared-root-listing 
-          (:user params) 
-          (irods-home) 
-          (include-files? params) 
-          []))
+      (irods-actions/shared-root-listing 
+        (:user params) 
+        (irods-home) 
+        (include-files? params) 
+        [])
       
       :else
       ;;; There's a path parameter, so simply list the directory.
       (let [inc-files (include-files? params)]
-        (json/generate-string
-          (if (irods-actions/user-trash-dir? (:user params) (:path params))
-            (dir-list (:user params) (:path params) inc-files true)
-            (dir-list (:user params) (:path params) inc-files)))))))
+        (if (irods-actions/user-trash-dir? (:user params) (:path params))
+          (dir-list (:user params) (:path params) inc-files true)
+          (dir-list (:user params) (:path params) inc-files))))))
 
 (defn do-root-listing
   [req-params]
@@ -125,14 +120,13 @@
           uhome          (utils/path-join (irods-home) user)
           user-root-list (partial irods-actions/root-listing user)
           user-trash-dir (irods-actions/user-trash-dir user)]
-      (json/generate-string
-        {:roots
-         (remove
-           nil?
-           [(user-root-list uhome)
-            (user-root-list (fs-community-data))
-            (user-root-list (irods-home))
-            (user-root-list user-trash-dir true)])}))))
+      {:roots
+       (remove
+         nil?
+         [(user-root-list uhome)
+          (user-root-list (fs-community-data))
+          (user-root-list (irods-home))
+          (user-root-list user-trash-dir true)])})))
 
 (defn do-rename
   "Performs a rename.
@@ -157,8 +151,7 @@
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))
     
-    (json/generate-string
-      (irods-actions/rename-path (:user params) (:source body) (:dest body)))))
+    (irods-actions/rename-path (:user params) (:source body) (:dest body))))
 
 (defn do-delete
   "Performs a delete.
@@ -181,8 +174,7 @@
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))
     
-    (json/generate-string
-      (irods-actions/delete-paths (:user params) (:paths body)))))
+    (irods-actions/delete-paths (:user params) (:paths body))))
 
 (defn do-move
   "Performs a move.
@@ -209,8 +201,7 @@
       (throw+ {:error_code ERR_NOT_AUTHORIZED 
                :user (:user params)}))
 
-    (json/generate-string
-      (irods-actions/move-paths (:user params) (:sources body) (:dest body)))))
+    (irods-actions/move-paths (:user params) (:sources body) (:dest body))))
 
 (defn do-create
   "Performs a directory creation.
@@ -234,8 +225,7 @@
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))
     
-    (json/generate-string
-      (irods-actions/create (:user params) (:path body)))))
+    (irods-actions/create (:user params) (:path body))))
 
 (defn do-metadata-get
   [req-params]
@@ -243,8 +233,7 @@
   
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string? :path string?})
-    (json/generate-string
-      (irods-actions/metadata-get (:user params) (:path params)))))
+    (irods-actions/metadata-get (:user params) (:path params))))
 
 (defn do-metadata-set
   [req-params req-body]
@@ -254,8 +243,7 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string? :path string?})
     (validate-map body {:attr string? :value string? :unit string?})
-    (json/generate-string
-      (irods-actions/metadata-set (:user params) (:path params) body))))
+    (irods-actions/metadata-set (:user params) (:path params) body)))
 
 (defn- fix-username
   [username]
@@ -278,8 +266,7 @@
     (validate-map (:permissions body) {:read boolean? :write boolean? :own boolean?})
     (let [user        (fix-username (:user params))
           share-withs (map fix-username (:users body))]
-      (json/generate-string
-        (irods-actions/share user share-withs (:paths body) (:permissions body))))))
+      (irods-actions/share user share-withs (:paths body) (:permissions body)))))
 
 (defn do-unshare
   [req-params req-body]
@@ -292,8 +279,7 @@
     (let [user        (fix-username (:user params))
           share-withs (map fix-username (:users body))
           fpaths      (:paths body)]
-      (json/generate-string
-        (irods-actions/unshare user share-withs fpaths)))))
+      (irods-actions/unshare user share-withs fpaths))))
 
 (defn- check-adds
   [adds]
@@ -321,19 +307,17 @@
           (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "add"})))
       
       (when (pos? (count dels))
-        (if (not (every? true? (check-dels dels)))
+        (if-not (every? true? (check-dels dels))
           (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "add"})))
       
-      (json/generate-string
-        (irods-actions/metadata-batch-set user path body)))))
+      (irods-actions/metadata-batch-set user path body))))
 
 (defn do-metadata-delete
   [req-params]
   (log/debug "do-metadata-delete")
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string? :path string? :attr string?})
-    (json/generate-string
-      (irods-actions/metadata-delete (:user params) (:path params) (:attr params)))))
+    (irods-actions/metadata-delete (:user params) (:path params) (:attr params))))
 
 (defn do-preview
   "Handles a file preview.
@@ -351,12 +335,10 @@
       (throw+ {:error_code ERR_NOT_AUTHORIZED 
                :user (:user params)
                :path (:path params)}))
-    (json/generate-string
-      {:action  "preview"
-       :preview (irods-actions/preview 
-                  (:user params) 
-                  (:path params) 
-                  (fs-preview-size))})))
+    {:preview (irods-actions/preview 
+                (:user params) 
+                (:path params) 
+                (fs-preview-size))}))
 
 (defn do-exists
   "Returns True if the path exists and False if it doesn't."
@@ -366,12 +348,11 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths vector?})
-    (json/generate-string
-      {:paths 
-       (apply 
-         conj {} 
-         (map #(hash-map %1 (irods-actions/path-exists? (:user params) %1)) 
-              (:paths body)))})))
+    {:paths 
+     (apply
+       conj {} 
+       (map #(hash-map %1 (irods-actions/path-exists? (:user params) %1)) 
+            (:paths body)))}))
 
 (defn do-stat
   "Returns data object status information for one or more paths."
@@ -383,8 +364,7 @@
     (validate-map body {:paths vector?})
     (let [paths (:paths body)
           user  (:user params)]
-    (json/generate-string
-      {:paths (into {} (map #(vector % (irods-actions/path-stat user %)) paths))}))))
+    {:paths (into {} (map #(vector % (irods-actions/path-stat user %)) paths))})))
 
 (defn do-manifest
   "Returns a manifest consisting of preview and rawcontent fields for a
@@ -392,8 +372,7 @@
   [req-params]
   (log/debug "do-manifest")
   (let [params (add-current-user-to-map req-params)]
-    (json/generate-string
-      (irods-actions/manifest (:user params) (:path params) (fs-data-threshold)))))
+    (irods-actions/manifest (:user params) (:path params) (fs-data-threshold))))
 
 (defn do-download
   [req-params req-body]
@@ -401,15 +380,13 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
-    (json/generate-string
-      (irods-actions/download (:user params) (:paths body)))))
+    (irods-actions/download (:user params) (:paths body))))
 
 (defn do-upload
   [req-params]
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
-    (json/generate-string
-      (irods-actions/upload (:user params)))))
+    (irods-actions/upload (:user params))))
 
 (defn attachment?
   [params]
@@ -476,8 +453,7 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
-    (json/generate-string
-      {:paths (irods-actions/list-perms (:user params) (:paths body))})))
+    {:paths (irods-actions/list-perms (:user params) (:paths body))}))
 
 (defn do-restore
   "Handles restoring a file or directory from a user's trash directory."
@@ -487,11 +463,10 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
-    (json/generate-string
-      (irods-actions/restore-path
-        {:user  (:user params)
-         :paths (:paths body)
-         :user-trash (irods-actions/user-trash-dir (:user params))}))))
+    (irods-actions/restore-path
+      {:user  (:user params)
+       :paths (:paths body)
+       :user-trash (irods-actions/user-trash-dir (:user params))})))
 
 (defn do-copy
   [req-params req-body]
@@ -500,12 +475,11 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :destination string?})
-    (json/generate-string
-      (irods-actions/copy-path
-        {:user (:user params)
-         :from (:paths body)
-         :to   (:destination body)}
-        (fs-copy-attribute)))))
+    (irods-actions/copy-path
+      {:user (:user params)
+       :from (:paths body)
+       :to   (:destination body)}
+      (fs-copy-attribute))))
 
 (defn do-groups
   [req-params]
@@ -517,8 +491,7 @@
   (log/debug "do-groups")
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
-    (json/generate-string
-      {:groups (irods-actions/list-user-groups (:user params))})))
+    {:groups (irods-actions/list-user-groups (:user params))}))
 
 (defn do-quota
   "Handles returning a list of objects representing
@@ -527,24 +500,21 @@
   (log/debug "do-quota")
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
-    (json/generate-string
-      {:quotas (irods-actions/get-quota (:user params))})))
+    {:quotas (irods-actions/get-quota (:user params))}))
 
 (defn do-user-trash
   [req-params]
   (log/debug "do-user-trash")
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
-    (json/generate-string
-      (irods-actions/user-trash (:user params)))))
+    (irods-actions/user-trash (:user params))))
 
 (defn do-delete-trash
   [req-params]
   (log/debug "do-delete-trash")
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
-    (json/generate-string
-      (irods-actions/delete-trash (:user params)))))
+    (irods-actions/delete-trash (:user params))))
 
 (defn check-tickets
   [tickets]
@@ -565,8 +535,7 @@
     
     (let [pub-param (:public params)
           public    (if (and pub-param (= pub-param "1")) true false)]
-      (json/generate-string
-        (irods-actions/add-tickets (:user params) (:tickets body) public)))))
+      (irods-actions/add-tickets (:user params) (:tickets body) public))))
 
 (defn do-remove-tickets
   [req-params req-body]
@@ -579,8 +548,7 @@
     (when-not (every? true? (mapv string? (:tickets body)))
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD 
                :field     "tickets"}))
-    (json/generate-string
-      (irods-actions/remove-tickets (:user params) (:tickets body)))))
+    (irods-actions/remove-tickets (:user params) (:tickets body))))
 
 (defn do-list-tickets
   [req-params req-body]
@@ -594,8 +562,7 @@
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD 
                :field      "paths"}))
     
-    (json/generate-string
-      (irods-actions/list-tickets-for-paths (:user params) (:paths body)))))
+    (irods-actions/list-tickets-for-paths (:user params) (:paths body))))
 
 (defn do-paths-contain-space
   [req-params req-body]
@@ -608,8 +575,7 @@
     (when-not (every? true? (mapv string? (:paths body)))
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD 
                :field      "paths"}))  
-    (json/generate-string
-      {:paths (irods-actions/paths-contain-char (:paths body) " ")})))
+    {:paths (irods-actions/paths-contain-char (:paths body) " ")}))
 
 (defn do-replace-spaces
   [req-params req-body]
@@ -626,8 +592,7 @@
     
     (let [paths (:paths body)
           user  (:user params)]
-      (json/generate-string
-        (irods-actions/replace-spaces user paths "_")))))
+      (irods-actions/replace-spaces user paths "_"))))
 
 (defn do-read-chunk
   [req-params req-body]
@@ -642,8 +607,7 @@
           path (:path body)
           pos  (Long/parseLong (:position body)) 
           size (Long/parseLong (:chunk-size body))]
-      (json/generate-string
-        (irods-actions/read-file-chunk user path pos size)))))
+      (irods-actions/read-file-chunk user path pos size))))
 
 (defn do-overwrite-chunk
   [req-params req-body]
@@ -653,8 +617,8 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:path string? :position string? :update string?})
+    
     (let [user (:user params)
           path (:path body)
           pos  (Long/parseLong (:position body))]
-      (json/generate-string
-        (irods-actions/overwrite-file-chunk user path pos (:update body))))))
+      (irods-actions/overwrite-file-chunk user path pos (:update body)))))
