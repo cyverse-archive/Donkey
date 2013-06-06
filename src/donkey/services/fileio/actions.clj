@@ -28,8 +28,7 @@
         (.close ostream)
         (set-owner cm dest-path user)
         (filetype/auto-add-type cm user dest-path)))
-    {:status      "success"
-     :id          dest-path
+    {:id          dest-path
      :permissions (dataobject-perm-map cm user dest-path)}))
 
 (defn store
@@ -93,8 +92,7 @@
       (if (exists? cm new-path) (delete cm new-path))
       (move cm tmp-path new-path :user user :admin-users (irods-admins) :skip-source-perms? true)
       (set-owner cm new-path user)
-      {:status "success"
-       :file 
+      {:file 
        {:id new-path
         :label         (ft/basename new-path)
         :permissions   (dataobject-perm-map cm user new-path)
@@ -206,8 +204,7 @@
         (throw+ {:msg        jex-body
                  :error_code ERR_REQUEST_FAILED}))
 
-      {:status "success"
-       :msg    "Upload scheduled."
+      {:msg    "Upload scheduled."
        :url    address
        :label  decoded-filename
        :dest   dest-path})))
