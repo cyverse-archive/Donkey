@@ -14,35 +14,74 @@
 (defn empty-response []
   {:status 200})
 
+(defn error-body [e]
+  (cheshire/encode {:success false :reason (.getMessage e)}))
+
+(defn success?
+  "Returns true if status-code is between 200 and 299, inclusive."
+  [status-code]
+  (<= 200 status-code 299))
+
+(defn response-map?
+  "Returns true if 'm' can be used as a response map. We're defining a
+   response map as a map that contains a :status and :body field."
+  [m]
+  (and (map? m)
+       (contains? m :status)
+       (contains? m :body)))
+
+(defn donkey-response
+  "Generates a Donkey HTTP response map based on a value and a status code.
+
+   If a response map is passed in, it is preserved.
+
+   If a response map is passed in and is missing the content-type field, 
+   then the content-type is set to application/json.
+
+   If it's a map but not a response map, then the :success field is merged in, 
+   then is JSON encoded, and it is finally used as the body of the response.
+
+   Otherwise, the value is preserved and is wrapped in a response map."
+  [e status-code]
+  (cond
+    (and (response-map? e)
+         (not (contains? e :content-type)))
+    (merge e {:content-type :json})
+
+    (and (response-map? e)
+         (contains? e :content-type))
+    e
+
+    (and (not (response-map? e))
+         (map? e))
+    {:status       status-code
+     :body         (cheshire/encode (merge e {:success (success? status-code)}))
+     :content-type :json}
+
+    (and (not (map? e))
+         (not (success? status-code))
+         (instance? Exception e))
+    {:status       status-code
+     :body         (error-body e)
+     :content-type :json}
+
+    :else
+    {:status       status-code
+     :body         e}))
+
 (defn success-response
   ([]
      (success-response {}))
   ([retval]
-    (if (map? retval)
-      {:status       200
-       :body         (cheshire/encode (merge {:success true} retval))
-       :content-type :json}
-      {:status       200
-       :body         (if-not (string? retval)
-                       (.toString retval)
-                       retval)})))
-
-(defn error-body [e]
-  (cheshire/encode {:success false :reason (.getMessage e)}))
+    (donkey-response retval 200)))
 
 (defn failure-response [e]
   (log/error e "bad request")
-  {:status       400
-   :body         (error-body e)
-   :content-type :json})
+  (donkey-response e 400))
 
 (defn error-response [e]
   (log/error e "internal error")
-  (if (map? e)
-    (cheshire/encode (merge {:success false} e))
-    {:status       500
-     :body         (error-body e)
-     :content-type :json}))
+  (donkey-response e 500))
 
 (defn invalid-arg-response [arg val reason]
   {:status       400
