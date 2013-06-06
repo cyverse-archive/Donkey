@@ -14,6 +14,7 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
+            [clojure-commons.file-utils :as ft]
             [donkey.util.nibblonian :as nibblonian]
             [donkey.util.scruffian :as scruffian])
   (:import [java.security MessageDigest DigestInputStream]
@@ -25,6 +26,7 @@
   "Builds the meta-URL for to use when saving tree files in Riak.  The SHA1 hash
    of the contents of the tree file is used as the key in Riak."
   [sha1]
+  (println (riak-base-url) (tree-url-bucket) sha1)
   (->> [(riak-base-url) (tree-url-bucket) sha1]
        (map #(string/replace % #"^/|/$" ""))
        (string/join "/")))
@@ -104,6 +106,12 @@
       (catch Exception e
         (log/warn e "unable to save the tree metaurl for" path)))))
 
+(defn- urlize
+  [url-path]
+  (if-not (or (.startsWith url-path "http") (.startsWith url-path "https"))
+    (str (curl/url (riak-base-url) :path url-path))
+    url-path))
+
 (defn- get-existing-tree-urls
   "Obtains existing tree URLs for either a file stored in the iPlant data store
    or a SHA1 hash obtained from the contents of a file."
@@ -113,7 +121,7 @@
   ([user path]
      (log/debug "searching for existing tree URLs for user" user "and path" path)
      (when-let [metaurl (nibblonian/get-tree-metaurl user path)]
-       (retrieve-tree-urls-from metaurl)))
+       (retrieve-tree-urls-from (urlize metaurl))))
   ([sha1 user path]
      (log/debug "searching for existing tree URLs for SHA1 hash" sha1)
      (let [metaurl (metaurl-for sha1)]
