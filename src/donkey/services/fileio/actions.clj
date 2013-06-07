@@ -27,7 +27,9 @@
         (.close istream)
         (.close ostream)
         (set-owner cm dest-path user)
-        (filetype/auto-add-type cm user dest-path)))
+        (let [guessed-type (:type (filetype/preview-auto-type user dest-path))]
+          (if-not (or (nil? guessed-type) (empty? guessed-type))
+            (filetype/auto-add-type cm user dest-path)))))
     {:id          dest-path
      :permissions (dataobject-perm-map cm user dest-path)}))
 
