@@ -449,14 +449,21 @@
     (merge stat-map {:share-count (count-shares cm user path)})
     stat-map))
 
+(defn merge-type-info
+  [stat-map cm user path]
+  (if-not (is-dir? cm path)
+    (-> stat-map
+      (merge {:info-type (filetypes/get-types cm user path)})
+      (merge {:mime-type (.detect (Tika.) (input-stream cm path))}))
+    stat-map))
+
 (defn path-stat
   [user path]
   (with-jargon (jargon-cfg) [cm]
     (validators/path-exists cm path)
     (-> (stat cm path)
         (merge {:permissions (permissions cm user path)})
-        (merge {:info-type   (filetypes/get-types cm user path)})
-        (merge {:mime-type   (.detect (Tika.) (input-stream cm path))})
+        (merge-type-info cm user path)
         (merge-shares cm user path)
         (merge-counts cm path))))
 
