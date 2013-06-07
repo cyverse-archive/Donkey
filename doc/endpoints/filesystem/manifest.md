@@ -19,7 +19,8 @@ __Response Body__:
         "content-type" : "text/plain",
         "preview":"file\/preview?user=johnw&path=\/iplant\/home\/johnw\/LICENSE.txt",
         "tree-urls" : [],
-        "file-type" : "<a valid filetype>"
+        "info-type" : "<an info type or empty string>"
+        "mime-type" : "<a valid filetype>"
     }
 
 __Curl Command__:

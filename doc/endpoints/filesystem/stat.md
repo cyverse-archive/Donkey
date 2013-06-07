@@ -50,7 +50,8 @@ __Response Body__:
                 "modified": "1335289356000",
                 "size": 4,
                 "type": "file",
-                "file-type" : "<a valid filetype>"
+                "info-type" : "<an info type or empty string>"
+                "mime-type" : "<a valid filetype>"
             }
         },
         "status": "success"
