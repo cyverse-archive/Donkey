@@ -21,6 +21,7 @@
 (defn chunk-input-stream
   "Creates an input-stream that only reads a chunk from the beginning of a file."
   [istream max-size]
+  (log/info "in chunk-input-stream")
   (let [curr-size (atom 0)]
     (proxy [java.io.InputStream] []
       (available [] (.available istream))
@@ -47,6 +48,7 @@
 (defn copy-to-temp
   "Copies a leading section of 'path' from iRODS into a temp file. Returns the path to the temp file."
   [cm path]
+  (log/info "in copy-to-temp")
   (let [tmpf (tmp-file)] 
     (try
       (with-open [ins  (chunk-input-stream (input-stream cm path) (cfg/filetype-read-amount))
@@ -83,6 +85,8 @@
   "Determines the filetype of path. Reads in a chunk, writes it to a temp file, runs it
    against the configured script. If the script can't identify it, it's passed to Tika."
   [cm path]
+  (log/info "in content-type")
+
   (let [script-type (type-from-script cm path)]
     (log/info "Path " path " has a type of " script-type " from the script.")
     (if (or (nil? script-type) (empty? script-type))
@@ -96,6 +100,8 @@
       (add-type cm user path type)))
   
   ([cm user path type]
+    (log/info "in add-type")
+    
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
@@ -121,6 +127,8 @@
       (auto-add-type cm user path)))
   
   ([cm user path]
+    (log/info "in auto-add-type")
+    
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
@@ -143,6 +151,8 @@
 (defn preview-auto-type
   "Returns the auto-type that (auto-add-type) would have associated with the file."
   [user path]
+  (log/info "in preview-auto-type")
+  
   (with-jargon (jargon-cfg) [cm]
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
@@ -160,11 +170,13 @@
     (let [ct (content-type cm path)]
       (log/info "Preview type of " path " for " user " is " ct ".")
       {:path path
-       :type (content-type cm path)})))
+       :type ct})))
 
 (defn get-avus
   "Returns a list of avu maps for set of attributes associated with dir-path"
   [cm dir-path attr val]
+  (log/info "in get-avus")
+  
   (validate-path-lengths dir-path)
   (filter
     #(and (= (:attr %1) attr) 
@@ -174,6 +186,8 @@
 (defn delete-type
   "Removes the association of type with path for the specified user."
   [user path type]
+  (log/info "in delete-type")
+  
   (with-jargon (jargon-cfg) [cm]
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
@@ -197,6 +211,8 @@
 (defn get-types
   "Gets all of the filetypes associated with path."
   ([cm user path]
+    (log/info "in get-types")
+    
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
@@ -220,12 +236,15 @@
 (defn home-dir
   "Returns the path to the user's home directory."
   [cm user]
+  (log/info "in home-dir")
   (ft/path-join "/" (:zone cm) "home" user))
   
 (defn find-paths-with-type
   "Returns all of the paths under the user's home directory that have the specified type
    associated with it."
   [user type]
+  (log/info "in find-paths-with-type")
+  
   (with-jargon (jargon-cfg) [cm]
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER

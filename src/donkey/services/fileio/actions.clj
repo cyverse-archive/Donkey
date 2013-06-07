@@ -20,6 +20,7 @@
 
 (defn scruffy-copy
   [cm user istream dest-path]
+  (log/warn "In scruffy-copy")
   (let [ostream (output-stream cm dest-path)]
     (try
       (io/copy istream ostream)
@@ -28,8 +29,10 @@
         (.close ostream)
         (set-owner cm dest-path user)
         (let [guessed-type (:type (filetype/preview-auto-type user dest-path))]
-          (if-not (or (nil? guessed-type) (empty? guessed-type))
-            (filetype/auto-add-type cm user dest-path)))))
+          (log/warn "Guessed type" guessed-type)
+          (when-not (or (nil? guessed-type) (empty? guessed-type))
+            (log/warn "Adding type " guessed-type)
+            (filetype/add-type cm user dest-path guessed-type)))))
     {:id          dest-path
      :permissions (dataobject-perm-map cm user dest-path)}))
 
