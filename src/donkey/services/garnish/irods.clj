@@ -86,7 +86,7 @@
   (let [script-type (type-from-script cm path)]
     (log/info "Path " path " has a type of " script-type " from the script.")
     (if (or (nil? script-type) (empty? script-type))
-      (.detect (Tika.) (input-stream cm path))
+      ""
       script-type)))
 
 (defn add-type

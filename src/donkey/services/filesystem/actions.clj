@@ -455,7 +455,8 @@
     (validators/path-exists cm path)
     (-> (stat cm path)
         (merge {:permissions (permissions cm user path)})
-        (merge {:file-type (filetypes/get-types cm user path)})
+        (merge {:info-type   (filetypes/get-types cm user path)})
+        (merge {:mime-type   (.detect (Tika.) (input-stream cm path))})
         (merge-shares cm user path)
         (merge-counts cm path))))
 
@@ -495,7 +496,8 @@
     {:action       "manifest"
      :content-type (content-type cm path)
      :tree-urls    (extract-tree-urls cm path)
-     :file-type         (filetypes/get-types cm user path)
+     :info-type    (filetypes/get-types cm user path)
+     :mime-type    (.detect (Tika.) (input-stream cm path))
      :preview      (preview-url user path)}))
 
 (defn download-file
