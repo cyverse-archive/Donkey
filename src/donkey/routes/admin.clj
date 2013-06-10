@@ -16,4 +16,4 @@
          (trap #(admin/config)))
     
     (GET "/admin/status" [:as req]
-         (trap #(admin/status)))))
+         (trap #(admin/status req)))))
