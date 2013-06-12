@@ -74,7 +74,7 @@ __Curl Command__:
     curl http://donkey.example.org:31325/secured/filetypes/type-list?proxyToken=notARealOne
 
 
-Get the file types associated with a file
+Get the file type associated with a file
 ------------------------------------------
 
 __URL Path__: /secured/filetypes/type
@@ -90,7 +90,7 @@ __Request Query Parameters__:
 __Response Body__:
 
 	{
-        "types" : ["csv", ...]
+        "type" : "csv"
     }
 
 __Curl Command__:
