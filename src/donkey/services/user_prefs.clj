@@ -128,15 +128,17 @@
   (->> prefs
     (add-system-default-output-dir)
     (create-system-default-output-dir)
+    (cheshire/generate-string)
     (settings riak-prefs-bucket)))
 
 (defn user-prefs
   "Retrieves or saves the user's preferences."
   ([]
-     (let [prefs      (cheshire/decode (settings riak-prefs-bucket) true)]
+     (let [prefs (cheshire/decode (settings riak-prefs-bucket) true)]
        (get-user-prefs prefs)))
-  ([prefs]
-    (set-user-prefs prefs)))
+  ([req-prefs-string]
+    (let [prefs (cheshire/decode req-prefs-string true)] 
+      (set-user-prefs prefs))))
 
 (def remove-prefs (partial remove-settings riak-prefs-bucket))
 (def search-history (partial settings riak-search-hist-bucket))
