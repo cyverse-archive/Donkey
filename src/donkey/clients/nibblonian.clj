@@ -2,70 +2,33 @@
   (:use [donkey.util.config]
         [donkey.util.service :only [build-url-with-query]]
         [donkey.util.transformers :only [add-current-user-to-map]]
+        [donkey.auth.user-attributes :only [current-user]]        
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]))
-
-(defn- nibblonian-url
-  "Builds a URL that can be used to send a request to Nibblonian."
-  [query & components]
-  (let [query (add-current-user-to-map query)]
-    (apply build-url-with-query (nibblonian-base-url) query components)))
-
-(defn- handle-nibblonian-resp
-  "Handles a response from Nibblonian."
-  [res f]
-  (if (< 199 (:status res) 300)
-    (f res)
-    (throw+ {:type :error-status :res res})))
-
-(defn- nibblonian-get
-  "Forwards a GET request to Nibblonian."
-  [query f & components]
-  (let [url (apply nibblonian-url query components)
-        res (client/get url {:throw-exceptions false})]
-    (handle-nibblonian-resp res f)))
-
-(defn- nibblonian-post
-  "Forwards a POST request to Nibblonian."
-  [query body-map f & components]
-  (let [url (apply nibblonian-url query components)
-        res (client/post url {:body             (cheshire/encode body-map)
-                              :content-type     :json
-                              :throw-exceptions false})]
-    (handle-nibblonian-resp res f)))
+            [clojure.tools.logging :as log]
+            [donkey.services.filesystem.actions :as fs]))
 
 (defn home-dir
   "Determines the home folder for the current user."
   []
-  (nibblonian-get {} :body "home"))
+  (fs/user-home-dir (:shortUsername current-user)))
 
 (defn create
   "Creates a directory."
   [path]
-  (let [query {}
-        body  {:path path}
-        f     #(:path (cheshire/decode (:body %) true))]
-    (nibblonian-post query body f "directory" "create")))
+  (fs/create (:shortUsername current-user) path))
 
 (defn exists?
   "Determines whether or not a path exists."
   [path]
-  (let [query {}
-        body  {:paths [path]}
-        f     #(get-in (cheshire/decode (:body %) true) [:paths (keyword path)])]
-    (nibblonian-post query body f "exists")))
+  (fs/path-exists? path))
 
 (defn stat
   "Obtains file status information for a path."
   [path]
-  (when (exists? path)
-    (let [query {}
-          body  {:paths [path]}
-          f     #(get-in (cheshire/decode (:body %) true) [:paths (keyword path)])]
-      (nibblonian-post query body f "stat"))))
+  (fs/path-stat (:shortUsername current-user) path))
 
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If

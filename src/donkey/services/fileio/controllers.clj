@@ -7,6 +7,7 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
             [donkey.services.fileio.controllers :as fileio]
+            [donkey.services.filesystem.actions :as fs]
             [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
@@ -57,7 +58,12 @@
   (let [user    (get req-params "user")
         dest    (get req-params "dest")
         up-path (get req-multipart "file")]
-    (actions/upload user up-path dest)))
+    (if-not (fs/good-string? up-path)
+      {:status 500
+       :body   (json/generate-string 
+                 {:error_code ERR_BAD_OR_MISSING_FIELD
+                  :path       up-path})}
+      (actions/upload user up-path dest))))
 
 (defn url-filename
   [address]

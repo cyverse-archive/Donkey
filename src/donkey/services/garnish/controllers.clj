@@ -37,6 +37,7 @@
    "mase"
    "mega"
    "msf"
+   "other"
    "phrap"
    "pir"
    "pfam"

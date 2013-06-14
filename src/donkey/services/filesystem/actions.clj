@@ -414,11 +414,14 @@
   [string-to-check]
   (re-seq #"\%[A-Fa-f0-9]{2}" string-to-check))
 
-(defn path-exists? [user path] 
-  (with-jargon (jargon-cfg) [cm]
-    (if (url-encoded? path)
-      (exists? cm (url/url-decode path))
-      (exists? cm path))))
+(defn path-exists?
+  ([path]
+    (path-exists? "" path))
+  ([user path] 
+    (with-jargon (jargon-cfg) [cm]
+      (if (url-encoded? path)
+        (exists? cm (url/url-decode path))
+        (exists? cm path)))))
 
 (defn list-user-perms-for-path
   [cm user path]

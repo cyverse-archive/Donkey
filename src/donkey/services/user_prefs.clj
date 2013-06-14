@@ -9,7 +9,8 @@
             [clj-http.client :as cl]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [clojure-commons.file-utils :as ft]))
+            [clojure-commons.file-utils :as ft]
+            [clj-jargon.jargon :as jg]))
 
 (def default-output-dir-key :defaultOutputFolder)
 
@@ -72,6 +73,10 @@
   [prefs]
   (default-output-dir-key prefs))
 
+(defn- system-default-output-dir
+  []
+  (build-path (home-dir) (default-output-dir)))
+
 (defn- generate-default-output-dir
   "Generates a default output directory for the user and stores it in the preferences."
   [prefs]
@@ -80,17 +85,58 @@
     (settings riak-prefs-bucket (cheshire/encode prefs))
     prefs))
 
+(defn- add-system-default-output-dir
+  "Adds system default output directory to the preferences that are passed in."
+  [prefs]
+  (if-not (contains? prefs :systemDefaultOutputDir)
+    (assoc prefs :systemDefaultOutputDir (system-default-output-dir))
+    prefs))
+
+(defn- create-system-default-output-dir
+  "Creates the system defaultm output dir."
+  [prefs]
+  (let [sys-output-dir (ft/rm-last-slash (:systemDefaultOutputDir prefs))
+        output-dir     (ft/rm-last-slash (extract-default-output-dir prefs))]
+    (jg/with-jargon (jargon-cfg) [cm]
+      (log/warn "SYS OUTPUT:" sys-output-dir)
+      (log/warn "EQUAL?" (= sys-output-dir output-dir))
+      (log/warn "EXISTS?" (jg/exists? cm sys-output-dir))
+      (when (and (not (string/blank? sys-output-dir)) 
+               (= sys-output-dir output-dir) 
+               (not (jg/exists? cm sys-output-dir)))
+        (jg/mkdir cm sys-output-dir)
+        (jg/set-owner cm sys-output-dir (:shortUsername current-user))))
+    prefs))
+
+(defn handle-blank-default-output-dir
+  [prefs]
+  (let [output-dir (extract-default-output-dir prefs)]
+    (if (string/blank? output-dir)
+      (generate-default-output-dir prefs)
+      prefs)))
+
+(defn- get-user-prefs
+  [prefs]
+  (-> prefs
+    (handle-blank-default-output-dir)
+    (add-system-default-output-dir)
+    (create-system-default-output-dir)
+    (cheshire/encode)))
+
+(defn- set-user-prefs
+  [prefs]
+  (->> prefs
+    (add-system-default-output-dir)
+    (create-system-default-output-dir)
+    (settings riak-prefs-bucket)))
+
 (defn user-prefs
   "Retrieves or saves the user's preferences."
   ([]
-     (let [prefs      (cheshire/decode (settings riak-prefs-bucket) true)
-           output-dir (extract-default-output-dir prefs)]
-       (cheshire/encode
-        (if (string/blank? output-dir)
-          (generate-default-output-dir prefs)
-          prefs))))
+     (let [prefs      (cheshire/decode (settings riak-prefs-bucket) true)]
+       (get-user-prefs prefs)))
   ([prefs]
-     (settings riak-prefs-bucket prefs)))
+    (set-user-prefs prefs)))
 
 (def remove-prefs (partial remove-settings riak-prefs-bucket))
 (def search-history (partial settings riak-search-hist-bucket))
