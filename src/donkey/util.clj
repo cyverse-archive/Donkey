@@ -28,6 +28,26 @@
    (catch IllegalStateException e (failure-response e))
    (catch Throwable t (error-response t))))
 
+(defn trap-handler
+  [handler]
+  (fn [req] 
+    (try+
+      (success-response (handler req))
+      (catch [:type :error-status] {:keys [res]} res)
+      (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
+      (catch [:type :invalid-argument] {:keys [arg val reason]}
+        (invalid-arg-response arg val reason))
+      (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
+      (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
+      
+      (catch ce/error? err
+        (log/error (ce/format-exception (:throwable &throw-context)))
+        (error-response err))
+      
+      (catch IllegalArgumentException e (failure-response e))
+      (catch IllegalStateException e (failure-response e))
+      (catch Throwable t (error-response t)))))
+
 (defn as-vector
   "Returns the given parameter inside a vector if it's not a vector already."
   [p]

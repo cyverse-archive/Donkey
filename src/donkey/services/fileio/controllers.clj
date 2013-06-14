@@ -41,7 +41,9 @@
         user     (irods-user)
         home     (irods-home)
         temp-dir (fileio-temp-dir)]
-    (log/warn filename)
+    (if-not (fs/good-string? orig-filename)
+      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+               :path orig-filename}))
     (with-jargon (jargon-cfg) [cm]
       (store cm stream filename user temp-dir))))
 

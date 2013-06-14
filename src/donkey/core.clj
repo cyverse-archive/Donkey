@@ -17,8 +17,10 @@
         [donkey.routes.collaborator]
         [donkey.routes.filesystem]
         [donkey.auth.user-attributes]
+        [donkey.util]
         [donkey.util.service]
-        [ring.middleware keyword-params multipart-params])
+        [ring.middleware keyword-params multipart-params]
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
@@ -84,10 +86,11 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler donkey-routes)
-      (wrap-multipart-params {:store fileio/store-irods})
-      wrap-keyword-params
-      wrap-lcase-params
-      wrap-query-params))
+    (wrap-multipart-params {:store fileio/store-irods})
+    trap-handler
+    wrap-keyword-params
+    wrap-lcase-params
+    wrap-query-params))
 
 (def app
   (site-handler donkey-routes))
