@@ -4,6 +4,8 @@
         [donkey.util.transformers]
         [donkey.auth.user-attributes]
         [donkey.services.user-info :only [get-user-details]]
+        [donkey.services.filesystem.actions :only [user-home-dir]]
+        [donkey.services.fileio.actions :only [upload]]
         [donkey.util.email]
         [donkey.util.service]
         [ring.util.codec :only [url-encode]])
@@ -603,6 +605,38 @@
   (let [url (build-metadactyl-secured-url "reference-genomes")]
     (forward-put url req)))
 
+(defn- extract-uploaded-path
+  "Gets the file ID as a path from the given upload results."
+  [upload]
+  (get-in upload [:file :id]))
+
+(defn- upload-tool-request-file
+  "Uploads a file with a tmp path, found in params by the given file-key, to the
+   given user's final-path dir, then updates file-key in params with the file's
+   new path."
+  [params file-key user final-path]
+  (let [tmp-path (params file-key)]
+    (if (nil? tmp-path)
+      params
+      (assoc params
+             file-key
+             (extract-uploaded-path (upload user tmp-path final-path))))))
+
+(defn- preprocess-tool-request
+  "Uploads all files found in params to the user's home dir, replacing each
+   file's tmp path value in params with the file's new path."
+  [req]
+  (let [user (get-in req [:params "user"])
+        home-dir (user-home-dir user)
+        files-to-upload ["src_upload_file" "test_data_file"]
+        params (reduce #(upload-tool-request-file %1 %2 user home-dir)
+                       (:params req)
+                       files-to-upload)]
+    (-> req
+      (dissoc :body :multipart-params)
+      (assoc :params params)
+      (assoc :content-type "application/json"))))
+
 (defn- postprocess-tool-request
   "Postprocesses a tool request update or submission. The postprocessing function
    should take the tool request and user details as arguments."
@@ -615,14 +649,20 @@
     res))
 
 (defn submit-tool-request
-  "Submits a tool request on behalf of the authenticated user."
+  "Submits a tool request on behalf of the user found in the request params."
   [req]
-  (postprocess-tool-request
-   (forward-put (build-metadactyl-secured-url "tool-request") req)
-   (fn [tool-req user-details]
-     (send-tool-request-email tool-req user-details)
-     (dn/send-tool-request-notification tool-req user-details)
-     (success-response tool-req))))
+  (let [req (preprocess-tool-request req)
+        user-query-params {:user (get-in req [:params "user"])
+                           :email (get-in req [:params "email"])}
+        tool-request-url (build-url-with-query (metadactyl-base-url)
+                                               user-query-params
+                                               "tool-request")]
+    (postprocess-tool-request
+      (forward-put tool-request-url req (cheshire/encode (:params req)))
+      (fn [tool-req user-details]
+        (send-tool-request-email tool-req user-details)
+        (dn/send-tool-request-notification tool-req user-details)
+        (success-response tool-req)))))
 
 (defn list-tool-requests
   "Lists the tool requests that were submitted by the authenticated user."

@@ -213,6 +213,9 @@
    (GET "/app-rerun-info/:job-id" [job-id :as req]
         (trap #(get-new-app-rerun-info req job-id)))
 
+   (POST "/submit-tool-request" [:as req]
+         (trap #(submit-tool-request req)))
+
    (POST "/tool-request" [:as req]
          (trap #(update-tool-request req)))
 
