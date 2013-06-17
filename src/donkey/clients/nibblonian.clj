@@ -38,7 +38,7 @@
   (log/debug "getting or creating dir: path =" path)
   (let [stats (stat path)]
     (cond (nil? stats)            (create path)
-          (= (:type stats) "dir") path
+          (= (:type stats) :dir)  path
           :else                   nil)))
 
 (defn gen-output-dir

@@ -1,5 +1,6 @@
 (ns donkey.services.file-listing
-  (:use [donkey.clients.nibblonian]
+  (:use [clojure-commons.error-codes] 
+        [donkey.clients.nibblonian]
         [donkey.util.config]
         [donkey.util.service :only [decode-stream required-param success-response]]
         [slingshot.slingshot :only [throw+]])
@@ -22,18 +23,18 @@
   (log/debug "validating path:" path)
   (let [validated-path (get-or-create-dir path)]
     (when-not validated-path
-      (throw+ {:type :regular-file-selected-as-output-folder
+      (throw+ {:error_code ERR_NOT_A_FOLDER
+               :type :regular-file-selected-as-output-folder
                :path  path}))
     path))
 
 (defn get-default-output-dir
   "Determines whether or not the default directory name exists for a user."
   []
-  (success-response {:path (validate-output-dir (prefs/get-default-output-dir))}))
+  {:path (validate-output-dir (prefs/get-default-output-dir))})
 
 (defn reset-default-output-dir
   "Resets the default output directory for a user."
   [body]
   (let [path (required-param (decode-stream body) :path)]
-    (success-response
-     {:path (generate-output-dir (build-path (home-dir) path))})))
+    {:path (generate-output-dir (build-path (home-dir) path))}))
