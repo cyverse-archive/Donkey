@@ -600,8 +600,9 @@
 
        3. The permissions are set on the item being shared. This is done recursively in case the
           item being shared is a directory."
-  [cm share-with {read-perm :read write-perm :write own-perm :own :as perms} fpath]
-  (let [base-dirs #{(ft/rm-last-slash (:home cm)) (trash-base-dir cm)}]
+  [cm user share-with {read-perm :read write-perm :write own-perm :own :as perms} fpath]
+  (let [base-dirs #{(ft/rm-last-slash (user-home-dir user)) (trash-base-dir cm user)}]
+    (log/warn "BASE DIRS:" base-dirs)
     (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath))
   (when (is-dir? cm fpath)
     (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) fpath true))
@@ -614,7 +615,7 @@
         fpath      fpaths]
     (cond (= user share-with)                 (skip-share share-with fpath :share-with-self)
           (shared? cm share-with fpath perms) (skip-share share-with fpath :already-shared)
-          :else                               (share-path cm share-with perms fpath))))
+          :else                               (share-path cm user share-with perms fpath))))
 
 (defn share
   [user share-withs fpaths perms]
@@ -627,8 +628,8 @@
     (let [keyfn      #(if (:skipped %) :skipped :succeeded)
           share-recs (group-by keyfn (share-paths cm user share-withs fpaths perms))
           sharees    (map :user (:succeeded share-recs))
-          home-dir   (ft/path-join (:home cm) user)]
-      (dorun (map (partial add-user-shared-with cm (ft/path-join (:home cm) user)) sharees))
+          home-dir   (user-home-dir user)]
+      (dorun (map (partial add-user-shared-with cm (user-home-dir user)) sharees))
       {:user        sharees
        :path        fpaths
        :skipped     (map #(dissoc % :skipped) (:skipped share-recs))
@@ -670,7 +671,7 @@
        3. Remove the user's read permissions for parent directories in which the user no longer has
           access to any other files or subdirectories."
   [cm user unshare-with fpath]
-  (let [base-dirs #{(ft/rm-last-slash (:home cm)) (trash-base-dir cm)}]
+  (let [base-dirs #{(ft/rm-last-slash (user-home-dir user)) (trash-base-dir cm user)}]
     (remove-permissions cm unshare-with fpath)
     (when (is-dir? cm fpath)
       (unshare-dir cm user unshare-with fpath))
@@ -712,7 +713,7 @@
     (let [keyfn        #(if (:skipped %) :skipped :succeeded)
           unshare-recs (group-by keyfn (unshare-paths cm user unshare-withs fpaths))
           unsharees    (map :user (:succeeded unshare-recs))
-          home-dir     (ft/path-join (:home cm) user)]
+          home-dir     (user-home-dir user)]
       (dorun (map (partial clean-up-unsharee-avus cm home-dir) unsharees))
       {:user unsharees
        :path fpaths
