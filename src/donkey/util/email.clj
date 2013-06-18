@@ -20,16 +20,23 @@
 
 (defn send-tool-request-email
   "Sends the email message informing Core Services of a tool request."
-  [tool-req {:keys [firstname lastname]}]
-  (send-email
-   :to        (config/tool-request-dest-addr)
-   :from-addr (config/tool-request-src-addr)
-   :subject   "New Tool Request"
-   :template  "tool_request"
-   :values    {:username           (str firstname " " lastname)
-               :environment        (config/environment-name)
-               :toolrequestid      (:uuid tool-req)
-               :toolrequestdetails (cheshire/encode tool-req {:pretty true})}))
+  [tool-req {:keys [firstname lastname email]}]
+  (let [template-values {:username           (str firstname " " lastname)
+                         :environment        (config/environment-name)
+                         :toolrequestid      (:uuid tool-req)
+                         :toolrequestdetails (cheshire/encode tool-req {:pretty true})}]
+    (send-email
+      :to        (config/tool-request-dest-addr)
+      :from-addr (config/tool-request-src-addr)
+      :subject   "New Tool Request"
+      :template  "tool_request"
+      :values    template-values)
+    (send-email
+      :to        email
+      :from-addr (config/tool-request-src-addr)
+      :subject   "New Tool Request"
+      :template  "tool_request"
+      :values    template-values)))
 
 (defn- format-question
   "Formats a question and answer for a user feedback submission."
