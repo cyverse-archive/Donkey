@@ -92,7 +92,7 @@
     (try
       (send-notification {:type    "tool_request"
                           :user    (:username user-details)
-                          :subject (str "Tool Request Submitted")
+                          :subject (str "Tool Request " (:name tool-req) " Submitted")
                           :email   false
                           :payload (assoc tool-req
                                      :email_address (:email user-details)
@@ -106,11 +106,12 @@
   [tool-req user-details]
   (let [this-update (last (:history tool-req))
         status      (:status this-update)
-        comments    (:comments this-update)]
+        comments    (:comments this-update)
+        subject     (str "Tool Request " (:name tool-req) "Status Changed to " status)]
     (try
       (send-notification {:type           "tool_request"
                           :user           (:username user-details)
-                          :subject        (str "Tool Request Status Changed to " status)
+                          :subject        subject
                           :email          true
                           :email_template (str "tool_request_" (string/lower-case status))
                           :payload        (assoc tool-req
