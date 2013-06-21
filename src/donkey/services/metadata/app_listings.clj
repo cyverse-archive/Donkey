@@ -73,7 +73,7 @@
 (defn apps-in-group
   [group-id]
   (let [system-statuses (agave-system-statuses)
-        app-listing     (agave/list-apps)]
+        app-listing     (when (config/agave-enabled) (agave/list-apps))]
     (service/log-runtime
      ["formatting HPC app listing result"]
      (service/success-response
