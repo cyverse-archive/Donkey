@@ -33,10 +33,11 @@
 
 (defn- agave-system-statuses
   []
-  (let [system-listing (agave/list-systems)]
-    (service/log-runtime
-     ["extracting system statuses"]
-     (into {} (map (fn [m] [(:resource.id m) (:status m)]) system-listing)))))
+  (when (config/agave-enabled)
+    (let [system-listing (agave/list-systems)]
+      (service/log-runtime
+       ["extracting system statuses"]
+       (into {} (map (fn [m] [(:resource.id m) (:status m)]) system-listing))))))
 
 (defn- agave-app-enabled?
   [system-statuses listing]
