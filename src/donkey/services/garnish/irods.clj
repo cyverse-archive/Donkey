@@ -6,6 +6,7 @@
   (:require [cheshire.core :as json] 
             [hoot.rdf :as rdf]
             [hoot.csv :as csv]
+            [heuristomancer.core :as hm]
             [clojure.java.shell :as sh]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
@@ -13,73 +14,13 @@
             [donkey.util.config :as cfg])
   (:import [org.apache.tika Tika]))
 
-(defn tmp-file
-  "Creates a temp file with a prefix of donkey- and a suffix of .kick"
-  []
-  (java.io.File/createTempFile "donkey-" ".kick"))
-
-(defn chunk-input-stream
-  "Creates an input-stream that only reads a chunk from the beginning of a file."
-  [istream max-size]
-  (log/info "in chunk-input-stream")
-  (let [curr-size (atom 0)]
-    (proxy [java.io.InputStream] []
-      (available [] (.available istream))
-      (mark [readlimit] (.mark istream readlimit))
-      (markSupported [] (.markSupported istream))
-      (read
-        ([] (if (>= @curr-size max-size) 
-              -1 
-              (do (reset! curr-size (inc @curr-size))
-                (.read istream))))
-        ([b] (if (>= @curr-size max-size)
-               -1
-               (do (reset! curr-size (+ @curr-size (count b)))
-                 (.read istream b))))
-        ([b off len] (if (>= @curr-size max-size)
-                       -1
-                       (do (reset! curr-size (+ @curr-size len))
-                         (.read istream b off len)))))
-      (reset [] (.reset istream))
-      (skip [] (.skip istream))
-      (close []
-        (.close istream)))))
-
-(defn copy-to-temp
-  "Copies a leading section of 'path' from iRODS into a temp file. Returns the path to the temp file."
+(defn get-file-type
   [cm path]
-  (log/info "in copy-to-temp")
-  (let [tmpf (tmp-file)] 
-    (try
-      (with-open [ins  (chunk-input-stream (input-stream cm path) (cfg/filetype-read-amount))
-                  outs (io/output-stream tmpf)]
-        (log/info "Created temp file " (str tmpf) " containing chunk of " path " from iRODS.")
-        (io/copy ins outs)
-        (str tmpf))
-      (catch Exception e
-        (log/error "Error copying to temp file " tmpf)
-        (when (.exists (io/file tmpf))
-          (log/warn "Deleting temp file because of error: " tmpf)
-          (io/delete-file tmpf))
-        (throw e)))))
-
-(defn type-from-script
-  "Attempts to determine the type of a file from a script. Returns a type on success, an empty string
-   if the script doesn't know the type, and a nil if there's an error. The error is logged."
-  [cm path]
-  (try
-    (let [tmp-path (copy-to-temp cm path)
-          result   (sh/sh "perl" (cfg/filetype-script) "-f" tmp-path)   
-          outstr   (:out result)]
-      (try
-        (:ipc-media-type (json/parse-string outstr true))
-        (finally
-          (when (.exists (io/file tmp-path))
-            (log/info "Normal removal of temp file " tmp-path)
-            (io/delete-file tmp-path)))))
-    (catch Exception e
-      (log/error "Error determining type from file path:\n" (format-exception e))
-      nil)))
+  "Uses heuristomancer to determine a the file type of a file."
+  (let [result (hm/identify (input-stream cm path) (cfg/filetype-read-amount))]
+    (if-not (nil? result)
+      (name result)
+      result)))
 
 (defn content-type
   "Determines the filetype of path. Reads in a chunk, writes it to a temp file, runs it
@@ -87,7 +28,7 @@
   [cm path]
   (log/info "in content-type")
 
-  (let [script-type (type-from-script cm path)]
+  (let [script-type (get-file-type cm path)]
     (log/info "Path " path " has a type of " script-type " from the script.")
     (if (or (nil? script-type) (empty? script-type))
       ""
