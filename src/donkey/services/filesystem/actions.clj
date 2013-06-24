@@ -601,13 +601,15 @@
        3. The permissions are set on the item being shared. This is done recursively in case the
           item being shared is a directory."
   [cm user share-with {read-perm :read write-perm :write own-perm :own :as perms} fpath]
-  (let [base-dirs #{(ft/rm-last-slash (user-home-dir user)) (trash-base-dir cm user)}]
-    (log/warn "BASE DIRS:" base-dirs)
-    (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath))
-  (when (is-dir? cm fpath)
-    (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) fpath true))
-  (set-permissions cm share-with fpath read-perm write-perm own-perm true)
-  {:user share-with :path fpath})
+  (let [hdir      (ft/rm-last-slash (user-home-dir user))
+        trash-dir (trash-base-dir cm user)
+        base-dirs #{hdir trash-dir}]
+    (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath)
+    (when (is-dir? cm fpath)
+      (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) fpath true))
+    (set-permissions cm share-with hdir true false false true)
+    (set-permissions cm share-with fpath read-perm write-perm own-perm true)
+    {:user share-with :path fpath}))
 
 (defn- share-paths
   [cm user share-withs fpaths perms]
