@@ -174,7 +174,6 @@ __Error Codes__:
 
 + ERR_INVALID_JSON (Missing content-type or JSON syntax error)
 + ERR_BAD_OR_MISSING_FIELD (Missing JSON field or invalid JSON field value)
-+ ERR_MISSING_QUERY_PARAMETER (One of the query parameters is missing)
 + ERR_NOT_A_USER (Invalid user specified)
 + ERR_DOES_NOT_EXIST (The destination directory does not exist)
 + ERR_NOT_WRITEABLE (The destination directory is not writable by the user)
@@ -206,6 +205,6 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"content" : "This is the content for the file.", "dest" : "/iplant/home/testuser/savedfile.txt"}' 'http://127.0.0.1:31370/secured/fileio/saveas?proxyToken=notReal'
+    curl -d '{"content" : "This is the content for the file.", "dest" : "/iplant/home/testuser/savedfile.txt"}' 'http://127.0.0.1:31370/secured/fileio/saveas?proxyToken=notReal'
 
 
