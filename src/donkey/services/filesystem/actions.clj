@@ -607,7 +607,7 @@
     (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath)
     (when (is-dir? cm fpath)
       (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) fpath true))
-    (set-permissions cm share-with hdir true false false true)
+    (set-permissions cm share-with hdir true false false false)
     (set-permissions cm share-with fpath read-perm write-perm own-perm true)
     {:user share-with :path fpath}))
 
