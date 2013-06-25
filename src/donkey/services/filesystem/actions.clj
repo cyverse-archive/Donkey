@@ -651,7 +651,7 @@
 
 (defn- remove-inherit-bit?
   [cm user fpath]
-  (empty? (remove (comp (conj (irods-admins) user) :user)
+  (empty? (remove (comp (conj (set (irods-admins)) user) :user)
                   (list-user-perms cm fpath))))
 
 (defn- unshare-dir
