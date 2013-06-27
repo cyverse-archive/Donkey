@@ -16,7 +16,7 @@
                  [clj-http "0.6.5"]
                  [com.cemerick/url "0.0.7"]
                  [compojure "1.0.1"]
-                 [heuristomancer "0.1.0-SNAPSHOT"]
+                 [heuristomancer "0.1.1-SNAPSHOT"]
                  [ring/ring-jetty-adapter "1.0.1"]
                  [slingshot "0.10.1"]
                  [clojurewerkz/elastisch "1.0.2"]
