@@ -589,6 +589,11 @@
    :reason  reason
    :skipped true})
 
+(defn- share-path-home
+  "Returns the home directory that a shared file is under."
+  [share-path]
+  (string/join "/" (take 4 (string/split share-path #"\/"))))
+
 (defn- share-path
   "Shares a path with a user. This consists of the following steps:
 
@@ -601,7 +606,7 @@
        3. The permissions are set on the item being shared. This is done recursively in case the
           item being shared is a directory."
   [cm user share-with {read-perm :read write-perm :write own-perm :own :as perms} fpath]
-  (let [hdir      (ft/rm-last-slash (user-home-dir user))
+  (let [hdir      (share-path-home fpath) #_(ft/rm-last-slash (user-home-dir user))
         trash-dir (trash-base-dir cm user)
         base-dirs #{hdir trash-dir}]
     (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath)
