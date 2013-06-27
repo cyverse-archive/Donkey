@@ -6,6 +6,7 @@
   (:require [cheshire.core :as json]
             [hoot.rdf :as rdf]
             [hoot.csv :as csv]
+            [heuristomancer.core :as hm]
             [clojure.core.memoize :as memo]
             [clojure.java.shell :as sh]
             [clojure.string :as string]
@@ -13,47 +14,11 @@
             [donkey.services.garnish.irods :as prods]
             [donkey.util.config :as cfg]))
 
-(def script-types 
-  ["ace"
-   "blast"
-   "bowtie"
-   "clustalw"
-   "codata"
-   "csv"
-   "embl"
-   "fasta"
-   "fastq"
-   "fastxy"
-   "game"
-   "gcg"
-   "gcgblast"
-   "gcgfasta"
-   "gde"
-   "genbank"
-   "genscan"
-   "gff"
-   "hmmer"
-   "nexus"
-   "mase"
-   "mega"
-   "msf"
-   "other"
-   "phrap"
-   "pir"
-   "pfam"
-   "phylip"
-   "prodom"
-   "raw"
-   "rsf"
-   "selex"
-   "stockholm"
-   "swiss"
-   "tab"
-   "vcf"])
+(def script-types (sort (hm/supported-formats)))
 
 (defn accepted-types
   []
-  (set (concat script-types rdf/accepted-languages csv/csv-types)))
+  (set script-types))
 
 (defn add-type
   [req-body req-params]
@@ -94,7 +59,7 @@
 
 (defn get-type-list 
   [] 
-  (json/generate-string {:types (seq (set (concat csv/csv-types script-types)))}))
+  (json/generate-string {:types script-types}))
 
 (defn set-auto-type
   [req-body req-params]
