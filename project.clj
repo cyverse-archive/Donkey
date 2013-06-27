@@ -7,7 +7,7 @@
                  [org.clojure/java.classpath "0.2.0"]
                  [org.apache.tika/tika-core "1.3"]
                  [org.iplantc/clj-cas "1.0.1-SNAPSHOT"]
-                 [org.iplantc/clj-jargon "0.2.6-SNAPSHOT"]
+                 [org.iplantc/clj-jargon "0.2.7-SNAPSHOT"]
                  [org.iplantc/clojure-commons "1.4.5-SNAPSHOT"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
