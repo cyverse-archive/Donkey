@@ -845,7 +845,10 @@
 (defn trash-origin-path
   [cm user p]
   (if (attribute? cm p "ipc-trash-origin")
-    (:value (first (get-attribute cm p "ipc-trash-origin")))
+    (let [origin-path (:value (first (get-attribute cm p "ipc-trash-origin")))]
+      (if-not (is-writeable? cm user origin-path)
+        (ft/path-join (user-home-dir user) (ft/basename p))
+        origin-path))
     (ft/path-join (user-home-dir user) (ft/basename p))))
 
 (defn restore-to-homedir?
