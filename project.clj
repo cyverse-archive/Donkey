@@ -37,7 +37,7 @@
                :exe-files ["resources/scripts/filetypes/guess-2.pl"]
                :config-files ["log4j.properties"]
                :config-path "conf/main"}
-  :uberjar-exclusions [#"BCKEY.SF"]
+  :uberjar-exclusions [#"BCKEY.SF" #"LICENSE" #"NOTICE"]
   :repositories [["iplantCollaborative"
                   "http://projects.iplantcollaborative.org/archiva/repository/internal/"]
                  ["biojava"
