@@ -158,13 +158,6 @@
   (let [url (build-metadactyl-unprotected-url "export-template" template-id)]
     (forward-get url req)))
 
-(defn export-app
-  "This service will export the single-step app with the given identifier."
-  [req app-id]
-  (forward-get
-   (build-metadactyl-unprotected-url "export-app" app-id)
-   req))
-
 (defn export-workflow
   "This service will export a workflow with the given identifier."
   [req app-id]

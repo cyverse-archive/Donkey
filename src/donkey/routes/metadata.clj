@@ -159,9 +159,6 @@
    (GET "/export-template/:template-id" [template-id :as req]
         (trap #(export-template req template-id)))
 
-   (GET "/export-app/:app-id" [app-id :as req]
-        (trap #(export-app req app-id)))
-
    (GET "/export-workflow/:app-id" [app-id :as req]
         (trap #(export-workflow req app-id)))
 
