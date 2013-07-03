@@ -615,21 +615,6 @@
              file-key
              (extract-uploaded-path (upload user tmp-path final-path))))))
 
-(defn- preprocess-tool-request
-  "Uploads all files found in params to the user's home dir, replacing each
-   file's tmp path value in params with the file's new path."
-  [req]
-  (let [user (get-in req [:params "user"])
-        home-dir (user-home-dir user)
-        files-to-upload ["src_upload_file" "test_data_file"]
-        params (reduce #(upload-tool-request-file %1 %2 user home-dir)
-                       (:params req)
-                       files-to-upload)]
-    (-> req
-      (dissoc :body :multipart-params)
-      (assoc :params params)
-      (assoc :content-type "application/json"))))
-
 (defn- postprocess-tool-request
   "Postprocesses a tool request update or submission. The postprocessing function
    should take the tool request and user details as arguments."
@@ -644,14 +629,11 @@
 (defn submit-tool-request
   "Submits a tool request on behalf of the user found in the request params."
   [req]
-  (let [req (preprocess-tool-request req)
-        user-query-params {:user (get-in req [:params "user"])
+  (let [user-query-params {:user (get-in req [:params "user"])
                            :email (get-in req [:params "email"])}
-        tool-request-url (build-url-with-query (metadactyl-base-url)
-                                               user-query-params
-                                               "tool-request")]
+        tool-request-url  (build-metadactyl-secured-url "tool-request")]
     (postprocess-tool-request
-      (forward-put tool-request-url req (cheshire/encode (:params req)))
+      (forward-put tool-request-url req)
       (fn [tool-req user-details]
         (send-tool-request-email tool-req user-details)
         (dn/send-tool-request-notification tool-req user-details)
