@@ -107,7 +107,7 @@
   (let [this-update (last (:history tool-req))
         status      (:status this-update)
         comments    (:comments this-update)
-        subject     (str "Tool Request " (:name tool-req) "Status Changed to " status)]
+        subject     (str "Tool Request " (:name tool-req) " Status Changed to " status)]
     (try
       (send-notification {:type           "tool_request"
                           :user           (:username user-details)
