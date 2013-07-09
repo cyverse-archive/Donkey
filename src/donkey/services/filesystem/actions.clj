@@ -343,6 +343,22 @@
     (validators/user-exists cm user)
     (user-groups cm user)))
 
+(defn attr-value?
+  "Returns a truthy value if path has metadata that has an attribute of attr and
+   a value of val."
+  [cm path attr val] 
+  (filter
+    #(and (= (:attr %1) attr)
+          (= (:value %1) val))
+    (get-metadata cm path)))
+
+(defn reserved-unit
+  "Turns a blank unit into a reserved unit."
+  [avu-map]
+  (if (string/blank? (:unit avu-map)) 
+    IPCRESERVED 
+    (:unit avu-map)))
+
 (defn metadata-get
   [user path]
   (with-jargon (jargon-cfg) [cm]
@@ -362,9 +378,13 @@
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
 
-    (let [new-unit (if (string/blank? (:unit avu-map)) IPCRESERVED (:unit avu-map))]
-      (set-metadata cm (ft/rm-last-slash path) (:attr avu-map) (:value avu-map) new-unit)
-      {:path (ft/rm-last-slash path) :user user})))
+    (let [fixed-path (ft/rm-last-slash path)
+          new-unit   (reserved-unit avu-map)
+          attr       (:attr avu-map)
+          value      (:value avu-map)]
+      (if-not (attr-value? cm fixed-path attr value)
+        (set-metadata cm fixed-path attr value new-unit))
+      {:path fixed-path :user user})))
 
 (defn encode-str
   [str-to-encode]
@@ -393,9 +413,12 @@
           (delete-metadata cm new-path del)))
 
       (doseq [avu (:add adds-dels)]
-        (let [new-unit (if (string/blank? (:unit avu)) IPCRESERVED (:unit avu))]
-          (set-metadata cm new-path (:attr avu) (:value avu) new-unit)))
-      {:path (ft/rm-last-slash path) :user user})))
+        (let [new-unit (reserved-unit avu)
+              attr     (:attr avu)
+              value    (:value avu)]
+          (if-not (attr-value? cm new-path attr value)
+            (set-metadata cm new-path attr value new-unit))))
+      {:path new-path :user user})))
 
 (defn metadata-delete
   [user path attr]
