@@ -32,7 +32,7 @@
   "Loads an XML schema from a file somewhere on the classpath."
   [path]
   (.newSchema (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)
-              (StreamSource. (file (get-resource path)))))
+              (get-resource path)))
 
 (defn- first-line
   "Loads the firt non-blank line from a file."

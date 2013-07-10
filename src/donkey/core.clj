@@ -3,6 +3,8 @@
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
+        [clj-jargon.jargon :only [with-jargon]]
+        [clj-jargon.lazy-listings :only [define-specific-queries]]
         [compojure.core]
         [donkey.routes.admin]
         [donkey.routes.data]
@@ -95,8 +97,14 @@
 (def app
   (site-handler donkey-routes))
 
+(defn register-specific-queries
+  []
+  (with-jargon (config/jargon-cfg) [cm]
+    (define-specific-queries cm)))
+
 (defn -main
   [& _]
   (load-configuration-from-zookeeper)
+  (register-specific-queries)
   (log/warn "Listening on" (config/listen-port))
   (jetty/run-jetty app {:port (config/listen-port)}))

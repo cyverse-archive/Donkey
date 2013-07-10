@@ -30,12 +30,6 @@
       :from-addr (config/tool-request-src-addr)
       :subject   "New Tool Request"
       :template  "tool_request"
-      :values    template-values)
-    (send-email
-      :to        email
-      :from-addr (config/tool-request-src-addr)
-      :subject   "New Tool Request"
-      :template  "tool_request"
       :values    template-values)))
 
 (defn- format-question

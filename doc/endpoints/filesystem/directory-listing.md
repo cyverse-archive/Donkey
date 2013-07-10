@@ -1,6 +1,10 @@
 Directory List (Non-Recursive)
 ------------------------------
 
+The following characters are considered invalid since they cause issues:
+
+    =!\"#$'%*+,\\:?@[]^{}|&;<>`~\n\t\\
+
 __URL Path__: /secured/filesystem/directory
 
 __HTTP Method__: GET

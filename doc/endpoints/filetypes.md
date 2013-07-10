@@ -13,10 +13,12 @@ Currently Supported File Types
 ------------------------------
 
 * "ace"
+* "bash"
 * "blast"
 * "bowtie"
 * "clustalw"
 * "codata"
+* "csh"
 * "csv"
 * "embl"
 * "fasta"
@@ -31,21 +33,25 @@ Currently Supported File Types
 * "genscan"
 * "gff"
 * "hmmer"
-* "nexus"
 * "mase"
 * "mega"
 * "msf"
-* "phrap"
+* "newick"
+* "nexml",
+* "nexus"
+* "perl",
+* "phylip",
+* "phyloxml",
 * "pir"
-* "pfam"
-* "phylip"
-* "prodom"
+* "prodom",
+* "python"
 * "raw"
 * "rsf"
 * "selex"
+* "sh"
 * "stockholm"
 * "swiss"
-* "tab"
+* "tcsh"
 * "vcf"
 
 Some endpoints may also return file types detected by Apache Tika.

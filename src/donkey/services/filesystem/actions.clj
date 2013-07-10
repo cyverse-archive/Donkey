@@ -343,6 +343,22 @@
     (validators/user-exists cm user)
     (user-groups cm user)))
 
+(defn attr-value?
+  "Returns a truthy value if path has metadata that has an attribute of attr and
+   a value of val."
+  [cm path attr val] 
+  (filter
+    #(and (= (:attr %1) attr)
+          (= (:value %1) val))
+    (get-metadata cm path)))
+
+(defn reserved-unit
+  "Turns a blank unit into a reserved unit."
+  [avu-map]
+  (if (string/blank? (:unit avu-map)) 
+    IPCRESERVED 
+    (:unit avu-map)))
+
 (defn metadata-get
   [user path]
   (with-jargon (jargon-cfg) [cm]
@@ -362,9 +378,13 @@
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
 
-    (let [new-unit (if (string/blank? (:unit avu-map)) IPCRESERVED (:unit avu-map))]
-      (set-metadata cm (ft/rm-last-slash path) (:attr avu-map) (:value avu-map) new-unit)
-      {:path (ft/rm-last-slash path) :user user})))
+    (let [fixed-path (ft/rm-last-slash path)
+          new-unit   (reserved-unit avu-map)
+          attr       (:attr avu-map)
+          value      (:value avu-map)]
+      (if-not (attr-value? cm fixed-path attr value)
+        (set-metadata cm fixed-path attr value new-unit))
+      {:path fixed-path :user user})))
 
 (defn encode-str
   [str-to-encode]
@@ -393,9 +413,12 @@
           (delete-metadata cm new-path del)))
 
       (doseq [avu (:add adds-dels)]
-        (let [new-unit (if (string/blank? (:unit avu)) IPCRESERVED (:unit avu))]
-          (set-metadata cm new-path (:attr avu) (:value avu) new-unit)))
-      {:path (ft/rm-last-slash path) :user user})))
+        (let [new-unit (reserved-unit avu)
+              attr     (:attr avu)
+              value    (:value avu)]
+          (if-not (attr-value? cm new-path attr value)
+            (set-metadata cm new-path attr value new-unit))))
+      {:path new-path :user user})))
 
 (defn metadata-delete
   [user path attr]
@@ -589,6 +612,11 @@
    :reason  reason
    :skipped true})
 
+(defn- share-path-home
+  "Returns the home directory that a shared file is under."
+  [share-path]
+  (string/join "/" (take 4 (string/split share-path #"\/"))))
+
 (defn- share-path
   "Shares a path with a user. This consists of the following steps:
 
@@ -601,7 +629,7 @@
        3. The permissions are set on the item being shared. This is done recursively in case the
           item being shared is a directory."
   [cm user share-with {read-perm :read write-perm :write own-perm :own :as perms} fpath]
-  (let [hdir      (ft/rm-last-slash (user-home-dir user))
+  (let [hdir      (share-path-home fpath) #_(ft/rm-last-slash (user-home-dir user))
         trash-dir (trash-base-dir cm user)
         base-dirs #{hdir trash-dir}]
     (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath)
@@ -611,11 +639,16 @@
     (set-permissions cm share-with fpath read-perm write-perm own-perm true)
     {:user share-with :path fpath}))
 
+(defn- in-trash?
+  [cm user fpath]
+  (.startsWith fpath (user-trash-dir cm user)))
+
 (defn- share-paths
   [cm user share-withs fpaths perms]
   (for [share-with share-withs
         fpath      fpaths]
     (cond (= user share-with)                 (skip-share share-with fpath :share-with-self)
+          (in-trash? cm user fpath)           (skip-share share-with fpath :share-from-trash)
           (shared? cm share-with fpath perms) (skip-share share-with fpath :already-shared)
           :else                               (share-path cm user share-with perms fpath))))
 
@@ -840,7 +873,10 @@
 (defn trash-origin-path
   [cm user p]
   (if (attribute? cm p "ipc-trash-origin")
-    (:value (first (get-attribute cm p "ipc-trash-origin")))
+    (let [origin-path (:value (first (get-attribute cm p "ipc-trash-origin")))]
+      (if-not (is-writeable? cm user origin-path)
+        (ft/path-join (user-home-dir user) (ft/basename p))
+        origin-path))
     (ft/path-join (user-home-dir user) (ft/basename p))))
 
 (defn restore-to-homedir?

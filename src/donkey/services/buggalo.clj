@@ -57,7 +57,7 @@
   "Obtains a tree viewer URL for a single tree file."
   [f]
   (log/debug "obtaining a tree viewer URL for" (.getName f))
-  (let [label     (first (string/split (.getName f) #"[.]" 2))
+  (let [label     (string/replace (.getName f) #"[.]tre$" "")
         multipart [{:name "name"       :content label}
                    {:name "newickData" :content f}]
         res       (client/post (tree-parser-url)

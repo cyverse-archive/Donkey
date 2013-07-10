@@ -90,14 +90,15 @@
   (let [this-update (last (:history tool-req))
         comments    (:comments this-update)]
     (try
-      (send-notification {:type    "tool_request"
-                          :user    (:username user-details)
-                          :subject (str "Tool Request " (:name tool-req) " Submitted")
-                          :email   false
-                          :payload (assoc tool-req
-                                     :email_address (:email user-details)
-                                     :toolname      (:name tool-req)
-                                     :comments      comments)})
+      (send-notification {:type           "tool_request"
+                          :user           (:username user-details)
+                          :subject        (str "Tool Request " (:name tool-req) " Submitted")
+                          :email          true
+                          :email_template "tool_request_submitted"
+                          :payload        (assoc tool-req
+                                                 :email_address (:email user-details)
+                                                 :toolname      (:name tool-req)
+                                                 :comments      comments)})
       (catch Exception e
         (log/warn e "unable to send tool request submission notification for" tool-req)))))
 
@@ -107,7 +108,7 @@
   (let [this-update (last (:history tool-req))
         status      (:status this-update)
         comments    (:comments this-update)
-        subject     (str "Tool Request " (:name tool-req) "Status Changed to " status)]
+        subject     (str "Tool Request " (:name tool-req) " Status Changed to " status)]
     (try
       (send-notification {:type           "tool_request"
                           :user           (:username user-details)

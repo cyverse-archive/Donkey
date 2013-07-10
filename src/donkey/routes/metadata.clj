@@ -150,17 +150,14 @@
    (GET "/analysis-details/:app-id" [app-id :as req]
         (trap #(get-app-details req app-id)))
 
-   (GET "/get-only-analysis-groups/:workspace-id" [workspace-id :as req]
-        (trap #(get-only-analysis-groups req workspace-id)))
+   (GET "/public-app-groups" [req]
+        (trap #(get-public-app-groups req)))
 
    (GET "/list-analysis/:app-id" [app-id :as req]
         (trap #(list-app req app-id)))
 
    (GET "/export-template/:template-id" [template-id :as req]
         (trap #(export-template req template-id)))
-
-   (GET "/export-app/:app-id" [app-id :as req]
-        (trap #(export-app req app-id)))
 
    (GET "/export-workflow/:app-id" [app-id :as req]
         (trap #(export-workflow req app-id)))
