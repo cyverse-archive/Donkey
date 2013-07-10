@@ -639,11 +639,16 @@
     (set-permissions cm share-with fpath read-perm write-perm own-perm true)
     {:user share-with :path fpath}))
 
+(defn- in-trash?
+  [cm user fpath]
+  (.startsWith fpath (user-trash-dir cm user)))
+
 (defn- share-paths
   [cm user share-withs fpaths perms]
   (for [share-with share-withs
         fpath      fpaths]
     (cond (= user share-with)                 (skip-share share-with fpath :share-with-self)
+          (in-trash? cm user fpath)           (skip-share share-with fpath :share-from-trash)
           (shared? cm share-with fpath perms) (skip-share share-with fpath :already-shared)
           :else                               (share-path cm user share-with perms fpath))))
 
