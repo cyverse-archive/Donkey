@@ -13,18 +13,22 @@
    validate-cas-proxy-ticket."
   [{:keys [user-attributes]}]
   (log/trace user-attributes)
-  {:username (str (get user-attributes "uid") "@" (uid-domain)),
-   :password (get user-attributes "password"),
-   :email (get user-attributes "email"),
-   :shortUsername (get user-attributes "uid")})
+  {:username      (str (get user-attributes "uid") "@" (uid-domain)),
+   :password      (get user-attributes "password"),
+   :email         (get user-attributes "email"),
+   :shortUsername (get user-attributes "uid")
+   :firstName     (get user-attributes "firstName")
+   :lastName      (get user-attributes "lastName")})
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
   [placeholder & args]
-  {:username (System/getenv "IPLANT_CAS_USER")
-   :password (System/getenv "IPLANT_CAS_PASS")
-   :email    (System/getenv "IPLANT_CAS_EMAIL")
-   :shortUsername (System/getenv "IPLANT_CAS_SHORT")})
+  {:username      (System/getenv "IPLANT_CAS_USER")
+   :password      (System/getenv "IPLANT_CAS_PASS")
+   :email         (System/getenv "IPLANT_CAS_EMAIL")
+   :shortUsername (System/getenv "IPLANT_CAS_SHORT")
+   :firstName     (System/getenv "IPLANT_CAS_FIRST")
+   :lastName      (System/getenv "IPLANT_CAS_LAST")})
 
 (defn store-current-user
   "Authenticates the user using validate-cas-proxy-ticket and binds

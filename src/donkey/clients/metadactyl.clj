@@ -1,17 +1,15 @@
 (ns donkey.clients.metadactyl
-  (:use [donkey.auth.user-attributes :only [current-user]])
   (:require [cemerick.url :as curl]
             [clj-http.client :as client]
             [donkey.util.config :as config]
-            [donkey.util.service :as service]))
+            [donkey.util.service :as service]
+            [donkey.util.transformers :as xforms]))
 
 (defn- secured-params
   ([]
      (secured-params {}))
   ([existing-params]
-     (assoc existing-params
-       :user  (:shortUsername current-user)
-       :email (:email current-user))))
+     (xforms/add-current-user-to-map existing-params)))
 
 (defn- unsecured-url
   [& components]
