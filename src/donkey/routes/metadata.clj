@@ -150,8 +150,8 @@
    (GET "/analysis-details/:app-id" [app-id :as req]
         (trap #(get-app-details req app-id)))
 
-   (GET "/get-only-analysis-groups/:workspace-id" [workspace-id :as req]
-        (trap #(get-only-analysis-groups req workspace-id)))
+   (GET "/public-app-groups" [req]
+        (trap #(get-public-app-groups req)))
 
    (GET "/list-analysis/:app-id" [app-id :as req]
         (trap #(list-app req app-id)))

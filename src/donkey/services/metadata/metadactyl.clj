@@ -136,11 +136,10 @@
    (build-metadactyl-secured-url "app" app-id)
    req))
 
-(defn get-only-analysis-groups
-  "Retrieves the list of public analyses."
-  [req workspace-id]
-  (let [url (build-metadactyl-unprotected-url
-             "get-only-analysis-groups" workspace-id)]
+(defn get-public-app-groups
+  "Retrieves the list of public app groups."
+  [req]
+  (let [url (build-metadactyl-unprotected-url "public-app-groups")]
     (forward-get url req)))
 
 (defn list-app
