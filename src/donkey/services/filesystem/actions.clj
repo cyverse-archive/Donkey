@@ -864,7 +864,7 @@
         (log/debug "readable?" user (owns? cm user p))
         (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
           (doseq [path-ticket path-tickets]
-            (delete-ticket cm user path-ticket)))
+            (delete-ticket cm (:username cm) path-ticket)))
 
         (if-not (.startsWith p (user-trash-dir cm user))
           (move-to-trash cm p user)
@@ -995,11 +995,11 @@
       (validators/all-tickets-nonexistant cm user all-ticket-ids)
 
       (doseq [tm tickets]
-        (create-ticket cm user (:path tm) (:ticket-id tm))
+        (create-ticket cm (:username cm) (:path tm) (:ticket-id tm))
         (when public?
-          (.addTicketGroupRestriction (ticket-admin-service cm user) (:ticket-id tm) "public")))
+          (.addTicketGroupRestriction (ticket-admin-service cm (:username cm)) (:ticket-id tm) "public")))
 
-      {:user user :tickets (mapv #(ticket-map cm user %) all-ticket-ids)})))
+      {:user user :tickets (mapv #(ticket-map cm (:username cm) %) all-ticket-ids)})))
 
 (defn remove-tickets
   [user ticket-ids]
@@ -1007,10 +1007,10 @@
     (validators/user-exists cm user)
     (validators/all-tickets-exist cm user ticket-ids)
 
-    (let [all-paths (mapv #(.getIrodsAbsolutePath (ticket-by-id cm user %)) ticket-ids)]
+    (let [all-paths (mapv #(.getIrodsAbsolutePath (ticket-by-id cm (:username cm) %)) ticket-ids)]
       (validators/all-paths-writeable cm user all-paths)
       (doseq [ticket-id ticket-ids]
-        (delete-ticket cm user ticket-id))
+        (delete-ticket cm (:username cm) ticket-id))
       {:user user :tickets ticket-ids})))
 
 (defn list-tickets-for-paths
@@ -1021,7 +1021,7 @@
     (validators/all-paths-readable cm user paths)
 
     {:tickets
-     (apply merge (mapv #(hash-map %1 (ticket-ids-for-path cm user %1)) paths))}))
+     (apply merge (mapv #(hash-map %1 (ticket-ids-for-path cm (:username cm) %1)) paths))}))
 
 (defn paths-contain-char
   [paths char]
