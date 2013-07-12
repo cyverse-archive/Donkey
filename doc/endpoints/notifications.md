@@ -230,9 +230,9 @@ parameters:
     </tbody>
 </table>
 
-The response body consists of a JSON object containing four fields: `user-total`, contains the number of user messages 
+The response body consists of a JSON object containing four fields: `user-total`, contains the number of user messages
 that have not been marked as deleted and match the criteria specified in the query string, `system-total` contains the
-number of system messages that are active and have not been dismissed by the user, `system-total-new` contains the 
+number of system messages that are active and have not been dismissed by the user, `system-total-new` contains the
 number of system messages that have not been marked as received by the user, and `system-total-unseen` contains the
 number of system messages that have not been marked as seen by the user.
 
@@ -460,60 +460,60 @@ parameter and its corresponding ticket string.
     </thead>
     <tbody>
         <tr>
-            <td>/secured/notifications/system/messages</td>
-            <td>/system/messages</td>
+            <td>GET /secured/notifications/system/messages</td>
+            <td>GET /system/messages</td>
         </tr>
         <tr>
-            <td>/secured/notifications/system/new-messages</td>
-            <td>/system/new-messages</td>
+            <td>GET /secured/notifications/system/new-messages</td>
+            <td>GET /system/new-messages</td>
         </tr>
         <tr>
-            <td>/secured/notifications/system/unseen-messages</td>
-            <td>/system/unseen-messages</td>
+            <td>GET /secured/notifications/system/unseen-messages</td>
+            <td>GET /system/unseen-messages</td>
         </tr>
         <tr>
-            <td>/secured/notifications/system/received</td>
-            <td>/system/received</td>
+            <td>POST /secured/notifications/system/received</td>
+            <td>POST /system/received</td>
         </tr>
          <tr>
-            <td>/secured/notifications/system/mark-all-received</td>
-            <td>/system/mark-all-received</td>
+            <td>POST /secured/notifications/system/mark-all-received</td>
+            <td>POST /system/mark-all-received</td>
         </tr>
         <tr>
-            <td>/secured/notifications/system/seen</td>
-            <td>/system/seen</td>
+            <td>POST /secured/notifications/system/seen</td>
+            <td>POST /system/seen</td>
         </tr>
         <tr>
-            <td>/secured/notifications/system/mark-all-seen</td>
-            <td>/system/mark-all-seen</td>
+            <td>POST /secured/notifications/system/mark-all-seen</td>
+            <td>POST /system/mark-all-seen</td>
         </tr>
         <tr>
-            <td>/secured/notifications/system/delete</td>
-            <td>/system/delete</td>
+            <td>POST /secured/notifications/system/delete</td>
+            <td>POST /system/delete</td>
         </tr>
         <tr>
-            <td>/secured/notifications/system/delete-all</td>
-            <td>/system/delete-all</td>
+            <td>DELETE /secured/notifications/system/delete-all</td>
+            <td>DELETE /system/delete-all</td>
         </tr>
         <tr>
-            <td>/secured/notifications/admin/system</td>
-            <td>/admin/system</td>
+            <td>PUT /secured/notifications/admin/system</td>
+            <td>PUT /admin/system</td>
         </tr>
         <tr>
-            <td>/secured/notifications/admin/system/:uuid</td>
-            <td>/admin/system/:uuid</td>
+            <td>GET /secured/notifications/admin/system/:uuid</td>
+            <td>GET /admin/system/:uuid</td>
         </tr>
         <tr>
-            <td>/secured/notifications/admin/system/:uuid</td>
-            <td>/admin/system/:uuid</td>
+            <td>POST /secured/notifications/admin/system/:uuid</td>
+            <td>POST /admin/system/:uuid</td>
         </tr>
         <tr>
-            <td>/secured/notifications/admin/system/:uuid</td>
-            <td>/admin/system/:uuid</td>
+            <td>DELETE /secured/notifications/admin/system/:uuid</td>
+            <td>DELETE /admin/system/:uuid</td>
         </tr>
         <tr>
-            <td>/secured/notifications/admin/system-types</td>
-            <td>/admin/system-types</td>
+            <td>GET /secured/notifications/admin/system-types</td>
+            <td>GET /admin/system-types</td>
         </tr>
     </tbody>
 </table>
