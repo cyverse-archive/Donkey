@@ -2,7 +2,7 @@ Emptying a User's Trash Directory
 ---------------------------------
 __URL Path__: /secured/filesystem/trash
 
-__HTTP METHOD__: DELETE
+__HTTP Method__: DELETE
 
 __Error Codes__: ERR_NOT_A_USER
 
@@ -24,4 +24,3 @@ __Response__:
 __Curl Command__:
 
     curl -X DELETE http://127.0.0.1:3000/secured/filesystem/trash?proxyToken=notReal
-

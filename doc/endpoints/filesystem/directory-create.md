@@ -1,6 +1,6 @@
 Directory Creation
 ------------------
-__URL Path__: /secured/filesyste/directory/create
+__URL Path__: /secured/filesystem/directory/create
 
 __HTTP Method__: POST
 
