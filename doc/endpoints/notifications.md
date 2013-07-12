@@ -230,11 +230,14 @@ parameters:
     </tbody>
 </table>
 
-The response body consists of a JSON object containing four fields: `user-total`, contains the number of user messages
-that have not been marked as deleted and match the criteria specified in the query string, `system-total` contains the
-number of system messages that are active and have not been dismissed by the user, `system-total-new` contains the
-number of system messages that have not been marked as received by the user, and `system-total-unseen` contains the
-number of system messages that have not been marked as seen by the user.
+The response body consists of a JSON object containing four fields:
+`user-total`, contains the number of user messages that have not been marked as
+deleted and match the criteria specified in the query string, `system-total`
+contains the number of system messages that are active and have not been
+dismissed by the user, `system-total-new` contains the number of system messages
+that have not been marked as received by the user, and `system-total-unseen`
+contains the number of system messages that have not been marked as seen by the
+user.
 
 ```json
 {

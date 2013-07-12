@@ -10,12 +10,16 @@
 
 Secured Endpoint: GET /secured/reference-genomes
 
+Delegates to metadactyl: GET /secured/reference-genomes
+
 This endpoint is a passthrough to the metadactyl endpoint with the same
 path. Please see the metadactyl documentation for more details.
 
 ## Importing Reference Genomes
 
 Secured Endpoint: PUT /secured/reference-genomes
+
+Delegates to metadactyl: PUT /secured/reference-genomes
 
 This endpoint is a passthrough to the metadactyl endpoint with the same
 path. Please see the metadactyl documentation for more details.

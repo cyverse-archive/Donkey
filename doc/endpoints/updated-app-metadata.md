@@ -12,12 +12,16 @@
 
 *Secured Endpoint:* POST /secured/update-app
 
+*Delegates to metadactyl:* POST /secured/update-app
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Obtaining an App Representation for Editing
 
 *Secured Endpoint:* GET /secured/edit-app/{app-id}
+
+*Delegates to metadactyl:* GET /secured/edit-app/{app-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -26,12 +30,16 @@ path. Please see the metadactyl documentation for more information.
 
 *Secured Endpoint:* GET /secured/app/{app-id}
 
+*Delegates to metadactyl:* GET /secured/app/{app-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Previewing Command Line Arguments
 
 *Unsecured Endpoint:* POST /arg-preview
+
+*Delegates to metadactyl:* POST /arg-preview
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.

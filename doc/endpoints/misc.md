@@ -36,6 +36,8 @@ Welcome to Donkey!  I've mastered the stairs!
 
 Secured Endpoint: GET /secured/bootstrap
 
+Delegates to metadactyl: GET /secured/bootstrap
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 

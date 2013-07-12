@@ -55,12 +55,16 @@
 
 Unsecured Endpoint: GET /get-workflow-elements/{element-type}
 
+Delegates to metadactyl: GET /get-workflow-elements/{element-type}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Searching for Deployed Components
 
 Unsecured Endpoint: GET /search-deployed-components/{search-term}
+
+Delegates to metadactyl: GET /search-deployed-components{search-term}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -69,12 +73,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: GET /get-all-analysis-ids
 
+Delegates to metadactyl: GET /get-all-analysis-ids
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Deleting Categories
 
 Unsecured Endpoint: POST /delete-categories
+
+Delegates to metadactyl: POST /delete-categories
 
 This endpoint is a passthrough to the metactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -83,12 +91,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: GET /validate-analysis-for-pipelines/{analysis-id}
 
+Delegates to metadactyl: GET /validate-analysis-for-pipelines/{analysis-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Listing Data Objects in an Analysis
 
 Unsecured Endpoint: GET /analysis-data-objects/{analysis-id}
+
+Delegates to metadactyl: GET /analysis-data-objects/{analysis-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -97,12 +109,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: POST /categorize-analyses
 
+Delegates to metadactyl: POST /categorize-analyses
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Listing Analysis Categorizations
 
 Unsecured Endpoint: GET /get-analysis-categories/{category-set}
+
+Delegates to metadactyl: GET /get-analysis-categories/{category-set}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -111,12 +127,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: POST /can-export-analysis
 
+Delegates to metadactyl: POST /can-export-analysis
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Adding Analyses to Analysis Groups
 
 Unsecured Endpoint: POST /add-analysis-to-group
+
+Delegates to metadactyl: POST /add-analysis-to-group
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -125,12 +145,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: GET /get-analysis/{analysis-id}
 
+Delegates to metadactyl: GET /get-analysis/{analysis-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Getting Analysis Details
 
 Unsecured Endpoint: GET /analysis-details/{analysis-id}
+
+Delegates to metadactyl: GET /analysis-details/{anaysis-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -139,7 +163,11 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: GET /secured/app-groups
 
+Delegates to metadactyl: GET /secured/app-groups
+
 Unsecured Endpoint: GET /public-app-groups
+
+Delegates to metadactyl: GET /public-app-groups
 
 These endpoints are passthroughs to the metadactyl endpoints using the same
 paths. Please see the metadactyl documentation for more information.
@@ -148,12 +176,16 @@ paths. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: GET /list-analysis/{analysis-id}
 
+Delegates to metadactyl: GET /list-analysis/{analysis-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Exporting a Template
 
 Unsecured Endpoint: GET /export-template/{template-id}
+
+Delegates to metadactyl: GET /export-template/{template-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -162,12 +194,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: GET /export-workflow/{analysis-id}
 
+Delegates to metadactyl: GET /export-workflow/{analysis-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Exporting Selected Deployed Components
 
 Unsecured Endpoint: POST /export-deployed-components
+
+Delegates to metadactyl: POST /export-deployed-components
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -176,12 +212,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: POST /permanently-delete-workflow
 
+Delegates to metadactyl: POST /permanently-delete-workflow
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Logically Deleting an Analysis
 
 Unsecured Endpoint: POST /delete-workflow
+
+Delegates to metadactyl: POST /delete-workflow
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -190,12 +230,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: POST /preview-template
 
+Delegates to metadactyl: POST /preview-template
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Previewing Analyses
 
 Unsecured Endpoint: POST /preview-workflow
+
+Delegates to metadactyl: POST /preview-workflow
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -204,12 +248,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: POST /update-template
 
+Delegates to metadactyl: POST /update-template
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Updating an Analysis
 
 Unsecured Endpoint: POST /update-workflow
+
+Delegates to metadactyl: POST /update-workflow
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -218,12 +266,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: POST /force-update-workflow
 
+Delegates to metadactyl: POST /force-update-workflow
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Updating App Labels
 
 Unsecured Endpoint: POST /update-app-labels
+
+Delegates to metadactyl: POST /update-app-labels
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -232,6 +284,8 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: POST /import-template
 
+Delegates to metadactyl: POST /import-template
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
@@ -239,12 +293,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: POST /import-workflow
 
+Delegates to metadactyl: POST /import-workflow
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Importing Deployed Components
 
 Unsecured Endpoint: POST /import-tools
+
+Delegates to metadactyl: POST /import-tools
 
 This service is an extension of the /import-workflow endpoint that also sends a
 notification for every deployed component that is imported provided that a
@@ -368,12 +426,16 @@ not recommended because it can cause spurious notifications to be sent.
 
 Unsecured Endpoint: POST /update-analysis
 
+Delegates to metadactyl: POST /update-analysis
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Getting Analyses in the JSON Format Required by the DE
 
 Secured Endpoint: GET /secured/template/{analysis-id}
+
+Delegates to metadactyl: GET /secured/template/{analysis-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -382,12 +444,16 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: POST /secured/rate-analysis
 
+Delegates to metadactyl: POST /secured/rate-analysis
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Deleting Analysis Ratings
 
 Secured Endpoint: POST /secured/delete-rating
+
+Delegates to metadactyl: POST /secured/delete-rating
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -396,6 +462,8 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: GET /secured/search-analyses
 
+Delegates to metadactyl: GET /secured/search-analyses
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
@@ -403,12 +471,16 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: GET /secured/get-analyses-in-group/{group-id}
 
+Delegates to metadactyl: GET /secured/get-analyses-in-group/{group-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Listing Analyses that may be Included in a Pipeline
 
 Secured Endpoint: GET /secured/list-analyses-for-pipeline/{group-id}
+
+Delegates to metadactyl: GET /secured/list-analyses-for-pipeline/{group-id}
 
 This service is an alias for the `/get-analyses-in-group/{group-id}` service.
 At one time, this was a different service that returned additional information
@@ -421,12 +493,16 @@ backward compatibility.
 
 Secured Endpoint: GET /secured/get-components-in-analysis/{analysis-id}
 
+Delegates to metadactyl: GET /secured/get-components-in-analysis/{analysis-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Updating the Favorite Analyses List
 
 Secured Endpoint: POST /secured/update-favorites
+
+Delegates to metadactyl: POST /secured/update-favorites
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -435,12 +511,16 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: GET /secured/edit-template/{analysis-id}
 
+Delegates to metadactyl: GET /secured/edit-template/{analysis-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Making a Copy of an Analysis Available for Editing in Tito
 
 Secured Endpoint: GET /secured/copy-template/{analysis-id}
+
+Delegates to metadactyl: GET /secured/copy-template/{analysis-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -449,12 +529,16 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: POST /secured/make-analysis-public
 
+Delegates to metadactyl: POST /secured/make-analysis-public
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Making a Pipeline Available for Editing
 
 Secured Endpoint: GET /secured/edit-workflow/{analysis-id}
+
+Delegates to metadactyl: GET /secured/edit-workflow/{analysis-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -463,12 +547,16 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: GET /secured/copy-workflow/{analysis-id}
 
+Delegates to metadactyl: GET /secured/copy-workflow/{analysis-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Requesting Installation of a Tool
 
 Secured Endpoint: PUT /secured/tool-request
+
+Delegates to metadactyl: PUT /secured/tool-request
 
 This service is primarily a passthrough to the metadactyl endpoint using the
 same path. The only difference is that this endpoint also sends a message to the
@@ -480,12 +568,16 @@ metadactyl documentation for more details.
 
 Secured Endpoint: POST /secured/tool-request
 
+Delegates to metadactyl: POST /secured/tool-request
+
 This service is a passthrough to the metadactyl endpoint using the same
 path. Please se the metadactyl documentation for more details.
 
 ## Updating a Tool Installation Request (Administrator)
 
 Unsecured Endpoint: POST /tool-request
+
+Delegates to metadactyl: POST /tool-request
 
 This service is primarily a passthrough to the metadactyl endpoint using the
 same path. The only difference is that this endpoint also generates a
@@ -496,12 +588,16 @@ documentation for more details.
 
 Secured Endpoint: GET /secured/tool-requests
 
+Delegates to metadactyl: GET /secured/tool-requests
+
 This service is a passthrough to the metadactyl endpoint using the same
 path. Please se the metadactyl documentation for more details.
 
 ## Listing Tool Installation Request Details
 
 Unsecured Endpoint: GET /tool-request/{tool-request-id}
+
+Delegates to metadactyl: GET /tool-request/{tool-request-id}
 
 This service is a passthrough to the metadactyl endpoint using the same
 path. Please se the metadactyl documentation for more details.
