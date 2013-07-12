@@ -860,7 +860,9 @@
                  :paths (filterv home-matcher paths)}))
 
       (doseq [p paths]
-        (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm user p))]
+        (log/debug "path" p)
+        (log/debug "readable?" user (owns? cm user p))
+        (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
           (doseq [path-ticket path-tickets]
             (delete-ticket cm user path-ticket)))
 
