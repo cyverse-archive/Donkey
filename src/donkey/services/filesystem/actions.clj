@@ -346,11 +346,13 @@
 (defn attr-value?
   "Returns a truthy value if path has metadata that has an attribute of attr and
    a value of val."
-  [cm path attr val] 
-  (filter
-    #(and (= (:attr %1) attr)
-          (= (:value %1) val))
-    (get-metadata cm path)))
+  [cm path attr val]
+  (-> (filter
+        #(and (= (:attr %1) attr)
+              (= (:value %1) val))
+        (get-metadata cm path))
+    count
+    pos?))
 
 (defn reserved-unit
   "Turns a blank unit into a reserved unit."
@@ -382,7 +384,10 @@
           new-unit   (reserved-unit avu-map)
           attr       (:attr avu-map)
           value      (:value avu-map)]
-      (if-not (attr-value? cm fixed-path attr value)
+      (log/warn "Fixed Path:" fixed-path)
+      (log/warn "check" (true? (attr-value? cm fixed-path attr value)))
+      (when-not (attr-value? cm fixed-path attr value)
+        (log/warn "Adding " attr value "to" fixed-path)
         (set-metadata cm fixed-path attr value new-unit))
       {:path fixed-path :user user})))
 
