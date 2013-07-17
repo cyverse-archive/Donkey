@@ -451,19 +451,13 @@
         (exists? cm (url/url-decode path))
         (exists? cm path)))))
 
-(defn list-user-perms-for-path
-  [cm user path]
-  (if (is-file? cm path)
-    (.listPermissionsForDataObject (:dataObjectAO cm) path)
-    (.listPermissionsForCollection (:collectionAO cm) path)))
-
 (defn count-shares
   [cm user path]
   (let [filter-users (set (conj (fs-perms-filter) user (irods-user)))
-        full-listing (list-user-perms-for-path cm user path)]
+        full-listing (list-user-perms cm path)]
     (count
      (filterv
-      #(not (contains? filter-users (.getUserName %1)))
+      #(not (contains? filter-users (:user %1)))
       full-listing))))
 
 (defn merge-counts
