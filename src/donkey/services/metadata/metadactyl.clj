@@ -238,9 +238,15 @@
 
 (defn bootstrap
   "This service obtains information about and initializes the workspace for
-   the authenticated user."
+   the authenticated user. It also records the fact that the user logged in."
   [req]
   (let [url (build-metadactyl-secured-url req "bootstrap")]
+    (forward-get url req)))
+
+(defn logout
+  "This service records the fact that the user logged out."
+  [req]
+  (let [url (build-metadactyl-secured-url req "logout")]
     (forward-get url req)))
 
 (defn get-messages

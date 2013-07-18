@@ -38,8 +38,46 @@ Secured Endpoint: GET /secured/bootstrap
 
 Delegates to metadactyl: GET /secured/bootstrap
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
+Note that the `ip-address` query parameter that has to be passed to the
+metadactyl service cannot be obtained automatically in most cases. Because of
+this, the `ip-address` parameter must be passed to this service in addition to
+the `proxyToken` parameter. Here's an example:
+
+```
+$ curl "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)&ip-address=127.0.0.1" | python -mjson.tool
+{
+    "action": "bootstrap",
+    "loginTime": "1374190755304",
+    "newWorkspace": false,
+    "status": "success",
+    "workspaceId": "4"
+}
+```
+
+## Recording when a User Logs Out
+
+Secured Endpoint: GET /secured/logout
+
+Delegates to metadactyl: GET /secured/logout
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
+Note that the `ip-address` and `login-time` query parameters that have to be
+passed to the metadactyl service cannot be obtained automatically in most cases.
+Because of this, these parameters must be passed to this service in addition to
+the `proxyToken` parameter. Here's an example:
+
+```
+$ curl -s "http://by-tor:8888/secured/logout?proxyToken=$(cas-ticket)&ip-address=127.0.0.1&login-time=1374190755304" | python -mjson.tool
+{
+    "action": "logout",
+    "status": "success"
+}
+```
 
 ## Saving User Session Data
 

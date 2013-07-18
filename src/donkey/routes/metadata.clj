@@ -16,6 +16,9 @@
    (GET "/bootstrap" [:as req]
         (trap #(bootstrap req)))
 
+   (GET "/logout" [:as req]
+        (trap #(logout req)))
+
    (GET "/template/:app-id" [app-id :as req]
         (trap #(get-app-secured req app-id)))
 
