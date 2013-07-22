@@ -9,7 +9,7 @@
 
 The "secured" endpoints in metadactyl behave a little bit differently from the
 secured endpoints in Donkey. Specifically, the secured endpoints in Donkey
-actuall require user authentication whereas those in metadactyl merely require
+actually require user authentication whereas those in metadactyl merely require
 information about the user making the request.
 
 ## Calling Secured Donkey Endpoints
