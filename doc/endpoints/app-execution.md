@@ -13,8 +13,8 @@
 # Application Execution Endpoints
 
 Note that secured endpoints in Donkey and metadactyl are a little different from
-each other. Please see [Donkey Vs. Metadactyl](endpoints/donkey-v-metadactyl.md)
-for more information.
+each other. Please see [Donkey Vs. Metadactyl](donkey-v-metadactyl.md) for more
+information.
 
 ## Obtaining Property Values for a Previously Executed Job
 
