@@ -19,6 +19,10 @@
 
 # Miscellaneous Donkey Endpoints
 
+Note that secured endpoints in Donkey and metadactyl are a little different from
+each other. Please see [Donkey Vs. Metadactyl](endpoints/donkey-v-metadactyl.md)
+for more information.
+
 ## Verifying that Donkey is Running
 
 Unsecured Endpoint: GET /
