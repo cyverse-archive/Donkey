@@ -16,6 +16,9 @@
    (GET "/bootstrap" [:as req]
         (trap #(bootstrap req)))
 
+   (GET "/logout" [:as req]
+        (trap #(logout req)))
+
    (GET "/template/:app-id" [app-id :as req]
         (trap #(get-app-secured req app-id)))
 
@@ -50,7 +53,7 @@
         (trap #(app-listings/get-only-app-groups)))
 
    (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as req]
-        (trap #(app-listings/apps-in-group app-group-id)))
+        (trap #(list-apps-in-group req app-group-id)))
 
    (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id :as req]
         (trap #(list-apps-in-group req app-group-id)))

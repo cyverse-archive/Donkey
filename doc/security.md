@@ -17,3 +17,7 @@ services that are secured will be labeled as secured endpoints.
 If authentication or authorization fails for a secured service then an HTTP 401
 (unauthorized) status will result, and there will be no response body, even if
 the service normally has a response body.
+
+Note that secured endpoints in Donkey and metadactyl are a little different from
+each other. Please see [Donkey Vs. Metadactyl](endpoints/donkey-v-metadactyl.md)
+for more information.

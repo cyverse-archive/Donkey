@@ -346,11 +346,13 @@
 (defn attr-value?
   "Returns a truthy value if path has metadata that has an attribute of attr and
    a value of val."
-  [cm path attr val] 
-  (filter
-    #(and (= (:attr %1) attr)
-          (= (:value %1) val))
-    (get-metadata cm path)))
+  [cm path attr val]
+  (-> (filter
+        #(and (= (:attr %1) attr)
+              (= (:value %1) val))
+        (get-metadata cm path))
+    count
+    pos?))
 
 (defn reserved-unit
   "Turns a blank unit into a reserved unit."
@@ -382,7 +384,10 @@
           new-unit   (reserved-unit avu-map)
           attr       (:attr avu-map)
           value      (:value avu-map)]
-      (if-not (attr-value? cm fixed-path attr value)
+      (log/warn "Fixed Path:" fixed-path)
+      (log/warn "check" (true? (attr-value? cm fixed-path attr value)))
+      (when-not (attr-value? cm fixed-path attr value)
+        (log/warn "Adding " attr value "to" fixed-path)
         (set-metadata cm fixed-path attr value new-unit))
       {:path fixed-path :user user})))
 
@@ -446,19 +451,13 @@
         (exists? cm (url/url-decode path))
         (exists? cm path)))))
 
-(defn list-user-perms-for-path
-  [cm user path]
-  (if (is-file? cm path)
-    (.listPermissionsForDataObject (:dataObjectAO cm) path)
-    (.listPermissionsForCollection (:collectionAO cm) path)))
-
 (defn count-shares
   [cm user path]
   (let [filter-users (set (conj (fs-perms-filter) user (irods-user)))
-        full-listing (list-user-perms-for-path cm user path)]
+        full-listing (list-user-perms cm path)]
     (count
      (filterv
-      #(not (contains? filter-users (.getUserName %1)))
+      #(not (contains? filter-users (:user %1)))
       full-listing))))
 
 (defn merge-counts
@@ -860,9 +859,11 @@
                  :paths (filterv home-matcher paths)}))
 
       (doseq [p paths]
-        (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm user p))]
+        (log/debug "path" p)
+        (log/debug "readable?" user (owns? cm user p))
+        (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
           (doseq [path-ticket path-tickets]
-            (delete-ticket cm user path-ticket)))
+            (delete-ticket cm (:username cm) path-ticket)))
 
         (if-not (.startsWith p (user-trash-dir cm user))
           (move-to-trash cm p user)
@@ -873,8 +874,8 @@
 (defn trash-origin-path
   [cm user p]
   (if (attribute? cm p "ipc-trash-origin")
-    (let [origin-path (:value (first (get-attribute cm p "ipc-trash-origin")))]
-      (if-not (is-writeable? cm user origin-path)
+    (let [origin-path (:value (first (get-attribute cm p "ipc-trash-origin")))] 
+      (if-not (is-writeable? cm user (ft/dirname origin-path))
         (ft/path-join (user-home-dir user) (ft/basename p))
         origin-path))
     (ft/path-join (user-home-dir user) (ft/basename p))))
@@ -993,11 +994,11 @@
       (validators/all-tickets-nonexistant cm user all-ticket-ids)
 
       (doseq [tm tickets]
-        (create-ticket cm user (:path tm) (:ticket-id tm))
+        (create-ticket cm (:username cm) (:path tm) (:ticket-id tm))
         (when public?
-          (.addTicketGroupRestriction (ticket-admin-service cm user) (:ticket-id tm) "public")))
+          (.addTicketGroupRestriction (ticket-admin-service cm (:username cm)) (:ticket-id tm) "public")))
 
-      {:user user :tickets (mapv #(ticket-map cm user %) all-ticket-ids)})))
+      {:user user :tickets (mapv #(ticket-map cm (:username cm) %) all-ticket-ids)})))
 
 (defn remove-tickets
   [user ticket-ids]
@@ -1005,10 +1006,10 @@
     (validators/user-exists cm user)
     (validators/all-tickets-exist cm user ticket-ids)
 
-    (let [all-paths (mapv #(.getIrodsAbsolutePath (ticket-by-id cm user %)) ticket-ids)]
+    (let [all-paths (mapv #(.getIrodsAbsolutePath (ticket-by-id cm (:username cm) %)) ticket-ids)]
       (validators/all-paths-writeable cm user all-paths)
       (doseq [ticket-id ticket-ids]
-        (delete-ticket cm user ticket-id))
+        (delete-ticket cm (:username cm) ticket-id))
       {:user user :tickets ticket-ids})))
 
 (defn list-tickets-for-paths
@@ -1019,7 +1020,7 @@
     (validators/all-paths-readable cm user paths)
 
     {:tickets
-     (apply merge (mapv #(hash-map %1 (ticket-ids-for-path cm user %1)) paths))}))
+     (apply merge (mapv #(hash-map %1 (ticket-ids-for-path cm (:username cm) %1)) paths))}))
 
 (defn paths-contain-char
   [paths char]

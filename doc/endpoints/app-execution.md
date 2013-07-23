@@ -12,9 +12,15 @@
 
 # Application Execution Endpoints
 
+Note that secured endpoints in Donkey and metadactyl are a little different from
+each other. Please see [Donkey Vs. Metadactyl](donkey-v-metadactyl.md) for more
+information.
+
 ## Obtaining Property Values for a Previously Executed Job
 
 Unsecured Endpoint: GET /get-property-values/{job-id}
+
+Delegates to metadactyl: GET /get-property-values/{job-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -23,12 +29,16 @@ path. Please see the metadactyl documentation for more information.
 
 Unsecured Endpoint: GET /analysis-rerun-info/{job-id}
 
+Delegates to metadactyl: GET /analysis-rerun-info/{job-id}
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Obtaining Information to Rerun a Job in the New Format
 
 Unsecured Endpoint: GET /app-rerun-info/{job-id}
+
+Delegates to metadactyl: GET /app-rerun-info/{job-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -37,12 +47,16 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: PUT /secured/workspaces/{workspace-id}/newexperiment
 
+Delegates to metadactyl: PUT /secured/workspaces/{workspace-id}/newexperiment
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Listing Jobs
 
 Secured Endpoint: GET /secured/workspaces/{workspace-id}/executions/list
+
+Delegates to metadactyl: GET /secured/workspaces/{workspace-id}/executions/list
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -51,6 +65,8 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: POST /secured/workspaces/{workspace-id}/executions/list
 
+Delegates to metadactyl: POST /secured/workspaces/{workspace-id}/executions/list
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
@@ -58,12 +74,16 @@ path. Please see the metadactyl documentation for more information.
 
 Secured Endpoint: PUT /secured/workspaces/{workspace-id}/executions/delete
 
+Delegates to metadactyl: PUT /secured/workspaces/{workspace-id}/executions/delete.
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Stopping a Running Analysis
 
 Secured Endpoint: DELETE /secured/stop-analysis/{job-id}
+
+Delegates to JEX: DELETE /stop/{job-id}
 
 This endpoint is a passthrough to the JEX endpoint, `/stop/{job-id}`. Please see
 the JEX documentation for more details.

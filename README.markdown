@@ -23,3 +23,4 @@ inside Donkey instead.  The Mule services no longer exist.
     * [Sharing Endpoints](doc/endpoints/sharing.md)
     * [Reference Genome Endpoints](doc/endpoints/reference-genomes.md)
     * [Data Search Endpoints](doc/endpoints/data-search.md)
+* [Endpoint Index](doc/endpoint-index.md)

@@ -9,6 +9,10 @@
 
 # Collaborator List Management Endpoints
 
+Note that secured endpoints in Donkey and metadactyl are a little different from
+each other. Please see [Donkey Vs. Metadactyl](donkey-v-metadactyl.md) for more
+information.
+
 ## Listing Collaborators
 
 Secured Endpoint: GET /secured/collaborators
@@ -157,7 +161,7 @@ $ curl -sd '
 
 ## Searching for Users
 
-Secured Endpoint: /secured/user-search/{search-string}
+Secured Endpoint: GET /secured/user-search/{search-string}
 
 This endpoint allows the caller to search for user information by username,
 email address and actual name. The search search string provided in the URL
@@ -213,7 +217,7 @@ $ curl -s "http://by-tor:8888/secured/user-search/nobody?proxyToken=$(cas-ticket
 
 ## Obtaining User Info
 
-Secured Endpoint: /secured/user-info
+Secured Endpoint: GET /secured/user-info
 
 This endpoint allows the caller to search for information about users with
 specific usernames. Each username is specified using the `username` query string

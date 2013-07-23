@@ -6,9 +6,15 @@
 
 # Reference Genome endpoints
 
+Note that secured endpoints in Donkey and metadactyl are a little different from
+each other. Please see [Donkey Vs. Metadactyl](donkey-v-metadactyl.md) for more
+information.
+
 ## Exporting Reference Genomes
 
 Secured Endpoint: GET /secured/reference-genomes
+
+Delegates to metadactyl: GET /secured/reference-genomes
 
 This endpoint is a passthrough to the metadactyl endpoint with the same
 path. Please see the metadactyl documentation for more details.
@@ -16,6 +22,8 @@ path. Please see the metadactyl documentation for more details.
 ## Importing Reference Genomes
 
 Secured Endpoint: PUT /secured/reference-genomes
+
+Delegates to metadactyl: PUT /secured/reference-genomes
 
 This endpoint is a passthrough to the metadactyl endpoint with the same
 path. Please see the metadactyl documentation for more details.

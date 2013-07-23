@@ -4,7 +4,7 @@
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [clj-jargon.jargon :only [with-jargon]]
-        [clj-jargon.lazy-listings :only [define-specific-queries]]
+        [clj-jargon.lazy-listings :only [define-specific-queries delete-specific-queries]]
         [compojure.core]
         [donkey.routes.admin]
         [donkey.routes.data]
@@ -100,6 +100,7 @@
 (defn register-specific-queries
   []
   (with-jargon (config/jargon-cfg) [cm]
+    (delete-specific-queries cm)
     (define-specific-queries cm)))
 
 (defn -main
