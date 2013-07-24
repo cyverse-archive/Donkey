@@ -1,4 +1,4 @@
-(defproject donkey "1.3.4-SNAPSHOT"
+(defproject donkey "1.3.5-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.memoize "0.5.3"]
