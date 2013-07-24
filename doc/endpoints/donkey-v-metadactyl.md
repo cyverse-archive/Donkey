@@ -77,7 +77,3 @@ The equivalent call to the metadactyl service would look like this:
 ```
 $ curl "http://by-tor:9999/secured/bootstrap?user=nobody&email=nobody@iplantcollaborative.org&first-name=Nobody&last-name=Inparticular&ip-address=127.0.0.1"
 ```
-
-Strictly speaking, the bootstrap service doesn't currently require the
-`first-name` and `last-name` parameters, but Donkey always includes them in
-forwarded requests and it doesn't hurt to include them when testing.
