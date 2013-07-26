@@ -7,12 +7,18 @@
   (:require [clojure-commons.error-codes :as ce]
             [clojure.tools.logging :as log]))
 
+(defn determine-response
+  [resp-val]
+  (if (and (map? resp-val) (contains? resp-val :status))
+    (donkey-response resp-val (:status resp-val))
+    (success-response resp-val)))
+
 (defn trap
   "Traps any exception thrown by a service and returns an appropriate
    repsonse."
   [f]
   (try+
-   (success-response (f))
+   (determine-response (f))
    (catch [:type :error-status] {:keys [res]} res)
    (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
    (catch [:type :invalid-argument] {:keys [arg val reason]}
@@ -32,7 +38,7 @@
   [handler]
   (fn [req] 
     (try+
-      (success-response (handler req))
+      (determine-response (handler req))
       (catch [:type :error-status] {:keys [res]} res)
       (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
       (catch [:type :invalid-argument] {:keys [arg val reason]}
