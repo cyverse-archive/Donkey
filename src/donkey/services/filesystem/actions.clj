@@ -182,6 +182,7 @@
       (validators/path-exists cm path)
 
       (when (and set-own? (not (owns? cm user path)))
+        (log/warn "Setting own perms on" path "for" user)
         (set-permissions cm user path false false true))
 
       (validators/path-readable cm user path)
@@ -194,15 +195,20 @@
 
   ([user root-path set-own?]
      (with-jargon (jargon-cfg) [cm]
+       (log/warn "in (root-listing)")
        (validators/user-exists cm user)
 
        (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
+         (log/warn "Creating" root-path "for" user)
          (mkdir cm root-path)
+         (log/warn "Setting own perms on" root-path "for" user)
          (set-permissions cm user root-path false false true))
 
        (validators/path-exists cm root-path)
 
        (when (and set-own? (not (owns? cm user root-path)))
+         (log/warn "set-own? is true and" root-path "is not owned by" user)
+         (log/warn "Setting own perms on" root-path "for" user)
          (set-permissions cm user root-path false false true))
 
        (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
@@ -606,6 +612,7 @@
 
 (defn- skip-share
   [user path reason]
+  (log/warn "Skipping share of" path "with" user "because:" reason)
   {:user    user
    :path    path
    :reason  reason
@@ -628,14 +635,28 @@
        3. The permissions are set on the item being shared. This is done recursively in case the
           item being shared is a directory."
   [cm user share-with {read-perm :read write-perm :write own-perm :own :as perms} fpath]
-  (let [hdir      (share-path-home fpath) #_(ft/rm-last-slash (user-home-dir user))
+  (let [hdir      (share-path-home fpath)
         trash-dir (trash-base-dir cm user)
         base-dirs #{hdir trash-dir}]
+    (log/warn fpath "is being shared with" share-with "by" user)
     (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath)
+    
     (when (is-dir? cm fpath)
+      (log/warn fpath "is a directory, setting the inherit bit.")
       (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) fpath true))
+    
+    (log/warn share-with "is being given read permissions on" hdir "by" user)
     (set-permissions cm share-with hdir true false false false)
+    
     (set-permissions cm share-with fpath read-perm write-perm own-perm true)
+    (log/warn 
+      share-with 
+      "is being given recursive permissions (" 
+      "read:" read-perm 
+      "write:" write-perm 
+      "own:" own-perm ")"
+      "on" fpath)
+    
     {:user share-with :path fpath}))
 
 (defn- in-trash?
@@ -691,6 +712,7 @@
    other than iRODS administrative accounts."
   [cm user unshare-with fpath]
   (when (remove-inherit-bit? cm user fpath)
+    (log/warn "Removing inherit bit on" fpath)
     (.setAccessPermissionToNotInherit (:collectionAO cm) (:zone cm) fpath true)))
 
 (defn- unshare-path
@@ -706,13 +728,18 @@
           access to any other files or subdirectories."
   [cm user unshare-with fpath]
   (let [base-dirs #{(ft/rm-last-slash (user-home-dir user)) (trash-base-dir cm user)}]
+    (log/warn "Removing permissions on" fpath "from" unshare-with "by" user)
     (remove-permissions cm unshare-with fpath)
+    
     (when (is-dir? cm fpath)
+      (log/warn "Unsharing directory" fpath "from" unshare-with "by" user)
       (unshare-dir cm user unshare-with fpath))
-    (process-parent-dirs (partial set-readable cm unshare-with false)
-                         #(and (not (base-dirs %))
-                               (not (contains-accessible-obj? cm unshare-with %)))
-                         fpath)
+    
+    (log/warn "Removing read perms on parents of" fpath "from" unshare-with "by" user)
+    (process-parent-dirs 
+      (partial set-readable cm unshare-with false)
+      #(and (not (base-dirs %)) (not (contains-accessible-obj? cm unshare-with %)))
+      fpath)
     {:user unshare-with :path fpath}))
 
 (defn- unshare-paths
@@ -726,6 +753,7 @@
 (defn clean-up-unsharee-avus
   [cm fpath unshare-with]
   (when-not (shared? cm unshare-with fpath)
+    (log/warn "Removing shared with AVU on" fpath "for" unshare-with)
     (remove-user-shared-with cm fpath unshare-with)))
 
 (defn unshare
@@ -791,6 +819,7 @@
 
   (with-jargon (jargon-cfg) [cm]
     (when-not (is-readable? cm user root-dir)
+      (log/warn "Setting read perms on" (ft/rm-last-slash root-dir) "for" user)
       (set-permissions cm user (ft/rm-last-slash root-dir) true false false))
 
     (let [listing (sharing-data cm user root-dir)]
