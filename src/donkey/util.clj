@@ -9,7 +9,7 @@
 
 (defn determine-response
   [resp-val]
-  (if (and (map? resp-val) (contains? resp-val :status))
+  (if (and (map? resp-val) (number? (:status resp-val)))
     (donkey-response resp-val (:status resp-val))
     (success-response resp-val)))
 
@@ -25,18 +25,18 @@
      (invalid-arg-response arg val reason))
    (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
    (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
-   
+
    (catch ce/error? err
      (log/error (ce/format-exception (:throwable &throw-context)))
      (error-response err))
-   
+
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))
    (catch Throwable t (error-response t))))
 
 (defn trap-handler
   [handler]
-  (fn [req] 
+  (fn [req]
     (try+
       (determine-response (handler req))
       (catch [:type :error-status] {:keys [res]} res)
@@ -45,11 +45,11 @@
         (invalid-arg-response arg val reason))
       (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
       (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
-      
+
       (catch ce/error? err
         (log/error (ce/format-exception (:throwable &throw-context)))
         (error-response err))
-      
+
       (catch IllegalArgumentException e (failure-response e))
       (catch IllegalStateException e (failure-response e))
       (catch Throwable t (error-response t)))))
