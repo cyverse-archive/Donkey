@@ -57,7 +57,11 @@ $ curl "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)&ip-address
     "loginTime": "1374190755304",
     "newWorkspace": false,
     "status": "success",
-    "workspaceId": "4"
+    "workspaceId": "4",
+    "username": "snow-dog",
+    "email": "sd@example.org",
+    "firstName": "Snow",
+    "lastName": "Dog"
 }
 ```
 

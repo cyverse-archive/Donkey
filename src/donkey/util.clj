@@ -7,43 +7,49 @@
   (:require [clojure-commons.error-codes :as ce]
             [clojure.tools.logging :as log]))
 
+(defn determine-response
+  [resp-val]
+  (if (and (map? resp-val) (number? (:status resp-val)))
+    (donkey-response resp-val (:status resp-val))
+    (success-response resp-val)))
+
 (defn trap
   "Traps any exception thrown by a service and returns an appropriate
    repsonse."
   [f]
   (try+
-   (success-response (f))
+   (determine-response (f))
    (catch [:type :error-status] {:keys [res]} res)
    (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
    (catch [:type :invalid-argument] {:keys [arg val reason]}
      (invalid-arg-response arg val reason))
    (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
    (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
-   
+
    (catch ce/error? err
      (log/error (ce/format-exception (:throwable &throw-context)))
      (error-response err))
-   
+
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))
    (catch Throwable t (error-response t))))
 
 (defn trap-handler
   [handler]
-  (fn [req] 
+  (fn [req]
     (try+
-      (success-response (handler req))
+      (determine-response (handler req))
       (catch [:type :error-status] {:keys [res]} res)
       (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
       (catch [:type :invalid-argument] {:keys [arg val reason]}
         (invalid-arg-response arg val reason))
       (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
       (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
-      
+
       (catch ce/error? err
         (log/error (ce/format-exception (:throwable &throw-context)))
         (error-response err))
-      
+
       (catch IllegalArgumentException e (failure-response e))
       (catch IllegalStateException e (failure-response e))
       (catch Throwable t (error-response t)))))

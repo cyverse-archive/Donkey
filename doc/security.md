@@ -5,8 +5,8 @@ service tickets that are passed to the service in the `proxyToken` query
 parameter. For example, the first service that the Discovery Environment hits
 when a user logs in is the bootstrap service, which does require user
 authentication. This service can be accessed using the URL,
-`/bootstrap?proxyToken={some-service-ticket}` where {some-service-ticket} refers
-to a service ticket string that has been obtained from CAS.
+`/bootstrap?proxyToken={some-service-ticket}&...` where {some-service-ticket}
+refers to a service ticket string that has been obtained from CAS.
 
 Secured services can be distinguished from unsecured services by looking at the
 path in the URL. The paths for all secured endpoints begin with `/secured`

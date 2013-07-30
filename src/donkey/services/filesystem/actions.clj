@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.actions
-  (:require [cemerick.url :as url] 
+  (:require [cemerick.url :as url]
             [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
             [clojure.data.codec.base64 :as b64]
@@ -19,6 +19,21 @@
 
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
+
+(defmacro log-rulers
+  [cm users msg & body]
+  `(let [result# (do ~@body)]
+     (->> ~users
+          (map #(when (jargon/one-user-to-rule-them-all? ~cm %)
+                  (jargon/log-stack-trace (str ~msg " - " % " rules all"))))
+          (dorun))
+     result#))
+
+(defn format-call
+  [fn-name & args]
+  (with-open [w (java.io.StringWriter.)]
+    (clojure.pprint/write (conj args (symbol fn-name)) :stream w)
+    (str w)))
 
 (defn not-filtered?
   [cm user fpath ff]
@@ -53,10 +68,13 @@
 (defn list-perms
   [user abspaths]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/all-paths-exist cm abspaths)
-    (validators/user-owns-paths cm user abspaths)
-    (mapv (partial list-perm cm user) abspaths)))
+    (log-rulers
+     cm [user]
+     (format-call "list-perms" user abspaths)
+     (validators/user-exists cm user)
+     (validators/all-paths-exist cm abspaths)
+     (validators/user-owns-paths cm user abspaths)
+     (mapv (partial list-perm cm user) abspaths))))
 
 (defn date-mod-from-stat
   [stat]
@@ -70,9 +88,9 @@
   [stat]
   (str (.getObjSize stat)))
 
-(defn sharing? 
+(defn sharing?
   [abs]
-  (= (ft/rm-last-slash (irods-home)) 
+  (= (ft/rm-last-slash (irods-home))
      (ft/rm-last-slash abs)))
 
 (defn community? [abs] (= (fs-community-data) abs))
@@ -82,15 +100,21 @@
      (with-jargon (jargon-cfg) [cm]
        (user-trash-dir cm user)))
   ([cm user]
-     (trash-base-dir cm user)))
+     (log-rulers
+      cm [user]
+      (format-call "user-trash-dir" 'cm user)
+      (trash-base-dir cm user))))
 
 (defn user-trash-dir?
   ([user path-to-check]
      (with-jargon (jargon-cfg) [cm]
        (user-trash-dir? cm user path-to-check)))
   ([cm user path-to-check]
-     (= (ft/rm-last-slash path-to-check)
-        (ft/rm-last-slash (user-trash-dir cm user)))))
+     (log-rulers
+      cm [user]
+      (format-call "user-trash-dir?" 'cm user path-to-check)
+      (= (ft/rm-last-slash path-to-check)
+         (ft/rm-last-slash (user-trash-dir cm user))))))
 
 (defn id->label
   "Generates a label given a listing ID (read as absolute path)."
@@ -175,18 +199,22 @@
      (list-dir user path true filter-files false))
 
   ([user path include-files filter-files set-own?]
-    (log/warn (str "list-dir " user " " path))
+     (log/warn (str "list-dir " user " " path))
 
-    (with-jargon (jargon-cfg) [cm]
-      (validators/user-exists cm user)
-      (validators/path-exists cm path)
+     (with-jargon (jargon-cfg) [cm]
+       (log-rulers
+        cm [user]
+        (format-call "list-dir" user path include-files filter-files set-own?)
+        (validators/user-exists cm user)
+        (validators/path-exists cm path)
 
-      (when (and set-own? (not (owns? cm user path)))
-        (set-permissions cm user path false false true))
+        (when (and set-own? (not (owns? cm user path)))
+          (log/warn "Setting own perms on" path "for" user)
+          (set-permissions cm user path false false true))
 
-      (validators/path-readable cm user path)
+        (validators/path-readable cm user path)
 
-      (gen-listing cm user path filter-files include-files))))
+        (gen-listing cm user path filter-files include-files)))))
 
 (defn root-listing
   ([user root-path]
@@ -194,19 +222,27 @@
 
   ([user root-path set-own?]
      (with-jargon (jargon-cfg) [cm]
-       (validators/user-exists cm user)
+       (log-rulers
+        cm [user]
+        (format-call "root-listing" user root-path)
+        (log/warn "in (root-listing)")
+        (validators/user-exists cm user)
 
-       (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
-         (mkdir cm root-path)
-         (set-permissions cm user root-path false false true))
+        (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
+          (log/warn "Creating" root-path "for" user)
+          (mkdir cm root-path)
+          (log/warn "Setting own perms on" root-path "for" user)
+          (set-permissions cm user root-path false false true))
 
-       (validators/path-exists cm root-path)
+        (validators/path-exists cm root-path)
 
-       (when (and set-own? (not (owns? cm user root-path)))
-         (set-permissions cm user root-path false false true))
+        (when (and set-own? (not (owns? cm user root-path)))
+          (log/warn "set-own? is true and" root-path "is not owned by" user)
+          (log/warn "Setting own perms on" root-path "for" user)
+          (set-permissions cm user root-path false false true))
 
-       (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
-         (assoc res :label (id->label cm user (:id res)))))))
+        (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
+          (assoc res :label (id->label cm user (:id res))))))))
 
 (defn create
   "Creates a directory at 'path' in iRODS and sets the user to 'user'.
@@ -220,17 +256,20 @@
   [user path]
   (log/debug (str "create " user " " path))
   (with-jargon (jargon-cfg) [cm]
-    (let [fixed-path (ft/rm-last-slash path)]
-      (when-not (good-string? fixed-path)
-        (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-                 :path path}))
-      (validators/user-exists cm user)
-      (validators/path-writeable cm user (ft/dirname fixed-path))
-      (validators/path-not-exists cm fixed-path)
+    (log-rulers
+     cm [user]
+     (format-call "create" user path)
+     (let [fixed-path (ft/rm-last-slash path)]
+             (when-not (good-string? fixed-path)
+               (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+                        :path path}))
+             (validators/user-exists cm user)
+             (validators/path-writeable cm user (ft/dirname fixed-path))
+             (validators/path-not-exists cm fixed-path)
 
-      (mkdir cm fixed-path)
-      (set-owner cm fixed-path user)
-      {:path fixed-path :permissions (collection-perm-map cm user fixed-path)})))
+             (mkdir cm fixed-path)
+             (set-owner cm fixed-path user)
+             {:path fixed-path :permissions (collection-perm-map cm user fixed-path)}))))
 
 (defn source->dest
   [source-path dest-path]
@@ -241,34 +280,40 @@
    works by calling move and passing it move-dir."
   [user sources dest]
   (with-jargon (jargon-cfg) [cm]
-    (let [path-list  (conj sources dest)
-          all-paths  (apply merge (mapv #(hash-map (source->dest %1 dest) %1) sources))
-          dest-paths (keys all-paths)]
-      (validators/user-exists cm user)
-      (validators/all-paths-exist cm sources)
-      (validators/all-paths-exist cm [dest])
-      (validators/path-is-dir cm dest)
-      (validators/user-owns-paths cm user sources)
-      (validators/path-writeable cm user dest)
-      (validators/no-paths-exist cm dest-paths)
-      (move-all cm sources dest :user user :admin-users (irods-admins))
-      {:sources sources :dest dest})))
+    (log-rulers
+     cm [user]
+     (format-call "move-paths" user sources dest)
+     (let [path-list  (conj sources dest)
+           all-paths  (apply merge (mapv #(hash-map (source->dest %1 dest) %1) sources))
+           dest-paths (keys all-paths)]
+       (validators/user-exists cm user)
+       (validators/all-paths-exist cm sources)
+       (validators/all-paths-exist cm [dest])
+       (validators/path-is-dir cm dest)
+       (validators/user-owns-paths cm user sources)
+       (validators/path-writeable cm user dest)
+       (validators/no-paths-exist cm dest-paths)
+       (move-all cm sources dest :user user :admin-users (irods-admins))
+       {:sources sources :dest dest}))))
 
 (defn rename-path
   "High-level file renaming. Calls rename-func, passing it file-rename as the mv-func param."
   [user source dest]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm source)
-    (validators/user-owns-path cm user source)
-    (validators/path-not-exists cm dest)
+    (log-rulers
+     cm [user]
+     (format-call "rename-path" user source dest)
+     (validators/user-exists cm user)
+     (validators/path-exists cm source)
+     (validators/user-owns-path cm user source)
+     (validators/path-not-exists cm dest)
 
-    (let [result (move cm source dest :user user :admin-users (irods-admins))]
-      (when-not (nil? result)
-        (throw+ {:error_code ERR_INCOMPLETE_RENAME
-                 :paths result
-                 :user user}))
-      {:source source :dest dest :user user})))
+     (let [result (move cm source dest :user user :admin-users (irods-admins))]
+       (when-not (nil? result)
+         (throw+ {:error_code ERR_INCOMPLETE_RENAME
+                  :paths result
+                  :user user}))
+       {:source source :dest dest :user user}))))
 
 (defn- preview-buffer
   [cm path size]
@@ -293,24 +338,30 @@
      size - The size (in bytes) of the preview to be created."
   [user path size]
   (with-jargon (jargon-cfg) [cm]
-    (log/debug (str "preview " user " " path " " size))
-    (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-readable cm user path)
-    (validators/path-is-file cm path)
-    (gen-preview cm path size)))
+    (log-rulers
+     cm [user]
+     (format-call "preview" user path size)
+     (log/debug (str "preview " user " " path " " size))
+     (validators/user-exists cm user)
+     (validators/path-exists cm path)
+     (validators/path-readable cm user path)
+     (validators/path-is-file cm path)
+     (gen-preview cm path size))))
 
 (defn user-home-dir
   ([user]
      (ft/path-join "/" (irods-zone) "home" user))
   ([staging-dir user set-owner?]
      (with-jargon (jargon-cfg) [cm]
-       (validators/user-exists cm user)
+       (log-rulers
+        cm [user]
+        (format-call "user-home-dir" staging-dir user set-owner?)
+        (validators/user-exists cm user)
 
-       (let [user-home (ft/path-join staging-dir user)]
-         (if (not (exists? cm user-home))
-           (mkdirs cm user-home))
-         user-home))))
+        (let [user-home (ft/path-join staging-dir user)]
+          (if (not (exists? cm user-home))
+            (mkdirs cm user-home))
+          user-home)))))
 
 (defn fix-unit
   [avu]
@@ -340,8 +391,11 @@
    Throws:
      ERR_NOT_A_USER - This is thrown if user is not a valid iRODS account name."
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (user-groups cm user)))
+    (log-rulers
+     cm [user]
+     (format-call "list-user-groups" user)
+     (validators/user-exists cm user)
+     (user-groups cm user))))
 
 (defn attr-value?
   "Returns a truthy value if path has metadata that has an attribute of attr and
@@ -357,39 +411,45 @@
 (defn reserved-unit
   "Turns a blank unit into a reserved unit."
   [avu-map]
-  (if (string/blank? (:unit avu-map)) 
-    IPCRESERVED 
+  (if (string/blank? (:unit avu-map))
+    IPCRESERVED
     (:unit avu-map)))
 
 (defn metadata-get
   [user path]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-readable cm user path)
-    {:metadata (list-path-metadata cm path)}))
+    (log-rulers
+     cm [user]
+     (format-call "metadata-get" user path)
+     (validators/user-exists cm user)
+     (validators/path-exists cm path)
+     (validators/path-readable cm user path)
+     {:metadata (list-path-metadata cm path)})))
 
 (defn metadata-set
   [user path avu-map]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
+    (log-rulers
+     cm [user]
+     (format-call "metadata-set" user path avu-map)
+     (validators/user-exists cm user)
 
-    (when (= "failure" (:status avu-map))
-      (throw+ {:error_code ERR_INVALID_JSON}))
+     (when (= "failure" (:status avu-map))
+       (throw+ {:error_code ERR_INVALID_JSON}))
 
-    (validators/path-exists cm path)
-    (validators/path-writeable cm user path)
+     (validators/path-exists cm path)
+     (validators/path-writeable cm user path)
 
-    (let [fixed-path (ft/rm-last-slash path)
-          new-unit   (reserved-unit avu-map)
-          attr       (:attr avu-map)
-          value      (:value avu-map)]
-      (log/warn "Fixed Path:" fixed-path)
-      (log/warn "check" (true? (attr-value? cm fixed-path attr value)))
-      (when-not (attr-value? cm fixed-path attr value)
-        (log/warn "Adding " attr value "to" fixed-path)
-        (set-metadata cm fixed-path attr value new-unit))
-      {:path fixed-path :user user})))
+     (let [fixed-path (ft/rm-last-slash path)
+           new-unit   (reserved-unit avu-map)
+           attr       (:attr avu-map)
+           value      (:value avu-map)]
+       (log/warn "Fixed Path:" fixed-path)
+       (log/warn "check" (true? (attr-value? cm fixed-path attr value)))
+       (when-not (attr-value? cm fixed-path attr value)
+         (log/warn "Adding " attr value "to" fixed-path)
+         (set-metadata cm fixed-path attr value new-unit))
+       {:path fixed-path :user user}))))
 
 (defn encode-str
   [str-to-encode]
@@ -407,36 +467,42 @@
 (defn metadata-batch-set
   [user path adds-dels]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-writeable cm user path)
+    (log-rulers
+     cm [user]
+     (format-call "metadata-batch-set" user path adds-dels)
+     (validators/user-exists cm user)
+     (validators/path-exists cm path)
+     (validators/path-writeable cm user path)
 
-    (let [new-path (ft/rm-last-slash path)]
-      (doseq [del (:delete adds-dels)]
-        (when (attribute? cm new-path del)
-          (workaround-delete cm new-path del)
-          (delete-metadata cm new-path del)))
+     (let [new-path (ft/rm-last-slash path)]
+       (doseq [del (:delete adds-dels)]
+         (when (attribute? cm new-path del)
+           (workaround-delete cm new-path del)
+           (delete-metadata cm new-path del)))
 
-      (doseq [avu (:add adds-dels)]
-        (let [new-unit (reserved-unit avu)
-              attr     (:attr avu)
-              value    (:value avu)]
-          (if-not (attr-value? cm new-path attr value)
-            (set-metadata cm new-path attr value new-unit))))
-      {:path new-path :user user})))
+       (doseq [avu (:add adds-dels)]
+         (let [new-unit (reserved-unit avu)
+               attr     (:attr avu)
+               value    (:value avu)]
+           (if-not (attr-value? cm new-path attr value)
+             (set-metadata cm new-path attr value new-unit))))
+       {:path new-path :user user}))))
 
 (defn metadata-delete
   [user path attr]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-writeable cm user path)
+    (log-rulers
+     cm [user]
+     (format-call "metadata-delete" user path attr)
+     (validators/user-exists cm user)
+     (validators/path-exists cm path)
+     (validators/path-writeable cm user path)
 
-    (let [fix-unit #(if (= (:unit %1) IPCRESERVED) (assoc %1 :unit "") %1)
-          avu      (map fix-unit (get-metadata cm (ft/rm-last-slash path)))]
-      (workaround-delete cm path attr)
-      (delete-metadata cm path attr))
-    {:path path :user user}))
+     (let [fix-unit #(if (= (:unit %1) IPCRESERVED) (assoc %1 :unit "") %1)
+           avu      (map fix-unit (get-metadata cm (ft/rm-last-slash path)))]
+       (workaround-delete cm path attr)
+       (delete-metadata cm path attr))
+     {:path path :user user})))
 
 (defn url-encoded?
   [string-to-check]
@@ -444,12 +510,15 @@
 
 (defn path-exists?
   ([path]
-    (path-exists? "" path))
-  ([user path] 
-    (with-jargon (jargon-cfg) [cm]
-      (if (url-encoded? path)
-        (exists? cm (url/url-decode path))
-        (exists? cm path)))))
+     (path-exists? "" path))
+  ([user path]
+     (with-jargon (jargon-cfg) [cm]
+       (log-rulers
+        cm [user]
+        (format-call "path-exists?" user path)
+        (if (url-encoded? path)
+          (exists? cm (url/url-decode path))
+          (exists? cm path))))))
 
 (defn count-shares
   [cm user path]
@@ -485,12 +554,15 @@
 (defn path-stat
   [user path]
   (with-jargon (jargon-cfg) [cm]
-    (validators/path-exists cm path)
-    (-> (stat cm path)
-        (merge {:permissions (permissions cm user path)})
-        (merge-type-info cm user path)
-        (merge-shares cm user path)
-        (merge-counts cm path))))
+    (log-rulers
+     cm [user]
+     (format-call "path-stat" user path)
+     (validators/path-exists cm path)
+     (-> (stat cm path)
+         (merge {:permissions (permissions cm user path)})
+         (merge-type-info cm user path)
+         (merge-shares cm user path)
+         (merge-counts cm path)))))
 
 (defn- format-tree-urls
   [treeurl-maps]
@@ -520,63 +592,75 @@
 (defn manifest
   [user path data-threshold]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-is-file cm path)
-    (validators/path-readable cm user path)
+    (log-rulers
+     cm [user]
+     (format-call "manifest" user path data-threshold)
+     (validators/user-exists cm user)
+     (validators/path-exists cm path)
+     (validators/path-is-file cm path)
+     (validators/path-readable cm user path)
 
-    {:action       "manifest"
-     :content-type (content-type cm path)
-     :tree-urls    (extract-tree-urls cm path)
-     :info-type    (filetypes/get-types cm user path)
-     :mime-type    (.detect (Tika.) (input-stream cm path))
-     :preview      (preview-url user path)}))
+     {:action       "manifest"
+      :content-type (content-type cm path)
+      :tree-urls    (extract-tree-urls cm path)
+      :info-type    (filetypes/get-types cm user path)
+      :mime-type    (.detect (Tika.) (input-stream cm path))
+      :preview      (preview-url user path)})))
 
 (defn download-file
   [user file-path]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm file-path)
-    (validators/path-readable cm user file-path)
+    (log-rulers
+     cm [user]
+     (format-call "download-file" user file-path)
+     (validators/user-exists cm user)
+     (validators/path-exists cm file-path)
+     (validators/path-readable cm user file-path)
 
-    (if (zero? (file-size cm file-path)) "" (input-stream cm file-path))))
+     (if (zero? (file-size cm file-path)) "" (input-stream cm file-path)))))
 
 (defn download
   [user filepaths]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
+    (log-rulers
+     cm [user]
+     (format-call "download" user filepaths)
+     (validators/user-exists cm user)
 
-    (let [cart-key (str (System/currentTimeMillis))
-          account  (:irodsAccount cm)]
-      {:action "download"
-       :status "success"
-       :data
-       {:user user
-        :home (ft/path-join "/" (irods-zone) "home" user)
-        :password (store-cart cm user cart-key filepaths)
-        :host (.getHost account)
-        :port (.getPort account)
-        :zone (.getZone account)
-        :defaultStorageResource (.getDefaultStorageResource account)
-        :key cart-key}})))
+     (let [cart-key (str (System/currentTimeMillis))
+           account  (:irodsAccount cm)]
+       {:action "download"
+        :status "success"
+        :data
+        {:user user
+         :home (ft/path-join "/" (irods-zone) "home" user)
+         :password (store-cart cm user cart-key filepaths)
+         :host (.getHost account)
+         :port (.getPort account)
+         :zone (.getZone account)
+         :defaultStorageResource (.getDefaultStorageResource account)
+         :key cart-key}}))))
 
 (defn upload
   [user]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
+    (log-rulers
+     cm [user]
+     (format-call "upload" user)
+     (validators/user-exists cm user)
 
-    (let [account (:irodsAccount cm)]
-      {:action "upload"
-       :status "success"
-       :data
-       {:user user
-        :home (ft/path-join "/" (irods-zone) "home" user)
-        :password (temp-password cm user)
-        :host (.getHost account)
-        :port (.getPort account)
-        :zone (.getZone account)
-        :defaultStorageResource (.getDefaultStorageResource account)
-        :key (str (System/currentTimeMillis))}})))
+     (let [account (:irodsAccount cm)]
+       {:action "upload"
+        :status "success"
+        :data
+        {:user user
+         :home (ft/path-join "/" (irods-zone) "home" user)
+         :password (temp-password cm user)
+         :host (.getHost account)
+         :port (.getPort account)
+         :zone (.getZone account)
+         :defaultStorageResource (.getDefaultStorageResource account)
+         :key (str (System/currentTimeMillis))}}))))
 
 (def shared-with-attr "ipc-contains-obj-shared-with")
 
@@ -606,6 +690,7 @@
 
 (defn- skip-share
   [user path reason]
+  (log/warn "Skipping share of" path "with" user "because:" reason)
   {:user    user
    :path    path
    :reason  reason
@@ -628,14 +713,28 @@
        3. The permissions are set on the item being shared. This is done recursively in case the
           item being shared is a directory."
   [cm user share-with {read-perm :read write-perm :write own-perm :own :as perms} fpath]
-  (let [hdir      (share-path-home fpath) #_(ft/rm-last-slash (user-home-dir user))
+  (let [hdir      (share-path-home fpath)
         trash-dir (trash-base-dir cm user)
         base-dirs #{hdir trash-dir}]
+    (log/warn fpath "is being shared with" share-with "by" user)
     (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath)
+
     (when (is-dir? cm fpath)
+      (log/warn fpath "is a directory, setting the inherit bit.")
       (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) fpath true))
+
+    (log/warn share-with "is being given read permissions on" hdir "by" user)
     (set-permissions cm share-with hdir true false false false)
+
     (set-permissions cm share-with fpath read-perm write-perm own-perm true)
+    (log/warn
+      share-with
+      "is being given recursive permissions ("
+      "read:" read-perm
+      "write:" write-perm
+      "own:" own-perm ")"
+      "on" fpath)
+
     {:user share-with :path fpath}))
 
 (defn- in-trash?
@@ -654,20 +753,23 @@
 (defn share
   [user share-withs fpaths perms]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/all-users-exist cm share-withs)
-    (validators/all-paths-exist cm fpaths)
-    (validators/user-owns-paths cm user fpaths)
+    (log-rulers
+     cm (conj share-withs user)
+     (format-call "share" user share-withs fpaths perms)
+     (validators/user-exists cm user)
+     (validators/all-users-exist cm share-withs)
+     (validators/all-paths-exist cm fpaths)
+     (validators/user-owns-paths cm user fpaths)
 
-    (let [keyfn      #(if (:skipped %) :skipped :succeeded)
-          share-recs (group-by keyfn (share-paths cm user share-withs fpaths perms))
-          sharees    (map :user (:succeeded share-recs))
-          home-dir   (user-home-dir user)]
-      (dorun (map (partial add-user-shared-with cm (user-home-dir user)) sharees))
-      {:user        sharees
-       :path        fpaths
-       :skipped     (map #(dissoc % :skipped) (:skipped share-recs))
-       :permissions perms})))
+     (let [keyfn      #(if (:skipped %) :skipped :succeeded)
+           share-recs (group-by keyfn (share-paths cm user share-withs fpaths perms))
+           sharees    (map :user (:succeeded share-recs))
+           home-dir   (user-home-dir user)]
+       (dorun (map (partial add-user-shared-with cm (user-home-dir user)) sharees))
+       {:user        sharees
+        :path        fpaths
+        :skipped     (map #(dissoc % :skipped) (:skipped share-recs))
+        :permissions perms}))))
 
 (defn contains-subdir?
   [cm dpath]
@@ -691,6 +793,7 @@
    other than iRODS administrative accounts."
   [cm user unshare-with fpath]
   (when (remove-inherit-bit? cm user fpath)
+    (log/warn "Removing inherit bit on" fpath)
     (.setAccessPermissionToNotInherit (:collectionAO cm) (:zone cm) fpath true)))
 
 (defn- unshare-path
@@ -706,13 +809,18 @@
           access to any other files or subdirectories."
   [cm user unshare-with fpath]
   (let [base-dirs #{(ft/rm-last-slash (user-home-dir user)) (trash-base-dir cm user)}]
+    (log/warn "Removing permissions on" fpath "from" unshare-with "by" user)
     (remove-permissions cm unshare-with fpath)
+
     (when (is-dir? cm fpath)
+      (log/warn "Unsharing directory" fpath "from" unshare-with "by" user)
       (unshare-dir cm user unshare-with fpath))
-    (process-parent-dirs (partial set-readable cm unshare-with false)
-                         #(and (not (base-dirs %))
-                               (not (contains-accessible-obj? cm unshare-with %)))
-                         fpath)
+
+    (log/warn "Removing read perms on parents of" fpath "from" unshare-with "by" user)
+    (process-parent-dirs
+      (partial set-readable cm unshare-with false)
+      #(and (not (base-dirs %)) (not (contains-accessible-obj? cm unshare-with %)))
+      fpath)
     {:user unshare-with :path fpath}))
 
 (defn- unshare-paths
@@ -726,6 +834,7 @@
 (defn clean-up-unsharee-avus
   [cm fpath unshare-with]
   (when-not (shared? cm unshare-with fpath)
+    (log/warn "Removing shared with AVU on" fpath "for" unshare-with)
     (remove-user-shared-with cm fpath unshare-with)))
 
 (defn unshare
@@ -734,24 +843,27 @@
   (log/debug "entered unshare")
 
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/all-users-exist cm unshare-withs)
-    (validators/all-paths-exist cm fpaths)
-    (validators/user-owns-paths cm user fpaths)
+    (log-rulers
+     cm (conj unshare-withs user)
+     (format-call "unshare" user unshare-withs fpaths)
+     (validators/user-exists cm user)
+     (validators/all-users-exist cm unshare-withs)
+     (validators/all-paths-exist cm fpaths)
+     (validators/user-owns-paths cm user fpaths)
 
-    (log/debug "unshare - after validators")
-    (log/debug "unshare - user: " user)
-    (log/debug "unshare - unshare-withs: " unshare-withs)
-    (log/debug "unshare - fpaths: " fpaths)
+     (log/debug "unshare - after validators")
+     (log/debug "unshare - user: " user)
+     (log/debug "unshare - unshare-withs: " unshare-withs)
+     (log/debug "unshare - fpaths: " fpaths)
 
-    (let [keyfn        #(if (:skipped %) :skipped :succeeded)
-          unshare-recs (group-by keyfn (unshare-paths cm user unshare-withs fpaths))
-          unsharees    (map :user (:succeeded unshare-recs))
-          home-dir     (user-home-dir user)]
-      (dorun (map (partial clean-up-unsharee-avus cm home-dir) unsharees))
-      {:user unsharees
-       :path fpaths
-       :skipped (map #(dissoc % :skipped) (:skipped unshare-recs))})))
+     (let [keyfn        #(if (:skipped %) :skipped :succeeded)
+           unshare-recs (group-by keyfn (unshare-paths cm user unshare-withs fpaths))
+           unsharees    (map :user (:succeeded unshare-recs))
+           home-dir     (user-home-dir user)]
+       (dorun (map (partial clean-up-unsharee-avus cm home-dir) unsharees))
+       {:user unsharees
+        :path fpaths
+        :skipped (map #(dissoc % :skipped) (:skipped unshare-recs))}))))
 
 (defn list-of-homedirs-with-shared-files
   [cm user]
@@ -790,17 +902,24 @@
   [user root-dir inc-files filter-files]
 
   (with-jargon (jargon-cfg) [cm]
-    (when-not (is-readable? cm user root-dir)
-      (set-permissions cm user (ft/rm-last-slash root-dir) true false false))
+    (log-rulers
+     cm [user]
+     (format-call "shared-root-listing" user root-dir inc-files filter-files)
+     (when-not (is-readable? cm user root-dir)
+       (log/warn "Setting read perms on" (ft/rm-last-slash root-dir) "for" user)
+       (set-permissions cm user (ft/rm-last-slash root-dir) true false false))
 
-    (let [listing (sharing-data cm user root-dir)]
-      (assoc listing :label (id->label cm user (:id listing))))))
+     (let [listing (sharing-data cm user root-dir)]
+       (assoc listing :label (id->label cm user (:id listing)))))))
 
 (defn get-quota
   [user]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (quota cm user)))
+    (log-rulers
+     cm [user]
+     (format-call "get-quota" user)
+     (validators/user-exists cm user)
+     (quota cm user))))
 
 (defn trim-leading-slash
   [str-to-trim]
@@ -817,8 +936,11 @@
 (defn user-trash
   [user]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    {:trash (user-trash-dir cm user)}))
+    (log-rulers
+     cm [user]
+     (format-call "user-trash" user)
+     (validators/user-exists cm user)
+     {:trash (user-trash-dir cm user)})))
 
 (def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
 
@@ -850,31 +972,34 @@
   (let [home-matcher #(= (str "/" (irods-zone) "/home/" user)
                          (ft/rm-last-slash %1))]
     (with-jargon (jargon-cfg) [cm]
-      (validators/user-exists cm user)
-      (validators/all-paths-exist cm paths)
-      (validators/user-owns-paths cm user paths)
+      (log-rulers
+       cm [user]
+       (format-call "delete-paths" user paths)
+       (validators/user-exists cm user)
+       (validators/all-paths-exist cm paths)
+       (validators/user-owns-paths cm user paths)
 
-      (when (some true? (mapv home-matcher paths))
-        (throw+ {:error_code ERR_NOT_AUTHORIZED
-                 :paths (filterv home-matcher paths)}))
+       (when (some true? (mapv home-matcher paths))
+         (throw+ {:error_code ERR_NOT_AUTHORIZED
+                  :paths (filterv home-matcher paths)}))
 
-      (doseq [p paths]
-        (log/debug "path" p)
-        (log/debug "readable?" user (owns? cm user p))
-        (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
-          (doseq [path-ticket path-tickets]
-            (delete-ticket cm (:username cm) path-ticket)))
+       (doseq [p paths]
+         (log/debug "path" p)
+         (log/debug "readable?" user (owns? cm user p))
+         (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
+           (doseq [path-ticket path-tickets]
+             (delete-ticket cm (:username cm) path-ticket)))
 
-        (if-not (.startsWith p (user-trash-dir cm user))
-          (move-to-trash cm p user)
-          (delete cm p)))
+         (if-not (.startsWith p (user-trash-dir cm user))
+           (move-to-trash cm p user)
+           (delete cm p)))
 
-      {:paths paths})))
+       {:paths paths}))))
 
 (defn trash-origin-path
   [cm user p]
   (if (attribute? cm p "ipc-trash-origin")
-    (let [origin-path (:value (first (get-attribute cm p "ipc-trash-origin")))] 
+    (let [origin-path (:value (first (get-attribute cm p "ipc-trash-origin")))]
       (if-not (is-writeable? cm user (ft/dirname origin-path))
         (ft/path-join (user-home-dir user) (ft/basename p))
         origin-path))
@@ -913,36 +1038,39 @@
 (defn restore-path
   [{:keys [user paths user-trash]}]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/all-paths-exist cm paths)
-    (validators/all-paths-writeable cm user paths)
+    (log-rulers
+     cm [user]
+     (format-call "restore-path" :user user :paths paths :user-trash user-trash)
+     (validators/user-exists cm user)
+     (validators/all-paths-exist cm paths)
+     (validators/all-paths-writeable cm user paths)
 
-    (let [retval (atom (hash-map))]
-      (doseq [path paths]
-        (let [fully-restored      (restoration-path cm user path)
-              restored-to-homedir (restore-to-homedir? cm path)]
-          (log/warn "Restoring " path " to " fully-restored)
+     (let [retval (atom (hash-map))]
+       (doseq [path paths]
+         (let [fully-restored      (restoration-path cm user path)
+               restored-to-homedir (restore-to-homedir? cm path)]
+           (log/warn "Restoring " path " to " fully-restored)
 
-          (validators/path-not-exists cm fully-restored)
-          (log/warn fully-restored " does not exist. That's good.")
+           (validators/path-not-exists cm fully-restored)
+           (log/warn fully-restored " does not exist. That's good.")
 
-          (restore-parent-dirs cm user fully-restored)
-          (log/warn "Done restoring parent dirs for " fully-restored)
+           (restore-parent-dirs cm user fully-restored)
+           (log/warn "Done restoring parent dirs for " fully-restored)
 
-          (validators/path-writeable cm user (ft/dirname fully-restored))
-          (log/warn fully-restored "is writeable. That's good.")
+           (validators/path-writeable cm user (ft/dirname fully-restored))
+           (log/warn fully-restored "is writeable. That's good.")
 
-          (log/warn "Moving " path " to " fully-restored)
-          (validators/path-not-exists cm fully-restored)
+           (log/warn "Moving " path " to " fully-restored)
+           (validators/path-not-exists cm fully-restored)
 
-          (log/warn fully-restored " does not exist. That's good.")
-          (move cm path fully-restored :user user :admin-users (irods-admins))
-          (log/warn "Done moving " path " to " fully-restored)
+           (log/warn fully-restored " does not exist. That's good.")
+           (move cm path fully-restored :user user :admin-users (irods-admins))
+           (log/warn "Done moving " path " to " fully-restored)
 
-          (reset! retval
-                  (assoc @retval path {:restored-path fully-restored
-                                       :partial-restore restored-to-homedir}))))
-      {:restored @retval})))
+           (reset! retval
+                   (assoc @retval path {:restored-path fully-restored
+                                        :partial-restore restored-to-homedir}))))
+       {:restored @retval}))))
 
 (defn copy-path
   ([copy-map]
@@ -950,77 +1078,95 @@
 
   ([{:keys [user from to]} copy-key]
      (with-jargon (jargon-cfg) [cm]
-       (validators/user-exists cm user)
-       (validators/all-paths-exist cm from)
-       (validators/all-paths-readable cm user from)
-       (validators/path-exists cm to)
-       (validators/path-writeable cm user to)
-       (validators/path-is-dir cm to)
-       (validators/no-paths-exist cm (mapv #(ft/path-join to (ft/basename %)) from))
+       (log-rulers
+        cm [user]
+        (format-call "copy-path" {:user user :from from :to to} copy-key)
+        (validators/user-exists cm user)
+        (validators/all-paths-exist cm from)
+        (validators/all-paths-readable cm user from)
+        (validators/path-exists cm to)
+        (validators/path-writeable cm user to)
+        (validators/path-is-dir cm to)
+        (validators/no-paths-exist cm (mapv #(ft/path-join to (ft/basename %)) from))
 
-       (when (some true? (mapv #(= to %1) from))
-         (throw+ {:error_code ERR_INVALID_COPY
-                  :paths (filterv #(= to %1) from)}))
+        (when (some true? (mapv #(= to %1) from))
+          (throw+ {:error_code ERR_INVALID_COPY
+                   :paths (filterv #(= to %1) from)}))
 
-       (doseq [fr from]
-         (let [metapath (ft/rm-last-slash (ft/path-join to (ft/basename fr)))]
-           (copy cm fr to)
-           (set-metadata cm metapath copy-key fr "")
-           (set-owner cm to user)))
+        (doseq [fr from]
+          (let [metapath (ft/rm-last-slash (ft/path-join to (ft/basename fr)))]
+            (copy cm fr to)
+            (set-metadata cm metapath copy-key fr "")
+            (set-owner cm to user)))
 
-       {:sources from :dest to})))
+        {:sources from :dest to}))))
 
 (defn delete-trash
   [user]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
+    (log-rulers
+     cm [user]
+     (format-call "delete-trash" user)
+     (validators/user-exists cm user)
 
-    (let [trash-dir  (user-trash-dir cm user)
-          trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
-      (doseq [trash-path trash-list]
-        (delete cm trash-path))
-      {:trash trash-dir
-       :paths trash-list})))
+     (let [trash-dir  (user-trash-dir cm user)
+           trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
+       (doseq [trash-path trash-list]
+         (delete cm trash-path))
+       {:trash trash-dir
+        :paths trash-list}))))
 
 (defn add-tickets
   [user tickets public?]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
+    (log-rulers
+     cm [user]
+     (format-call "add-tickets" user tickets public?)
+     (validators/user-exists cm user)
 
-    (let [all-paths      (mapv :path tickets)
-          all-ticket-ids (mapv :ticket-id tickets)]
-      (validators/all-paths-exist cm all-paths)
-      (validators/all-paths-writeable cm user all-paths)
-      (validators/all-tickets-nonexistant cm user all-ticket-ids)
+     (let [all-paths      (mapv :path tickets)
+           all-ticket-ids (mapv :ticket-id tickets)]
+       (validators/all-paths-exist cm all-paths)
+       (validators/all-paths-writeable cm user all-paths)
+       (validators/all-tickets-nonexistant cm user all-ticket-ids)
 
-      (doseq [tm tickets]
-        (create-ticket cm (:username cm) (:path tm) (:ticket-id tm))
-        (when public?
-          (.addTicketGroupRestriction (ticket-admin-service cm (:username cm)) (:ticket-id tm) "public")))
+       (doseq [tm tickets]
+         (create-ticket cm (:username cm) (:path tm) (:ticket-id tm))
+         (when public?
+           (.addTicketGroupRestriction
+            (ticket-admin-service cm (:username cm))
+            (:ticket-id tm)
+            "public")))
 
-      {:user user :tickets (mapv #(ticket-map cm (:username cm) %) all-ticket-ids)})))
+       {:user user :tickets (mapv #(ticket-map cm (:username cm) %) all-ticket-ids)}))))
 
 (defn remove-tickets
   [user ticket-ids]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/all-tickets-exist cm user ticket-ids)
+    (log-rulers
+     cm [user]
+     (format-call "remove-tickets" user ticket-ids)
+     (validators/user-exists cm user)
+     (validators/all-tickets-exist cm user ticket-ids)
 
-    (let [all-paths (mapv #(.getIrodsAbsolutePath (ticket-by-id cm (:username cm) %)) ticket-ids)]
-      (validators/all-paths-writeable cm user all-paths)
-      (doseq [ticket-id ticket-ids]
-        (delete-ticket cm (:username cm) ticket-id))
-      {:user user :tickets ticket-ids})))
+     (let [all-paths (mapv #(.getIrodsAbsolutePath (ticket-by-id cm (:username cm) %)) ticket-ids)]
+       (validators/all-paths-writeable cm user all-paths)
+       (doseq [ticket-id ticket-ids]
+         (delete-ticket cm (:username cm) ticket-id))
+       {:user user :tickets ticket-ids}))))
 
 (defn list-tickets-for-paths
   [user paths]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/all-paths-exist cm paths)
-    (validators/all-paths-readable cm user paths)
+    (log-rulers
+     cm [user]
+     (format-call "list-tickets-for-paths" user paths)
+     (validators/user-exists cm user)
+     (validators/all-paths-exist cm paths)
+     (validators/all-paths-readable cm user paths)
 
-    {:tickets
-     (apply merge (mapv #(hash-map %1 (ticket-ids-for-path cm (:username cm) %1)) paths))}))
+     {:tickets
+      (apply merge (mapv #(hash-map %1 (ticket-ids-for-path cm (:username cm) %1)) paths))})))
 
 (defn paths-contain-char
   [paths char]
@@ -1090,50 +1236,59 @@
   "Generates new paths by replacing all spaces with new-char."
   [user paths new-char]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/all-paths-exist cm paths)
-    (validators/user-owns-paths cm user paths)
+    (log-rulers
+     cm [user]
+     (format-call "replace-spaces" paths new-char)
+     (validators/user-exists cm user)
+     (validators/all-paths-exist cm paths)
+     (validators/user-owns-paths cm user paths)
 
-    (when-not (good-string? new-char)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :character new-char}))
+     (when-not (good-string? new-char)
+       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+                :character new-char}))
 
-    (let [parent-dirs (all-parent-dirs user paths)]
-      (validators/user-owns-paths cm user parent-dirs)
+     (let [parent-dirs (all-parent-dirs user paths)]
+       (validators/user-owns-paths cm user parent-dirs)
 
-      (let [mv-base         #(move-spacey-path cm user %1 new-char :parent false)
-            mv-parent       #(move-spacey-path cm user %1 new-char :parent true)
-            basename-merges (apply merge (map mv-base paths))
-            parent-merges   (apply merge (map mv-parent parent-dirs))]
-        {:paths (fix-return-map basename-merges new-char)}))))
+       (let [mv-base         #(move-spacey-path cm user %1 new-char :parent false)
+             mv-parent       #(move-spacey-path cm user %1 new-char :parent true)
+             basename-merges (apply merge (map mv-base paths))
+             parent-merges   (apply merge (map mv-parent parent-dirs))]
+         {:paths (fix-return-map basename-merges new-char)})))))
 
 (defn read-file-chunk
   "Reads a chunk of a file starting at 'position' and reading a chunk of length 'chunk-size'."
   [user path position chunk-size]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-is-file cm path)
-    (validators/path-readable cm user path)
-    
-    {:path       path
-     :user       user
-     :start      (str position)
-     :chunk-size (str chunk-size)
-     :file-size  (str (file-size cm path))
-     :chunk      (read-at-position cm path position chunk-size)}))
+    (log-rulers
+     cm [user]
+     (format-call "read-file-chunk" user path position chunk-size)
+     (validators/user-exists cm user)
+     (validators/path-exists cm path)
+     (validators/path-is-file cm path)
+     (validators/path-readable cm user path)
+
+     {:path       path
+      :user       user
+      :start      (str position)
+      :chunk-size (str chunk-size)
+      :file-size  (str (file-size cm path))
+      :chunk      (read-at-position cm path position chunk-size)})))
 
 (defn overwrite-file-chunk
   "Writes a chunk of a file starting at 'position' and extending to the length of the string."
   [user path position update-string]
   (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-is-file cm path)
-    (validators/path-writeable cm user path)
-    (overwrite-at-position cm path position update-string)
-    {:path       path
-     :user       user
-     :start      (str position)
-     :chunk-size (str (count (.getBytes update-string)))
-     :file-size  (str (file-size cm path))}))
+    (log-rulers
+     cm [user]
+     (format-call "overwrite-file-chunk" user path position update-string)
+     (validators/user-exists cm user)
+     (validators/path-exists cm path)
+     (validators/path-is-file cm path)
+     (validators/path-writeable cm user path)
+     (overwrite-at-position cm path position update-string)
+     {:path       path
+      :user       user
+      :start      (str position)
+      :chunk-size (str (count (.getBytes update-string)))
+      :file-size  (str (file-size cm path))})))

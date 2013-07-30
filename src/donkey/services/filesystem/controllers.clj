@@ -82,10 +82,10 @@
      user - Query string value containing a username."
   [req-params]
   (log/debug "do-directory")
-  
+
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
-    
+
     ;;; If there's no path parameter, then it's a top-level
     ;;; request and the community listing should be included.
     (cond
@@ -96,14 +96,14 @@
             share-f    (future (gen-sharing-data user inc-files))
             home-f     (future (dir-list user (get-home-dir user) inc-files))]
         {:roots [@home-f @comm-f @share-f]})
-      
+
       (= (utils/add-trailing-slash (:path params)) (irods-home))
-      (irods-actions/shared-root-listing 
-        (:user params) 
-        (irods-home) 
-        (include-files? params) 
+      (irods-actions/shared-root-listing
+        (:user params)
+        (irods-home)
+        (include-files? params)
         [])
-      
+
       :else
       ;;; There's a path parameter, so simply list the directory.
       (let [inc-files (include-files? params)]
@@ -141,16 +141,16 @@
      source - JSON field from the body telling which file to rename."
   [req-params req-body]
   (log/debug "do-rename")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:source string? :dest string?})
-    
+
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))
-    
+
     (irods-actions/rename-path (:user params) (:source body) (:dest body))))
 
 (defn do-delete
@@ -169,11 +169,11 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body   {:paths sequential?})
-    
+
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))
-    
+
     (irods-actions/delete-paths (:user params) (:paths body))))
 
 (defn do-move
@@ -194,11 +194,11 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:sources sequential? :dest string?})
-    
+
     (log/info "Body: " (json/encode body))
 
     (when (super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED 
+      (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user (:user params)}))
 
     (irods-actions/move-paths (:user params) (:sources body) (:dest body))))
@@ -214,23 +214,23 @@
      path - JSON field containing the path to create."
   [req-params req-body]
   (log/debug "do-create")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:path string?})
-    
+
     (log/info "Body: " body)
 
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))
-    
+
     (irods-actions/create (:user params) (:path body))))
 
 (defn do-metadata-get
   [req-params]
   (log/debug "do-metadata-get")
-  
+
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string? :path string?})
     (irods-actions/metadata-get (:user params) (:path params))))
@@ -238,7 +238,7 @@
 (defn do-metadata-set
   [req-params req-body]
   (log/debug "do-metadata-set")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string? :path string?})
@@ -258,7 +258,7 @@
 (defn do-share
   [req-params req-body]
   (log/debug "do-share")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
@@ -271,7 +271,7 @@
 (defn do-unshare
   [req-params req-body]
   (log/debug "do-unshare")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
@@ -292,12 +292,12 @@
 (defn do-metadata-batch-set
   [req-params req-body]
   (log/debug "do-metadata-set")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string? :path string?})
     (validate-map body {:add sequential? :delete sequential?})
-    
+
     (let [user (:user params)
           path (:path params)
           adds (:add body)
@@ -305,11 +305,11 @@
       (when (pos? (count adds))
         (if (not (every? true? (check-adds adds)))
           (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "add"})))
-      
+
       (when (pos? (count dels))
         (if-not (every? true? (check-dels dels))
           (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "add"})))
-      
+
       (irods-actions/metadata-batch-set user path body))))
 
 (defn do-metadata-delete
@@ -327,17 +327,17 @@
      path - Query string field containing the file to preview."
   [req-params]
   (log/debug "do-preview")
-  
+
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string? :path string?})
-    
+
     (when (super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED 
+      (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user (:user params)
                :path (:path params)}))
-    {:preview (irods-actions/preview 
-                (:user params) 
-                (:path params) 
+    {:preview (irods-actions/preview
+                (:user params)
+                (:path params)
                 (fs-preview-size))}))
 
 (defn do-exists
@@ -348,10 +348,10 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths vector?})
-    {:paths 
+    {:paths
      (apply
-       conj {} 
-       (map #(hash-map %1 (irods-actions/path-exists? (:user params) %1)) 
+       conj {}
+       (map #(hash-map %1 (irods-actions/path-exists? (:user params) %1))
             (:paths body)))}))
 
 (defn do-stat
@@ -402,39 +402,39 @@
      path - Query string field containing the path to download."
   [req-params]
   (log/debug "do-download")
-  
+
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string? :path string?})
-    
+
     (let [user (:user params)
           path (:path params)]
       (log/info "User for download: " user)
       (log/info "Path to download: " path)
-      
+
       (when (super-user? user)
-        (throw+ {:error_code ERR_NOT_AUTHORIZED 
+        (throw+ {:error_code ERR_NOT_AUTHORIZED
                  :user       user}))
-      
+
       (cond
         ;;; If disable is not included, assume the attachment
         ;;; part should be left out.
         (not (contains? params :attachment))
         (rsp-utils/header
-          {:status               200 
+          {:status               200
            :body                 (irods-actions/download-file user path)}
-          "Content-Disposition" (str "attachment; filename=\"" 
-                                     (utils/basename path) 
+          "Content-Disposition" (str "attachment; filename=\""
+                                     (utils/basename path)
                                      "\""))
-        
+
         (not (attachment? req-params))
         (rsp-utils/header
-          {:status 200 
+          {:status 200
            :body (irods-actions/download-file user path)}
           "Content-Disposition" (str "filename=\"" (utils/basename path) "\""))
-        
+
         :else
         (rsp-utils/header
-          {:status 200 
+          {:status 200
            :body (irods-actions/download-file user path)}
           "Content-Disposition" (str "attachment; filename=\"" (utils/basename path) "\""))))))
 
@@ -523,16 +523,16 @@
 (defn do-add-tickets
   [req-params req-body]
   (log/debug "do-add-tickets")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:tickets sequential?})
-    
+
     (when-not (check-tickets (:tickets body))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD 
+      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :field      "tickets"}))
-    
+
     (let [pub-param (:public params)
           public    (if (and pub-param (= pub-param "1")) true false)]
       (irods-actions/add-tickets (:user params) (:tickets body) public))))
@@ -544,9 +544,9 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:tickets sequential?})
-    
+
     (when-not (every? true? (mapv string? (:tickets body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD 
+      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :field     "tickets"}))
     (irods-actions/remove-tickets (:user params) (:tickets body))))
 
@@ -557,11 +557,11 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
-    
+
     (when-not (every? true? (mapv string? (:paths body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD 
+      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :field      "paths"}))
-    
+
     (irods-actions/list-tickets-for-paths (:user params) (:paths body))))
 
 (defn do-paths-contain-space
@@ -571,25 +571,25 @@
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
-    
+
     (when-not (every? true? (mapv string? (:paths body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD 
-               :field      "paths"}))  
+      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+               :field      "paths"}))
     {:paths (irods-actions/paths-contain-char (:paths body) " ")}))
 
 (defn do-replace-spaces
   [req-params req-body]
   (log/debug "do-substitute-spaces")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
-    
+
     (when-not (every? true? (mapv string? (:paths body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD 
+      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :field      "paths"}))
-    
+
     (let [paths (:paths body)
           user  (:user params)]
       (irods-actions/replace-spaces user paths "_"))))
@@ -597,27 +597,27 @@
 (defn do-read-chunk
   [req-params req-body]
   (log/debug "do-read-chunk")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:path string? :position string? :chunk-size string?})
-    
+
     (let [user (:user params)
           path (:path body)
-          pos  (Long/parseLong (:position body)) 
+          pos  (Long/parseLong (:position body))
           size (Long/parseLong (:chunk-size body))]
       (irods-actions/read-file-chunk user path pos size))))
 
 (defn do-overwrite-chunk
   [req-params req-body]
   (log/debug "do-overwrite-chunk")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:path string? :position string? :update string?})
-    
+
     (let [user (:user params)
           path (:path body)
           pos  (Long/parseLong (:position body))]
