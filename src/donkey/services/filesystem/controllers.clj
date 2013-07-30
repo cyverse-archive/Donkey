@@ -16,13 +16,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defmacro log-rulers
-  [cm users]
-  `(->> ~users
-        (map #(when (jargon/one-user-to-rule-them-all? ~cm %)
-                (jargon/log-stack-trace (str % " rules all"))))
-        (dorun)))
-
 (defn super-user?
   [username]
   (.equals username (irods-user)))
