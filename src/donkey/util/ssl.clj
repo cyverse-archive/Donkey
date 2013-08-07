@@ -1,6 +1,8 @@
 (ns donkey.util.ssl
   [:import [java.net URL]]
-  [:import [java.io IOException]]
+  [:import [java.io
+            InputStream
+            IOException]]
   [:import [javax.net.ssl
             HostnameVerifier
             HttpsURLConnection
@@ -69,15 +71,39 @@
        (ftp-login ftp "anonymous" ""))))
 
 (defn- get-ftp-input-stream
-  [url]
-  (let [ftp (FTPClient.)]
-    (ftp-connect ftp url)
-    (.enterLocalPassiveMode ftp)
-    (when-not (FTPReply/isPositiveCompletion (.getReplyCode ftp))
-      (throw (IOException. "FTP server refused connection")))
-    (when-not (ftp-login ftp url)
-      (throw (IOException. "FTP server rejected credentials")))
-    (.retrieveFileStream ftp (.getPath url))))
+  ([ftp url]
+     (ftp-connect ftp url)
+     (.enterLocalPassiveMode ftp)
+     (when-not (FTPReply/isPositiveCompletion (.getReplyCode ftp))
+       (throw (IOException. "FTP server refused connection")))
+     (when-not (ftp-login ftp url)
+       (throw (IOException. "FTP server rejected credentials")))
+     (.retrieveFileStream ftp (.getPath url)))
+  ([url]
+     (let [ftp (FTPClient.)
+           in  (get-ftp-input-stream ftp url)]
+       (proxy [InputStream] []
+         (available []
+           (.available in))
+         (close []
+           (.close in)
+           (.logout ftp)
+           (.disconnect ftp))
+         (mark [read-limit]
+           (.mark in read-limit))
+         (markSupported []
+           (.markSupported in))
+         (read
+           ([]
+              (.read in))
+           ([b]
+              (.read in b))
+           ([b off len]
+              (.read in b off len)))
+         (reset []
+           (.reset in))
+         (skip [n]
+           (.skip in n))))))
 
 (defn input-stream [url-string]
   (let [url (URL. url-string)]
