@@ -118,6 +118,11 @@
   [props config-valid configs]
   "donkey.debug.log-runtimes" false)
 
+(cc/defprop-optboolean debug-ownership
+  "Enables or disables the ownership check for folders in the home directory."
+  [props config-valid configs]
+  "donkey.debug.ownership" false)
+
 (cc/defprop-str iplant-email-base-url
   "The base URL to use when connnecting to the iPlant email service."
   [props config-valid configs metadata-routes-enabled]

@@ -23,10 +23,11 @@
 (defmacro log-rulers
   [cm users msg & body]
   `(let [result# (do ~@body)]
-     (->> ~users
-          (map #(when (jargon/one-user-to-rule-them-all? ~cm %)
-                  (jargon/log-stack-trace (str ~msg " - " % " rules all"))))
-          (dorun))
+     (when (debug-ownership)
+       (->> ~users
+            (map #(when (jargon/one-user-to-rule-them-all? ~cm %)
+                    (jargon/log-stack-trace (str ~msg " - " % " rules all"))))
+            (dorun)))
      result#))
 
 (defn format-call
