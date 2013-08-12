@@ -1,6 +1,8 @@
 (ns donkey.util.ssl
   [:import [java.net URL]]
-  [:import [java.io IOException]]
+  [:import [java.io
+            InputStream
+            IOException]]
   [:import [javax.net.ssl
             HostnameVerifier
             HttpsURLConnection
@@ -14,7 +16,10 @@
             SecureRandom]]
   [:import [java.security.cert
             CertificateException
-            X509Certificate]])
+            X509Certificate]]
+  [:import [org.apache.commons.net.ftp
+            FTPClient
+            FTPReply]])
 
 (def trust-manager
   (proxy [X509TrustManager] []
@@ -43,7 +48,7 @@
       (do
         (HttpsURLConnection/setDefaultSSLSocketFactory (. ssl-context getSocketFactory))
         (HttpsURLConnection/setDefaultHostnameVerifier hostname-verifier)
-        (. url openConnection))
+        (.openConnection url))
       (catch GeneralSecurityException e
         (throw IOException "Unable to establish trusting SSL connection." e))
       (finally
@@ -51,6 +56,57 @@
           (HttpsURLConnection/setDefaultSSLSocketFactory orig-socket-factory)
           (HttpsURLConnection/setDefaultHostnameVerifier orig-hostname-verifier))))))
 
+(defn- ftp-connect
+  [ftp url]
+  (if (pos? (.getPort url))
+    (.connect ftp (.getHost url) (.getPort url))
+    (.connect ftp (.getHost url))))
+
+(defn- ftp-login
+  ([ftp username password]
+     (.login ftp username password))
+  ([ftp url]
+     (if-let [user-info (.getUserInfo url)]
+       (apply ftp-login (clojure.string/split #":" user-info))
+       (ftp-login ftp "anonymous" ""))))
+
+(defn- get-ftp-input-stream
+  ([ftp url]
+     (ftp-connect ftp url)
+     (.enterLocalPassiveMode ftp)
+     (when-not (FTPReply/isPositiveCompletion (.getReplyCode ftp))
+       (throw (IOException. "FTP server refused connection")))
+     (when-not (ftp-login ftp url)
+       (throw (IOException. "FTP server rejected credentials")))
+     (.retrieveFileStream ftp (.getPath url)))
+  ([url]
+     (let [ftp (FTPClient.)
+           in  (get-ftp-input-stream ftp url)]
+       (proxy [InputStream] []
+         (available []
+           (.available in))
+         (close []
+           (.close in)
+           (.logout ftp)
+           (.disconnect ftp))
+         (mark [read-limit]
+           (.mark in read-limit))
+         (markSupported []
+           (.markSupported in))
+         (read
+           ([]
+              (.read in))
+           ([b]
+              (.read in b))
+           ([b off len]
+              (.read in b off len)))
+         (reset []
+           (.reset in))
+         (skip [n]
+           (.skip in n))))))
+
 (defn input-stream [url-string]
   (let [url (URL. url-string)]
-    (. (get-connection url) getInputStream)))
+    (if (= (.getProtocol url) "ftp")
+      (get-ftp-input-stream url)
+      (.getInputStream (get-connection url)))))

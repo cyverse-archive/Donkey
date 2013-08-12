@@ -1,5 +1,5 @@
 (ns donkey.services.fileio.controllers
-  (:use [clj-jargon.jargon] 
+  (:use [clj-jargon.jargon]
         [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
@@ -20,12 +20,10 @@
   [address]
   (try+
    (ssl/input-stream address)
-   (catch java.net.UnknownHostException e
+   (catch java.io.IOException e
      (throw+ {:error_code ERR_INVALID_URL
-              :url address}))
-   (catch java.net.MalformedURLException e
-     (throw+ {:error_code ERR_INVALID_URL
-              :url address}))))
+              :url address
+              :msg (.getMessage e)}))))
 
 (defn gen-uuid []
   (str (java.util.UUID/randomUUID)))
@@ -62,7 +60,7 @@
         up-path (get req-multipart "file")]
     (if-not (fs/good-string? up-path)
       {:status 500
-       :body   (json/generate-string 
+       :body   (json/generate-string
                  {:error_code ERR_BAD_OR_MISSING_FIELD
                   :path       up-path})}
       (actions/upload user up-path dest))))
@@ -91,12 +89,13 @@
     (let [user    (:user params)
           dest    (string/trim (:dest body))
           addr    (string/trim (:address body))
-          istream (in-stream addr)
           fname   (url-filename addr)]
       (log/warn (str "User: " user))
       (log/warn (str "Dest: " dest))
       (log/warn (str "Fname: " fname))
       (log/warn (str "Addr: " addr))
+      (with-open [istream (in-stream addr)]
+        (log/warn "connection to" addr "successfully established"))
       (actions/urlimport user addr fname dest))))
 
 (defn saveas
@@ -112,23 +111,23 @@
         (when-not (user-exists? cm user)
           (throw+ {:user       user
                    :error_code ERR_NOT_A_USER}))
-        
+
         (when-not (exists? cm (ft/dirname dest))
           (throw+ {:error_code ERR_DOES_NOT_EXIST
                    :path       (ft/dirname dest)}))
-        
+
         (when-not (is-writeable? cm user (ft/dirname dest))
           (throw+ {:error_code ERR_NOT_WRITEABLE
                    :path       (ft/dirname dest)}))
-        
+
         (when (exists? cm dest)
-          (throw+ {:error_code ERR_EXISTS 
+          (throw+ {:error_code ERR_EXISTS
                    :path       dest}))
-        
+
         (with-in-str cont
           (actions/store cm *in* user dest)
           {:status "success"
-           :file 
+           :file
            {:id dest
             :label         (ft/basename dest)
             :permissions   (dataobject-perm-map cm user dest)
