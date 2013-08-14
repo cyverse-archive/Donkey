@@ -509,6 +509,12 @@
   [string-to-check]
   (re-seq #"\%[A-Fa-f0-9]{2}" string-to-check))
 
+(defn url-decode
+  [string-to-decode]
+  (if (url-encoded? string-to-decode)
+    (url/url-decode string-to-decode)
+    string-to-decode))
+
 (defn path-exists?
   ([path]
      (path-exists? "" path))
@@ -517,9 +523,19 @@
        (log-rulers
         cm [user]
         (format-call "path-exists?" user path)
-        (if (url-encoded? path)
-          (exists? cm (url/url-decode path))
-          (exists? cm path))))))
+        (exists? cm (url-decode path))))))
+
+(defn path-is-dir?
+  [path]
+  (let [path (url-decode path)]
+    (with-jargon (jargon-cfg) [cm]
+      (and (exists? cm path) (is-dir? cm path)))))
+
+(defn path-is-file?
+  [path]
+  (let [path (url-decode path)]
+    (with-jargon (jargon-cfg) [cm]
+      (and (exists? cm path) (is-file? cm path)))))
 
 (defn count-shares
   [cm user path]
