@@ -2,7 +2,7 @@
   (:use [donkey.util.config]
         [donkey.util.service :only [build-url-with-query]]
         [donkey.util.transformers :only [add-current-user-to-map]]
-        [donkey.auth.user-attributes :only [current-user]]        
+        [donkey.auth.user-attributes :only [current-user]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
@@ -36,16 +36,15 @@
    Otherwise, a new directory is created and the path is returned."
   [path]
   (log/debug "getting or creating dir: path =" path)
-  (let [stats (stat path)]
-    (cond (nil? stats)            (create path)
-          (= (:type stats) :dir)  path
-          :else                   nil)))
+  (cond (fs/path-is-dir? path) path
+        (fs/path-exists? path) nil
+        :else                  (create path)))
 
 (defn gen-output-dir
   "Either obtains or creates a default output directory using a specified base name."
   [base]
   (first
-   (filter #(not (nil? (get-or-create-dir %)))
+   (remove #(nil? (get-or-create-dir %))
            (cons base (map #(str base "-" %) (iterate inc 1))))))
 
 (defn build-path
