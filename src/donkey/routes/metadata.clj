@@ -85,6 +85,9 @@
    (PUT "/update-app" [:as req]
         (trap #(update-app-secured req)))
 
+   (POST "/update-workflow" [:as req]
+         (trap #(update-workflow-secured req)))
+
    (POST "/make-analysis-public" [:as req]
          (trap #(make-app-public req)))
 

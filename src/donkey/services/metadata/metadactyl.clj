@@ -210,6 +210,12 @@
   (let [url (build-metadactyl-unprotected-url req "update-workflow")]
     (forward-post url req)))
 
+(defn update-workflow-secured
+  "This service will either update an existing workflow or import a new workflow."
+  [req]
+  (let [url (build-metadactyl-secured-url req "update-workflow")]
+    (forward-post url req)))
+
 (defn force-update-workflow
   "This service will either update an existing workflow or import a new workflow.
    Vetted workflows may be updated."
