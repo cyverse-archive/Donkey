@@ -94,6 +94,7 @@
 * [GET /secured/list-analyses-for-pipeline/{group-id}](endpoints/app-metadata.md#listing-analyses-that-may-be-included-in-a-pipeline)
 * [GET /secured/logout](endpoints/misc.md#recording-when-a-user-logs-out)
 * [POST /secured/make-analysis-public](endpoints/app-metadata.md#submitting-an-analysis-for-public-use)
+* [GET /secured/notifications/admin/system](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)
 * [PUT /secured/notifications/admin/system](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)
 * [GET /secured/notifications/admin/system-types](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)
 * [DELETE /secured/notifications/admin/system/:uuid](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)
