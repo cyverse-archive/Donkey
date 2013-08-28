@@ -26,7 +26,8 @@
                  [hoot "0.1.0-SNAPSHOT"]
                  [com.novemberain/validateur "1.4.0"]
                  [xerces/xercesImpl "2.11.0"]
-                 [commons-net "3.3"]]
+                 [commons-net "3.3"]
+                 [org.clojure/tools.nrepl "0.2.3"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
             [lein-ring "0.7.4"]
             [swank-clojure "1.4.2"]]
@@ -34,7 +35,7 @@
   :aot [donkey.core]
   :main donkey.core
   :ring {:handler donkey.core/app
-         :init donkey.core/load-configuration-from-file
+         :init donkey.core/lein-ring-init
          :port 31325}
   :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
                :provides "donkey"
