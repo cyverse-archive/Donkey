@@ -398,17 +398,6 @@
      (validators/user-exists cm user)
      (user-groups cm user))))
 
-(defn attr-value?
-  "Returns a truthy value if path has metadata that has an attribute of attr and
-   a value of val."
-  [cm path attr val]
-  (-> (filter
-        #(and (= (:attr %1) attr)
-              (= (:value %1) val))
-        (get-metadata cm path))
-    count
-    pos?))
-
 (defn reserved-unit
   "Turns a blank unit into a reserved unit."
   [avu-map]
