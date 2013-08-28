@@ -210,6 +210,12 @@
   (let [url (build-metadactyl-unprotected-url req "update-workflow")]
     (forward-post url req)))
 
+(defn update-workflow-secured
+  "This service will either update an existing workflow or import a new workflow."
+  [req]
+  (let [url (build-metadactyl-secured-url req "update-workflow")]
+    (forward-post url req)))
+
 (defn force-update-workflow
   "This service will either update an existing workflow or import a new workflow.
    Vetted workflows may be updated."
@@ -373,6 +379,12 @@
    list of system notification types."
   [req]
   (forward-get (secured-notification-url req "admin" "system-types") req))
+
+(defn admin-list-system-messages
+  "Forwards a request to the notification agent to allow an admin to list existing system
+   notifications."
+  [req]
+  (forward-get (secured-notification-url req "admin" "system") req))
 
 (defn admin-get-system-message
   "Forwards a request to the notification-agent to get a system notification for an admin."

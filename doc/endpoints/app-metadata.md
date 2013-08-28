@@ -263,6 +263,10 @@ Unsecured Endpoint: POST /update-workflow
 
 Delegates to metadactyl: POST /update-workflow
 
+Secured Endpoint: POST /secured/update-workflow
+
+Delegates to metadactyl: POST /secured/update-workflow
+
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 

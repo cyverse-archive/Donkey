@@ -503,6 +503,10 @@ parameter and its corresponding ticket string.
             <td>PUT /admin/system</td>
         </tr>
         <tr>
+            <td>GET /secured/notifications/admin/system</td>
+            <td>GET /admin/system</td>
+        </tr>
+        <tr>
             <td>GET /secured/notifications/admin/system/:uuid</td>
             <td>GET /admin/system/:uuid</td>
         </tr>
