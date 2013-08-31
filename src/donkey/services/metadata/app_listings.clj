@@ -70,15 +70,19 @@
           :step-count           1
           :wiki_url             "")))
 
-(defn apps-in-group
-  [group-id]
+(defn- apps-in-hpc-group
+  []
   (let [system-statuses (agave-system-statuses)
-        app-listing     (when (config/agave-enabled) (agave/list-apps))]
+        app-listing     (agave/list-apps)]
     (service/log-runtime
      ["formatting HPC app listing result"]
-     (service/success-response
-      (if (= group-id hpc-group-id)
-        (assoc (hpc-group)
-          :templates      (map (partial format-hpc-app-listing system-statuses) app-listing)
-          :template_count (count app-listing))
-        (metadactyl/apps-in-group group-id))))))
+     (assoc (hpc-group)
+       :templates      (map (partial format-hpc-app-listing system-statuses) app-listing)
+       :template-count (count app-listing)))))
+
+(defn apps-in-group
+  [group-id]
+  (service/success-response
+   (if (and (config/agave-enabled) (= group-id hpc-group-id))
+     (apps-in-hpc-group)
+     (metadactyl/apps-in-group group-id))))
