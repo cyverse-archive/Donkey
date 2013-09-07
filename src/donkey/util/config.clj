@@ -20,7 +20,7 @@
 (defn masked-config
   "Returns a masked version of the Donkey config as a map."
   []
-  (cc/mask-config props :filters [#"irods-pass" #"irods.pass" #"irods.user"]))
+  (cc/mask-config props :filters [#"(?:irods|agave)[-.](?:user|pass)"]))
 
 (cc/defprop-int listen-port
   "The port that donkey listens to."
@@ -116,7 +116,7 @@
 (cc/defprop-optboolean rabbitmq-enabled
   "Enables or disables RabbitMQ connection."
   [props config-valid configs]
-  "donkey.features.rabbitmq" true)
+  "donkey.features.rabbitmq" false)
 
 (cc/defprop-optboolean log-runtimes
   "Enables or disables the logging of runtimes for endpoints that support it."
@@ -425,6 +425,16 @@
   "The base URL to use when connecting to Agave."
   [props config-valid configs agave-enabled]
   "donkey.agave.base-url")
+
+(cc/defprop-str agave-user
+  "The username to use when authenticating to Agave."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.user")
+
+(cc/defprop-str agave-pass
+  "The password to use when authenticating to Agave."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.pass")
 
 (cc/defprop-str default-output-dir
   "The default name of the default job output directory."
