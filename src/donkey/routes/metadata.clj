@@ -52,11 +52,11 @@
    (GET "/app-groups" []
         (trap #(app-listings/get-only-app-groups)))
 
-   (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as req]
-        (trap #(list-apps-in-group req app-group-id)))
+   (GET "/get-analyses-in-group/:app-group-id" [app-group-id]
+        (trap #(app-listings/apps-in-group app-group-id)))
 
-   (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id :as req]
-        (trap #(list-apps-in-group req app-group-id)))
+   (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
+        (trap #(app-listings/apps-in-group app-group-id)))
 
    (GET "/get-components-in-analysis/:app-id" [app-id :as req]
         (trap #(list-deployed-components-in-app req app-id)))

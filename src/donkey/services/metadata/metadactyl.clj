@@ -380,6 +380,12 @@
   [req]
   (forward-get (secured-notification-url req "admin" "system-types") req))
 
+(defn admin-list-system-messages
+  "Forwards a request to the notification agent to allow an admin to list existing system
+   notifications."
+  [req]
+  (forward-get (secured-notification-url req "admin" "system") req))
+
 (defn admin-get-system-message
   "Forwards a request to the notification-agent to get a system notification for an admin."
   [req uuid]

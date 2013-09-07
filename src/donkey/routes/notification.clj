@@ -63,6 +63,9 @@
    (PUT "/notifications/admin/system" [:as req]
         (trap #(admin-add-system-message req)))
 
+   (GET "/notifications/admin/system" [:as req]
+       (trap #(admin-list-system-messages req)))
+
    (GET "/notifications/admin/system/:uuid" [uuid :as req]
         (trap #(admin-get-system-message req uuid)))
 
