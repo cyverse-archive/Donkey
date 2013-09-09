@@ -394,6 +394,16 @@
   [props config-valid configs]
   "donkey.job-exec.default-output-folder")
 
+(cc/defprop-str oauth-pem
+  ""
+  [props config-valid configs]
+  "donkey.oauth.pem")
+
+(cc/defprop-str oauth-base-url
+  "The base URL to use when getting OAuth tokens."
+  [props config-valid configs]
+  "donkey.oauth.base-url")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []
