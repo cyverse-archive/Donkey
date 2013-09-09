@@ -1,4 +1,4 @@
-(ns donkey.services.metadata.app-listings
+(ns donkey.services.metadata.apps
   (:use [donkey.auth.user-attributes :only [current-user]])
   (:require [donkey.clients.metadactyl :as metadactyl]
             [donkey.util.config :as config]

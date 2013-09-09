@@ -5,7 +5,7 @@
         [donkey.util.service]
         [donkey.util])
   (:require [donkey.util.config :as config]
-            [donkey.services.metadata.app-listings :as app-listings]
+            [donkey.services.metadata.apps :as apps]
             [donkey.services.jex :as jex]))
 
 (defn secured-metadata-routes
@@ -50,13 +50,13 @@
         (trap #(search-apps req)))
 
    (GET "/app-groups" []
-        (trap #(app-listings/get-only-app-groups)))
+        (trap #(apps/get-only-app-groups)))
 
    (GET "/get-analyses-in-group/:app-group-id" [app-group-id]
-        (trap #(app-listings/apps-in-group app-group-id)))
+        (trap #(apps/apps-in-group app-group-id)))
 
    (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
-        (trap #(app-listings/apps-in-group app-group-id)))
+        (trap #(apps/apps-in-group app-group-id)))
 
    (GET "/get-components-in-analysis/:app-id" [app-id :as req]
         (trap #(list-deployed-components-in-app req app-id)))
