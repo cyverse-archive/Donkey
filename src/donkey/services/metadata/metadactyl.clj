@@ -113,13 +113,6 @@
   (let [url (build-metadactyl-secured-url req "template" app-id)]
     (forward-get url req)))
 
-(defn get-app-new-format
-  "This service gets an app in the format required by the DE as of version 1.8."
-  [req app-id]
-  (forward-get
-   (build-metadactyl-secured-url req "app" app-id)
-   req))
-
 (defn get-public-app-groups
   "Retrieves the list of public app groups."
   [req]
