@@ -54,6 +54,12 @@
       (catch IllegalStateException e (failure-response e))
       (catch Throwable t (error-response t)))))
 
+(defn req-logger
+  [handler]
+  (fn [req]
+    (log/info "Request received:" req)
+    (handler req)))
+
 (defn as-vector
   "Returns the given parameter inside a vector if it's not a vector already."
   [p]

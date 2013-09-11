@@ -100,6 +100,7 @@
   (-> (delayed-handler donkey-routes)
     (wrap-multipart-params {:store fileio/store-irods})
     trap-handler
+    req-logger
     wrap-keyword-params
     wrap-lcase-params
     wrap-query-params))
