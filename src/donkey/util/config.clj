@@ -20,7 +20,7 @@
 (defn masked-config
   "Returns a masked version of the Donkey config as a map."
   []
-  (cc/mask-config props :filters [#"irods-pass" #"irods.pass" #"irods.user"]))
+  (cc/mask-config props :filters [#"(?:irods|agave)[-.](?:user|pass)"]))
 
 (cc/defprop-int listen-port
   "The port that donkey listens to."
@@ -113,6 +113,11 @@
   [props config-valid configs]
   "donkey.features.agave.jobs" false)
 
+(cc/defprop-optboolean rabbitmq-enabled
+  "Enables or disables RabbitMQ connection."
+  [props config-valid configs]
+  "donkey.features.rabbitmq" false)
+
 (cc/defprop-optboolean log-runtimes
   "Enables or disables the logging of runtimes for endpoints that support it."
   [props config-valid configs]
@@ -198,6 +203,38 @@
   "The base URL for the JEX."
   [props config-valid configs metadata-routes-enabled]
   "donkey.jex.base-url")
+
+;;;RabbitMQ connection information
+(cc/defprop-str rabbitmq-host
+  "The hostname for RabbitMQ"
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.host")
+
+(cc/defprop-int rabbitmq-port
+  "The port for RabbitMQ"
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.port")
+
+(cc/defprop-str rabbitmq-user
+  "The username for RabbitMQ"
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.user")
+
+(cc/defprop-str rabbitmq-pass
+  "The password for RabbitMQ"
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.pass")
+
+(cc/defprop-str rabbitmq-exchange
+  "The exchange to listen to for iRODS updates."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.exchange")
+
+(cc/defprop-str rabbitmq-dataobject-topic
+  "The topic to listen to for data-object updates"
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.dataobject-topic")
+;;;End RabbitMQ connection information
 
 ;;;iRODS connection information
 (cc/defprop-str irods-home
@@ -388,6 +425,16 @@
   "The base URL to use when connecting to Agave."
   [props config-valid configs agave-enabled]
   "donkey.agave.base-url")
+
+(cc/defprop-str agave-user
+  "The username to use when authenticating to Agave."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.user")
+
+(cc/defprop-str agave-pass
+  "The password to use when authenticating to Agave."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.pass")
 
 (cc/defprop-str default-output-dir
   "The default name of the default job output directory."

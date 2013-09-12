@@ -1,6 +1,7 @@
 (defproject donkey "1.3.5-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 [com.novemberain/langohr "1.4.0"]
                  [org.clojure/core.memoize "0.5.3"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/data.codec "0.1.0"]
@@ -11,6 +12,7 @@
                   :exclusions [[xerces/xmlParserAPIs]
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
                  [org.iplantc/clojure-commons "1.4.5-SNAPSHOT"]
+                 [org.iplantc/mescal "0.1.0-SNAPSHOT"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
@@ -25,7 +27,8 @@
                  [hoot "0.1.0-SNAPSHOT"]
                  [com.novemberain/validateur "1.4.0"]
                  [xerces/xercesImpl "2.11.0"]
-                 [commons-net "3.3"]]
+                 [commons-net "3.3"]
+                 [org.clojure/tools.nrepl "0.2.3"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
             [lein-ring "0.7.4"]
             [swank-clojure "1.4.2"]]
@@ -33,7 +36,7 @@
   :aot [donkey.core]
   :main donkey.core
   :ring {:handler donkey.core/app
-         :init donkey.core/load-configuration-from-file
+         :init donkey.core/lein-ring-init
          :port 31325}
   :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
                :provides "donkey"

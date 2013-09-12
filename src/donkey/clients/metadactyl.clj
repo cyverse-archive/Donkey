@@ -34,3 +34,11 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn get-app
+  [app-id]
+  (-> (client/get (secured-url "app" app-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))

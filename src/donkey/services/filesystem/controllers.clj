@@ -97,7 +97,7 @@
             home-f     (future (dir-list user (get-home-dir user) inc-files))]
         {:roots [@home-f @comm-f @share-f]})
 
-      (= (utils/add-trailing-slash (:path params)) (irods-home))
+      (= (utils/add-trailing-slash (:path params)) (utils/add-trailing-slash (irods-home)))
       (irods-actions/shared-root-listing
         (:user params)
         (irods-home)
