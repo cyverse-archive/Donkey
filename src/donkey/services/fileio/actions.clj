@@ -77,33 +77,34 @@
   (string/join "." (drop-last (string/split (ft/basename tmp-path) #"\."))))
 
 (defn upload
-  [user tmp-path final-path]
-  (log/info "In upload for " user tmp-path final-path)
-  (with-jargon (jargon-cfg) [cm]
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
-
-    (when-not (exists? cm final-path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :id final-path}))
-
-    (when-not (is-writeable? cm user final-path)
-      (throw+ {:error_code ERR_NOT_WRITEABLE
-               :id final-path}))
-
-    (let [new-fname (new-filename tmp-path)
-          new-path  (ft/path-join final-path new-fname)]
-      (if (exists? cm new-path) (delete cm new-path))
-      (move cm tmp-path new-path :user user :admin-users (irods-admins) :skip-source-perms? true)
-      (set-owner cm new-path user)
-      {:file 
-       {:id new-path
-        :label         (ft/basename new-path)
-        :permissions   (dataobject-perm-map cm user new-path)
-        :date-created  (created-date cm new-path)
-        :date-modified (lastmod-date cm new-path)
-        :file-size     (str (file-size cm new-path))}})))
+  [user tmp-path fpath]
+  (log/info "In upload for " user tmp-path fpath)
+  (let [final-path (ft/rm-last-slash fpath)] 
+    (with-jargon (jargon-cfg) [cm]
+      (when-not (user-exists? cm user)
+        (throw+ {:error_code ERR_NOT_A_USER
+                 :user user}))
+      
+      (when-not (exists? cm final-path)
+        (throw+ {:error_code ERR_DOES_NOT_EXIST
+                 :id final-path}))
+      
+      (when-not (is-writeable? cm user final-path)
+        (throw+ {:error_code ERR_NOT_WRITEABLE
+                 :id final-path}))
+      
+      (let [new-fname (new-filename tmp-path)
+            new-path  (ft/path-join final-path new-fname)]
+        (if (exists? cm new-path) (delete cm new-path))
+        (move cm tmp-path new-path :user user :admin-users (irods-admins) :skip-source-perms? true)
+        (set-owner cm new-path user)
+        {:file 
+         {:id new-path
+          :label         (ft/basename new-path)
+          :permissions   (dataobject-perm-map cm user new-path)
+          :date-created  (created-date cm new-path)
+          :date-modified (lastmod-date cm new-path)
+          :file-size     (str (file-size cm new-path))}}))))
 
 (defn url-encoded?
   [string-to-check]
