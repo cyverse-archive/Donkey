@@ -27,7 +27,8 @@
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
-            [donkey.services.fileio.controllers :as fileio]))
+            [donkey.services.fileio.controllers :as fileio]
+            [clojure.tools.nrepl.server :as nrepl]))
 
 (defn- flagged-routes
   [& handlers]
@@ -69,10 +70,19 @@
 
    (route/not-found (unrecognized-path-response))))
 
+(defn start-nrepl
+  []
+  (nrepl/start-server :port 7888))
+
 (defn load-configuration-from-file
   "Loads the configuration properties from a file."
   []
   (config/load-config-from-file))
+
+(defn lein-ring-init
+  []
+  (load-configuration-from-file)
+  (start-nrepl))
 
 (defn load-configuration-from-zookeeper
   "Loads the configuration properties from Zookeeper."
@@ -90,6 +100,7 @@
   (-> (delayed-handler donkey-routes)
     (wrap-multipart-params {:store fileio/store-irods})
     trap-handler
+    req-logger
     wrap-keyword-params
     wrap-lcase-params
     wrap-query-params))
@@ -108,4 +119,5 @@
   (load-configuration-from-zookeeper)
   (register-specific-queries)
   (log/warn "Listening on" (config/listen-port))
+  (start-nrepl)
   (jetty/run-jetty app {:port (config/listen-port)}))
