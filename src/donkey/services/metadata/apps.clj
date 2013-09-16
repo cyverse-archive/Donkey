@@ -5,8 +5,9 @@
             [donkey.util.service :as service]
             [mescal.de :as agave]))
 
-(def ^:private uuid-regex
-  #"^\p{XDigit}{8}(?:-\p{XDigit}{4}){3}-\p{XDigit}{12}$")
+(def ^:private uuid-regexes
+  [#"^\p{XDigit}{8}(?:-\p{XDigit}{4}){3}-\p{XDigit}{12}$"
+   #"^[at]\p{XDigit}{32}"])
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
@@ -33,7 +34,7 @@
       (.listPublicApps agave-client)
       (metadactyl/apps-in-group group-id)))
   (getApp [this app-id]
-    (if (re-find uuid-regex app-id)
+    (if (some #(re-find % app-id) uuid-regexes)
       (metadactyl/get-app app-id)
       (.getApp agave-client app-id))))
 
