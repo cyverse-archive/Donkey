@@ -50,3 +50,11 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn app-publishable?
+  [app-id]
+  (-> (client/get (secured-url "is-publishable" app-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))

@@ -91,6 +91,7 @@
 * [GET /secured/filetypes/type/paths](endpoints/filetypes.md#look-up-paths-in-a-users-home-directory-based-on-file-type-)
 * [GET /secured/get-analyses-in-group/{group-id}](endpoints/app-metadata.md#listing-analyses-in-an-analysis-group)
 * [GET /secured/get-components-in-analysis/{analysis-id}](endpoints/app-metadata.md#listing-deployed-components-in-an-analysis)
+* [GET /secured/is-publishable/{analysis-id}](endpoints/app-metadata.md#determining-if-an-analysis-can-be-made-public)
 * [GET /secured/list-analyses-for-pipeline/{group-id}](endpoints/app-metadata.md#listing-analyses-that-may-be-included-in-a-pipeline)
 * [GET /secured/logout](endpoints/misc.md#recording-when-a-user-logs-out)
 * [POST /secured/make-analysis-public](endpoints/app-metadata.md#submitting-an-analysis-for-public-use)
