@@ -42,3 +42,11 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn admin-list-tool-requests
+  [params]
+  (-> (client/get (unsecured-url "tool-requests")
+                  {:query-params (secured-params params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))

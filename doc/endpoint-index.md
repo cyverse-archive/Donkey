@@ -151,6 +151,7 @@
 * [POST /send-notification.](endpoints/notifications.md#sending-an-arbitrary-notification)
 * [POST /tool-request](endpoints/app-metadata.md#updating-a-tool-installation-request-administrator)
 * [GET /tool-request/{tool-request-id}](endpoints/app-metadata.md#listing-tool-installation-request-details)
+* [GET /tool-requests](endpoints/app-metadata.md#listing-tool-installation-requests)
 * [POST /tree-viewer-urls](endpoints/tree-viewing.md#obtaining-tree-viewer-urls-for-a-post-body)
 * [POST /update-analysis](endpoints/app-metadata.md#updating-top-level-analysis-information)
 * [POST /update-app-labels](endpoints/app-metadata.md#updating-app-labels)

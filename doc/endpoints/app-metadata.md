@@ -579,7 +579,7 @@ Secured Endpoint: POST /secured/tool-request
 Delegates to metadactyl: POST /secured/tool-request
 
 This service is a passthrough to the metadactyl endpoint using the same
-path. Please se the metadactyl documentation for more details.
+path. Please see the metadactyl documentation for more details.
 
 ## Updating a Tool Installation Request (Administrator)
 
@@ -594,12 +594,16 @@ documentation for more details.
 
 ## Listing Tool Installation Requests
 
+Unsecured Endpoint: GET /tool-requests
+
+Delegates to metadactyl: GET /tool-requests
+
 Secured Endpoint: GET /secured/tool-requests
 
 Delegates to metadactyl: GET /secured/tool-requests
 
-This service is a passthrough to the metadactyl endpoint using the same
-path. Please se the metadactyl documentation for more details.
+These services are passthroughs to the metadactyl endpoints using the same path.
+Please see the metadactyl documentation for more details.
 
 ## Listing Tool Installation Request Details
 
@@ -608,4 +612,4 @@ Unsecured Endpoint: GET /tool-request/{tool-request-id}
 Delegates to metadactyl: GET /tool-request/{tool-request-id}
 
 This service is a passthrough to the metadactyl endpoint using the same
-path. Please se the metadactyl documentation for more details.
+path. Please see the metadactyl documentation for more details.

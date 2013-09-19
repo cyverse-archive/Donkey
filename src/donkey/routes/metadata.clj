@@ -225,5 +225,8 @@
    (GET "/tool-request/:uuid" [uuid :as req]
         (trap #(get-tool-request req uuid)))
 
+   (GET "/tool-requests" [:as {params :params}]
+        (trap #(admin-list-tool-requests params)))
+
    (POST "/arg-preview" [:as req]
          (trap #(preview-args req)))))
