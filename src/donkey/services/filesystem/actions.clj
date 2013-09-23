@@ -254,6 +254,7 @@
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-readable cm user path)
+    (validators/path-is-dir cm path)
     
     (when-not (contains? #{"NAME" "PATH" "LASTMOD" "CREATED" "SIZE"} sort-col)
       (log/warn "invalid sort column" sort-col)
@@ -274,7 +275,7 @@
           :hasSubDirs    true
           :date-created  (:created stat)
           :date-modified (:modified stat)
-          :file-size     (:size stat))
+          :file-size     0)
         (page->map (ll/paged-list-entries cm user path sort-col sort-order limit offset))))))
 
 (defn root-listing
