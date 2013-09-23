@@ -10,7 +10,8 @@
             [donkey.services.filesystem.riak :as riak]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.garnish.irods :as filetypes]
-            [ring.util.codec :as cdc])
+            [ring.util.codec :as cdc]
+            [clj-jargon.lazy-listings :as ll])
   (:use [clj-jargon.jargon :exclude [init list-dir] :as jargon]
         [clojure-commons.error-codes]
         [donkey.util.config]
@@ -216,6 +217,65 @@
         (validators/path-readable cm user path)
 
         (gen-listing cm user path filter-files include-files)))))
+
+(defn- page-entry->map
+  "Turns a entry in a paged listing result into a map containing file/directory
+   information that can be consumed by the front-end."
+  [page-entry]
+  (let [[id label size created lastmod perm-val entry-type] page-entry
+        base-map {:id            id
+                  :label         label
+                  :file-size     (Integer/parseInt size)
+                  :date-created  (str (* (Integer/parseInt created) 1000))
+                  :date-modified (str (* (Integer/parseInt lastmod) 1000))
+                  :permissions   (perm-map-for perm-val)}]
+    (if (= entry-type "dataobject")
+      base-map
+      (merge base-map {:hasSubDirs true
+                       :file-size  0}))))
+
+(defn- page->map
+  "Transforms an entire page of results for a paged listing in a map that
+   can be returned to the client."
+  [page]
+  (let [entry-types (group-by #(last %) page)
+        do          (get entry-types "dataobject")
+        collections (get entry-types "collection")]
+    {:files   (mapv page-entry->map do)
+     :folders (mapv page-entry->map collections)}))
+
+(defn paged-dir-listing
+  "Provides paged directory listing as an alternative to (list-dir). Always contains files."
+  [user path limit offset & {:keys [sort-col sort-order] 
+                             :or {:sort-col   "NAME" 
+                                  :sort-order "ASC"}}]
+  (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
+  (with-jargon (jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/path-exists cm path)
+    (validators/path-readable cm user path)
+    
+    (when-not (contains? #{"NAME" "PATH" "LASTMOD" "CREATED" "SIZE"} sort-col)
+      (log/warn "invalid sort column" sort-col)
+      (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
+               :column sort-col}))
+    
+    (when-not (contains? #{"ASC" "DESC"} sort-order)
+      (log/warn "invalid sort order" sort-order)
+      (throw+ {:error_code "ERR_INVALID_SORT_ORDER"
+               :sort-order sort-order}))
+    
+    (let [stat (stat cm path)]
+      (merge
+        (hash-map
+          :id            path
+          :label         (id->label cm user path)
+          :permissions   (collection-perm-map cm user path)
+          :hasSubDirs    true
+          :date-created  (:created stat)
+          :date-modified (:modified stat)
+          :file-size     (:size stat))
+        (page->map (ll/paged-list-entries cm user path sort-col sort-order limit offset))))))
 
 (defn root-listing
   ([user root-path]

@@ -35,6 +35,9 @@
     (GET "/filesystem/directory" [:as req]
          (trap #(do-directory (:params req))))
     
+    (GET "/filesystem/paged-directory" [:as req]
+         (trap #(do-paged-listing (:params req))))
+    
     (POST "/filesystem/directory/create" [:as req]
           (trap #(do-create (:params req) (:body req))))
     

@@ -622,3 +622,18 @@
           path (:path body)
           pos  (Long/parseLong (:position body))]
       (irods-actions/overwrite-file-chunk user path pos (:update body)))))
+
+(defn do-paged-listing
+  [req-params]
+  (log/debug "do-paged-listing")
+  
+  (let [params (add-current-user-to-map req-params)]
+    (validate-map params {:user string? :path string? :limit string? :offset string?})
+    
+    (let [user       (:user params)
+          path       (:path params)
+          limit      (Integer/parseInt (:limit params))
+          offset     (Integer/parseInt (:offset params))
+          sort-col   (if (contains? params :sort-col) (:sort-col params) "NAME")
+          sort-order (if (contains? params :sort-order) (:sort-order params) "ASC")]
+      (irods-actions/paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order))))
