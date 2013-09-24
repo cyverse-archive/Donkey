@@ -184,36 +184,37 @@
      address - string containing the URL of the file to be imported.
      filename - the filename of the file being imported.
      dest-path - irods path indicating the directory the file should go in."
-  [user address filename dest-path]
-  (with-jargon (jargon-cfg) [cm]
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user       user}))
-
-    (when-not (is-writeable? cm user dest-path)
-      (throw+ {:error_code ERR_NOT_WRITEABLE
-               :user       user
-               :path       dest-path}))
-
-    (when (exists? cm (ft/path-join dest-path filename))
-      (throw+ {:error_code ERR_EXISTS
-               :path (ft/path-join dest-path filename)}))
-
-    (let [decoded-filename (if (url-encoded? filename) 
-                             (url/url-decode filename) filename)
-          req-body         (jex-urlimport user address decoded-filename dest-path)
-          {jex-status :status jex-body :body} (jex-send req-body)]
-      (log/warn "Status from JEX: " jex-status)
-      (log/warn "Body from JEX: " jex-body)
-
-      (when (not= jex-status 200)
-        (throw+ {:msg        jex-body
-                 :error_code ERR_REQUEST_FAILED}))
-
-      {:msg    "Upload scheduled."
-       :url    address
-       :label  decoded-filename
-       :dest   dest-path})))
+  [user address filename orig-dest-path]
+  (let [dest-path (ft/rm-last-slash orig-dest-path)]
+    (with-jargon (jargon-cfg) [cm]
+      (when-not (user-exists? cm user)
+        (throw+ {:error_code ERR_NOT_A_USER
+                 :user       user}))
+      
+      (when-not (is-writeable? cm user dest-path)
+        (throw+ {:error_code ERR_NOT_WRITEABLE
+                 :user       user
+                 :path       dest-path}))
+      
+      (when (exists? cm (ft/path-join dest-path filename))
+        (throw+ {:error_code ERR_EXISTS
+                 :path (ft/path-join dest-path filename)}))
+      
+      (let [decoded-filename (if (url-encoded? filename) 
+                               (url/url-decode filename) filename)
+            req-body         (jex-urlimport user address decoded-filename dest-path)
+            {jex-status :status jex-body :body} (jex-send req-body)]
+        (log/warn "Status from JEX: " jex-status)
+        (log/warn "Body from JEX: " jex-body)
+        
+        (when (not= jex-status 200)
+          (throw+ {:msg        jex-body
+                   :error_code ERR_REQUEST_FAILED}))
+        
+        {:msg    "Upload scheduled."
+         :url    address
+         :label  decoded-filename
+         :dest   dest-path}))))
 
 (defn download
   "Returns a response map filled out with info that lets the client download
