@@ -286,7 +286,9 @@
      (format-call "move-paths" user sources dest)
      (let [path-list  (conj sources dest)
            all-paths  (apply merge (mapv #(hash-map (source->dest %1 dest) %1) sources))
-           dest-paths (keys all-paths)]
+           dest-paths (keys all-paths)
+           sources    (mapv ft/rm-last-slash sources)
+           dest       (ft/rm-last-slash dest)]
        (validators/user-exists cm user)
        (validators/all-paths-exist cm sources)
        (validators/all-paths-exist cm [dest])
@@ -304,17 +306,19 @@
     (log-rulers
      cm [user]
      (format-call "rename-path" user source dest)
-     (validators/user-exists cm user)
-     (validators/path-exists cm source)
-     (validators/user-owns-path cm user source)
-     (validators/path-not-exists cm dest)
+     (let [source (ft/rm-last-slash source)
+           dest   (ft/rm-last-slash dest)] 
+       (validators/user-exists cm user)
+       (validators/path-exists cm source)
+       (validators/user-owns-path cm user source)
+       (validators/path-not-exists cm dest)
 
-     (let [result (move cm source dest :user user :admin-users (irods-admins))]
-       (when-not (nil? result)
-         (throw+ {:error_code ERR_INCOMPLETE_RENAME
-                  :paths result
-                  :user user}))
-       {:source source :dest dest :user user}))))
+       (let [result (move cm source dest :user user :admin-users (irods-admins))]
+         (when-not (nil? result)
+           (throw+ {:error_code ERR_INCOMPLETE_RENAME
+                    :paths result
+                    :user user}))
+         {:source source :dest dest :user user})))))
 
 (defn- preview-buffer
   [cm path size]
@@ -981,26 +985,28 @@
       (log-rulers
        cm [user]
        (format-call "delete-paths" user paths)
-       (validators/user-exists cm user)
-       (validators/all-paths-exist cm paths)
-       (validators/user-owns-paths cm user paths)
-
-       (when (some true? (mapv home-matcher paths))
-         (throw+ {:error_code ERR_NOT_AUTHORIZED
-                  :paths (filterv home-matcher paths)}))
-
-       (doseq [p paths]
-         (log/debug "path" p)
-         (log/debug "readable?" user (owns? cm user p))
-         (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
-           (doseq [path-ticket path-tickets]
-             (delete-ticket cm (:username cm) path-ticket)))
-
-         (if-not (.startsWith p (user-trash-dir cm user))
-           (move-to-trash cm p user)
-           (delete cm p)))
-
-       {:paths paths}))))
+       (let [paths (mapv ft/rm-last-slash paths)] 
+         (validators/user-exists cm user)
+         (validators/all-paths-exist cm paths)
+         (validators/user-owns-paths cm user paths)
+         
+         (when (some true? (mapv home-matcher paths))
+           (throw+ {:error_code ERR_NOT_AUTHORIZED
+                    :paths (filterv home-matcher paths)}))
+         
+         (doseq [p paths]
+           (log/debug "path" p)
+           (log/debug "readable?" user (owns? cm user p))
+           
+           (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
+             (doseq [path-ticket path-tickets]
+               (delete-ticket cm (:username cm) path-ticket)))
+           
+           (if-not (.startsWith p (user-trash-dir cm user))
+             (move-to-trash cm p user)
+             (delete cm p)))
+         
+         {:paths paths})))))
 
 (defn trash-origin-path
   [cm user p]
@@ -1047,36 +1053,37 @@
     (log-rulers
      cm [user]
      (format-call "restore-path" :user user :paths paths :user-trash user-trash)
-     (validators/user-exists cm user)
-     (validators/all-paths-exist cm paths)
-     (validators/all-paths-writeable cm user paths)
-
-     (let [retval (atom (hash-map))]
-       (doseq [path paths]
-         (let [fully-restored      (restoration-path cm user path)
-               restored-to-homedir (restore-to-homedir? cm path)]
-           (log/warn "Restoring " path " to " fully-restored)
-
-           (validators/path-not-exists cm fully-restored)
-           (log/warn fully-restored " does not exist. That's good.")
-
-           (restore-parent-dirs cm user fully-restored)
-           (log/warn "Done restoring parent dirs for " fully-restored)
-
-           (validators/path-writeable cm user (ft/dirname fully-restored))
-           (log/warn fully-restored "is writeable. That's good.")
-
-           (log/warn "Moving " path " to " fully-restored)
-           (validators/path-not-exists cm fully-restored)
-
-           (log/warn fully-restored " does not exist. That's good.")
-           (move cm path fully-restored :user user :admin-users (irods-admins))
-           (log/warn "Done moving " path " to " fully-restored)
-
-           (reset! retval
-                   (assoc @retval path {:restored-path fully-restored
-                                        :partial-restore restored-to-homedir}))))
-       {:restored @retval}))))
+     (let [paths (mapv ft/rm-last-slash paths)] 
+       (validators/user-exists cm user)
+       (validators/all-paths-exist cm paths)
+       (validators/all-paths-writeable cm user paths)
+       
+       (let [retval (atom (hash-map))]
+         (doseq [path paths]
+           (let [fully-restored      (ft/rm-last-slash (restoration-path cm user path))
+                 restored-to-homedir (restore-to-homedir? cm path)]
+             (log/warn "Restoring " path " to " fully-restored)
+             
+             (validators/path-not-exists cm fully-restored)
+             (log/warn fully-restored " does not exist. That's good.")
+             
+             (restore-parent-dirs cm user fully-restored)
+             (log/warn "Done restoring parent dirs for " fully-restored)
+             
+             (validators/path-writeable cm user (ft/dirname fully-restored))
+             (log/warn fully-restored "is writeable. That's good.")
+             
+             (log/warn "Moving " path " to " fully-restored)
+             (validators/path-not-exists cm fully-restored)
+             
+             (log/warn fully-restored " does not exist. That's good.")
+             (move cm path fully-restored :user user :admin-users (irods-admins))
+             (log/warn "Done moving " path " to " fully-restored)
+             
+             (reset! retval
+                     (assoc @retval path {:restored-path fully-restored
+                                          :partial-restore restored-to-homedir}))))
+         {:restored @retval})))))
 
 (defn copy-path
   ([copy-map]
