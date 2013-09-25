@@ -91,6 +91,9 @@
    (POST "/make-analysis-public" [:as req]
          (trap #(make-app-public req)))
 
+   (GET "/is-publishable/:app-id" [app-id]
+        (trap #(app-publishable? app-id)))
+
    (GET "/default-output-dir" []
         (trap #(get-default-output-dir)))
 
@@ -224,6 +227,9 @@
 
    (GET "/tool-request/:uuid" [uuid :as req]
         (trap #(get-tool-request req uuid)))
+
+   (GET "/tool-requests" [:as {params :params}]
+        (trap #(admin-list-tool-requests params)))
 
    (POST "/arg-preview" [:as req]
          (trap #(preview-args req)))))

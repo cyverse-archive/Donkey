@@ -35,10 +35,10 @@
 
    If a response map is passed in, it is preserved.
 
-   If a response map is passed in and is missing the content-type field, 
+   If a response map is passed in and is missing the content-type field,
    then the content-type is set to application/json.
 
-   If it's a map but not a response map, then the :success field is merged in, 
+   If it's a map but not a response map, then the :success field is merged in,
    then is JSON encoded, and it is finally used as the body of the response.
 
    Otherwise, the value is preserved and is wrapped in a response map."

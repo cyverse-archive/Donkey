@@ -42,3 +42,19 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn admin-list-tool-requests
+  [params]
+  (-> (client/get (unsecured-url "tool-requests")
+                  {:query-params (secured-params params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn app-publishable?
+  [app-id]
+  (-> (client/get (secured-url "is-publishable" app-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
