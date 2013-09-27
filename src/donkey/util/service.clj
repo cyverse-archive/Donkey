@@ -46,10 +46,11 @@
   (cond
     (and (response-map? e)
          (not (contains? e :content-type)))
-    (merge e {:content-type :json})
+    (merge e {:headers {"Content-Type" "application/json; charset=utf-8"}})
 
     (and (response-map? e)
-         (contains? e :content-type))
+         (contains? e :headers)
+         (contains? (:headers e) "Content-Type"))
     e
 
     (and (not (response-map? e))
