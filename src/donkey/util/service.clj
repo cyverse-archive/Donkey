@@ -56,14 +56,14 @@
          (map? e))
     {:status       status-code
      :body         (cheshire/encode (merge e {:success (success? status-code)}))
-     :content-type :json}
+     :headers {"Content-Type" "application/json; charset=utf-8"}}
 
     (and (not (map? e))
          (not (success? status-code))
          (instance? Exception e))
     {:status       status-code
      :body         (error-body e)
-     :content-type :json}
+     :headers {"Content-Type" "application/json; charset=utf-8"}}
 
     :else
     {:status       status-code
