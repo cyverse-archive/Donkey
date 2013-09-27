@@ -17,7 +17,7 @@
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [cheshire "5.0.1"]
-                 [clj-http "0.6.5"]
+                 [clj-http "0.7.7"]
                  [com.cemerick/url "0.0.7"]
                  [compojure "1.0.1"]
                  [heuristomancer "0.1.1-SNAPSHOT"]

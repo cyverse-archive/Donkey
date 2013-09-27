@@ -12,6 +12,7 @@
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [donkey.clients.metadactyl :as dm]
             [donkey.clients.notifications :as dn]))
 
 (defn- secured-notification-url
@@ -510,6 +511,11 @@
   (let [url (build-metadactyl-secured-url req "make-analysis-public")]
     (forward-post url req)))
 
+(defn app-publishable?
+  "This service determines whether or not an app can safely be made public."
+  [app-id]
+  (cheshire/encode (dm/app-publishable? app-id)))
+
 (defn get-property-values
   "Gets the property values for a previously submitted job."
   [req job-id]
@@ -628,6 +634,11 @@
   (forward-get
    (build-metadactyl-secured-url req "tool-requests")
    req))
+
+(defn admin-list-tool-requests
+  "Lists the tool requests that were submitted by any user."
+  [params]
+  (success-response (dm/admin-list-tool-requests (dissoc params :proxyToken))))
 
 (defn update-tool-request
   "Updates a tool request with comments and possibly a new status."

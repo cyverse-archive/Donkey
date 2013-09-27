@@ -41,6 +41,7 @@
     * [Making an Analysis Available for Editing in Tito](#making-an-analysis-available-for-editing-in-tito)
     * [Making a Copy of an Analysis Available for Editing in Tito](#making-a-copy-of-an-analysis-available-for-editing-in-tito)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
+    * [Determining if an Analysis Can be Made Public](#determining-if-an-analysis-can-be-made-public)
     * [Making a Pipeline Available for Editing](#making-a-pipeline-available-for-editing)
     * [Making a Copy of a Pipeline Available for Editing](#making-a-copy-of-a-pipeline-available-for-editing)
     * [Requesting Installation of a Tool](#requesting-installation-of-a-tool)
@@ -542,6 +543,15 @@ Delegates to metadactyl: POST /secured/make-analysis-public
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
+## Determining if an Analysis Can be Made Public
+
+Secured Endpoint: GET /secured/is-publishable/{analysis-id}
+
+Delegates to metadactyl: GET /secured/is-publishable/{analysis-id}
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
 ## Making a Pipeline Available for Editing
 
 Secured Endpoint: GET /secured/edit-workflow/{analysis-id}
@@ -579,7 +589,7 @@ Secured Endpoint: POST /secured/tool-request
 Delegates to metadactyl: POST /secured/tool-request
 
 This service is a passthrough to the metadactyl endpoint using the same
-path. Please se the metadactyl documentation for more details.
+path. Please see the metadactyl documentation for more details.
 
 ## Updating a Tool Installation Request (Administrator)
 
@@ -594,12 +604,16 @@ documentation for more details.
 
 ## Listing Tool Installation Requests
 
+Unsecured Endpoint: GET /tool-requests
+
+Delegates to metadactyl: GET /tool-requests
+
 Secured Endpoint: GET /secured/tool-requests
 
 Delegates to metadactyl: GET /secured/tool-requests
 
-This service is a passthrough to the metadactyl endpoint using the same
-path. Please se the metadactyl documentation for more details.
+These services are passthroughs to the metadactyl endpoints using the same path.
+Please see the metadactyl documentation for more details.
 
 ## Listing Tool Installation Request Details
 
@@ -608,4 +622,4 @@ Unsecured Endpoint: GET /tool-request/{tool-request-id}
 Delegates to metadactyl: GET /tool-request/{tool-request-id}
 
 This service is a passthrough to the metadactyl endpoint using the same
-path. Please se the metadactyl documentation for more details.
+path. Please see the metadactyl documentation for more details.
