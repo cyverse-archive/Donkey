@@ -15,7 +15,8 @@
         [clojure-commons.error-codes]
         [donkey.util.config]
         [slingshot.slingshot :only [try+ throw+]])
-  (:import [org.apache.tika Tika]))
+  (:import [org.apache.tika Tika]
+           [au.com.bytecode.opencsv CSVReader]))
 
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
@@ -1298,3 +1299,56 @@
       :start      (str position)
       :chunk-size (str (count (.getBytes update-string)))
       :file-size  (str (file-size cm path))})))
+
+(defn trim-to-line-start
+  [str-chunk line-ending]
+  (.substring str-chunk (+ (.indexOf str-chunk line-ending) 1)))
+
+(defn calc-start-pos
+  "Calculates the new start position after (trim-to-line-start) has been called."
+  [start-pos orig-chunk trimmed-chunk]
+  (+ start-pos (- (count (.getBytes orig-chunk)) (count (.getBytes trimmed-chunk)))))
+
+(defn trim-to-last-line
+  [str-chunk line-ending]
+  (let [calced-pos (- (.lastIndexOf str-chunk line-ending) 1)
+        last-pos   (if-not (pos? calced-pos) 1 calced-pos)]
+    (.substring str-chunk 0 last-pos)))
+
+(defn calc-end-pos
+  "Calculates the new ending byte based on the start position and the current size of the chunk."
+  [start-pos trimmed-chunk]
+  (+ start-pos (- (count (.getBytes trimmed-chunk)) 1)))
+
+(defn read-csv
+  [csv-str]
+  (let [ba  (java.io.ByteArrayInputStream. (.getBytes csv-str))
+        isr (java.io.InputStreamReader. ba "UTF-8")]
+    (mapv vec (.readAll (CSVReader. isr)))))
+
+(defn read-csv-chunk
+  "Reads a chunk of a file and parses it as a CSV. The position and chunk-size are not guaranteed, since
+   we shouldn't try to parse partial rows. We scan forward from the starting position to find the first
+   line-ending and then scan backwards from the last position for the last line-ending."
+  [user path position chunk-size line-ending]
+  (with-jargon (jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/path-exists cm path)
+    (validators/path-is-file cm path)
+    (validators/path-readable cm user path)
+    
+    (when-not (contains? #{"\r\n" "\n"} line-ending)
+      (throw+ {:error_code "ERR_INVALID_LINE_ENDING"
+               :line-ending line-ending}))
+    
+    (let [chunk         (read-at-position cm path position chunk-size)
+          #_(front-trimmed (trim-to-line-start chunk line-ending))
+          #_(new-start-pos (calc-start-pos position chunk front-trimmed))
+          #_(trimmed-chunk (trim-to-last-line front-trimmed line-ending))
+          #_(new-end-pos   (calc-end-pos position trimmed-chunk))] 
+      {:path       path
+       :user       user
+       :start      (str position)
+       :chunk-size (str (count (.getBytes chunk)))
+       :file-size  (str (file-size cm path))
+       :csv        (read-csv chunk)})))

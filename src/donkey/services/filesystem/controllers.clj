@@ -622,3 +622,19 @@
           path (:path body)
           pos  (Long/parseLong (:position body))]
       (irods-actions/overwrite-file-chunk user path pos (:update body)))))
+
+(defn do-read-csv-chunk
+  [req-params req-body]
+  (log/debug "do-read-csv-chunk")
+  
+  (let [params (add-current-user-to-map req-params)
+        body   (parse-body (slurp req-body))]
+    (validate-map params {:user string?})
+    (validate-map body {:path string? :position string? :chunk-size string? :line-ending string?})
+    
+    (let [user   (:user params)
+          path   (:path body)
+          ending (:line-ending body)
+          pos    (Long/parseLong (:position body))
+          size   (Long/parseLong (:chunk-size body))]
+      (irods-actions/read-csv-chunk user path pos size ending))))

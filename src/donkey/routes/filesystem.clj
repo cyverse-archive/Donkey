@@ -108,4 +108,7 @@
           (trap #(do-read-chunk (:params req) (:body req))))
     
     (POST "/filesystem/overwrite-chunk" [:as req]
-          (trap #(do-overwrite-chunk (:params req) (:body req))))))
+          (trap #(do-overwrite-chunk (:params req) (:body req))))
+    
+    (POST "/filesystem/read-csv-chunk" [:as req]
+          (trap #(do-read-csv-chunk (:params req) (:body req))))))
