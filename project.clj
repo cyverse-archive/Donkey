@@ -12,6 +12,7 @@
                   :exclusions [[xerces/xmlParserAPIs]
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
                  [org.iplantc/clojure-commons "1.4.5-SNAPSHOT"]
+                 [org.iplantc/deliminator "0.1.0-SNAPSHOT"]
                  [org.iplantc/mescal "0.1.0-SNAPSHOT"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
