@@ -1012,10 +1012,7 @@
 (defn trash-origin-path
   [cm user p]
   (if (attribute? cm p "ipc-trash-origin")
-    (let [origin-path (:value (first (get-attribute cm p "ipc-trash-origin")))]
-      (if-not (is-writeable? cm user (ft/dirname origin-path))
-        (ft/path-join (user-home-dir user) (ft/basename p))
-        origin-path))
+    (:value (first (get-attribute cm p "ipc-trash-origin")))
     (ft/path-join (user-home-dir user) (ft/basename p))))
 
 (defn restore-to-homedir?
@@ -1036,13 +1033,16 @@
 
 (defn restore-parent-dirs
   [cm user path]
-  (log/warn "restore-parent-dirs")
-  (log/warn (ft/dirname path))
+  (log/warn "restore-parent-dirs" (ft/dirname path))
+  
   (when-not (exists? cm (ft/dirname path))
     (mkdirs cm (ft/dirname path))
     (log/warn "Created " (ft/dirname path))
 
     (loop [parent (ft/dirname path)]
+      (log/warn "restoring path" parent)
+      (log/warn "user parent path" user)
+ 
       (when (and (not= parent (user-home-dir user)) (not (owns? cm user parent)))
         (log/warn (str "Restoring ownership of parent dir: " parent))
         (set-owner cm parent user)
@@ -1309,7 +1309,10 @@
 
 (defn trim-to-line-start
   [str-chunk line-ending]
-  (.substring str-chunk (+ (.indexOf str-chunk line-ending) 1)))
+  (let [line-pos (.indexOf str-chunk line-ending)]
+    (if (<= line-pos 0)
+      str-chunk
+      (.substring str-chunk (+ line-pos 1)))))
 
 (defn calc-start-pos
   "Calculates the new start position after (trim-to-line-start) has been called."
@@ -1349,13 +1352,14 @@
                :line-ending line-ending}))
     
     (let [chunk         (read-at-position cm path position chunk-size)
-          #_(front-trimmed (trim-to-line-start chunk line-ending))
-          #_(new-start-pos (calc-start-pos position chunk front-trimmed))
-          #_(trimmed-chunk (trim-to-last-line front-trimmed line-ending))
-          #_(new-end-pos   (calc-end-pos position trimmed-chunk))] 
+          front-trimmed (trim-to-line-start chunk line-ending)
+          new-start-pos (calc-start-pos position chunk front-trimmed)
+          trimmed-chunk (trim-to-last-line front-trimmed line-ending)
+          new-end-pos   (calc-end-pos position trimmed-chunk)] 
       {:path       path
        :user       user
-       :start      (str position)
-       :chunk-size (str (count (.getBytes chunk)))
+       :start      (str new-start-pos)
+       :end        (str new-end-pos)
+       :chunk-size (str (count (.getBytes trimmed-chunk)))
        :file-size  (str (file-size cm path))
-       :csv        (read-csv chunk)})))
+       :csv        (read-csv trimmed-chunk)})))
