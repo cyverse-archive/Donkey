@@ -30,6 +30,42 @@
        (contains? m :status)
        (contains? m :body)))
 
+(def ^:private default-content-type
+  "application/json; charset=utf-8")
+
+(defn- content-type-specified?
+  [e]
+  (or (contains? e :content-type)
+      (contains? (:headers e) "Content-Type")))
+
+(defn- donkey-response-from-response-map
+  [e status-code]
+  (if-not (content-type-specified? e)
+    (update-in e [:headers] assoc "Content-Type" default-content-type)
+    e))
+
+(defn- donkey-response-from-map
+  [e status-code]
+  {:status  status-code
+   :body    (cheshire/encode (assoc e :success (success? status-code)))
+   :headers {"Content-Type" default-content-type}})
+
+(defn- error-resp?
+  [e status-code]
+  (and (instance? Exception e)
+       (not (success? status-code))))
+
+(defn- donkey-response-from-exception
+  [e status-code]
+  {:status  status-code
+   :body    (error-body e)
+   :headers {"Content-Type" default-content-type}})
+
+(defn- default-donkey-response
+  [e status-code]
+  {:status status-code
+   :body   e})
+
 (defn donkey-response
   "Generates a Donkey HTTP response map based on a value and a status code.
 
@@ -44,31 +80,10 @@
    Otherwise, the value is preserved and is wrapped in a response map."
   [e status-code]
   (cond
-    (and (response-map? e)
-         (not (contains? e :content-type)))
-    (merge e {:headers {"Content-Type" "application/json; charset=utf-8"}})
-
-    (and (response-map? e)
-         (contains? e :headers)
-         (contains? (:headers e) "Content-Type"))
-    e
-
-    (and (not (response-map? e))
-         (map? e))
-    {:status       status-code
-     :body         (cheshire/encode (merge e {:success (success? status-code)}))
-     :headers {"Content-Type" "application/json; charset=utf-8"}}
-
-    (and (not (map? e))
-         (not (success? status-code))
-         (instance? Exception e))
-    {:status       status-code
-     :body         (error-body e)
-     :headers {"Content-Type" "application/json; charset=utf-8"}}
-
-    :else
-    {:status       status-code
-     :body         e}))
+   (response-map? e)           (donkey-response-from-response-map e status-code)
+   (map? e)                    (donkey-response-from-map e status-code)
+   (error-resp? e status-code) (donkey-response-from-exception e status-code)
+   :else                       (default-donkey-response e status-code)))
 
 (defn success-response
   ([]
