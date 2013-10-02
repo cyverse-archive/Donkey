@@ -23,18 +23,34 @@
   [connection]
   (lch/open connection))
 
+(defn exchange?
+  [channel exchange]
+  (try
+    (le/declare-passive channel exchange)
+    true
+    (catch java.io.IOException _ false)))
+
+(defn queue?
+  [channel queue]
+  (try
+    (lq/declare-passive channel queue)
+    true
+    (catch java.io.IOException _ false)))
+
 (defn declare-exchange
   [channel exchange type & {:keys [durable auto-delete]
-                            :or {durable false
+                            :or {durable     false
                                  auto-delete false}}]
-  (le/declare channel exchange type :durable durable :auto-delete auto-delete)
+  (when-not (exchange? channel exchange)
+    (le/declare channel exchange type :durable durable :auto-delete auto-delete))
   channel)
 
 (defn declare-queue
   [channel queue & {:keys [exclusive auto-delete] 
-                    :or {exclusive false 
-                         auto-delete false}}]
-  (lq/declare channel queue :exclusive exclusive :auto-delete auto-delete)
+                    :or   {exclusive   false 
+                           auto-delete false}}]
+  (when-not (queue? channel queue)
+    (lq/declare channel queue :exclusive exclusive :auto-delete auto-delete))
   channel)
 
 (defn bind
@@ -48,7 +64,7 @@
 
 (defn subscribe
   [channel queue msg-fn & {:keys [auto-ack]
-                           :or {auto-ack true}}]
+                           :or   {auto-ack true}}]
   (lc/subscribe channel queue msg-fn :auto-ack true)
   channel)
 
@@ -72,48 +88,49 @@
   (and (not (nil? chan))
        (rmq/open? chan)))
 
-(defn setup-connection
-  "Sets the amqp-conn ref if necessary and returns it. Must be called within (dosync)."
+(defn get-connection
+  "Sets the amqp-conn ref if necessary and returns it."
   []
   (if (connection-okay? @amqp-conn)
     @amqp-conn
-    (ref-set amqp-conn (connection (connection-map)))))
-
-(defn setup-channel
-  "Sets the amqp-channel ref if necessary and returns it. Must be called within (dosync)."
-  [conn]
-  (if (channel-okay? @amqp-channel)
-    @amqp-channel
-    (ref-set amqp-channel (channel conn))))
+    (dosync (ref-set amqp-conn (connection (connection-map))))))
 
 (defn get-channel
+  "Sets the amqp-channel ref if necessary and returns it."
+  []
+  (if (channel-okay? @amqp-channel)
+    @amqp-channel
+    (dosync (ref-set amqp-channel (channel (get-connection))))))
+
+(defn configure
   [msg-fn]
-  (dosync
-    (let [conn (setup-connection)
-          chan (setup-channel conn)]
-      (-> @amqp-channel
-        (declare-exchange 
-          (cfg/rabbitmq-exchange) 
-          (cfg/rabbitmq-exchange-type)
-          :durable (cfg/rabbitmq-exchange-durable?)
-          :auto-delete (cfg/rabbitmq-exchange-auto-delete?))
-        (declare-queue
-          (cfg/rabbitmq-queue)
-          :exclusive (cfg/rabbitmq-queue-exclusive?)
-          :auto-delete (cfg/rabbitmq-queue-auto-delete?))
-        (bind (cfg/rabbitmq-queue) (cfg/rabbitmq-exchange))
-        (subscribe
-          (cfg/rabbitmq-queue)
-          msg-fn
-          :auto-ack (cfg/rabbitmq-msg-auto-ack?))))))
+  (let [conn (get-connection)
+        chan (get-channel)]
+    (-> @amqp-channel
+      (declare-exchange 
+        (cfg/rabbitmq-exchange) 
+        (cfg/rabbitmq-exchange-type)
+        :durable     (cfg/rabbitmq-exchange-durable?)
+        :auto-delete (cfg/rabbitmq-exchange-auto-delete?))
+      
+      (declare-queue
+        (cfg/rabbitmq-queue)
+        :exclusive   (cfg/rabbitmq-queue-exclusive?)
+        :auto-delete (cfg/rabbitmq-queue-auto-delete?))
+      
+      (bind (cfg/rabbitmq-queue) (cfg/rabbitmq-exchange))
+      
+      (subscribe (cfg/rabbitmq-queue) msg-fn :auto-ack (cfg/rabbitmq-msg-auto-ack?)))))
 
 (defn conn-monitor
-  "Starts an infinite loop that checks the health of the amqp-conn and reconnects if necessary."
-  []
+  "Starts an infinite loop in a new thread that checks the health of the connection and reconnects if necessary."
+  [msg-fn]
   (.start 
     (Thread. 
       (fn [] 
         (loop []
-          (dosync (setup-connection))
+          (if (or (not (connection-okay? @amqp-conn)) 
+                  (not (channel-okay? @amqp-channel)))
+            (configure msg-fn))
           (Thread/sleep (cfg/rabbitmq-health-check-interval))
           (recur))))))
