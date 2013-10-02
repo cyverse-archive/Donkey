@@ -5,7 +5,8 @@
             [langohr.queue     :as lq]
             [langohr.consumers :as lc]
             [langohr.basic     :as lb]
-            [donkey.util.config :as cfg]))
+            [donkey.util.config    :as cfg]
+            [clojure.tools.logging :as log]))
 
 (defn test-msg-fn
   [channel {:keys [content-type delivery-tag type] :as meta} ^bytes payload]
@@ -61,15 +62,35 @@
    :username (cfg/rabbitmq-user)
    :password (cfg/rabbitmq-pass)})
 
-(defn setup
+(defn connection-okay?
+  [conn]
+  (and (not (nil? conn))
+       (rmq/open? conn)))
+
+(defn channel-okay?
+  [chan]
+  (and (not (nil? chan))
+       (rmq/open? chan)))
+
+(defn setup-connection
+  "Sets the amqp-conn ref if necessary and returns it. Must be called within (dosync)."
+  []
+  (if (connection-okay? @amqp-conn)
+    @amqp-conn
+    (ref-set amqp-conn (connection (connection-map)))))
+
+(defn setup-channel
+  "Sets the amqp-channel ref if necessary and returns it. Must be called within (dosync)."
+  [conn]
+  (if (channel-okay? @amqp-channel)
+    @amqp-channel
+    (ref-set amqp-channel (channel conn))))
+
+(defn get-channel
   [msg-fn]
   (dosync
-    (let [conn (connection (connection-map))
-          chan (channel conn)]
-      (println "setting up connection")
-      (println "setting up channel")
-      (ref-set amqp-conn conn)
-      (ref-set amqp-channel chan)
+    (let [conn (setup-connection)
+          chan (setup-channel conn)]
       (-> @amqp-channel
         (declare-exchange 
           (cfg/rabbitmq-exchange) 
@@ -86,11 +107,13 @@
           msg-fn
           :auto-ack (cfg/rabbitmq-msg-auto-ack?))))))
 
-(defn donkey-amqp-client
-  [msg-fn]
-  (if (or (nil? @amqp-conn)
-            (nil? @amqp-channel)
-            (not (rmq/open? @amqp-conn))
-            (not (rmq/open? @amqp-channel)))
-    (setup msg-fn)
-    @amqp-channel))
+(defn conn-monitor
+  "Starts an infinite loop that checks the health of the amqp-conn and reconnects if necessary."
+  []
+  (.start 
+    (Thread. 
+      (fn [] 
+        (loop []
+          (dosync (setup-connection))
+          (Thread/sleep (cfg/rabbitmq-health-check-interval))
+          (recur))))))

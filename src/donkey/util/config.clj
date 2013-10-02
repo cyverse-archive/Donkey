@@ -264,6 +264,11 @@
   "Toggles whether or not to auto-ack messages that are received."
   [props config-valid configs rabbitmq-enabled]
   "donkey.rabbitmq.msg.auto-ack")
+
+(cc/defprop-long rabbitmq-health-check-interval
+  "The number of milliseconds to wait between connection health checks."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.connection.health-check-interval")
 ;;;End RabbitMQ connection information
 
 ;;;iRODS connection information
