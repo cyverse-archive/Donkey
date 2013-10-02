@@ -58,3 +58,11 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn get-deployed-components-in-app
+  [app-id]
+  (-> (client/get (secured-url "get-components-in-analysis" app-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
