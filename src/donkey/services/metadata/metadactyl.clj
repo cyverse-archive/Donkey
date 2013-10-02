@@ -447,12 +447,6 @@
   (let [url (build-metadactyl-secured-url req "get-analyses-in-group" app-group-id)]
     (forward-get url req)))
 
-(defn list-deployed-components-in-app
-  "This service lists all of the deployed components in an app."
-  [req app-id]
-  (let [url (build-metadactyl-secured-url req "get-components-in-analysis" app-id)]
-    (forward-get url req)))
-
 (defn update-favorites
   "This service adds apps to or removes apps from a user's favorites list."
   [req]

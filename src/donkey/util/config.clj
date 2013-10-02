@@ -230,10 +230,45 @@
   [props config-valid configs rabbitmq-enabled]
   "donkey.rabbitmq.exchange")
 
-(cc/defprop-str rabbitmq-dataobject-topic
+(cc/defprop-str rabbitmq-exchange-type
+  "The exchange type for the iRODS updates"
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.exchange.type")
+
+(cc/defprop-boolean rabbitmq-exchange-durable?
+  "Toggles whether or not the rabbitmq exchange is durable."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.exchange.durable")
+
+(cc/defprop-boolean rabbitmq-exchange-auto-delete?
+  "Toggles whether to auto-delete the exchange or not."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.exchange.auto-delete")
+
+(cc/defprop-str rabbitmq-queue
   "The topic to listen to for data-object updates"
   [props config-valid configs rabbitmq-enabled]
-  "donkey.rabbitmq.dataobject-topic")
+  "donkey.rabbitmq.queue")
+
+(cc/defprop-boolean rabbitmq-queue-exclusive?
+  "Toggles whether or not the queue is exclusive."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.queue.exclusive")
+
+(cc/defprop-boolean rabbitmq-queue-auto-delete?
+  "Topggles whether or not to auto-delete the queue."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.queue.auto-delete")
+
+(cc/defprop-boolean rabbitmq-msg-auto-ack?
+  "Toggles whether or not to auto-ack messages that are received."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.msg.auto-ack")
+
+(cc/defprop-long rabbitmq-health-check-interval
+  "The number of milliseconds to wait between connection health checks."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.connection.health-check-interval")
 ;;;End RabbitMQ connection information
 
 ;;;iRODS connection information

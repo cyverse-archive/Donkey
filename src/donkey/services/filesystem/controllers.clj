@@ -637,3 +637,19 @@
           sort-col   (if (contains? params :sort-col) (:sort-col params) "NAME")
           sort-order (if (contains? params :sort-order) (:sort-order params) "ASC")]
       (irods-actions/paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order))))
+
+(defn do-read-csv-chunk
+  [req-params req-body]
+  (log/debug "do-read-csv-chunk")
+  
+  (let [params (add-current-user-to-map req-params)
+        body   (parse-body (slurp req-body))]
+    (validate-map params {:user string?})
+    (validate-map body {:path string? :position string? :chunk-size string? :line-ending string?})
+    
+    (let [user   (:user params)
+          path   (:path body)
+          ending (:line-ending body)
+          pos    (Long/parseLong (:position body))
+          size   (Long/parseLong (:chunk-size body))]
+      (irods-actions/read-csv-chunk user path pos size ending))))

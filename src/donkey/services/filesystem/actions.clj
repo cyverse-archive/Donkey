@@ -16,7 +16,8 @@
         [clojure-commons.error-codes]
         [donkey.util.config]
         [slingshot.slingshot :only [try+ throw+]])
-  (:import [org.apache.tika Tika]))
+  (:import [org.apache.tika Tika]
+           [au.com.bytecode.opencsv CSVReader]))
 
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
@@ -322,16 +323,16 @@
      cm [user]
      (format-call "create" user path)
      (let [fixed-path (ft/rm-last-slash path)]
-             (when-not (good-string? fixed-path)
-               (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-                        :path path}))
-             (validators/user-exists cm user)
-             (validators/path-writeable cm user (ft/dirname fixed-path))
-             (validators/path-not-exists cm fixed-path)
-
-             (mkdir cm fixed-path)
-             (set-owner cm fixed-path user)
-             {:path fixed-path :permissions (collection-perm-map cm user fixed-path)}))))
+       (when-not (good-string? fixed-path)
+         (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+                  :path path}))
+       (validators/user-exists cm user)
+       (validators/path-writeable cm user (ft/dirname fixed-path))
+       (validators/path-not-exists cm fixed-path)
+       
+       (mkdir cm fixed-path)
+       (set-owner cm fixed-path user)
+       {:path fixed-path :permissions (collection-perm-map cm user fixed-path)}))))
 
 (defn source->dest
   [source-path dest-path]
@@ -347,7 +348,9 @@
      (format-call "move-paths" user sources dest)
      (let [path-list  (conj sources dest)
            all-paths  (apply merge (mapv #(hash-map (source->dest %1 dest) %1) sources))
-           dest-paths (keys all-paths)]
+           dest-paths (keys all-paths)
+           sources    (mapv ft/rm-last-slash sources)
+           dest       (ft/rm-last-slash dest)]
        (validators/user-exists cm user)
        (validators/all-paths-exist cm sources)
        (validators/all-paths-exist cm [dest])
@@ -365,17 +368,19 @@
     (log-rulers
      cm [user]
      (format-call "rename-path" user source dest)
-     (validators/user-exists cm user)
-     (validators/path-exists cm source)
-     (validators/user-owns-path cm user source)
-     (validators/path-not-exists cm dest)
+     (let [source (ft/rm-last-slash source)
+           dest   (ft/rm-last-slash dest)] 
+       (validators/user-exists cm user)
+       (validators/path-exists cm source)
+       (validators/user-owns-path cm user source)
+       (validators/path-not-exists cm dest)
 
-     (let [result (move cm source dest :user user :admin-users (irods-admins))]
-       (when-not (nil? result)
-         (throw+ {:error_code ERR_INCOMPLETE_RENAME
-                  :paths result
-                  :user user}))
-       {:source source :dest dest :user user}))))
+       (let [result (move cm source dest :user user :admin-users (irods-admins))]
+         (when-not (nil? result)
+           (throw+ {:error_code ERR_INCOMPLETE_RENAME
+                    :paths result
+                    :user user}))
+         {:source source :dest dest :user user})))))
 
 (defn- preview-buffer
   [cm path size]
@@ -1042,34 +1047,33 @@
       (log-rulers
        cm [user]
        (format-call "delete-paths" user paths)
-       (validators/user-exists cm user)
-       (validators/all-paths-exist cm paths)
-       (validators/user-owns-paths cm user paths)
-
-       (when (some true? (mapv home-matcher paths))
-         (throw+ {:error_code ERR_NOT_AUTHORIZED
-                  :paths (filterv home-matcher paths)}))
-
-       (doseq [p paths]
-         (log/debug "path" p)
-         (log/debug "readable?" user (owns? cm user p))
-         (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
-           (doseq [path-ticket path-tickets]
-             (delete-ticket cm (:username cm) path-ticket)))
-
-         (if-not (.startsWith p (user-trash-dir cm user))
-           (move-to-trash cm p user)
-           (delete cm p)))
-
-       {:paths paths}))))
+       (let [paths (mapv ft/rm-last-slash paths)] 
+         (validators/user-exists cm user)
+         (validators/all-paths-exist cm paths)
+         (validators/user-owns-paths cm user paths)
+         
+         (when (some true? (mapv home-matcher paths))
+           (throw+ {:error_code ERR_NOT_AUTHORIZED
+                    :paths (filterv home-matcher paths)}))
+         
+         (doseq [p paths]
+           (log/debug "path" p)
+           (log/debug "readable?" user (owns? cm user p))
+           
+           (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
+             (doseq [path-ticket path-tickets]
+               (delete-ticket cm (:username cm) path-ticket)))
+           
+           (if-not (.startsWith p (user-trash-dir cm user))
+             (move-to-trash cm p user)
+             (delete cm p)))
+         
+         {:paths paths})))))
 
 (defn trash-origin-path
   [cm user p]
   (if (attribute? cm p "ipc-trash-origin")
-    (let [origin-path (:value (first (get-attribute cm p "ipc-trash-origin")))]
-      (if-not (is-writeable? cm user (ft/dirname origin-path))
-        (ft/path-join (user-home-dir user) (ft/basename p))
-        origin-path))
+    (:value (first (get-attribute cm p "ipc-trash-origin")))
     (ft/path-join (user-home-dir user) (ft/basename p))))
 
 (defn restore-to-homedir?
@@ -1090,13 +1094,16 @@
 
 (defn restore-parent-dirs
   [cm user path]
-  (log/warn "restore-parent-dirs")
-  (log/warn (ft/dirname path))
+  (log/warn "restore-parent-dirs" (ft/dirname path))
+  
   (when-not (exists? cm (ft/dirname path))
     (mkdirs cm (ft/dirname path))
     (log/warn "Created " (ft/dirname path))
 
     (loop [parent (ft/dirname path)]
+      (log/warn "restoring path" parent)
+      (log/warn "user parent path" user)
+ 
       (when (and (not= parent (user-home-dir user)) (not (owns? cm user parent)))
         (log/warn (str "Restoring ownership of parent dir: " parent))
         (set-owner cm parent user)
@@ -1108,36 +1115,37 @@
     (log-rulers
      cm [user]
      (format-call "restore-path" :user user :paths paths :user-trash user-trash)
-     (validators/user-exists cm user)
-     (validators/all-paths-exist cm paths)
-     (validators/all-paths-writeable cm user paths)
-
-     (let [retval (atom (hash-map))]
-       (doseq [path paths]
-         (let [fully-restored      (restoration-path cm user path)
-               restored-to-homedir (restore-to-homedir? cm path)]
-           (log/warn "Restoring " path " to " fully-restored)
-
-           (validators/path-not-exists cm fully-restored)
-           (log/warn fully-restored " does not exist. That's good.")
-
-           (restore-parent-dirs cm user fully-restored)
-           (log/warn "Done restoring parent dirs for " fully-restored)
-
-           (validators/path-writeable cm user (ft/dirname fully-restored))
-           (log/warn fully-restored "is writeable. That's good.")
-
-           (log/warn "Moving " path " to " fully-restored)
-           (validators/path-not-exists cm fully-restored)
-
-           (log/warn fully-restored " does not exist. That's good.")
-           (move cm path fully-restored :user user :admin-users (irods-admins))
-           (log/warn "Done moving " path " to " fully-restored)
-
-           (reset! retval
-                   (assoc @retval path {:restored-path fully-restored
-                                        :partial-restore restored-to-homedir}))))
-       {:restored @retval}))))
+     (let [paths (mapv ft/rm-last-slash paths)] 
+       (validators/user-exists cm user)
+       (validators/all-paths-exist cm paths)
+       (validators/all-paths-writeable cm user paths)
+       
+       (let [retval (atom (hash-map))]
+         (doseq [path paths]
+           (let [fully-restored      (ft/rm-last-slash (restoration-path cm user path))
+                 restored-to-homedir (restore-to-homedir? cm path)]
+             (log/warn "Restoring " path " to " fully-restored)
+             
+             (validators/path-not-exists cm fully-restored)
+             (log/warn fully-restored " does not exist. That's good.")
+             
+             (restore-parent-dirs cm user fully-restored)
+             (log/warn "Done restoring parent dirs for " fully-restored)
+             
+             (validators/path-writeable cm user (ft/dirname fully-restored))
+             (log/warn fully-restored "is writeable. That's good.")
+             
+             (log/warn "Moving " path " to " fully-restored)
+             (validators/path-not-exists cm fully-restored)
+             
+             (log/warn fully-restored " does not exist. That's good.")
+             (move cm path fully-restored :user user :admin-users (irods-admins))
+             (log/warn "Done moving " path " to " fully-restored)
+             
+             (reset! retval
+                     (assoc @retval path {:restored-path fully-restored
+                                          :partial-restore restored-to-homedir}))))
+         {:restored @retval})))))
 
 (defn copy-path
   ([copy-map]
@@ -1359,3 +1367,60 @@
       :start      (str position)
       :chunk-size (str (count (.getBytes update-string)))
       :file-size  (str (file-size cm path))})))
+
+(defn trim-to-line-start
+  [str-chunk line-ending]
+  (let [line-pos (.indexOf str-chunk line-ending)]
+    (if (<= line-pos 0)
+      str-chunk
+      (.substring str-chunk (+ line-pos 1)))))
+
+(defn calc-start-pos
+  "Calculates the new start position after (trim-to-line-start) has been called."
+  [start-pos orig-chunk trimmed-chunk]
+  (+ start-pos (- (count (.getBytes orig-chunk)) (count (.getBytes trimmed-chunk)))))
+
+(defn trim-to-last-line
+  [str-chunk line-ending]
+  (let [calced-pos (- (.lastIndexOf str-chunk line-ending) 1)
+        last-pos   (if-not (pos? calced-pos) 1 calced-pos)]
+    (.substring str-chunk 0 last-pos)))
+
+(defn calc-end-pos
+  "Calculates the new ending byte based on the start position and the current size of the chunk."
+  [start-pos trimmed-chunk]
+  (+ start-pos (- (count (.getBytes trimmed-chunk)) 1)))
+
+(defn read-csv
+  [csv-str]
+  (let [ba  (java.io.ByteArrayInputStream. (.getBytes csv-str))
+        isr (java.io.InputStreamReader. ba "UTF-8")]
+    (mapv vec (.readAll (CSVReader. isr)))))
+
+(defn read-csv-chunk
+  "Reads a chunk of a file and parses it as a CSV. The position and chunk-size are not guaranteed, since
+   we shouldn't try to parse partial rows. We scan forward from the starting position to find the first
+   line-ending and then scan backwards from the last position for the last line-ending."
+  [user path position chunk-size line-ending]
+  (with-jargon (jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/path-exists cm path)
+    (validators/path-is-file cm path)
+    (validators/path-readable cm user path)
+    
+    (when-not (contains? #{"\r\n" "\n"} line-ending)
+      (throw+ {:error_code "ERR_INVALID_LINE_ENDING"
+               :line-ending line-ending}))
+    
+    (let [chunk         (read-at-position cm path position chunk-size)
+          front-trimmed (trim-to-line-start chunk line-ending)
+          new-start-pos (calc-start-pos position chunk front-trimmed)
+          trimmed-chunk (trim-to-last-line front-trimmed line-ending)
+          new-end-pos   (calc-end-pos position trimmed-chunk)] 
+      {:path       path
+       :user       user
+       :start      (str new-start-pos)
+       :end        (str new-end-pos)
+       :chunk-size (str (count (.getBytes trimmed-chunk)))
+       :file-size  (str (file-size cm path))
+       :csv        (read-csv trimmed-chunk)})))
