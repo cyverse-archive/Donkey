@@ -276,6 +276,7 @@
           :hasSubDirs    true
           :date-created  (:created stat)
           :date-modified (:modified stat)
+          :total         (ll/count-list-entries cm user path)
           :file-size     0)
         (page->map (ll/paged-list-entries cm user path sort-col sort-order limit offset))))))
 
