@@ -9,11 +9,16 @@
   [#"^\p{XDigit}{8}(?:-\p{XDigit}{4}){3}-\p{XDigit}{12}$"
    #"^[at]\p{XDigit}{32}"])
 
+(defn- is-uuid?
+  [id]
+  (some #(re-find % id) uuid-regexes))
+
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
   (listAppGroups [this])
   (listApps [this group-id])
-  (getApp [this app-id]))
+  (getApp [this app-id])
+  (getAppDeployedComponents [this app-id]))
 
 (deftype DeOnlyAppLister []
   AppLister
@@ -22,7 +27,9 @@
   (listApps [this group-id]
     (metadactyl/apps-in-group group-id))
   (getApp [this app-id]
-    (metadactyl/get-app app-id)))
+    (metadactyl/get-app app-id))
+  (getAppDeployedComponents [this app-id]
+    (metadactyl/get-deployed-components-in-app app-id)))
 
 (deftype DeHpcAppLister [agave-client]
   AppLister
@@ -34,9 +41,13 @@
       (.listPublicApps agave-client)
       (metadactyl/apps-in-group group-id)))
   (getApp [this app-id]
-    (if (some #(re-find % app-id) uuid-regexes)
+    (if (is-uuid? app-id)
       (metadactyl/get-app app-id)
-      (.getApp agave-client app-id))))
+      (.getApp agave-client app-id)))
+  (getAppDeployedComponents [this app-id]
+    (if (is-uuid? app-id)
+      (metadactyl/get-deployed-components-in-app app-id)
+      {:deployed_components [(.getAppDeployedComponent agave-client app-id)]})))
 
 (defn- get-app-lister
   []
@@ -60,3 +71,7 @@
 (defn get-app
   [app-id]
   (service/success-response (.getApp (get-app-lister) app-id)))
+
+(defn get-deployed-components-in-app
+  [app-id]
+  (service/success-response (.getAppDeployedComponents (get-app-lister) app-id)))
