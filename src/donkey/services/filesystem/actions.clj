@@ -269,17 +269,18 @@
                  :sort-order sort-order}))
       
       (let [stat (stat cm path)]
-        (merge
-          (hash-map
-            :id               path
-            :label            (id->label cm user path)
-            :user-permissions (filtered-user-perms cm user path)
-            :hasSubDirs       true
-            :date-created     (:created stat)
-            :date-modified    (:modified stat)
-            :total            (ll/count-list-entries cm user path)
-            :file-size        0)
-          (page->map cm (ll/paged-list-entries cm user path sort-col sort-order limit offset) user))))))
+        {:path 
+         (merge
+           (hash-map
+             :id               path
+             :label            (id->label cm user path)
+             :user-permissions (filtered-user-perms cm user path)
+             :hasSubDirs       true
+             :date-created     (:created stat)
+             :date-modified    (:modified stat)
+             :total            (ll/count-list-entries cm user path)
+             :file-size        0)
+           (page->map cm (ll/paged-list-entries cm user path sort-col sort-order limit offset) user))}))))
 
 (defn root-listing
   ([user root-path]
