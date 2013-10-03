@@ -222,14 +222,14 @@
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory
    information that can be consumed by the front-end."
-  [cm page-entry user]
+  [page-entry]
   (let [[id label size created lastmod perm-val entry-type] page-entry
         base-map {:id            id
                   :label         label
                   :file-size     (Integer/parseInt size)
                   :date-created  (str (* (Integer/parseInt created) 1000))
                   :date-modified (str (* (Integer/parseInt lastmod) 1000))
-                  :user-permissions   (filtered-user-perms cm user id)}]
+                  :permissions   (perm-map-for perm-val)}]
     (if (= entry-type "dataobject")
       base-map
       (merge base-map {:hasSubDirs true
@@ -238,12 +238,12 @@
 (defn- page->map
   "Transforms an entire page of results for a paged listing in a map that
    can be returned to the client."
-  [cm page user]
+  [page]
   (let [entry-types (group-by #(last %) page)
         do          (get entry-types "dataobject")
         collections (get entry-types "collection")]
-    {:files   (mapv #(page-entry->map cm % user) do)
-     :folders (mapv #(page-entry->map cm % user) collections)}))
+    {:files   (mapv page-entry->map do)
+     :folders (mapv page-entry->map collections)}))
 
 (defn paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
@@ -269,18 +269,17 @@
                  :sort-order sort-order}))
       
       (let [stat (stat cm path)]
-        {:total (ll/count-list-entries cm user path)
-         :path 
-         (merge
-           (hash-map
-             :id               path
-             :label            (id->label cm user path)
-             :user-permissions (filtered-user-perms cm user path)
-             :hasSubDirs       true
-             :date-created     (:created stat)
-             :date-modified    (:modified stat)
-             :file-size        0)
-           (page->map cm (ll/paged-list-entries cm user path sort-col sort-order limit offset) user))}))))
+        (merge
+          (hash-map
+            :id               path
+            :label            (id->label cm user path)
+            :permissions      (collection-perm-map cm user path)
+            :hasSubDirs       true
+            :total            (ll/count-list-entries cm user path)
+            :date-created     (:created stat)
+            :date-modified    (:modified stat)
+            :file-size        0)
+          (page->map (ll/paged-list-entries cm user path sort-col sort-order limit offset)))))))
 
 (defn root-listing
   ([user root-path]
