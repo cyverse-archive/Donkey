@@ -251,34 +251,35 @@
                              :or {:sort-col   "NAME" 
                                   :sort-order "ASC"}}]
   (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
-  (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-readable cm user path)
-    (validators/path-is-dir cm path)
-    
-    (when-not (contains? #{"NAME" "PATH" "LASTMOD" "CREATED" "SIZE"} sort-col)
-      (log/warn "invalid sort column" sort-col)
-      (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
-               :column sort-col}))
-    
-    (when-not (contains? #{"ASC" "DESC"} sort-order)
-      (log/warn "invalid sort order" sort-order)
-      (throw+ {:error_code "ERR_INVALID_SORT_ORDER"
-               :sort-order sort-order}))
-    
-    (let [stat (stat cm path)]
-      (merge
-        (hash-map
-          :id               path
-          :label            (id->label cm user path)
-          :user-permissions (filtered-user-perms cm user path)
-          :hasSubDirs       true
-          :date-created     (:created stat)
-          :date-modified    (:modified stat)
-          :total            (ll/count-list-entries cm user path)
-          :file-size        0)
-        (page->map cm (ll/paged-list-entries cm user path sort-col sort-order limit offset) user)))))
+  (let [path (ft/rm-last-slash path)] 
+    (with-jargon (jargon-cfg) [cm]
+      (validators/user-exists cm user)
+      (validators/path-exists cm path)
+      (validators/path-readable cm user path)
+      (validators/path-is-dir cm path)
+      
+      (when-not (contains? #{"NAME" "PATH" "LASTMOD" "CREATED" "SIZE"} sort-col)
+        (log/warn "invalid sort column" sort-col)
+        (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
+                 :column sort-col}))
+      
+      (when-not (contains? #{"ASC" "DESC"} sort-order)
+        (log/warn "invalid sort order" sort-order)
+        (throw+ {:error_code "ERR_INVALID_SORT_ORDER"
+                 :sort-order sort-order}))
+      
+      (let [stat (stat cm path)]
+        (merge
+          (hash-map
+            :id               path
+            :label            (id->label cm user path)
+            :user-permissions (filtered-user-perms cm user path)
+            :hasSubDirs       true
+            :date-created     (:created stat)
+            :date-modified    (:modified stat)
+            :total            (ll/count-list-entries cm user path)
+            :file-size        0)
+          (page->map cm (ll/paged-list-entries cm user path sort-col sort-order limit offset) user))))))
 
 (defn root-listing
   ([user root-path]
