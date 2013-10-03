@@ -269,7 +269,8 @@
                  :sort-order sort-order}))
       
       (let [stat (stat cm path)]
-        {:path 
+        {:total (ll/count-list-entries cm user path)
+         :path 
          (merge
            (hash-map
              :id               path
@@ -278,7 +279,6 @@
              :hasSubDirs       true
              :date-created     (:created stat)
              :date-modified    (:modified stat)
-             :total            (ll/count-list-entries cm user path)
              :file-size        0)
            (page->map cm (ll/paged-list-entries cm user path sort-col sort-order limit offset) user))}))))
 
