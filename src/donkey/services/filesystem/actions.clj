@@ -226,14 +226,14 @@
   (let [[id label size created lastmod perm-val entry-type] page-entry
         base-map {:id            id
                   :label         label
-                  :file-size     (Integer/parseInt size)
+                  :file-size     (str size)
                   :date-created  (str (* (Integer/parseInt created) 1000))
                   :date-modified (str (* (Integer/parseInt lastmod) 1000))
                   :permissions   (perm-map-for perm-val)}]
     (if (= entry-type "dataobject")
       base-map
       (merge base-map {:hasSubDirs true
-                       :file-size  0}))))
+                       :file-size  "0"}))))
 
 (defn- page->map
   "Transforms an entire page of results for a paged listing in a map that
@@ -278,7 +278,7 @@
             :total            (ll/count-list-entries cm user path)
             :date-created     (:created stat)
             :date-modified    (:modified stat)
-            :file-size        0)
+            :file-size        "0")
           (page->map (ll/paged-list-entries cm user path sort-col sort-order limit offset)))))))
 
 (defn root-listing
