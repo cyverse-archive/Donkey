@@ -54,8 +54,8 @@
   channel)
 
 (defn bind
-  [channel queue exchange]
-  (lq/bind channel queue exchange)
+  [channel queue exchange routing-key]
+  (lq/bind channel queue exchange :routing-key routing-key)
   channel)
 
 (defn publish
@@ -118,7 +118,7 @@
         :exclusive   (cfg/rabbitmq-queue-exclusive?)
         :auto-delete (cfg/rabbitmq-queue-auto-delete?))
       
-      (bind (cfg/rabbitmq-queue) (cfg/rabbitmq-exchange))
+      (bind (cfg/rabbitmq-queue) (cfg/rabbitmq-exchange) (cfg/rabbitmq-routing-key))
       
       (subscribe (cfg/rabbitmq-queue) msg-fn :auto-ack (cfg/rabbitmq-msg-auto-ack?)))))
 

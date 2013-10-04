@@ -269,6 +269,11 @@
   "The number of milliseconds to wait between connection health checks."
   [props config-valid configs rabbitmq-enabled]
   "donkey.rabbitmq.connection.health-check-interval")
+
+(cc/defprop-str rabbitmq-routing-key
+  "The routing key for messages."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.queue.routing-key")
 ;;;End RabbitMQ connection information
 
 ;;;iRODS connection information

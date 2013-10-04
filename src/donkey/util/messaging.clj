@@ -1,52 +1,27 @@
 (ns donkey.util.messaging
-  (:require [langohr.core       :as rmq]
-            [langohr.channel    :as lch]
-            [langohr.exchange   :as le]
-            [langohr.consumers  :as lc]
-            [langohr.queue      :as lq]
-            [donkey.util.config :as cfg]))
+  (:require [donkey.services.garnish.messages :as ftype]
+            [donkey.clients.amqp :as amqp]
+            [clojure.tools.logging :as log]))
 
-(def rmq-conn (atom nil))
-(def dataobj-ch (atom nil))
+(defn dataobject-added
+  "Event handler for 'data-object.added' events."
+  [^bytes payload]
+  (ftype/filetype-handler (String. payload "UTF-8")))
 
-(defn connect
-  "Connects to RabbitMQ, resets @rmq-conn and returns it."
+(defn message-handler
+  "A langohr compatible message callback. This will push out message handling to other functions
+   based on the value of the routing-key. This will allow us to pull in the full iRODS event
+   firehose later and delegate execution to handlers without having to deal with AMQPs object
+   hierarchy.
+
+   The payload is passed to handlers as a byte stream. That should theoretically give us the
+   ability to handle binary data arriving in messages, even though that doesn't seem likely."
+  [channel {:keys [routing-key content-type delivery-tag type] :as meta} ^bytes payload]
+  (case routing-key
+    "data-object.added" (dataobject-added payload)
+    (log/warn (format "[message-handler] [%s] %s" routing-key (String. payload "UTF-8")))))
+
+(defn messaging-initialization
+  "Initializes the AMQP messaging handling, registering (message-handler) as the callback."
   []
-  (if (nil? @rmq-conn)
-    (let [conn-map {:host     (cfg/rabbitmq-host)
-                    :port     (cfg/rabbitmq-port)
-                    :username (cfg/rabbitmq-user)
-                    :password (cfg/rabbitmq-pass)}] 
-    (reset! rmq-conn (rmq/connect conn-map)))
-    @rmq-conn))
-
-(defn dataobj-channel
-  "Returns a channel object for the dataobj channels."
-  []
-  (if (nil? @dataobj-ch) 
-    (reset! dataobj-ch (lch/open @rmq-conn))
-    @dataobj-ch))
-
-(defn dataobj-exchange
-  []
-  (le/declare @dataobj-ch (cfg/rabbitmq-exchange) "topic"))
-
-(defn dataobj-message-handler
-  "A handler for dataobj messages"
-  [ch {:keys [content-type delivery-tag type] :as meta} payload]
-  (println (format "[consumer] Msg: %s, Tag: %d, Content Type: %s, Type: %s"
-                   (String. payload "UTF-8") delivery-tag content-type type)))
-
-(defn setup
-  []
-  (connect)
-  (dataobj-channel)
-  (dataobj-exchange))
-
-(defn dataobj-consumer
-  [consumer-id]
-  (let [queue-name (format "dataobj.queues.%s" consumer-id)]
-    (lq/declare (dataobj-channel) queue-name :exclusive false :auto-delete true)
-    (lq/bind (dataobj-channel) queue-name (cfg/rabbitmq-exchange) :routing-key (cfg/rabbitmq-dataobject-topic))
-    (lc/subscribe (dataobj-channel) queue-name dataobj-message-handler :auto-ack true)))
-
+  (amqp/configure message-handler))

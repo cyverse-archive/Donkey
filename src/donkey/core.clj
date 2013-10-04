@@ -28,6 +28,7 @@
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
             [donkey.services.fileio.controllers :as fileio]
+            [donkey.util.messaging :as messages]
             [clojure.tools.nrepl.server :as nrepl]))
 
 (defn- flagged-routes
@@ -70,6 +71,12 @@
 
    (route/not-found (unrecognized-path-response))))
 
+(defn register-specific-queries
+  []
+  (with-jargon (config/jargon-cfg) [cm]
+    (delete-specific-queries cm)
+    (define-specific-queries cm)))
+
 (defn start-nrepl
   []
   (nrepl/start-server :port 7888))
@@ -82,6 +89,8 @@
 (defn lein-ring-init
   []
   (load-configuration-from-file)
+  (register-specific-queries)
+  (messages/messaging-initialization)
   (start-nrepl))
 
 (defn load-configuration-from-zookeeper
@@ -108,16 +117,11 @@
 (def app
   (site-handler donkey-routes))
 
-(defn register-specific-queries
-  []
-  (with-jargon (config/jargon-cfg) [cm]
-    (delete-specific-queries cm)
-    (define-specific-queries cm)))
-
 (defn -main
   [& _]
   (load-configuration-from-zookeeper)
   (register-specific-queries)
   (log/warn "Listening on" (config/listen-port))
   (start-nrepl)
+  (messages/messaging-initialization)
   (jetty/run-jetty app {:port (config/listen-port)}))
