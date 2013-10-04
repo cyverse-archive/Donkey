@@ -204,20 +204,21 @@
   ([user path include-files filter-files set-own?]
      (log/warn (str "list-dir " user " " path))
 
-     (with-jargon (jargon-cfg) [cm]
-       (log-rulers
-        cm [user]
-        (format-call "list-dir" user path include-files filter-files set-own?)
-        (validators/user-exists cm user)
-        (validators/path-exists cm path)
-
-        (when (and set-own? (not (owns? cm user path)))
-          (log/warn "Setting own perms on" path "for" user)
-          (set-permissions cm user path false false true))
-
-        (validators/path-readable cm user path)
-
-        (gen-listing cm user path filter-files include-files)))))
+     (let [path (ft/rm-last-slash path)] 
+       (with-jargon (jargon-cfg) [cm]
+         (log-rulers
+           cm [user]
+           (format-call "list-dir" user path include-files filter-files set-own?)
+           (validators/user-exists cm user)
+           (validators/path-exists cm path)
+           
+           (when (and set-own? (not (owns? cm user path)))
+             (log/warn "Setting own perms on" path "for" user)
+             (set-permissions cm user path false false true))
+           
+           (validators/path-readable cm user path)
+           
+           (gen-listing cm user path filter-files include-files))))))
 
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory
@@ -286,28 +287,29 @@
      (root-listing user root-path false))
 
   ([user root-path set-own?]
-     (with-jargon (jargon-cfg) [cm]
-       (log-rulers
-        cm [user]
-        (format-call "root-listing" user root-path)
-        (log/warn "in (root-listing)")
-        (validators/user-exists cm user)
-
-        (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
-          (log/warn "Creating" root-path "for" user)
-          (mkdir cm root-path)
-          (log/warn "Setting own perms on" root-path "for" user)
-          (set-permissions cm user root-path false false true))
-
-        (validators/path-exists cm root-path)
-
-        (when (and set-own? (not (owns? cm user root-path)))
-          (log/warn "set-own? is true and" root-path "is not owned by" user)
-          (log/warn "Setting own perms on" root-path "for" user)
-          (set-permissions cm user root-path false false true))
-
-        (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
-          (assoc res :label (id->label cm user (:id res))))))))
+     (let [root-path (ft/rm-last-slash root-path)] 
+       (with-jargon (jargon-cfg) [cm]
+         (log-rulers
+           cm [user]
+           (format-call "root-listing" user root-path)
+           (log/warn "in (root-listing)")
+           (validators/user-exists cm user)
+           
+           (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
+             (log/warn "Creating" root-path "for" user)
+             (mkdir cm root-path)
+             (log/warn "Setting own perms on" root-path "for" user)
+             (set-permissions cm user root-path false false true))
+           
+           (validators/path-exists cm root-path)
+           
+           (when (and set-own? (not (owns? cm user root-path)))
+             (log/warn "set-own? is true and" root-path "is not owned by" user)
+             (log/warn "Setting own perms on" root-path "for" user)
+             (set-permissions cm user root-path false false true))
+           
+           (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
+             (assoc res :label (id->label cm user (:id res)))))))))
 
 (defn create
   "Creates a directory at 'path' in iRODS and sets the user to 'user'.
@@ -322,19 +324,19 @@
   (log/debug (str "create " user " " path))
   (with-jargon (jargon-cfg) [cm]
     (log-rulers
-     cm [user]
-     (format-call "create" user path)
-     (let [fixed-path (ft/rm-last-slash path)]
-       (when-not (good-string? fixed-path)
-         (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-                  :path path}))
-       (validators/user-exists cm user)
-       (validators/path-writeable cm user (ft/dirname fixed-path))
-       (validators/path-not-exists cm fixed-path)
-       
-       (mkdir cm fixed-path)
-       (set-owner cm fixed-path user)
-       {:path fixed-path :permissions (collection-perm-map cm user fixed-path)}))))
+      cm [user]
+      (format-call "create" user path)
+      (let [fixed-path (ft/rm-last-slash path)]
+        (when-not (good-string? fixed-path)
+          (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+                   :path path}))
+        (validators/user-exists cm user)
+        (validators/path-writeable cm user (ft/dirname fixed-path))
+        (validators/path-not-exists cm fixed-path)
+        
+        (mkdir cm fixed-path)
+        (set-owner cm fixed-path user)
+        {:path fixed-path :permissions (collection-perm-map cm user fixed-path)}))))
 
 (defn source->dest
   [source-path dest-path]
@@ -406,16 +408,17 @@
      path - The path to the file in iRODS that will be previewed.
      size - The size (in bytes) of the preview to be created."
   [user path size]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "preview" user path size)
-     (log/debug (str "preview " user " " path " " size))
-     (validators/user-exists cm user)
-     (validators/path-exists cm path)
-     (validators/path-readable cm user path)
-     (validators/path-is-file cm path)
-     (gen-preview cm path size))))
+  (let [path (ft/rm-last-slash path)] 
+    (with-jargon (jargon-cfg) [cm]
+      (log-rulers
+        cm [user]
+        (format-call "preview" user path size)
+        (log/debug (str "preview " user " " path " " size))
+        (validators/user-exists cm user)
+        (validators/path-exists cm path)
+        (validators/path-readable cm user path)
+        (validators/path-is-file cm path)
+        (gen-preview cm path size)))))
 
 (defn user-home-dir
   ([user]
@@ -576,11 +579,12 @@
   ([path]
      (path-exists? "" path))
   ([user path]
-     (with-jargon (jargon-cfg) [cm]
-       (log-rulers
-        cm [user]
-        (format-call "path-exists?" user path)
-        (exists? cm (url-decode path))))))
+    (let [path (ft/rm-last-slash path)] 
+      (with-jargon (jargon-cfg) [cm]
+        (log-rulers
+          cm [user]
+          (format-call "path-exists?" user path)
+          (exists? cm (url-decode path)))))))
 
 (defn path-is-dir?
   [path]
@@ -627,16 +631,17 @@
 
 (defn path-stat
   [user path]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "path-stat" user path)
-     (validators/path-exists cm path)
-     (-> (stat cm path)
-         (merge {:permissions (permissions cm user path)})
-         (merge-type-info cm user path)
-         (merge-shares cm user path)
-         (merge-counts cm path)))))
+  (let [path (ft/rm-last-slash path)] 
+    (with-jargon (jargon-cfg) [cm]
+      (log-rulers
+        cm [user]
+        (format-call "path-stat" user path)
+        (validators/path-exists cm path)
+        (-> (stat cm path)
+          (merge {:permissions (permissions cm user path)})
+          (merge-type-info cm user path)
+          (merge-shares cm user path)
+          (merge-counts cm path))))))
 
 (defn- format-tree-urls
   [treeurl-maps]
@@ -665,21 +670,22 @@
 
 (defn manifest
   [user path data-threshold]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "manifest" user path data-threshold)
-     (validators/user-exists cm user)
-     (validators/path-exists cm path)
-     (validators/path-is-file cm path)
-     (validators/path-readable cm user path)
-
-     {:action       "manifest"
-      :content-type (content-type cm path)
-      :tree-urls    (extract-tree-urls cm path)
-      :info-type    (filetypes/get-types cm user path)
-      :mime-type    (.detect (Tika.) (input-stream cm path))
-      :preview      (preview-url user path)})))
+  (let [path (ft/rm-last-slash path)] 
+    (with-jargon (jargon-cfg) [cm]
+      (log-rulers
+        cm [user]
+        (format-call "manifest" user path data-threshold)
+        (validators/user-exists cm user)
+        (validators/path-exists cm path)
+        (validators/path-is-file cm path)
+        (validators/path-readable cm user path)
+        
+        {:action       "manifest"
+         :content-type (content-type cm path)
+         :tree-urls    (extract-tree-urls cm path)
+         :info-type    (filetypes/get-types cm user path)
+         :mime-type    (.detect (Tika.) (input-stream cm path))
+         :preview      (preview-url user path)}))))
 
 (defn download-file
   [user file-path]
