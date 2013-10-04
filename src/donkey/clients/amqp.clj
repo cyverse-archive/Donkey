@@ -6,7 +6,8 @@
             [langohr.consumers :as lc]
             [langohr.basic     :as lb]
             [donkey.util.config    :as cfg]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]))
 
 (defn test-msg-fn
   [channel {:keys [content-type delivery-tag type] :as meta} ^bytes payload]
@@ -46,12 +47,9 @@
   channel)
 
 (defn declare-queue
-  [channel queue & {:keys [exclusive auto-delete] 
-                    :or   {exclusive   false 
-                           auto-delete false}}]
-  (when-not (queue? channel queue)
-    (lq/declare channel queue :exclusive exclusive :auto-delete auto-delete))
-  channel)
+  [channel]
+  
+  (.getQueue (lq/declare channel)))
 
 (defn bind
   [channel queue exchange routing-key]
@@ -105,22 +103,18 @@
 (defn configure
   [msg-fn]
   (let [conn (get-connection)
-        chan (get-channel)]
-    (-> @amqp-channel
-      (declare-exchange 
-        (cfg/rabbitmq-exchange) 
-        (cfg/rabbitmq-exchange-type)
-        :durable     (cfg/rabbitmq-exchange-durable?)
-        :auto-delete (cfg/rabbitmq-exchange-auto-delete?))
-      
-      (declare-queue
-        (cfg/rabbitmq-queue)
-        :exclusive   (cfg/rabbitmq-queue-exclusive?)
-        :auto-delete (cfg/rabbitmq-queue-auto-delete?))
-      
-      (bind (cfg/rabbitmq-queue) (cfg/rabbitmq-exchange) (cfg/rabbitmq-routing-key))
-      
-      (subscribe (cfg/rabbitmq-queue) msg-fn :auto-ack (cfg/rabbitmq-msg-auto-ack?)))))
+        chan (get-channel)
+        q    (declare-queue @amqp-channel)]
+    
+    (declare-exchange
+      @amqp-channel
+      (cfg/rabbitmq-exchange) 
+      (cfg/rabbitmq-exchange-type)
+      :durable     (cfg/rabbitmq-exchange-durable?)
+      :auto-delete (cfg/rabbitmq-exchange-auto-delete?))
+    
+    (bind @amqp-channel q (cfg/rabbitmq-exchange) (cfg/rabbitmq-routing-key))
+    (subscribe @amqp-channel q msg-fn :auto-ack (cfg/rabbitmq-msg-auto-ack?))))
 
 (defn conn-monitor
   "Starts an infinite loop in a new thread that checks the health of the connection and reconnects if necessary."
@@ -129,8 +123,12 @@
     (Thread. 
       (fn [] 
         (loop []
-          (if (or (not (connection-okay? @amqp-conn)) 
+          (when (or (not (connection-okay? @amqp-conn)) 
                   (not (channel-okay? @amqp-channel)))
-            (configure msg-fn))
+            (log/warn "[conn-monitor] reconfiguring messaging connection.")
+            (try
+              (configure msg-fn)
+              (catch Exception e
+                (log/error "[conn-monitor]" (ce/format-exception e)))))
           (Thread/sleep (cfg/rabbitmq-health-check-interval))
           (recur))))))

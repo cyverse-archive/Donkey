@@ -2,7 +2,8 @@
   (:require [donkey.services.garnish.messages :as ftype]
             [donkey.clients.amqp :as amqp]
             [donkey.util.config :as cfg]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]))
 
 (defn dataobject-added
   "Event handler for 'data-object.added' events."
@@ -31,5 +32,11 @@
   
   (when (cfg/rabbitmq-enabled)
     (log/warn "[messaging-initialization] iRODS messaging enabled")
-    (amqp/configure message-handler)
-    (amqp/conn-monitor message-handler)))
+    (try
+      (amqp/configure message-handler)
+      (catch Exception e
+        (log/error "[messaging-initialization]" (ce/format-exception e))))
+    (try
+      (amqp/conn-monitor message-handler)
+      (catch Exception e
+        (log/error "[messaging-initialization]" (ce/format-exception e))))))
