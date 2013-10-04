@@ -638,6 +638,18 @@
           sort-order (if (contains? params :sort-order) (:sort-order params) "ASC")]
       (irods-actions/paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order))))
 
+(defn do-unsecured-paged-listing
+  [params]
+  (validate-map params {:path string? :limit string? :offset string?})
+    
+  (let [user       "ipctest"
+        path       (:path params)
+        limit      (Integer/parseInt (:limit params))
+        offset     (Integer/parseInt (:offset params))
+        sort-col   (if (contains? params :sort-col) (:sort-col params) "NAME")
+        sort-order (if (contains? params :sort-order) (:sort-order params) "ASC")]
+    (irods-actions/paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
+
 (defn do-read-csv-chunk
   [req-params req-body]
   (log/debug "do-read-csv-chunk")

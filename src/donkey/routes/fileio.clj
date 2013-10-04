@@ -4,6 +4,7 @@
         [donkey.util])
   (:require [donkey.util.config :as config]
             [donkey.services.fileio.controllers :as fio]
+            [donkey.services.filesystem.controllers :as fs]
             [clojure.tools.logging :as log]))
 
 (defn secured-fileio-routes
@@ -29,4 +30,7 @@
     
     (POST "/fileio/upload" [:as req]
           (do (log/info "Request: " req)
-            (trap #(fio/upload (:params req) (:multipart-params req)))))))
+            (trap #(fio/upload (:params req) (:multipart-params req)))))
+    
+    (GET "/filesystem/paged-directory" [:as req]
+         (trap #(fs/do-unsecured-paged-listing (:params req))))))
