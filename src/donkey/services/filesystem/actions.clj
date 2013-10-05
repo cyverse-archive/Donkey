@@ -1386,15 +1386,22 @@
       [(last page-positions) len])))
 
 (defn- csv-page-result
-  [path user file-size page-positions page csv]
+  [path user delim file-size chunk-size page-positions page csv]
   {:path           path
    :user           user
+   :delim          (str delim)
    :file_size      (str file-size)
-   :page_positions page-positions
-   :page           page
+   :chunk-size     (str chunk-size)
+   :page_positions (mapv str page-positions)
+   :page           (str page)
    :csv            csv})
 
 (defn get-csv-page
+  "Retrieves a CSV page for a given chunk size. `delim` is the character that is used as a field
+   separator in the file. `page-positions` is a vector of positions of pages within the file,
+   which is used as an optimization when retrieving a CSV page. Without it, it would be necessary
+   to sequentially scan for the requested page with every call. `page-number` is the requsted page
+   number. `chunk-size` is the maximum size of a page."
   [user path delim page-positions page-number chunk-size]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
@@ -1407,7 +1414,7 @@
           parse-page (fn [chunk] (deliminator/parse-excerpt chunk delim))
           get-page   (comp parse-page get-chunk)
           add-pos    (fn [ps p] (if (> p (last ps)) (conj ps p) ps))
-          build-res  (partial csv-page-result path user size)]
+          build-res  (partial csv-page-result path user delim size chunk-size)]
       (loop [[pos page] (closest-page page-positions page-number)
              positions  page-positions
              [csv len]  (get-page pos)]
