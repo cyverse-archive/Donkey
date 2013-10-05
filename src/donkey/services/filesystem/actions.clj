@@ -1394,28 +1394,25 @@
     (validators/path-readable cm user path)
 
     (let [size       (file-size cm path)
-          [pos page] (closest-page page-positions page-number)]
-      (loop [pos       pos
-             page      page
-             positions page-positions]
-        (let [chunk     (read-at-position cm path pos chunk-size)
-              [csv len] (deliminator/parse-excerpt chunk delim)
-              next-pos  (+ pos len)
-              add-pos   (fn [ps p] (if (> p (last ps)) (conj ps p) ps))
+          get-chunk  (fn [pos] (read-at-position cm path pos chunk-size))
+          parse-page (fn [chunk] (deliminator/parse-excerpt chunk delim))
+          get-page   (comp parse-page get-chunk)
+          add-pos    (fn [ps p] (if (> p (last ps)) (conj ps p) ps))
+          build-res  (fn [ps p csv]
+                       {:path           path
+                        :user           user
+                        :page-positions ps
+                        :page           p
+                        :file-size      (str size)
+                        :csv            csv})]
+      (loop [[pos page] (closest-page page-positions page-number)
+             positions  page-positions
+             [csv len]  (get-page pos)]
+        (let [next-pos  (+ pos len)
               positions (add-pos positions next-pos)]
-          (cond (= page page-number) {:path           path
-                                      :user           user
-                                      :page-positions positions
-                                      :page           page
-                                      :file-size      (str size)
-                                      :csv            csv}
-                (< next-pos size)    (recur next-pos (inc page) positions)
-                :else                {:path           path
-                                      :user           user
-                                      :page-positions positions
-                                      :page           page
-                                      :file-size      (str size)
-                                      :csv            csv}))))))
+          (cond (= page page-number) (build-res positions page csv)
+                (< next-pos size)    (recur [next-pos (inc page)] positions (get-page next-pos))
+                :else                (build-res positions page csv)))))))
 
 (defn trim-to-line-start
   [str-chunk line-ending]
