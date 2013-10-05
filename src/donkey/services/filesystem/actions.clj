@@ -1390,9 +1390,9 @@
   {:path           path
    :user           user
    :delim          (str delim)
-   :file_size      (str file-size)
+   :file-size      (str file-size)
    :chunk-size     (str chunk-size)
-   :page_positions (mapv str page-positions)
+   :page-positions (mapv str page-positions)
    :page           (str page)
    :csv            csv})
 
