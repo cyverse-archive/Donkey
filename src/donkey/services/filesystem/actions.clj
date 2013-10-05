@@ -1377,13 +1377,22 @@
       :chunk-size (str (count (.getBytes update-string)))
       :file-size  (str (file-size cm path))})))
 
-(defn closest-page
+(defn- closest-page
   [page-positions page-number]
   (let [idx (dec page-number)
         len (count page-positions)]
     (if (<= page-number len)
       [(page-positions idx) page-number]
       [(last page-positions) len])))
+
+(defn- csv-page-result
+  [path user file-size page-positions page csv]
+  {:path           path
+   :user           user
+   :file_size      (str file-size)
+   :page_positions page-positions
+   :page           page
+   :csv            csv})
 
 (defn get-csv-page
   [user path delim page-positions page-number chunk-size]
@@ -1398,13 +1407,7 @@
           parse-page (fn [chunk] (deliminator/parse-excerpt chunk delim))
           get-page   (comp parse-page get-chunk)
           add-pos    (fn [ps p] (if (> p (last ps)) (conj ps p) ps))
-          build-res  (fn [ps p csv]
-                       {:path           path
-                        :user           user
-                        :page-positions ps
-                        :page           p
-                        :file-size      (str size)
-                        :csv            csv})]
+          build-res  (partial csv-page-result path user size)]
       (loop [[pos page] (closest-page page-positions page-number)
              positions  page-positions
              [csv len]  (get-page pos)]
