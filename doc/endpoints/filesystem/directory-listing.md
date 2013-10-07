@@ -150,7 +150,7 @@ __Request Query Params__:
 * path - The path to list. Must be a directory.
 * limit - The total number of results to return in a page. This is the number of folders and files combined.
 * offset - The offset into the directory listing result set to begin the listing at.
-* sort-col - The column to sort the result set by. Sorting is done in iRODS's ICAT database, not at the application level. Accepted values are NAME, PATH, LASTMODIFIED, DATESUBMITTED, SIZE. The values are case-insensitive.
+* sort-col - The column to sort the result set by. Sorting is done in iRODS's ICAT database, not at the application level. Accepted values are NAME, PATH, LASTMODIFIED, DATECREATED, SIZE. The values are case-insensitive.
 * sort-order - The order to sort the result set in. Accepted values are ASC and DESC. The values are case-insensitive.
 
 __Response Body__:
