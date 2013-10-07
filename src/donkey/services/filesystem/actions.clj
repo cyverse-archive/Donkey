@@ -261,7 +261,7 @@
       (validators/path-readable cm user path)
       (validators/path-is-dir cm path)
       
-      (when-not (contains? #{"NAME" "PATH" "LASTMODIFIED" "DATECREATED" "SIZE"} sort-col)
+      (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE"} sort-col)
         (log/warn "invalid sort column" sort-col)
         (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
                  :column sort-col}))
