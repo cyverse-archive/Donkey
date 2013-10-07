@@ -245,21 +245,6 @@
   [props config-valid configs rabbitmq-enabled]
   "donkey.rabbitmq.exchange.auto-delete")
 
-(cc/defprop-str rabbitmq-queue
-  "The topic to listen to for data-object updates"
-  [props config-valid configs rabbitmq-enabled]
-  "donkey.rabbitmq.queue")
-
-(cc/defprop-boolean rabbitmq-queue-exclusive?
-  "Toggles whether or not the queue is exclusive."
-  [props config-valid configs rabbitmq-enabled]
-  "donkey.rabbitmq.queue.exclusive")
-
-(cc/defprop-boolean rabbitmq-queue-auto-delete?
-  "Topggles whether or not to auto-delete the queue."
-  [props config-valid configs rabbitmq-enabled]
-  "donkey.rabbitmq.queue.auto-delete")
-
 (cc/defprop-boolean rabbitmq-msg-auto-ack?
   "Toggles whether or not to auto-ack messages that are received."
   [props config-valid configs rabbitmq-enabled]
