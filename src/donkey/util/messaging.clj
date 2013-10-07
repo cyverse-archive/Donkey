@@ -8,7 +8,7 @@
 (defn dataobject-added
   "Event handler for 'data-object.added' events."
   [^bytes payload]
-  (ftype/filetype-handler (String. payload "UTF-8")))
+  (ftype/filetype-message-handler (String. payload "UTF-8")))
 
 (defn message-handler
   "A langohr compatible message callback. This will push out message handling to other functions
