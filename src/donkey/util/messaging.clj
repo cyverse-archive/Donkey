@@ -24,6 +24,20 @@
     "data-object.added" (dataobject-added payload)
     nil))
 
+(defn- receive
+  []
+  (try
+    (amqp/configure message-handler)
+    (catch Exception e
+      (log/error "[messaging-initialization]" (ce/format-exception e)))))
+
+(defn- monitor
+  []
+  (try
+    (amqp/conn-monitor message-handler)
+    (catch Exception e
+      (log/error "[messaging-initialization]" (ce/format-exception e)))))
+
 (defn messaging-initialization
   "Initializes the AMQP messaging handling, registering (message-handler) as the callback."
   []
@@ -32,11 +46,5 @@
   
   (when (cfg/rabbitmq-enabled)
     (log/warn "[messaging-initialization] iRODS messaging enabled")
-    (try
-      (amqp/configure message-handler)
-      (catch Exception e
-        (log/error "[messaging-initialization]" (ce/format-exception e))))
-    (try
-      (amqp/conn-monitor message-handler)
-      (catch Exception e
-        (log/error "[messaging-initialization]" (ce/format-exception e))))))
+    (.start (Thread. receive))
+    (monitor)))
