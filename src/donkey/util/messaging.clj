@@ -25,6 +25,8 @@
     nil))
 
 (defn- receive
+  "Configures the AMQP connection. This is wrapped in a function because we want to start
+   the connection in a new thread."
   []
   (try
     (amqp/configure message-handler)
@@ -32,6 +34,8 @@
       (log/error "[messaging-initialization]" (ce/format-exception e)))))
 
 (defn- monitor
+  "Fires off the monitoring thread that makes sure that the AMQP connection is still up
+   and working."
   []
   (try
     (amqp/conn-monitor message-handler)
