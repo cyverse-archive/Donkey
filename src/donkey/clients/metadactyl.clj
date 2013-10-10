@@ -66,3 +66,11 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn submit-job
+  [workspace-id submission]
+  (-> (client/put (secured-url "workspaces" workspace-id "newexperiment")
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
