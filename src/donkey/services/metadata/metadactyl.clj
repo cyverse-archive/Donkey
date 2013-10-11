@@ -395,13 +395,6 @@
   [req uuid]
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
-(defn run-experiment
-  "This service accepts a job submission from a user then reformats it and
-   submits it to the JEX."
-  [req workspace-id]
-  (let [url (build-metadactyl-secured-url req "workspaces" workspace-id "newexperiment")]
-    (forward-put url req)))
-
 (defn get-experiments
   "This service retrieves information about jobs that a user has submitted."
   [req workspace-id]
