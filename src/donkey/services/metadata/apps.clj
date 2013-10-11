@@ -18,7 +18,8 @@
   (listAppGroups [this])
   (listApps [this group-id])
   (getApp [this app-id])
-  (getAppDeployedComponents [this app-id]))
+  (getAppDeployedComponents [this app-id])
+  (submitJob [this workspace-id submission]))
 
 (deftype DeOnlyAppLister []
   AppLister
@@ -29,7 +30,9 @@
   (getApp [this app-id]
     (metadactyl/get-app app-id))
   (getAppDeployedComponents [this app-id]
-    (metadactyl/get-deployed-components-in-app app-id)))
+    (metadactyl/get-deployed-components-in-app app-id))
+  (submitJob [this workspace-id submission]
+    (metadactyl/submit-job workspace-id submission)))
 
 (deftype DeHpcAppLister [agave-client]
   AppLister
@@ -47,7 +50,11 @@
   (getAppDeployedComponents [this app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-deployed-components-in-app app-id)
-      {:deployed_components [(.getAppDeployedComponent agave-client app-id)]})))
+      {:deployed_components [(.getAppDeployedComponent agave-client app-id)]}))
+  (submitJob [this workspace-id submission]
+    (if (is-uuid? (:analysis_id submission))
+      (metadactyl/submit-job workspace-id submission)
+      (.submitJob agave-client submission))))
 
 (defn- get-app-lister
   []
@@ -57,7 +64,8 @@
                       (config/agave-user)
                       (config/agave-pass)
                       (:shortUsername current-user)
-                      (config/agave-jobs-enabled)))
+                      (config/agave-jobs-enabled)
+                      (config/irods-home)))
     (DeOnlyAppLister.)))
 
 (defn get-only-app-groups
@@ -75,3 +83,8 @@
 (defn get-deployed-components-in-app
   [app-id]
   (service/success-response (.getAppDeployedComponents (get-app-lister) app-id)))
+
+(defn submit-job
+  [workspace-id body]
+  (service/success-response
+   (.submitJob (get-app-lister) workspace-id (service/decode-json body))))
