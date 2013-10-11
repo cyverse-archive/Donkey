@@ -1,5 +1,6 @@
 (ns donkey.clients.metadactyl
   (:require [cemerick.url :as curl]
+            [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [donkey.util.config :as config]
             [donkey.util.service :as service]
@@ -71,6 +72,8 @@
   [workspace-id submission]
   (-> (client/put (secured-url "workspaces" workspace-id "newexperiment")
                   {:query-params (secured-params)
+                   :content-type :json
+                   :body         (cheshire/encode submission)
                    :as           :stream})
       (:body)
       (service/decode-json)))
