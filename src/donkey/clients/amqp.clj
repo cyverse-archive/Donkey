@@ -25,20 +25,15 @@
   (lch/open connection))
 
 (defn exchange?
+  "Returns a boolean indicating whether an exchange exists."
   [channel exchange]
   (try
     (le/declare-passive channel exchange)
     true
     (catch java.io.IOException _ false)))
 
-(defn queue?
-  [channel queue]
-  (try
-    (lq/declare-passive channel queue)
-    true
-    (catch java.io.IOException _ false)))
-
 (defn declare-exchange
+  "Declares an exchange if it doesn't already exist."
   [channel exchange type & {:keys [durable auto-delete]
                             :or {durable     false
                                  auto-delete false}}]
@@ -47,29 +42,32 @@
   channel)
 
 (defn declare-queue
+  "Declares a default, anonymouse queue."
   [channel]
-  
   (.getQueue (lq/declare channel)))
 
 (defn bind
+  "Binds a queue to an exchange."
   [channel queue exchange routing-key]
   (lq/bind channel queue exchange :routing-key routing-key)
   channel)
 
 (defn publish
+  "Publishes a message to an exchange."
   [channel exchange queue message]
   (lb/publish channel exchange queue message))
 
 (defn subscribe
+  "Registers a callback function that fires every time a message enters the specified queue."
   [channel queue msg-fn & {:keys [auto-ack]
                            :or   {auto-ack true}}]
   (lc/subscribe channel queue msg-fn :auto-ack true)
   channel)
-
 (def amqp-conn (ref nil))
 (def amqp-channel (ref nil))
 
 (defn connection-map
+  "Returns a configuration map for the RabbitMQ connection."
   []
   {:host     (cfg/rabbitmq-host)
    :port     (cfg/rabbitmq-port)
@@ -77,11 +75,13 @@
    :password (cfg/rabbitmq-pass)})
 
 (defn connection-okay?
+  "Returns a boolean telling whether the connection that's passed in is still active."
   [conn]
   (and (not (nil? conn))
        (rmq/open? conn)))
 
 (defn channel-okay?
+  "Returns a boolean telling whether the channel that's passed in is still active."
   [chan]
   (and (not (nil? chan))
        (rmq/open? chan)))
@@ -101,6 +101,8 @@
     (dosync (ref-set amqp-channel (channel (get-connection))))))
 
 (defn configure
+  "Sets up a channel, exchange, and queue, with the queue bound to the exchange and 'msg-fn' 
+   registered as the callback."
   [msg-fn]
   (let [conn (get-connection)
         chan (get-channel)
@@ -117,7 +119,8 @@
     (subscribe @amqp-channel q msg-fn :auto-ack (cfg/rabbitmq-msg-auto-ack?))))
 
 (defn conn-monitor
-  "Starts an infinite loop in a new thread that checks the health of the connection and reconnects if necessary."
+  "Starts an infinite loop in a new thread that checks the health of the connection and reconnects 
+   if necessary."
   [msg-fn]
   (.start 
     (Thread. 

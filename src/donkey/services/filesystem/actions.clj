@@ -274,14 +274,16 @@
                              :or {:sort-col   "NAME"
                                   :sort-order "ASC"}}]
   (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
-  (let [path (ft/rm-last-slash path)]
+  (let [path      (ft/rm-last-slash path)
+        sort-col  (string/upper-case sort-col)
+        sort-oder (string/upper-case sort-order)] 
     (with-jargon (jargon-cfg) [cm]
       (validators/user-exists cm user)
       (validators/path-exists cm path)
       (validators/path-readable cm user path)
       (validators/path-is-dir cm path)
-
-      (when-not (contains? #{"NAME" "PATH" "LASTMOD" "CREATED" "SIZE"} sort-col)
+      
+      (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE"} sort-col)
         (log/warn "invalid sort column" sort-col)
         (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
                  :column sort-col}))

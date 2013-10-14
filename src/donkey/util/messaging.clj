@@ -8,7 +8,7 @@
 (defn dataobject-added
   "Event handler for 'data-object.added' events."
   [^bytes payload]
-  (ftype/filetype-handler (String. payload "UTF-8")))
+  (ftype/filetype-message-handler (String. payload "UTF-8")))
 
 (defn message-handler
   "A langohr compatible message callback. This will push out message handling to other functions
@@ -24,6 +24,24 @@
     "data-object.added" (dataobject-added payload)
     nil))
 
+(defn- receive
+  "Configures the AMQP connection. This is wrapped in a function because we want to start
+   the connection in a new thread."
+  []
+  (try
+    (amqp/configure message-handler)
+    (catch Exception e
+      (log/error "[messaging-initialization]" (ce/format-exception e)))))
+
+(defn- monitor
+  "Fires off the monitoring thread that makes sure that the AMQP connection is still up
+   and working."
+  []
+  (try
+    (amqp/conn-monitor message-handler)
+    (catch Exception e
+      (log/error "[messaging-initialization]" (ce/format-exception e)))))
+
 (defn messaging-initialization
   "Initializes the AMQP messaging handling, registering (message-handler) as the callback."
   []
@@ -32,11 +50,5 @@
   
   (when (cfg/rabbitmq-enabled)
     (log/warn "[messaging-initialization] iRODS messaging enabled")
-    (try
-      (amqp/configure message-handler)
-      (catch Exception e
-        (log/error "[messaging-initialization]" (ce/format-exception e))))
-    (try
-      (amqp/conn-monitor message-handler)
-      (catch Exception e
-        (log/error "[messaging-initialization]" (ce/format-exception e))))))
+    (.start (Thread. receive))
+    (monitor)))
