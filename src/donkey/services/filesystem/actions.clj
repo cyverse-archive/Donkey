@@ -221,6 +221,22 @@
 
            (gen-listing cm user path filter-files include-files))))))
 
+(defn- filtered-paths
+  "Returns a seq of paths that should not be included in paged listing."
+  [user]
+  (conj (fs-filter-files) 
+        (fs-community-data) 
+        (ft/path-join (irods-home) user)
+        (ft/path-join (irods-home) "public")))
+
+(defn- not-include-in-page?
+  "Returns true if the map is okay to include in a directory listing."
+  [user file-map]
+  (let [fpaths (set (filtered-paths user))]
+    (or (fpaths (:id file-map))
+        (fpaths (:label file-map))
+        (not (valid-file-map? file-map)))))
+
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory
    information that can be consumed by the front-end."
@@ -237,15 +253,20 @@
       (merge base-map {:hasSubDirs true
                        :file-size  "0"}))))
 
+(defn- filtered-path-map-seq
+  [ffunc list-to-filter]
+  (doall (remove ffunc (map page-entry->map list-to-filter))))
+
 (defn- page->map
   "Transforms an entire page of results for a paged listing in a map that
    can be returned to the client."
-  [page]
+  [user page]
   (let [entry-types (group-by #(last %) page)
         do          (get entry-types "dataobject")
-        collections (get entry-types "collection")]
-    {:files   (mapv page-entry->map do)
-     :folders (mapv page-entry->map collections)}))
+        collections (get entry-types "collection")
+        include?    (partial not-include-in-page? user)]
+    {:files   (filtered-path-map-seq include? do)
+     :folders (filtered-path-map-seq include? collections)}))
 
 (defn paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
@@ -281,7 +302,7 @@
             :date-created     (:created stat)
             :date-modified    (:modified stat)
             :file-size        "0")
-          (page->map (ll/paged-list-entries cm user path sort-col sort-order limit offset)))))))
+          (page->map user (ll/paged-list-entries cm user path sort-col sort-order limit offset)))))))
 
 (defn root-listing
   ([user root-path]
