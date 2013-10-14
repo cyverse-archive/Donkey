@@ -28,8 +28,8 @@
    (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
         (trap #(apps/submit-job workspace-id body)))
 
-   (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
-        (trap #(get-experiments req workspace-id)))
+   (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as {params :params}]
+        (trap #(apps/list-jobs workspace-id params)))
 
    (POST "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
          (trap #(get-selected-experiments req workspace-id)))

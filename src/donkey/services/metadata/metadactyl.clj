@@ -395,12 +395,6 @@
   [req uuid]
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
-(defn get-experiments
-  "This service retrieves information about jobs that a user has submitted."
-  [req workspace-id]
-  (let [url (build-metadactyl-secured-url req "workspaces" workspace-id "executions" "list")]
-    (forward-get url req)))
-
 (defn get-selected-experiments
   "This service retrieves information about selected jobs that a user has
    submitted."

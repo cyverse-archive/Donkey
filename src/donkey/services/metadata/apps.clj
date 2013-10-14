@@ -1,6 +1,8 @@
 (ns donkey.services.metadata.apps
-  (:use [donkey.auth.user-attributes :only [current-user]])
-  (:require [donkey.clients.metadactyl :as metadactyl]
+  (:use [donkey.auth.user-attributes :only [current-user]]
+        [slingshot.slingshot :only [throw+]])
+  (:require [clojure-commons.error-codes :as ce]
+            [donkey.clients.metadactyl :as metadactyl]
             [donkey.util.config :as config]
             [donkey.util.service :as service]
             [mescal.de :as agave]))
@@ -19,7 +21,8 @@
   (listApps [this group-id])
   (getApp [this app-id])
   (getAppDeployedComponents [this app-id])
-  (submitJob [this workspace-id submission]))
+  (submitJob [this workspace-id submission])
+  (listJobs [this workspace-id params]))
 
 (deftype DeOnlyAppLister []
   AppLister
@@ -32,7 +35,9 @@
   (getAppDeployedComponents [this app-id]
     (metadactyl/get-deployed-components-in-app app-id))
   (submitJob [this workspace-id submission]
-    (metadactyl/submit-job workspace-id submission)))
+    (metadactyl/submit-job workspace-id submission))
+  (listJobs [this workspace-id params]
+    (metadactyl/list-jobs this workspace-id params)))
 
 (deftype DeHpcAppLister [agave-client]
   AppLister
@@ -54,7 +59,9 @@
   (submitJob [this workspace-id submission]
     (if (is-uuid? (:analysis_id submission))
       (metadactyl/submit-job workspace-id submission)
-      (.submitJob agave-client submission))))
+      (.submitJob agave-client submission)))
+  (listJobs [this workspace-id params]
+    (concat (metadactyl/list-jobs workspace-id params) (.listJobs agave-client))))
 
 (defn- get-app-lister
   []
@@ -89,3 +96,52 @@
   (service/success-response
    (.submitJob (get-app-lister) workspace-id (service/decode-json body))))
 
+(defn- compare-number-strings
+  [& args]
+  (apply compare (map #(Long/parseLong %) args)))
+
+(defn- base-comparator-for
+  [sort-field]
+  (if (contains? #{:startdate :enddate} sort-field)
+    compare-number-strings
+    compare))
+
+(defn- illegal-sort-order
+  [sort-order]
+  (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+           :sort-order sort-order}))
+
+(defn- comparator-for
+  [sort-field sort-order]
+  (condp contains? sort-order
+    #{:desc :DESC} (comp - (base-comparator-for sort-field))
+    #{:asc  :ASC}  (base-comparator-for sort-field)
+                   (illegal-sort-order sort-order)))
+
+(defn- sort-jobs
+  [sort-field sort-order jobs]
+  (let [compare-fn (comparator-for sort-field sort-order)]
+    (sort-by sort-field compare-fn jobs)))
+
+(defn- apply-limit
+  [limit coll]
+  (if-not (zero? limit)
+    (take limit coll)
+    coll))
+
+(defn list-jobs
+  [workspace-id {:keys [limit offset sort-field sort-order]
+                 :or   {limit      "0"
+                        offset     "0"
+                        sort-field :startdate
+                        sort-order :desc}
+                 :as   params}]
+  (let [limit      (Long/parseLong limit)
+        offset     (Long/parseLong offset)
+        sort-field (keyword sort-field)
+        sort-order (keyword sort-order)]
+    (service/success-response
+     {:analyses (->> (.listJobs (get-app-lister) workspace-id params)
+                     (sort-jobs sort-field sort-order)
+                     (drop offset)
+                     (apply-limit limit))})))
