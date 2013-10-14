@@ -25,8 +25,8 @@
    (GET "/app/:app-id" [app-id]
         (trap #(apps/get-app app-id)))
 
-   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as req]
-        (trap #(run-experiment req workspace-id)))
+   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
+        (trap #(apps/submit-job workspace-id body)))
 
    (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
         (trap #(get-experiments req workspace-id)))

@@ -626,10 +626,10 @@
 (defn do-paged-listing
   [req-params]
   (log/debug "do-paged-listing")
-  
+
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string? :path string? :limit string? :offset string?})
-    
+
     (let [user       (:user params)
           path       (:path params)
           limit      (Integer/parseInt (:limit params))
@@ -641,7 +641,7 @@
 (defn do-unsecured-paged-listing
   [params]
   (validate-map params {:path string? :limit string? :offset string?})
-    
+
   (let [user       "ipctest"
         path       (:path params)
         limit      (Integer/parseInt (:limit params))
@@ -650,15 +650,40 @@
         sort-order (if (contains? params :sort-order) (:sort-order params) "ASC")]
     (irods-actions/paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
 
+(defn- validate-get-csv-page-request-body
+  [body]
+  (validate-map
+   body
+   {:path       string?
+    :delim      string?
+    :chunk-size string?
+    :page       string?}))
+
+(defn do-get-csv-page
+  [req-params req-body]
+  (log/debug "do-get-csv-page")
+
+  (let [params    (add-current-user-to-map req-params)
+        body      (parse-body (slurp req-body))
+        _         (validate-map params {:user string?})
+        _         (validate-get-csv-page-request-body body)
+        user      (:user params)
+        path      (:path body)
+        delim     (first (:delim body))
+        size      (Long/parseLong (:chunk-size body))
+        page      (Long/parseLong (:page body))
+        positions (mapv #(Long/parseLong %) (:page-positions body ["0"]))]
+    (irods-actions/get-csv-page user path delim positions page size)))
+
 (defn do-read-csv-chunk
   [req-params req-body]
   (log/debug "do-read-csv-chunk")
-  
+
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
     (validate-map body {:path string? :position string? :chunk-size string? :line-ending string?})
-    
+
     (let [user   (:user params)
           path   (:path body)
           ending (:line-ending body)

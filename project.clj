@@ -1,4 +1,4 @@
-(defproject donkey "1.3.5-SNAPSHOT"
+(defproject donkey "1.8.4-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [com.novemberain/langohr "1.4.0"]
@@ -12,6 +12,7 @@
                   :exclusions [[xerces/xmlParserAPIs]
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
                  [org.iplantc/clojure-commons "1.4.5-SNAPSHOT"]
+                 [org.iplantc/deliminator "0.1.0-SNAPSHOT"]
                  [org.iplantc/mescal "0.1.0-SNAPSHOT"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
