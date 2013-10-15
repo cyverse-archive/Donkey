@@ -1,4 +1,4 @@
-(defproject donkey "1.3.5-SNAPSHOT"
+(defproject donkey "2.0.0-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [com.novemberain/langohr "1.4.0"]
@@ -8,10 +8,11 @@
                  [org.clojure/java.classpath "0.2.0"]
                  [org.apache.tika/tika-core "1.3"]
                  [org.iplantc/clj-cas "1.0.1-SNAPSHOT"]
-                 [org.iplantc/clj-jargon "0.2.12-SNAPSHOT"
+                 [org.iplantc/clj-jargon "0.2.13-SNAPSHOT"
                   :exclusions [[xerces/xmlParserAPIs]
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
                  [org.iplantc/clojure-commons "1.4.5-SNAPSHOT"]
+                 [org.iplantc/deliminator "0.1.0-SNAPSHOT"]
                  [org.iplantc/mescal "0.1.0-SNAPSHOT"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
@@ -28,7 +29,9 @@
                  [com.novemberain/validateur "1.4.0"]
                  [xerces/xercesImpl "2.11.0"]
                  [commons-net "3.3"]
-                 [org.clojure/tools.nrepl "0.2.3"]]
+                 [org.clojure/tools.nrepl "0.2.3"]
+                 [net.sf.opencsv/opencsv "2.0"]
+                 [com.novemberain/langohr "1.4.1"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
             [lein-ring "0.7.4"]
             [swank-clojure "1.4.2"]]

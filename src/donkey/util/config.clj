@@ -230,10 +230,35 @@
   [props config-valid configs rabbitmq-enabled]
   "donkey.rabbitmq.exchange")
 
-(cc/defprop-str rabbitmq-dataobject-topic
-  "The topic to listen to for data-object updates"
+(cc/defprop-str rabbitmq-exchange-type
+  "The exchange type for the iRODS updates"
   [props config-valid configs rabbitmq-enabled]
-  "donkey.rabbitmq.dataobject-topic")
+  "donkey.rabbitmq.exchange.type")
+
+(cc/defprop-boolean rabbitmq-exchange-durable?
+  "Toggles whether or not the rabbitmq exchange is durable."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.exchange.durable")
+
+(cc/defprop-boolean rabbitmq-exchange-auto-delete?
+  "Toggles whether to auto-delete the exchange or not."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.exchange.auto-delete")
+
+(cc/defprop-boolean rabbitmq-msg-auto-ack?
+  "Toggles whether or not to auto-ack messages that are received."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.msg.auto-ack")
+
+(cc/defprop-long rabbitmq-health-check-interval
+  "The number of milliseconds to wait between connection health checks."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.connection.health-check-interval")
+
+(cc/defprop-str rabbitmq-routing-key
+  "The routing key for messages."
+  [props config-valid configs rabbitmq-enabled]
+  "donkey.rabbitmq.queue.routing-key")
 ;;;End RabbitMQ connection information
 
 ;;;iRODS connection information

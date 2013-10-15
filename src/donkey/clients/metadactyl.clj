@@ -1,5 +1,6 @@
 (ns donkey.clients.metadactyl
   (:require [cemerick.url :as curl]
+            [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [donkey.util.config :as config]
             [donkey.util.service :as service]
@@ -55,6 +56,24 @@
   [app-id]
   (-> (client/get (secured-url "is-publishable" app-id)
                   {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn get-deployed-components-in-app
+  [app-id]
+  (-> (client/get (secured-url "get-components-in-analysis" app-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn submit-job
+  [workspace-id submission]
+  (-> (client/put (secured-url "workspaces" workspace-id "newexperiment")
+                  {:query-params (secured-params)
+                   :content-type :json
+                   :body         (cheshire/encode submission)
                    :as           :stream})
       (:body)
       (service/decode-json)))

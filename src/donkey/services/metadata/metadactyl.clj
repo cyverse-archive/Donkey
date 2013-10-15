@@ -395,13 +395,6 @@
   [req uuid]
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
-(defn run-experiment
-  "This service accepts a job submission from a user then reformats it and
-   submits it to the JEX."
-  [req workspace-id]
-  (let [url (build-metadactyl-secured-url req "workspaces" workspace-id "newexperiment")]
-    (forward-put url req)))
-
 (defn get-experiments
   "This service retrieves information about jobs that a user has submitted."
   [req workspace-id]
@@ -445,12 +438,6 @@
    descendents."
   [req app-group-id]
   (let [url (build-metadactyl-secured-url req "get-analyses-in-group" app-group-id)]
-    (forward-get url req)))
-
-(defn list-deployed-components-in-app
-  "This service lists all of the deployed components in an app."
-  [req app-id]
-  (let [url (build-metadactyl-secured-url req "get-components-in-analysis" app-id)]
     (forward-get url req)))
 
 (defn update-favorites

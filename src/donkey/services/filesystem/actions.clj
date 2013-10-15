@@ -7,15 +7,18 @@
             [clojure.set :as set]
             [clojure.string :as string]
             [clojure.java.io :as ds]
+            [deliminator.core :as deliminator]
             [donkey.services.filesystem.riak :as riak]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.garnish.irods :as filetypes]
-            [ring.util.codec :as cdc])
+            [ring.util.codec :as cdc]
+            [clj-jargon.lazy-listings :as ll])
   (:use [clj-jargon.jargon :exclude [init list-dir] :as jargon]
         [clojure-commons.error-codes]
         [donkey.util.config]
         [slingshot.slingshot :only [try+ throw+]])
-  (:import [org.apache.tika Tika]))
+  (:import [org.apache.tika Tika]
+           [au.com.bytecode.opencsv CSVReader]))
 
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
@@ -202,48 +205,135 @@
   ([user path include-files filter-files set-own?]
      (log/warn (str "list-dir " user " " path))
 
-     (with-jargon (jargon-cfg) [cm]
-       (log-rulers
-        cm [user]
-        (format-call "list-dir" user path include-files filter-files set-own?)
-        (validators/user-exists cm user)
-        (validators/path-exists cm path)
+     (let [path (ft/rm-last-slash path)]
+       (with-jargon (jargon-cfg) [cm]
+         (log-rulers
+           cm [user]
+           (format-call "list-dir" user path include-files filter-files set-own?)
+           (validators/user-exists cm user)
+           (validators/path-exists cm path)
 
-        (when (and set-own? (not (owns? cm user path)))
-          (log/warn "Setting own perms on" path "for" user)
-          (set-permissions cm user path false false true))
+           (when (and set-own? (not (owns? cm user path)))
+             (log/warn "Setting own perms on" path "for" user)
+             (set-permissions cm user path false false true))
 
-        (validators/path-readable cm user path)
+           (validators/path-readable cm user path)
 
-        (gen-listing cm user path filter-files include-files)))))
+           (gen-listing cm user path filter-files include-files))))))
+
+(defn- filtered-paths
+  "Returns a seq of paths that should not be included in paged listing."
+  [user]
+  (conj (fs-filter-files) 
+        (fs-community-data) 
+        (ft/path-join (irods-home) user)
+        (ft/path-join (irods-home) "public")))
+
+(defn- not-include-in-page?
+  "Returns true if the map is okay to include in a directory listing."
+  [user file-map]
+  (let [fpaths (set (filtered-paths user))]
+    (or (fpaths (:id file-map))
+        (fpaths (:label file-map))
+        (not (valid-file-map? file-map)))))
+
+(defn- page-entry->map
+  "Turns a entry in a paged listing result into a map containing file/directory
+   information that can be consumed by the front-end."
+  [page-entry]
+  (let [[id label size created lastmod perm-val entry-type] page-entry
+        base-map {:id            id
+                  :label         label
+                  :file-size     (str size)
+                  :date-created  (str (* (Integer/parseInt created) 1000))
+                  :date-modified (str (* (Integer/parseInt lastmod) 1000))
+                  :permissions   (perm-map-for perm-val)}]
+    (if (= entry-type "dataobject")
+      base-map
+      (merge base-map {:hasSubDirs true
+                       :file-size  "0"}))))
+
+(defn- filtered-path-map-seq
+  [ffunc list-to-filter]
+  (doall (remove ffunc (map page-entry->map list-to-filter))))
+
+(defn- page->map
+  "Transforms an entire page of results for a paged listing in a map that
+   can be returned to the client."
+  [user page]
+  (let [entry-types (group-by #(last %) page)
+        do          (get entry-types "dataobject")
+        collections (get entry-types "collection")
+        include?    (partial not-include-in-page? user)]
+    {:files   (filtered-path-map-seq include? do)
+     :folders (filtered-path-map-seq include? collections)}))
+
+(defn paged-dir-listing
+  "Provides paged directory listing as an alternative to (list-dir). Always contains files."
+  [user path limit offset & {:keys [sort-col sort-order]
+                             :or {:sort-col   "NAME"
+                                  :sort-order "ASC"}}]
+  (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
+  (let [path      (ft/rm-last-slash path)
+        sort-col  (string/upper-case sort-col)
+        sort-oder (string/upper-case sort-order)] 
+    (with-jargon (jargon-cfg) [cm]
+      (validators/user-exists cm user)
+      (validators/path-exists cm path)
+      (validators/path-readable cm user path)
+      (validators/path-is-dir cm path)
+      
+      (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE"} sort-col)
+        (log/warn "invalid sort column" sort-col)
+        (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
+                 :column sort-col}))
+
+      (when-not (contains? #{"ASC" "DESC"} sort-order)
+        (log/warn "invalid sort order" sort-order)
+        (throw+ {:error_code "ERR_INVALID_SORT_ORDER"
+                 :sort-order sort-order}))
+
+      (let [stat (stat cm path)]
+        (merge
+          (hash-map
+            :id               path
+            :label            (id->label cm user path)
+            :permissions      (collection-perm-map cm user path)
+            :hasSubDirs       true
+            :total            (ll/count-list-entries cm user path)
+            :date-created     (:created stat)
+            :date-modified    (:modified stat)
+            :file-size        "0")
+          (page->map user (ll/paged-list-entries cm user path sort-col sort-order limit offset)))))))
 
 (defn root-listing
   ([user root-path]
      (root-listing user root-path false))
 
   ([user root-path set-own?]
-     (with-jargon (jargon-cfg) [cm]
-       (log-rulers
-        cm [user]
-        (format-call "root-listing" user root-path)
-        (log/warn "in (root-listing)")
-        (validators/user-exists cm user)
+     (let [root-path (ft/rm-last-slash root-path)]
+       (with-jargon (jargon-cfg) [cm]
+         (log-rulers
+           cm [user]
+           (format-call "root-listing" user root-path)
+           (log/warn "in (root-listing)")
+           (validators/user-exists cm user)
 
-        (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
-          (log/warn "Creating" root-path "for" user)
-          (mkdir cm root-path)
-          (log/warn "Setting own perms on" root-path "for" user)
-          (set-permissions cm user root-path false false true))
+           (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
+             (log/warn "Creating" root-path "for" user)
+             (mkdir cm root-path)
+             (log/warn "Setting own perms on" root-path "for" user)
+             (set-permissions cm user root-path false false true))
 
-        (validators/path-exists cm root-path)
+           (validators/path-exists cm root-path)
 
-        (when (and set-own? (not (owns? cm user root-path)))
-          (log/warn "set-own? is true and" root-path "is not owned by" user)
-          (log/warn "Setting own perms on" root-path "for" user)
-          (set-permissions cm user root-path false false true))
+           (when (and set-own? (not (owns? cm user root-path)))
+             (log/warn "set-own? is true and" root-path "is not owned by" user)
+             (log/warn "Setting own perms on" root-path "for" user)
+             (set-permissions cm user root-path false false true))
 
-        (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
-          (assoc res :label (id->label cm user (:id res))))))))
+           (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
+             (assoc res :label (id->label cm user (:id res)))))))))
 
 (defn create
   "Creates a directory at 'path' in iRODS and sets the user to 'user'.
@@ -258,19 +348,19 @@
   (log/debug (str "create " user " " path))
   (with-jargon (jargon-cfg) [cm]
     (log-rulers
-     cm [user]
-     (format-call "create" user path)
-     (let [fixed-path (ft/rm-last-slash path)]
-       (when-not (good-string? fixed-path)
-         (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-                  :path path}))
-       (validators/user-exists cm user)
-       (validators/path-writeable cm user (ft/dirname fixed-path))
-       (validators/path-not-exists cm fixed-path)
-       
-       (mkdir cm fixed-path)
-       (set-owner cm fixed-path user)
-       {:path fixed-path :permissions (collection-perm-map cm user fixed-path)}))))
+      cm [user]
+      (format-call "create" user path)
+      (let [fixed-path (ft/rm-last-slash path)]
+        (when-not (good-string? fixed-path)
+          (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+                   :path path}))
+        (validators/user-exists cm user)
+        (validators/path-writeable cm user (ft/dirname fixed-path))
+        (validators/path-not-exists cm fixed-path)
+
+        (mkdir cm fixed-path)
+        (set-owner cm fixed-path user)
+        {:path fixed-path :permissions (collection-perm-map cm user fixed-path)}))))
 
 (defn source->dest
   [source-path dest-path]
@@ -307,7 +397,7 @@
      cm [user]
      (format-call "rename-path" user source dest)
      (let [source (ft/rm-last-slash source)
-           dest   (ft/rm-last-slash dest)] 
+           dest   (ft/rm-last-slash dest)]
        (validators/user-exists cm user)
        (validators/path-exists cm source)
        (validators/user-owns-path cm user source)
@@ -342,16 +432,17 @@
      path - The path to the file in iRODS that will be previewed.
      size - The size (in bytes) of the preview to be created."
   [user path size]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "preview" user path size)
-     (log/debug (str "preview " user " " path " " size))
-     (validators/user-exists cm user)
-     (validators/path-exists cm path)
-     (validators/path-readable cm user path)
-     (validators/path-is-file cm path)
-     (gen-preview cm path size))))
+  (let [path (ft/rm-last-slash path)]
+    (with-jargon (jargon-cfg) [cm]
+      (log-rulers
+        cm [user]
+        (format-call "preview" user path size)
+        (log/debug (str "preview " user " " path " " size))
+        (validators/user-exists cm user)
+        (validators/path-exists cm path)
+        (validators/path-readable cm user path)
+        (validators/path-is-file cm path)
+        (gen-preview cm path size)))))
 
 (defn user-home-dir
   ([user]
@@ -512,11 +603,12 @@
   ([path]
      (path-exists? "" path))
   ([user path]
-     (with-jargon (jargon-cfg) [cm]
-       (log-rulers
-        cm [user]
-        (format-call "path-exists?" user path)
-        (exists? cm (url-decode path))))))
+    (let [path (ft/rm-last-slash path)]
+      (with-jargon (jargon-cfg) [cm]
+        (log-rulers
+          cm [user]
+          (format-call "path-exists?" user path)
+          (exists? cm (url-decode path)))))))
 
 (defn path-is-dir?
   [path]
@@ -540,11 +632,10 @@
       full-listing))))
 
 (defn merge-counts
-  [stat-map cm path]
+  [stat-map cm user path]
   (if (is-dir? cm path)
-    (let [subs (group-by #(is-dir? cm %) (mapv #(.getAbsolutePath %) (list-in-dir cm path)))]
-      (merge stat-map {:file-count (count (get subs false))
-                      :dir-count  (count (get subs true))}))
+    (merge stat-map {:file-count (ll/num-dataobjects-under-path cm user path)
+                     :dir-count  (ll/num-collections-under-path cm user path)})
     stat-map))
 
 (defn merge-shares
@@ -563,16 +654,18 @@
 
 (defn path-stat
   [user path]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "path-stat" user path)
-     (validators/path-exists cm path)
-     (-> (stat cm path)
-         (merge {:permissions (permissions cm user path)})
-         (merge-type-info cm user path)
-         (merge-shares cm user path)
-         (merge-counts cm path)))))
+  (let [path (ft/rm-last-slash path)]
+    (log/warn "[path-stat] user:" user "path:" path)
+    (with-jargon (jargon-cfg) [cm]
+      (log-rulers
+        cm [user]
+        (format-call "path-stat" user path)
+        (validators/path-exists cm path)
+        (-> (stat cm path)
+          (merge {:permissions (permissions cm user path)})
+          (merge-type-info cm user path)
+          (merge-shares cm user path)
+          (merge-counts cm user path))))))
 
 (defn- format-tree-urls
   [treeurl-maps]
@@ -601,21 +694,22 @@
 
 (defn manifest
   [user path data-threshold]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "manifest" user path data-threshold)
-     (validators/user-exists cm user)
-     (validators/path-exists cm path)
-     (validators/path-is-file cm path)
-     (validators/path-readable cm user path)
+  (let [path (ft/rm-last-slash path)]
+    (with-jargon (jargon-cfg) [cm]
+      (log-rulers
+        cm [user]
+        (format-call "manifest" user path data-threshold)
+        (validators/user-exists cm user)
+        (validators/path-exists cm path)
+        (validators/path-is-file cm path)
+        (validators/path-readable cm user path)
 
-     {:action       "manifest"
-      :content-type (content-type cm path)
-      :tree-urls    (extract-tree-urls cm path)
-      :info-type    (filetypes/get-types cm user path)
-      :mime-type    (.detect (Tika.) (input-stream cm path))
-      :preview      (preview-url user path)})))
+        {:action       "manifest"
+         :content-type (content-type cm path)
+         :tree-urls    (extract-tree-urls cm path)
+         :info-type    (filetypes/get-types cm user path)
+         :mime-type    (.detect (Tika.) (input-stream cm path))
+         :preview      (preview-url user path)}))))
 
 (defn download-file
   [user file-path]
@@ -985,36 +1079,33 @@
       (log-rulers
        cm [user]
        (format-call "delete-paths" user paths)
-       (let [paths (mapv ft/rm-last-slash paths)] 
+       (let [paths (mapv ft/rm-last-slash paths)]
          (validators/user-exists cm user)
          (validators/all-paths-exist cm paths)
          (validators/user-owns-paths cm user paths)
-         
+
          (when (some true? (mapv home-matcher paths))
            (throw+ {:error_code ERR_NOT_AUTHORIZED
                     :paths (filterv home-matcher paths)}))
-         
+
          (doseq [p paths]
            (log/debug "path" p)
            (log/debug "readable?" user (owns? cm user p))
-           
+
            (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
              (doseq [path-ticket path-tickets]
                (delete-ticket cm (:username cm) path-ticket)))
-           
+
            (if-not (.startsWith p (user-trash-dir cm user))
              (move-to-trash cm p user)
              (delete cm p)))
-         
+
          {:paths paths})))))
 
 (defn trash-origin-path
   [cm user p]
   (if (attribute? cm p "ipc-trash-origin")
-    (let [origin-path (:value (first (get-attribute cm p "ipc-trash-origin")))]
-      (if-not (is-writeable? cm user (ft/dirname origin-path))
-        (ft/path-join (user-home-dir user) (ft/basename p))
-        origin-path))
+    (:value (first (get-attribute cm p "ipc-trash-origin")))
     (ft/path-join (user-home-dir user) (ft/basename p))))
 
 (defn restore-to-homedir?
@@ -1035,13 +1126,16 @@
 
 (defn restore-parent-dirs
   [cm user path]
-  (log/warn "restore-parent-dirs")
-  (log/warn (ft/dirname path))
+  (log/warn "restore-parent-dirs" (ft/dirname path))
+
   (when-not (exists? cm (ft/dirname path))
     (mkdirs cm (ft/dirname path))
     (log/warn "Created " (ft/dirname path))
 
     (loop [parent (ft/dirname path)]
+      (log/warn "restoring path" parent)
+      (log/warn "user parent path" user)
+
       (when (and (not= parent (user-home-dir user)) (not (owns? cm user parent)))
         (log/warn (str "Restoring ownership of parent dir: " parent))
         (set-owner cm parent user)
@@ -1053,33 +1147,33 @@
     (log-rulers
      cm [user]
      (format-call "restore-path" :user user :paths paths :user-trash user-trash)
-     (let [paths (mapv ft/rm-last-slash paths)] 
+     (let [paths (mapv ft/rm-last-slash paths)]
        (validators/user-exists cm user)
        (validators/all-paths-exist cm paths)
        (validators/all-paths-writeable cm user paths)
-       
+
        (let [retval (atom (hash-map))]
          (doseq [path paths]
            (let [fully-restored      (ft/rm-last-slash (restoration-path cm user path))
                  restored-to-homedir (restore-to-homedir? cm path)]
              (log/warn "Restoring " path " to " fully-restored)
-             
+
              (validators/path-not-exists cm fully-restored)
              (log/warn fully-restored " does not exist. That's good.")
-             
+
              (restore-parent-dirs cm user fully-restored)
              (log/warn "Done restoring parent dirs for " fully-restored)
-             
+
              (validators/path-writeable cm user (ft/dirname fully-restored))
              (log/warn fully-restored "is writeable. That's good.")
-             
+
              (log/warn "Moving " path " to " fully-restored)
              (validators/path-not-exists cm fully-restored)
-             
+
              (log/warn fully-restored " does not exist. That's good.")
              (move cm path fully-restored :user user :admin-users (irods-admins))
              (log/warn "Done moving " path " to " fully-restored)
-             
+
              (reset! retval
                      (assoc @retval path {:restored-path fully-restored
                                           :partial-restore restored-to-homedir}))))
@@ -1305,3 +1399,107 @@
       :start      (str position)
       :chunk-size (str (count (.getBytes update-string)))
       :file-size  (str (file-size cm path))})))
+
+(defn- closest-page
+  [page-positions page-number]
+  (let [idx (dec page-number)
+        len (count page-positions)]
+    (if (<= page-number len)
+      [(page-positions idx) page-number]
+      [(last page-positions) len])))
+
+(defn- csv-page-result
+  [path user delim file-size chunk-size page-positions page csv]
+  {:path           path
+   :user           user
+   :delim          (str delim)
+   :file-size      (str file-size)
+   :chunk-size     (str chunk-size)
+   :page-positions (mapv str page-positions)
+   :page           (str page)
+   :csv            csv})
+
+(defn get-csv-page
+  "Retrieves a CSV page for a given chunk size. `delim` is the character that is used as a field
+   separator in the file. `page-positions` is a vector of positions of pages within the file,
+   which is used as an optimization when retrieving a CSV page. Without it, it would be necessary
+   to sequentially scan for the requested page with every call. `page-number` is the requsted page
+   number. `chunk-size` is the maximum size of a page."
+  [user path delim page-positions page-number chunk-size]
+  (with-jargon (jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/path-exists cm path)
+    (validators/path-is-file cm path)
+    (validators/path-readable cm user path)
+
+    (let [size       (file-size cm path)
+          get-chunk  (fn [pos] (read-at-position cm path pos chunk-size))
+          parse-page (fn [chunk] (deliminator/parse-excerpt chunk delim))
+          get-page   (comp parse-page get-chunk)
+          add-pos    (fn [ps p] (if (> p (last ps)) (conj ps p) ps))
+          build-res  (partial csv-page-result path user delim size chunk-size)]
+      (loop [[pos page] (closest-page page-positions page-number)
+             positions  page-positions
+             [csv len]  (get-page pos)]
+        (let [next-pos  (+ pos len)
+              positions (add-pos positions next-pos)]
+          (cond (= page page-number) (build-res positions page csv)
+                (< next-pos size)    (recur [next-pos (inc page)] positions (get-page next-pos))
+                :else                (build-res positions page csv)))))))
+
+(defn trim-to-line-start
+  [str-chunk line-ending]
+  (let [line-pos (.indexOf str-chunk line-ending)]
+    (if (<= line-pos 0)
+      str-chunk
+      (.substring str-chunk (+ line-pos 1)))))
+
+(defn calc-start-pos
+  "Calculates the new start position after (trim-to-line-start) has been called."
+  [start-pos orig-chunk trimmed-chunk]
+  (+ start-pos (- (count (.getBytes orig-chunk)) (count (.getBytes trimmed-chunk)))))
+
+(defn trim-to-last-line
+  [str-chunk line-ending]
+  (let [calced-pos (- (.lastIndexOf str-chunk line-ending) 1)
+        last-pos   (if-not (pos? calced-pos) 1 calced-pos)]
+    (.substring str-chunk 0 last-pos)))
+
+(defn calc-end-pos
+  "Calculates the new ending byte based on the start position and the current size of the chunk."
+  [start-pos trimmed-chunk]
+  (+ start-pos (- (count (.getBytes trimmed-chunk)) 1)))
+
+(defn read-csv
+  [csv-str]
+  (let [ba  (java.io.ByteArrayInputStream. (.getBytes csv-str))
+        isr (java.io.InputStreamReader. ba "UTF-8")]
+    (mapv vec (.readAll (CSVReader. isr)))))
+
+(defn read-csv-chunk
+  "Reads a chunk of a file and parses it as a CSV. The position and chunk-size are not guaranteed, since
+   we shouldn't try to parse partial rows. We scan forward from the starting position to find the first
+   line-ending and then scan backwards from the last position for the last line-ending."
+  [user path position chunk-size line-ending]
+  (with-jargon (jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/path-exists cm path)
+    (validators/path-is-file cm path)
+    (validators/path-readable cm user path)
+
+    (when-not (contains? #{"\r\n" "\n"} line-ending)
+      (throw+ {:error_code "ERR_INVALID_LINE_ENDING"
+               :line-ending line-ending}))
+
+    (let [chunk         (read-at-position cm path position chunk-size)
+          front-trimmed (trim-to-line-start chunk line-ending)
+          new-start-pos (calc-start-pos position chunk front-trimmed)
+          trimmed-chunk (trim-to-last-line front-trimmed line-ending)
+          new-end-pos   (calc-end-pos position trimmed-chunk)]
+      {:path       path
+       :user       user
+       :start      (str new-start-pos)
+       :end        (str new-end-pos)
+       :chunk-size (str (count (.getBytes trimmed-chunk)))
+       :file-size  (str (file-size cm path))
+       :csv        (read-csv trimmed-chunk)})))

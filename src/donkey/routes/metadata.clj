@@ -25,8 +25,8 @@
    (GET "/app/:app-id" [app-id]
         (trap #(apps/get-app app-id)))
 
-   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as req]
-        (trap #(run-experiment req workspace-id)))
+   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
+        (trap #(apps/submit-job workspace-id body)))
 
    (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
         (trap #(get-experiments req workspace-id)))
@@ -58,8 +58,8 @@
    (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
         (trap #(apps/apps-in-group app-group-id)))
 
-   (GET "/get-components-in-analysis/:app-id" [app-id :as req]
-        (trap #(list-deployed-components-in-app req app-id)))
+   (GET "/get-components-in-analysis/:app-id" [app-id]
+        (trap #(apps/get-deployed-components-in-app app-id)))
 
    (POST "/update-favorites" [:as req]
          (trap #(update-favorites req)))
