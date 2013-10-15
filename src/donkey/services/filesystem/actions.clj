@@ -632,11 +632,10 @@
       full-listing))))
 
 (defn merge-counts
-  [stat-map cm path]
+  [stat-map cm user path]
   (if (is-dir? cm path)
-    (let [subs (group-by #(is-dir? cm %) (mapv #(.getAbsolutePath %) (list-in-dir cm path)))]
-      (merge stat-map {:file-count (count (get subs false))
-                      :dir-count  (count (get subs true))}))
+    (merge stat-map {:file-count (ll/num-dataobjects-under-path cm user path)
+                     :dir-count  (ll/num-collections-under-path cm user path)})
     stat-map))
 
 (defn merge-shares
@@ -656,6 +655,7 @@
 (defn path-stat
   [user path]
   (let [path (ft/rm-last-slash path)]
+    (log/warn "[path-stat] user:" user "path:" path)
     (with-jargon (jargon-cfg) [cm]
       (log-rulers
         cm [user]
@@ -665,7 +665,7 @@
           (merge {:permissions (permissions cm user path)})
           (merge-type-info cm user path)
           (merge-shares cm user path)
-          (merge-counts cm path))))))
+          (merge-counts cm user path))))))
 
 (defn- format-tree-urls
   [treeurl-maps]
