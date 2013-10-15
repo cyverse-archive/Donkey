@@ -265,8 +265,8 @@
         do          (get entry-types "dataobject")
         collections (get entry-types "collection")
         include?    (partial not-include-in-page? user)]
-    {:files   (filtered-path-map-seq include? do)
-     :folders (filtered-path-map-seq include? collections)}))
+    {:files   (mapv page-entry->map do)
+     :folders (mapv page-entry->map collections)}))
 
 (defn paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
