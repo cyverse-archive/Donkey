@@ -27,6 +27,7 @@
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
+            [donkey.util.db :as db]
             [donkey.services.fileio.controllers :as fileio]
             [clojure.tools.nrepl.server :as nrepl]))
 
@@ -77,7 +78,8 @@
 (defn load-configuration-from-file
   "Loads the configuration properties from a file."
   []
-  (config/load-config-from-file))
+  (config/load-config-from-file)
+  (db/define-database))
 
 (defn lein-ring-init
   []
@@ -87,7 +89,8 @@
 (defn load-configuration-from-zookeeper
   "Loads the configuration properties from Zookeeper."
   []
-  (config/load-config-from-zookeeper))
+  (config/load-config-from-zookeeper)
+  (db/define-database))
 
 (defn delayed-handler
   [routes-fn]
