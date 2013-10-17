@@ -1,9 +1,9 @@
 (ns donkey.util.validators
   (:use [slingshot.slingshot :only [try+ throw+]]
-        [clojure-commons.error-codes]
-        [cheshire.core :as json]
-        [cemerick.url :as url-parser]
-        [clojure.string :as string]))
+        [clojure-commons.error-codes])
+  (:require [cheshire.core :as json]
+            [cemerick.url :as url-parser]
+            [clojure.string :as string]))
 
 (defn parse-body
   [body]

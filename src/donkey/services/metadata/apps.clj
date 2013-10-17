@@ -1,7 +1,8 @@
 (ns donkey.services.metadata.apps
   (:use [donkey.auth.user-attributes :only [current-user]]
-        [donkey.persistence.jobs :only [save-job]]
+        [donkey.persistence.jobs :only [save-job count-jobs get-jobs]]
         [donkey.util.validators :only [validate-map]]
+        [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure-commons.error-codes :as ce]
@@ -44,20 +45,53 @@
 
 (def ^:private de-job-validation-map
   "The validation map to use for DE jobs."
-  {:name          string?
-   :id            string?
-   :analysis_id   string?
-   :analysis_name string?
-   :startdate     string?
-   :status        string?})
+  {:name            string?
+   :uuid            string?
+   :analysis_id     string?
+   :analysis_name   string?
+   :submission_date #(or (string? %) (number? %))
+   :status          string?})
+
+(defn- get-end-date
+  [{:keys [status completion_date now_date]}]
+  (case status
+    "Failed"    (db/timestamp-from-str now_date)
+    "Completed" (db/timestamp-from-str completion_date)
+                nil))
 
 (defn- store-de-job
   [job]
   (validate-map job de-job-validation-map)
-  (save-job (:id job) (:name job) de-job-type (:username current-user) (:status job)
+  (save-job (:uuid job) (:name job) de-job-type (:username current-user) (:status job)
             :app-name   (:analysis_name job)
-            :start-date (db/timestamp-from-millis-str (:startdate job))
-            :end-date   (db/timestamp-from-millis-str (:enddate job))))
+            :start-date (db/timestamp-from-str (str (:submission_date job)))
+            :end-date   (get-end-date job)
+            :deleted    (:deleted job)))
+
+(defn- format-de-job
+  [job state]
+  (assoc job
+    :startdate        (str (db/millis-from-timestamp (:startdate job)))
+    :enddate          (str (db/millis-from-timestamp (:enddate job)))
+    :analysis_id      (:analysis_id state)
+    :analysis_details (:analysis_details state)
+    :wiki_url         (:wiki_url state)
+    :description      (:description state)
+    :resultfolderid   (:output_dir state)))
+
+(defn- list-de-jobs
+  [limit offset sort-field sort-order]
+  (let [username  (:username current-user)
+        job-types [de-job-type]
+        jobs      (get-jobs username limit offset sort-field sort-order job-types)
+        ids       (map :id jobs)
+        states    (into {} (map (juxt :uuid identity) (osm/get-jobs ids)))]
+    (mapv #(format-de-job % (states (:id %))) jobs)))
+
+(defn- list-all-jobs
+  [agave limit offset sort-field sort-order]
+  ;; TODO: implement me
+  )
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
@@ -66,7 +100,7 @@
   (getApp [this app-id])
   (getAppDeployedComponents [this app-id])
   (submitJob [this workspace-id submission])
-  (listJobs [this workspace-id params])
+  (listJobs [this limit offset sort-field sort-order])
   (populateJobsTable [this]))
 
 (deftype DeOnlyAppLister []
@@ -81,8 +115,8 @@
     (metadactyl/get-deployed-components-in-app app-id))
   (submitJob [this workspace-id submission]
     (metadactyl/submit-job workspace-id submission))
-  (listJobs [this workspace-id params]
-    (metadactyl/list-jobs this workspace-id params))
+  (listJobs [this limit offset sort-field sort-order]
+    (list-de-jobs limit offset sort-field sort-order))
   (populateJobsTable [this]
     (dorun (map store-de-job (osm/list-jobs)))))
 
@@ -107,12 +141,10 @@
     (if (is-uuid? (:analysis_id submission))
       (metadactyl/submit-job workspace-id submission)
       (.submitJob agave-client submission)))
-  (listJobs [this workspace-id params]
-    (concat (metadactyl/list-jobs workspace-id params) (.listJobs agave-client)))
+  (listJobs [this limit offset sort-field sort-order]
+    (list-all-jobs agave-client limit offset sort-field sort-order))
   (populateJobsTable [this]
-    (dorun (map store-de-job (osm/list-jobs)))
-    (dorun (map #(store-agave-job agave-client % (:analysis_name %))
-                (.listRawJobs agave-client)))))
+    (dorun (map store-de-job (osm/list-jobs)))))
 
 (defn- get-app-lister
   []
@@ -125,6 +157,13 @@
                       (config/agave-jobs-enabled)
                       (config/irods-home)))
     (DeOnlyAppLister.)))
+
+(defn- populate-jobs-table
+  [app-lister]
+  (let [username (:username current-user)]
+    (transaction
+     (when (zero? (count-jobs username))
+       (.populateJobsTable app-lister)))))
 
 (defn get-only-app-groups
   []
@@ -185,14 +224,11 @@
                  :or   {limit      "0"
                         offset     "0"
                         sort-field :startdate
-                        sort-order :desc}
-                 :as   params}]
+                        sort-order :desc}}]
   (let [limit      (Long/parseLong limit)
         offset     (Long/parseLong offset)
         sort-field (keyword sort-field)
-        sort-order (keyword sort-order)]
-    (service/success-response
-     {:analyses (->> (.listJobs (get-app-lister) workspace-id params)
-                     (sort-jobs sort-field sort-order)
-                     (drop offset)
-                     (apply-limit limit))})))
+        sort-order (keyword sort-order)
+        app-lister (get-app-lister)]
+    (populate-jobs-table app-lister)
+    (.listJobs app-lister limit offset sort-field sort-order)))
