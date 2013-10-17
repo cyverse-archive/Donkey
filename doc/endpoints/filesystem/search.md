@@ -84,10 +84,10 @@ $ curl \
                 },
                 "date-created": 1381350424,
                 "date-modified": 1381350424,
+                "file-size": 13225,
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "label": "read1_10k.fq",
                 "media-type": null,
-                "size": 13225,
                 "user-permissions": [
                     {
                         "permission": "read",
@@ -116,10 +116,10 @@ $ curl \
                 },
                 "date-created": 1381350485,
                 "date-modified": 1381350485,
+                "file-size": 14016,
                 "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
                 "label": "read1_10k.fq",
                 "media-type": null,
-                "size": 14016,
                 "user-permissions": [
                     {
                         "permission": "write",

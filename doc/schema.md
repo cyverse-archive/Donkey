@@ -56,8 +56,8 @@ describe a file.
 | Field       | Type   | Description |
 | ----------- | ------ | ----------- |
 | creator     | object | a [user identity record](#user-identity-record) identifying the creator of the file |
+| file-size   | number | the size of the file in octets |
 | media-type  | string | the media type of the file, `null` if unknown |
-| size        | number | the size of the file in octets |
 
 **Example**
 
@@ -86,9 +86,9 @@ describe a file.
     },
     "date-created"     : 1381350485,
     "date-modified"    : 1381350485,
+    "file-size"        : 14016,
     "label"            : "a.file",
-    "media-type"       : null,
-    "size"             : 14016
+    "media-type"       : null
 }
 ```
 
