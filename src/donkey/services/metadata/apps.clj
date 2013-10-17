@@ -186,39 +186,6 @@
   (service/success-response
    (.submitJob (get-app-lister) workspace-id (service/decode-json body))))
 
-(defn- compare-number-strings
-  [& args]
-  (apply compare (map #(Long/parseLong %) args)))
-
-(defn- base-comparator-for
-  [sort-field]
-  (if (contains? #{:startdate :enddate} sort-field)
-    compare-number-strings
-    compare))
-
-(defn- illegal-sort-order
-  [sort-order]
-  (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-           :sort-order sort-order}))
-
-(defn- comparator-for
-  [sort-field sort-order]
-  (condp contains? sort-order
-    #{:desc :DESC} (comp - (base-comparator-for sort-field))
-    #{:asc  :ASC}  (base-comparator-for sort-field)
-                   (illegal-sort-order sort-order)))
-
-(defn- sort-jobs
-  [sort-field sort-order jobs]
-  (let [compare-fn (comparator-for sort-field sort-order)]
-    (sort-by sort-field compare-fn jobs)))
-
-(defn- apply-limit
-  [limit coll]
-  (if-not (zero? limit)
-    (take limit coll)
-    coll))
-
 (defn list-jobs
   [workspace-id {:keys [limit offset sort-field sort-order]
                  :or   {limit      "0"
