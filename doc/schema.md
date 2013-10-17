@@ -16,15 +16,16 @@ Here are the fields that describe a filesystem entry.
 | Field            | Type   | Description |
 | ---------------- | ------ | ----------- |
 | id               | string | the logical path to the entry |
+| user-permissions | array  | an array of [permission records](#permission-record) identifying the permissions users have on this entry |
+| date-created     | number | the time when the file was created in seconds since the POSIX epoch |
+| date-modified    | number | the time when the file was last modified in seconds since the POSIX epoch |
 | label            | string | the logical name of the entry |
-| user-permissions | array  | an array of [permission records](#permission_record) identifying the permissions users have on this entry |
 
 **Example**
 
 ```json
 {
     "id"               : "/iplant/home/tedgin/an-entry",
-    "label"            : "an-entry",
     "user-permissions" : [
         {
             "permission" : "own",
@@ -40,20 +41,21 @@ Here are the fields that describe a filesystem entry.
                 "zone"     : "iplant"
             }
         }
-    ]
+    ],
+    "date-created"     : 1381350485,
+    "date-modified"    : 1381350485,
+    "label"            : "an-entry"
 }
 ```
 
 ## File Record
 
-A file extends a [filesystem entry](#filesystem_entry_record). Here are the additional fields that
+A file extends a [filesystem entry](#filesystem-entry-record). Here are the additional fields that
 describe a file.
 
 | Field       | Type   | Description |
 | ----------- | ------ | ----------- |
-| creator     | object | a [user identity record](#user_identity_record) identifying the creator of the file |
-| create-time | number | the time when the file was created in seconds since the POSIX epoch |
-| modify-time | number | the time when the file was last modified in seconds since the POSIX epoch |
+| creator     | object | a [user identity record](#user-identity-record) identifying the creator of the file |
 | media-type  | string | the media type of the file, `null` if unknown |
 | size        | number | the size of the file in octets |
 
@@ -62,7 +64,6 @@ describe a file.
 ```json
 {
     "id"               : "/iplant/home/tedgin/a.file",
-    "label"            : "a.file",
     "user-permissions" : [
         {
             "permission" : "own",
@@ -83,8 +84,9 @@ describe a file.
         "username" : "tedgin",
         "zone"     : "iplant"
     },
-    "create-time"      : 1381350485,
-    "modify-time"      : 1381350485,
+    "date-created"     : 1381350485,
+    "date-modified"    : 1381350485,
+    "label"            : "a.file",
     "media-type"       : null,
     "size"             : 14016
 }
@@ -92,23 +94,15 @@ describe a file.
 
 ## Folder Record
 
-A folder extends a [filesystem entry](#filesystem_entry_record). Here are the additional fields that
-describe a folder.
-
-| Field       | Type   | Description |
-| ----------- | ------ | ----------- |
-| creator     | object | a [user identity record](#user_identity_record) identifying the creator of the folder |
-| create-time | number | the time when the folder was created in seconds since the POSIX epoch |
-| modify-time | number | the time when the folder was last modified in seconds since the POSIX epoch\* |
-
-\* A folder is modified when a file or sub-folder is added to or removed from it.
+A folder extends a [filesystem entry](#filesystem-entry-record). It has the additional field
+`"creator"` that holds a [user identity record](#user-identity-record) identifying the creator of
+the folder.
 
 **Example**
 
 ```json
 {
     "id"               : "/iplant/home/tedgin/a-folder",
-    "label"            : "a-folder",
     "user-permissions" : [
         {
             "permission" : "own",
@@ -129,8 +123,9 @@ describe a folder.
         "username" : "tedgin",
         "zone"     : "iplant"
     },
-    "create-time"      : 1381350485,
-    "modify-time"      : 1381350485
+    "date-created"     : 1381350485,
+    "date-modified"    : 1381350485,
+    "label"            : "a-folder"
 }
 ```
 
@@ -140,8 +135,8 @@ Here are the fields that describe a permission.
 
 | Field      | Type   | Description |
 | ---------- | ------ | ----------- |
-| permission | string | the access level (`read`\|`modify`\|`own`)\* |
-| user       | object | a [user identity record](#user_identity_record) identifying the user having the given permission |
+| permission | string | the access level, `read`, `modify` or `own`\* |
+| user       | object | a [user identity record](#user-identity-record) identifying the user having the given permission |
 
 \* The `read` access level means the user can download a file or folder, read it, and read its
 metadata. The `modify` access level gives the user `read` access level plus the ability to create,
@@ -182,7 +177,7 @@ Here are the fields that define a user identity.
 
 ## User Details Record
 
-User details extend a [user identity](#user_identity_record). Here are the additional fields that
+User details extend a [user identity](#user-identity-record). Here are the additional fields that
 define a user's details.
 
 | Field       | Type   | Description |

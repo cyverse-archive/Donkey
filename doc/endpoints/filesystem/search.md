@@ -22,8 +22,8 @@ for searching.
 For each file and folder stored in the iPlant data store, its system metadata and ACL are indexed as
 a JSON document. Each field may be explicitly used in a search query. If the field is an object,
 i.e. an aggregate of fields, the object's fields may be explicitly referenced as well using dot
-notation, e.g. `acl.access`. For files, [file records](../../schema.md#file_record) are indexed, and
-for folders, [folder records](../../schema.md#folder_record) are indexed.
+notation, e.g. `acl.access`. For files, [file records](../../schema.md#file-record) are indexed, and
+for folders, [folder records](../../schema.md#folder-record) are indexed.
 
 ## Endpoints
 
@@ -66,7 +66,7 @@ When the search succeeds the response document has these additional fields.
 | ------ | ------ | ----------- |
 | score  | number | an indication of how well this entity matches the query compared to other matches |
 | type   | string | the entity is this type of filesystem entry, either `"file"` or `"folder"` |
-| entity | object | the [file record](../../schema.md#file_record) or [folder record](../../schema.md#folder_record) matched |
+| entity | object | the [file record](../../schema.md#file-record) or [folder record](../../schema.md#folder-record) matched |
 
 **Example**
 
@@ -78,15 +78,15 @@ $ curl \
     "matches": [
         {
             "entity": {
-                "create-time": 1381350424,
                 "creator": {
                     "name": "rods",
                     "zone": "iplant"
                 },
+                "date-created": 1381350424,
+                "date-modified": 1381350424,
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "label": "read1_10k.fq",
                 "media-type": null,
-                "modify-time": 1381350424,
                 "size": 13225,
                 "user-permissions": [
                     {
@@ -110,15 +110,15 @@ $ curl \
         },
         {
             "entity": {
-                "create-time": 1381350485,
                 "creator": {
                     "name": "rods",
                     "zone": "iplant"
                 },
+                "date-created": 1381350485,
+                "date-modified": 1381350485,
                 "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
                 "label": "read1_10k.fq",
                 "media-type": null,
-                "modify-time": 1381350485,
                 "size": 14016,
                 "user-permissions": [
                     {
