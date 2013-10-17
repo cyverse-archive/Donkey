@@ -22,5 +22,5 @@ inside Donkey instead.  The Mule services no longer exist.
     * [Collaborator List Management Endpoints](doc/endpoints/collaborators.md)
     * [Sharing Endpoints](doc/endpoints/sharing.md)
     * [Reference Genome Endpoints](doc/endpoints/reference-genomes.md)
-    * [Data Search Endpoints](doc/endpoints/data-search.md)
+    * [Data Search Endpoints](doc/endpoints/filesystem/search.md)
 * [Endpoint Index](doc/endpoint-index.md)
