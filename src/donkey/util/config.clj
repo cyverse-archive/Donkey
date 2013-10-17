@@ -330,6 +330,34 @@
        :max-retries (irods-max-retries)
        :retry-sleep (irods-retry-sleep)
        :use-trash   (irods-use-trash))))
+;;; End iRODS configuration
+
+;;; ICAT connection information
+(cc/defprop-str icat-host
+  "The hostname for the server running the ICAT database."
+  [props config-valid configs data-routes-enabled]
+  "donkey.icat.host")
+
+(cc/defprop-int icat-port
+  "The port that the ICAT is accepting connections on."
+  [props config-valid configs data-routes-enabled]
+  "donkey.icat.port")
+
+(cc/defprop-str icat-user
+  "The user for the ICAT database."
+  [props config-valid configs data-routes-enabled]
+  "donkey.icat.user")
+
+(cc/defprop-str icat-password
+  "The password for the ICAT database."
+  [props config-valid configs data-routes-enabled]
+  "donkey.icat.password")
+
+(cc/defprop-str icat-db
+  "The database name for the ICAT database. Yeah, it's most likely going to be 'ICAT'."
+  [props config-valid configs data-routes-enabled]
+  "donkey.icat.db")
+;;; End ICAT connection information.
 
 ;;; Garnish configuration
 (cc/defprop-str garnish-type-attribute

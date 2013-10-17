@@ -12,7 +12,8 @@
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.garnish.irods :as filetypes]
             [ring.util.codec :as cdc]
-            [clj-jargon.lazy-listings :as ll])
+            [clj-jargon.lazy-listings :as ll]
+            [clj-icat-direct.icat :as icat])
   (:use [clj-jargon.jargon :exclude [init list-dir] :as jargon]
         [clojure-commons.error-codes]
         [donkey.util.config]
@@ -240,15 +241,14 @@
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory
    information that can be consumed by the front-end."
-  [page-entry]
-  (let [[id label size created lastmod perm-val entry-type] page-entry
-        base-map {:id            id
-                  :label         label
-                  :file-size     (str size)
-                  :date-created  (str (* (Integer/parseInt created) 1000))
-                  :date-modified (str (* (Integer/parseInt lastmod) 1000))
-                  :permissions   (perm-map-for perm-val)}]
-    (if (= entry-type "dataobject")
+  [{:keys [type full_path base_name data_size modify_ts create_ts access_type_id]}]
+  (let [base-map {:id            full_path
+                  :label         base_name
+                  :file-size     (str data_size)
+                  :date-created  (str (* (Integer/parseInt create_ts) 1000))
+                  :date-modified (str (* (Integer/parseInt modify_ts) 1000))
+                  :permissions   (perm-map-for (str access_type_id))}]
+    (if (= type "dataobject")
       base-map
       (merge base-map {:hasSubDirs true
                        :file-size  "0"}))))
@@ -261,12 +261,29 @@
   "Transforms an entire page of results for a paged listing in a map that
    can be returned to the client."
   [user page]
-  (let [entry-types (group-by #(last %) page)
+  (let [entry-types (group-by :type page)
         do          (get entry-types "dataobject")
         collections (get entry-types "collection")
         include?    (partial not-include-in-page? user)]
     {:files   (mapv page-entry->map do)
      :folders (mapv page-entry->map collections)}))
+
+(defn- user-col->api-col
+  [sort-col]
+  (case sort-col
+    "NAME"         :base-name
+    "ID"           :full-path
+    "LASTMODIFIED" :modify-ts
+    "DATECREATED"  :create-ts
+    "SIZE"         :data-size
+                   :base-name))
+
+(defn- user-order->api-order
+  [sort-order]
+  (case sort-order
+    "ASC"  :asc
+    "DESC" :desc
+           :asc))
 
 (defn paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
@@ -293,18 +310,20 @@
         (throw+ {:error_code "ERR_INVALID_SORT_ORDER"
                  :sort-order sort-order}))
 
-      (let [stat (stat cm path)]
+      (let [stat (stat cm path)
+            scol (user-col->api-col sort-col)
+            sord (user-order->api-order sort-order)]
         (merge
           (hash-map
             :id               path
             :label            (id->label cm user path)
             :permissions      (collection-perm-map cm user path)
             :hasSubDirs       true
-            :total            (ll/count-list-entries cm user path)
+            :total            (icat/number-of-items-in-folder user path)
             :date-created     (:created stat)
             :date-modified    (:modified stat)
             :file-size        "0")
-          (page->map user (ll/paged-list-entries cm user path sort-col sort-order limit offset)))))))
+          (page->map user (icat/paged-folder-listing user path scol sord limit offset)))))))
 
 (defn root-listing
   ([user root-path]
@@ -634,8 +653,8 @@
 (defn merge-counts
   [stat-map cm user path]
   (if (is-dir? cm path)
-    (merge stat-map {:file-count (ll/num-dataobjects-under-path cm user path)
-                     :dir-count  (ll/num-collections-under-path cm user path)})
+    (merge stat-map {:file-count (icat/number-of-files-in-folder user path)
+                     :dir-count  (icat/number-of-folders-in-folder user path)})
     stat-map))
 
 (defn merge-shares
