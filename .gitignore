@@ -1,3 +1,4 @@
+donkey.iml
 /pom.xml
 *jar
 /bin
@@ -6,6 +7,7 @@
 /native
 /.lein-failures
 /checkouts
+.idea/
 .lein-deps-sum
 .lein-plugins
 /.classpath
