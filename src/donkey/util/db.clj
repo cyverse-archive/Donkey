@@ -1,11 +1,8 @@
 (ns donkey.util.db
-  (:use [clj-time.core :only [default-time-zone]]
-        [clj-time.format :only [formatter parse]]
-        [donkey.util.config]
-        [korma.db]
-        [slingshot.slingshot :only [throw+ try+]])
-  (:require [clojure.string :as string]
-            [clojure-commons.error-codes :as ce])
+  (:use [donkey.util.config]
+        [donkey.util.time :only [millis-from-str]]
+        [korma.db])
+  (:require [clojure.string :as string])
   (:import [java.sql Timestamp]))
 
 (defn- create-db-spec
@@ -31,31 +28,10 @@
   (when-not (nil? millis)
     (Timestamp. millis)))
 
-(def ^:private millis-str-regex #"^\d+$")
-
-(def ^:private timestamp-parser
-  (formatter (default-time-zone)
-             "EEE MMM dd YYYY HH:mm:ss 'GMT'Z"
-             "YYYY MMM dd HH:mm:ss"
-             "YYYY-MM-dd-HH-mm-ss.SSS"))
-
-(defn- strip-time-zone
-  "Removes the time zone abbreviation from a date timestamp."
-  [s]
-  (string/replace s #"\s*\(\w+\)\s*$" ""))
-
-(defn- parse-timestamp
-  "Parses a timestamp in one of the accepted formats."
-  [s]
-  (Timestamp. (.getMillis (parse timestamp-parser (strip-time-zone s)))))
-
 (defn timestamp-from-str
   "Parses a string representation of a timestamp."
   [s]
-  (assert (or (nil? s) (string? s)))
-  (cond (or (string/blank? s) (= "0" s)) nil
-        (re-matches #"\d+" s)            (Timestamp. (Long/parseLong s))
-        :else                            (parse-timestamp s)))
+  (timestamp-from-millis (millis-from-str s)))
 
 (defn millis-from-timestamp
   "Converts a timestamp to the number of milliseconds since the epoch."
