@@ -1,3 +1,6 @@
+
+<p style='color:red;font-weight:bold;font-size:larger;'>These endpoints have not been implemented yet.</p>
+
 This document describes the endpoints used to performing searches of user data.
 
 # Table of Contents
