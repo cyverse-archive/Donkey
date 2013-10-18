@@ -83,3 +83,11 @@
           (order sort-field sort-order)
           (offset (nil-if-zero row-offset))
           (limit (nil-if-zero row-limit))))
+
+(defn update-job
+  "Updates an existing job in the database."
+  [id status end-date]
+  (update :jobs
+          (set-fields (remove-nil-values {:status   status
+                                          :end_date end-date}))
+          (where {:external_id id})))

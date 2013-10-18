@@ -1,6 +1,6 @@
 (ns donkey.services.metadata.apps
   (:use [donkey.auth.user-attributes :only [current-user]]
-        [donkey.persistence.jobs :only [save-job count-jobs get-jobs]]
+        [donkey.persistence.jobs :only [save-job count-jobs get-jobs update-job]]
         [donkey.util.validators :only [validate-map]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
@@ -268,3 +268,7 @@
      {:analyses  (.listJobs app-lister limit offset sort-field sort-order)
       :timestamp (str (System/currentTimeMillis))
       :total     (.countJobs app-lister)})))
+
+(defn update-de-job-status
+  [id status end-date]
+  (update-job id status (db/timestamp-from-str (str end-date))))

@@ -1,8 +1,10 @@
 (ns donkey.routes.notification
   (:use [compojure.core]
+        [donkey.services.callbacks :only [receive-notification]]
         [donkey.services.metadata.metadactyl]
         [donkey.util])
-  (:require [donkey.util.config :as config]))
+  (:require [clojure.tools.logging :as log]
+            [donkey.util.config :as config]))
 
 (defn secured-notification-routes
   []
@@ -84,4 +86,7 @@
    [config/notification-routes-enabled]
 
    (POST "/send-notification" [:as req]
-         (trap #(send-notification req)))))
+         (trap #(send-notification req)))
+
+   (POST "/notification" [:as {body :body}]
+         (trap #(receive-notification body)))))
