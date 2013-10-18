@@ -316,6 +316,7 @@
           (hash-map
             :id               path
             :label            (id->label cm user path)
+            :filter           (should-filter? user path)
             :permissions      (collection-perm-map cm user path)
             :hasSubDirs       true
             :total            (icat/number-of-items-in-folder user path)
