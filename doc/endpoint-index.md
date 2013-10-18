@@ -25,6 +25,7 @@
 * [POST /import-tools](endpoints/app-metadata.md#importing-deployed-components)
 * [POST /import-workflow](endpoints/app-metadata.md#importing-an-analysis)
 * [GET /list-analysis/{analysis-id}](endpoints/app-metadata.md#listing-individual-analyses)
+* [POST /notification](endpoints/callbacks.md#receiving-de-notifications)
 * [POST /permanently-delete-workflow](endpoints/app-metadata.md#permanently-deleting-an-analysis)
 * [POST /preview-template](endpoints/app-metadata.md#previewing-templates)
 * [POST /preview-workflow](endpoints/app-metadata.md#previewing-analyses)
