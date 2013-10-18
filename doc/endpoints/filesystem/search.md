@@ -6,7 +6,7 @@ This document describes the endpoints used to performing searches of user data.
 # Table of Contents
 
 * [Searching User Data](#searching-user-data)
-    * [Indexed Fields](#indexed_fields)
+    * [Indexed Fields](#indexed-fields)
     * [Endpoints](#endpoints)
     * [Search Request](#search-request)
     * [Response Body](#response-body)
@@ -91,6 +91,7 @@ $ curl \
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "label": "read1_10k.fq",
                 "media-type": null,
+                "metadata": [],
                 "user-permissions": [
                     {
                         "permission": "read",
@@ -123,6 +124,13 @@ $ curl \
                 "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
                 "label": "read1_10k.fq",
                 "media-type": null,
+                "metadata": [
+                    {
+                        "attribute": "color",
+                        "unit": null,
+                        "value": "red"
+                    }
+                ],
                 "user-permissions": [
                     {
                         "permission": "write",
