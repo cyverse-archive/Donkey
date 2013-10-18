@@ -168,6 +168,8 @@
 
 (defn valid-file-map? [map-to-check] (good-string? (:id map-to-check)))
 
+(defn valid-path? [path-to-check] (good-string? path-to-check))
+
 (defn gen-listing
   [cm user path filter-files include-files]
   (let [fixed-path     (ft/rm-last-slash path)
@@ -230,20 +232,21 @@
         (ft/path-join (irods-home) user)
         (ft/path-join (irods-home) "public")))
 
-(defn- not-include-in-page?
+(defn- should-filter?
   "Returns true if the map is okay to include in a directory listing."
-  [user file-map]
+  [user path-to-check]
   (let [fpaths (set (filtered-paths user))]
-    (or (fpaths (:id file-map))
-        (fpaths (:label file-map))
-        (not (valid-file-map? file-map)))))
+    (or  (fpaths path-to-check)
+         (fpaths path-to-check)
+         (not (valid-path? path-to-check)))))
 
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory
    information that can be consumed by the front-end."
-  [{:keys [type full_path base_name data_size modify_ts create_ts access_type_id]}]
+  [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id]}]
   (let [base-map {:id            full_path
                   :label         base_name
+                  :filter        (should-filter? user full_path)
                   :file-size     (str data_size)
                   :date-created  (str (* (Integer/parseInt create_ts) 1000))
                   :date-modified (str (* (Integer/parseInt modify_ts) 1000))
@@ -253,10 +256,6 @@
       (merge base-map {:hasSubDirs true
                        :file-size  "0"}))))
 
-(defn- filtered-path-map-seq
-  [ffunc list-to-filter]
-  (doall (remove ffunc (map page-entry->map list-to-filter))))
-
 (defn- page->map
   "Transforms an entire page of results for a paged listing in a map that
    can be returned to the client."
@@ -264,9 +263,9 @@
   (let [entry-types (group-by :type page)
         do          (get entry-types "dataobject")
         collections (get entry-types "collection")
-        include?    (partial not-include-in-page? user)]
-    {:files   (mapv page-entry->map do)
-     :folders (mapv page-entry->map collections)}))
+        xformer     (partial page-entry->map user)]
+    {:files   (mapv xformer do)
+     :folders (mapv xformer collections)}))
 
 (defn- user-col->api-col
   [sort-col]
