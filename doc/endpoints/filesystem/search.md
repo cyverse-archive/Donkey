@@ -1,5 +1,5 @@
 
-<p style='color:red;font-weight:bold;font-size:larger;'>These endpoints have not been implemented yet.</p>
+# _These endpoints have not been implemented yet._
 
 This document describes the endpoints used to performing searches of user data.
 
