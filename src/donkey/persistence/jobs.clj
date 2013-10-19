@@ -5,7 +5,8 @@
         [kameleon.queries :only [get-user-id]]
         [korma.core]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce]))
+  (:require [clojure-commons.error-codes :as ce])
+  (:import [java.util UUID]))
 
 (defn- nil-if-zero
   "Returns nil if the argument value is zero."
@@ -23,12 +24,14 @@
 
 (defn save-job
   "Saves information about a job in the database."
-  [job-id job-name job-type username status & {:keys [app-name start-date end-date deleted]}]
+  [job-id job-name job-type username status & {:keys [id app-name start-date end-date deleted]}]
   (let [job-type-id (get-job-type-id job-type)
-        user-id     (get-user-id username)]
+        user-id     (get-user-id username)
+        id          (or id (UUID/randomUUID))]
     (insert :jobs
             (values (remove-nil-values
-                     {:external_id (str job-id)
+                     {:id          id
+                      :external_id (str job-id)
                       :job_name    job-name
                       :app_name    app-name
                       :start_date  start-date
@@ -83,6 +86,21 @@
           (order sort-field sort-order)
           (offset (nil-if-zero row-offset))
           (limit (nil-if-zero row-limit))))
+
+(defn get-job-by-id
+  "Gets a single job by its internal identifier."
+  [id]
+  (first
+   (select [:jobs :j]
+           (join [:job_types :jt] {:j.job_type_id :jt.id})
+           (fields [:j.external_id :id]
+                   [:j.job_name    :name]
+                   [:j.app_name    :analysis_name]
+                   [:j.start_date  :startdate]
+                   [:j.end_date    :enddate]
+                   [:j.status      :status]
+                   [:jt.name       :job_type])
+           (where {:j.id id}))))
 
 (defn update-job
   "Updates an existing job in the database."

@@ -2,13 +2,14 @@
   (:use [cemerick.url :only [url]]
         [ring.util.codec :only [url-encode]]
         [clojure.java.io :only [reader]]
-        [clojure.string :only [join blank?]]
+        [clojure.string :only [join blank?] :as string]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
-            [donkey.util.config :as config])
+            [donkey.util.config :as config]
+            [ring.util.codec :as codec])
   (:import [clojure.lang IPersistentMap]))
 
 (defn empty-response []
@@ -228,6 +229,21 @@
     (cheshire/decode source true)
     (cheshire/decode-stream (reader source) true)))
 
+(defn- contains-form?
+  "Determines if a request contains a URL encoded form."
+  [req]
+  (re-find #"^application/x-www-form-urlencoded" (str (:content-type req))))
+
+(defn parse-form
+  "Parses a URL encoded form from a request."
+  [req]
+  (or (if-let [body (and (contains-form? req) (:body req))]
+        (let [encoding (or (:character-encoding req) "UTF-8")
+              content  (slurp body :encoding encoding)
+              params   (codec/form-decode content encoding)]
+          (when (map? params) params)))
+      {}))
+
 (defmacro log-runtime
   [[msg] & body]
   `(let [start#  (System/currentTimeMillis)
@@ -236,3 +252,23 @@
      (when (config/log-runtimes)
        (log/warn ~msg "-" (- finish# start#) "milliseconds"))
      result#))
+
+(defn assert-found
+  "Asserts that an object to modify or retrieve was found."
+  [obj desc id]
+  (when (nil? obj)
+    (throw+ {:error_code ce/ERR_NOT_FOUND
+             :message    (string/join " " [desc id "not found"])})))
+
+(defn assert-valid
+  "Throws an exception if an arbitrary expression is false."
+  [valid? & msgs]
+  (when-not valid?
+    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+             :message    (string/join " " msgs)})))
+
+(defn request-failure
+  "Throws an exception indicating that a request failed for an unexpected reason."
+  [& msgs]
+  (throw+ {:error_code ce/ERR_REQUEST_FAILED
+           :message    (string/join " " msgs)}))

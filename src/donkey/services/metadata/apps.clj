@@ -1,10 +1,11 @@
 (ns donkey.services.metadata.apps
   (:use [donkey.auth.user-attributes :only [current-user]]
-        [donkey.persistence.jobs :only [save-job count-jobs get-jobs update-job]]
+        [donkey.persistence.jobs :only [save-job count-jobs get-jobs get-job-by-id update-job]]
         [donkey.util.validators :only [validate-map]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as cheshire]
+  (:require [cemerick.url :as curl]
+            [cheshire.core :as cheshire]
             [clojure-commons.error-codes :as ce]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.osm :as osm]
@@ -12,7 +13,8 @@
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.service :as service]
-            [mescal.de :as agave]))
+            [mescal.de :as agave])
+  (:import [java.util UUID]))
 
 (def ^:private de-job-type "DE")
 (def ^:private agave-job-type "Agave")
@@ -27,20 +29,28 @@
 
 (def ^:private agave-job-validation-map
   "The validation map to use for Agave jobs."
-  {:name       string?
-   :software   string?
-   :id         number?
-   :submitTime number?
-   :status     string?})
+  {:name          string?
+   :analysis_name string?
+   :id            string?
+   :startdate     string?
+   :status        string?})
 
 (defn- store-agave-job
-  [agave job]
+  [agave id job]
   (validate-map job agave-job-validation-map)
   (let [status (.translateJobStatus agave (:status job))]
     (save-job (:id job) (:name job) agave-job-type (:username current-user) status
+              :id         id
               :app-name   (:analysis_name job)
               :start-date (db/timestamp-from-millis (:submitTime job))
               :end-date   (db/timestamp-from-millis (:endTime job)))))
+
+(defn- submit-agave-job
+  [agave-client submission]
+  (let [id     (UUID/randomUUID)
+        cb-url (str (curl/url (config/agave-callback-base) (str id)))
+        job    (.submitJob agave-client (assoc-in submission [:config :callbackUrl] cb-url))]
+    (store-agave-job agave-client id job)))
 
 (def ^:private de-job-validation-map
   "The validation map to use for DE jobs."
@@ -154,6 +164,17 @@
         agave-states (load-agave-job-states agave jobs)]
     (map (partial format-job de-states de-apps agave-states) jobs)))
 
+(defn update-job-status
+  ([id status end-date]
+     (update-job id status (db/timestamp-from-str (str end-date))))
+  ([agave id]
+     (let [job (get-job-by-id (UUID/fromString id))]
+       (service/assert-found job "job" id)
+       (service/assert-valid (= agave-job-type (:job_type job)) "job" id "is not an HPC job")
+       (if-let [job-info (not-empty (.listRawJob agave (:id job)))]
+         (update-job (:id job) (:status job) (db/timestamp-from-str (str (:endTime job))))
+         (service/request-failure "HPC job" (:id job) "not found")))))
+
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
   (listAppGroups [this])
@@ -163,7 +184,8 @@
   (submitJob [this workspace-id submission])
   (countJobs [this])
   (listJobs [this limit offset sort-field sort-order])
-  (populateJobsTable [this]))
+  (populateJobsTable [this])
+  (updateJobStatus [this id]))
 
 (deftype DeOnlyAppLister []
   AppLister
@@ -182,7 +204,10 @@
   (listJobs [this limit offset sort-field sort-order]
     (list-de-jobs limit offset sort-field sort-order))
   (populateJobsTable [this]
-    (dorun (map store-de-job (osm/list-jobs)))))
+    (dorun (map store-de-job (osm/list-jobs))))
+  (updateJobStatus [this id]
+    (throw+ {:error_code ce/ERR_BAD_REQUEST
+             :reason     "HPC_JOBS_DISABLED"})))
 
 (deftype DeHpcAppLister [agave-client]
   AppLister
@@ -204,13 +229,15 @@
   (submitJob [this workspace-id submission]
     (if (is-uuid? (:analysis_id submission))
       (store-submitted-de-job (metadactyl/submit-job workspace-id submission))
-      (store-agave-job agave-client (.submitJob agave-client submission))))
+      (submit-agave-job agave-client submission)))
   (countJobs [this]
     (count-jobs-of-types [de-job-type agave-job-type]))
   (listJobs [this limit offset sort-field sort-order]
     (list-all-jobs agave-client limit offset sort-field sort-order))
   (populateJobsTable [this]
-    (dorun (map store-de-job (osm/list-jobs)))))
+    (dorun (map store-de-job (osm/list-jobs))))
+  (updateJobStatus [this id]
+    (update-job-status agave-client id)))
 
 (defn- get-app-lister
   []
@@ -269,6 +296,6 @@
       :timestamp (str (System/currentTimeMillis))
       :total     (.countJobs app-lister)})))
 
-(defn update-de-job-status
-  [id status end-date]
-  (update-job id status (db/timestamp-from-str (str end-date))))
+(defn update-agave-job-status
+  [uuid]
+  (.updateJobStatus (get-app-lister) uuid))

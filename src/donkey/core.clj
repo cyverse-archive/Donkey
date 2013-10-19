@@ -7,6 +7,7 @@
         [clj-jargon.lazy-listings :only [define-specific-queries delete-specific-queries]]
         [compojure.core]
         [donkey.routes.admin]
+        [donkey.routes.callbacks]
         [donkey.routes.data]
         [donkey.routes.fileio]
         [donkey.routes.metadata]
@@ -30,10 +31,6 @@
             [donkey.util.db :as db]
             [donkey.services.fileio.controllers :as fileio]
             [clojure.tools.nrepl.server :as nrepl]))
-
-(defn- flagged-routes
-  [& handlers]
-  (apply routes (remove nil? handlers)))
 
 (defn secured-routes
   []
@@ -65,6 +62,7 @@
    (unsecured-metadata-routes)
    (unsecured-tree-viewer-routes)
    (unsecured-fileio-routes)
+   (unsecured-callback-routes)
 
    (context "/secured" []
             (cas-store-user (secured-routes) config/cas-server config/server-name))

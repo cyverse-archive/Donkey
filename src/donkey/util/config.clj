@@ -489,6 +489,11 @@
   [props config-valid configs agave-enabled]
   "donkey.agave.pass")
 
+(cc/defprop-str agave-callback-base
+  "The base URL for receiving job status update callbacks from Agave."
+  [props config-valid configs #(and (agave-enabled) (agave-jobs-enabled))]
+  "donkey.agave.callback-base")
+
 (cc/defprop-str default-output-dir
   "The default name of the default job output directory."
   [props config-valid configs]
