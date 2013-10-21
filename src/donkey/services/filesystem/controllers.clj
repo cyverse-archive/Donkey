@@ -523,16 +523,13 @@
 
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
-    (validate-map params {:user string?})
-    (validate-map body {:tickets sequential?})
 
-    (when-not (check-tickets (:tickets body))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field      "tickets"}))
+    (validate-map params {:user string?})
+    (validate-map body {:paths sequential?})
 
     (let [pub-param (:public params)
           public    (if (and pub-param (= pub-param "1")) true false)]
-      (irods-actions/add-tickets (:user params) (:tickets body) public))))
+      (irods-actions/add-tickets (:user params) (:paths body) public))))
 
 (defn do-remove-tickets
   [req-params req-body]

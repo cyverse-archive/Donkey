@@ -19,7 +19,8 @@
         [donkey.util.config]
         [slingshot.slingshot :only [try+ throw+]])
   (:import [org.apache.tika Tika]
-           [au.com.bytecode.opencsv CSVReader]))
+           [au.com.bytecode.opencsv CSVReader]
+           [java.util UUID]))
 
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
@@ -1247,29 +1248,41 @@
        {:trash trash-dir
         :paths trash-list}))))
 
+
+(defn- ticket-uuids?
+  [cm user new-uuids]
+  (try+
+    (validators/all-tickets-nonexistant cm user new-uuids)
+    true
+    (catch error? e false)))
+
+(defn- gen-uuids
+  [cm user num-uuids]
+  (let [new-uuids (doall (repeatedly num-uuids #(string/upper-case (str (UUID/randomUUID)))))]
+    (if (ticket-uuids? cm user new-uuids)
+      new-uuids
+      (recur cm user num-uuids)) ))
+
 (defn add-tickets
-  [user tickets public?]
+  [user paths public?]
   (with-jargon (jargon-cfg) [cm]
     (log-rulers
      cm [user]
-     (format-call "add-tickets" user tickets public?)
-     (validators/user-exists cm user)
-
-     (let [all-paths      (mapv :path tickets)
-           all-ticket-ids (mapv :ticket-id tickets)]
-       (validators/all-paths-exist cm all-paths)
-       (validators/all-paths-writeable cm user all-paths)
-       (validators/all-tickets-nonexistant cm user all-ticket-ids)
-
-       (doseq [tm tickets]
-         (create-ticket cm (:username cm) (:path tm) (:ticket-id tm))
+     (format-call "add-tickets" user paths public?)
+     (let [new-uuids (gen-uuids cm user (count paths))] 
+       (validators/user-exists cm user)
+       (validators/all-paths-exist cm paths)
+       (validators/all-paths-writeable cm user paths)
+       
+       (doseq [[path uuid] (map list paths new-uuids)]
+         (log/warn "[add-tickets] adding ticket for " path "as" uuid)
+         (create-ticket cm (:username cm) path uuid)
          (when public?
-           (.addTicketGroupRestriction
-            (ticket-admin-service cm (:username cm))
-            (:ticket-id tm)
-            "public")))
-
-       {:user user :tickets (mapv #(ticket-map cm (:username cm) %) all-ticket-ids)}))))
+           (log/warn "[add-tickets] making ticket" uuid "public")
+           (doto (ticket-admin-service cm (:username cm))
+             (.addTicketGroupRestriction uuid "public"))))
+     
+       {:user user :tickets (mapv #(ticket-map cm (:username cm) %) new-uuids)}))))
 
 (defn remove-tickets
   [user ticket-ids]
