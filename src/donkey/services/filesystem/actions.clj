@@ -730,17 +730,22 @@
          :mime-type    (.detect (Tika.) (input-stream cm path))
          :preview      (preview-url user path)}))))
 
+(defn tika-detect-type
+  [user file-path]
+  (with-jargon (jargon-cfg) [cm-new]
+    (validators/user-exists cm-new user)
+    (validators/path-exists cm-new file-path)
+    (validators/path-readable cm-new user file-path)
+    (.detect (Tika.) (input-stream cm-new file-path))))
+
 (defn download-file
   [user file-path]
   (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "download-file" user file-path)
-     (validators/user-exists cm user)
-     (validators/path-exists cm file-path)
-     (validators/path-readable cm user file-path)
-
-     (if (zero? (file-size cm file-path)) "" (input-stream cm file-path)))))
+    (validators/user-exists cm user)
+    (validators/path-exists cm file-path)
+    (validators/path-readable cm user file-path)
+    
+    (if (zero? (file-size cm file-path)) "" (input-stream cm file-path))))
 
 (defn download
   [user filepaths]

@@ -394,6 +394,18 @@
     true
     (if (= "1" (:attachment params)) true false)))
 
+(defn- get-disposition
+  [params]
+  (cond
+    (not (contains? params :attachment))
+    (str "attachment; filename=\"" (utils/basename (:path params)) "\"")
+    
+    (not (attachment? params))
+    (str "filename=\"" (utils/basename (:path params)) "\"")
+    
+    :else
+    (str "attachment; filename=\"" (utils/basename (:path params)) "\"")))
+
 (defn do-special-download
   "Handles a file download
 
@@ -414,29 +426,14 @@
       (when (super-user? user)
         (throw+ {:error_code ERR_NOT_AUTHORIZED
                  :user       user}))
-
-      (cond
-        ;;; If disable is not included, assume the attachment
-        ;;; part should be left out.
-        (not (contains? params :attachment))
-        (rsp-utils/header
-          {:status               200
-           :body                 (irods-actions/download-file user path)}
-          "Content-Disposition" (str "attachment; filename=\""
-                                     (utils/basename path)
-                                     "\""))
-
-        (not (attachment? req-params))
-        (rsp-utils/header
-          {:status 200
-           :body (irods-actions/download-file user path)}
-          "Content-Disposition" (str "filename=\"" (utils/basename path) "\""))
-
-        :else
-        (rsp-utils/header
-          {:status 200
-           :body (irods-actions/download-file user path)}
-          "Content-Disposition" (str "attachment; filename=\"" (utils/basename path) "\""))))))
+      
+      (let [content      (irods-actions/download-file user path)
+            content-type @(future (irods-actions/tika-detect-type user path))
+            disposition  (get-disposition params)]
+        {:status               200
+         :body                 content
+         :headers {"Content-Disposition" disposition
+                   "Content-Type"        content-type}}))))
 
 (defn do-user-permissions
   "Handles returning the list of user permissions for a file
