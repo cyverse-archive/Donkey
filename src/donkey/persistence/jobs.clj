@@ -92,6 +92,7 @@
   [id]
   (first
    (select [:jobs :j]
+           (join [:users :u] {:j.user_id :u.id})
            (join [:job_types :jt] {:j.job_type_id :jt.id})
            (fields [:j.external_id :id]
                    [:j.job_name    :name]
@@ -99,7 +100,8 @@
                    [:j.start_date  :startdate]
                    [:j.end_date    :enddate]
                    [:j.status      :status]
-                   [:jt.name       :job_type])
+                   [:jt.name       :job_type]
+                   [:u.username    :username])
            (where {:j.id id}))))
 
 (defn update-job

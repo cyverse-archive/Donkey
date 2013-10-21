@@ -6,6 +6,7 @@
         [slingshot.slingshot :only [throw+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure-commons.error-codes :as ce]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.osm :as osm]
@@ -168,12 +169,9 @@
   ([id status end-date]
      (update-job id status (db/timestamp-from-str (str end-date))))
   ([agave id]
-     (let [job (get-job-by-id (UUID/fromString id))]
-       (service/assert-found job "job" id)
-       (service/assert-valid (= agave-job-type (:job_type job)) "job" id "is not an HPC job")
-       (if-let [job-info (not-empty (.listRawJob agave (:id job)))]
-         (update-job (:id job) (:status job) (db/timestamp-from-str (str (:endTime job))))
-         (service/request-failure "HPC job" (:id job) "not found")))))
+     (if-let [job-info (not-empty (.listRawJob agave id))]
+       (update-job id (:status job-info) (db/timestamp-from-str (str (:endTime job-info))))
+       (service/request-failure "HPC job" id "not found"))))
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
@@ -240,16 +238,18 @@
     (update-job-status agave-client id)))
 
 (defn- get-app-lister
-  []
-  (if (config/agave-enabled)
-    (DeHpcAppLister. (agave/de-agave-client-v1
-                      (config/agave-base-url)
-                      (config/agave-user)
-                      (config/agave-pass)
-                      (:shortUsername current-user)
-                      (config/agave-jobs-enabled)
-                      (config/irods-home)))
-    (DeOnlyAppLister.)))
+  ([]
+     (get-app-lister (:shortUsername current-user)))
+  ([username]
+     (if (config/agave-enabled)
+       (DeHpcAppLister. (agave/de-agave-client-v1
+                         (config/agave-base-url)
+                         (config/agave-user)
+                         (config/agave-pass)
+                         username
+                         (config/agave-jobs-enabled)
+                         (config/irods-home)))
+       (DeOnlyAppLister.))))
 
 (defn- populate-jobs-table
   [app-lister]
@@ -298,4 +298,7 @@
 
 (defn update-agave-job-status
   [uuid]
-  (.updateJobStatus (get-app-lister) uuid))
+  (let [job (get-job-by-id (UUID/fromString uuid))]
+    (service/assert-found job "job" uuid)
+    (service/assert-valid (= agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
+    (.updateJobStatus (get-app-lister (string/replace (:username job) #"@.*" "")) (:id job))))
