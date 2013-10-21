@@ -17,16 +17,11 @@ __Request Parameters__:
 __Request Body__:
 
     {
-        "tickets" : [
-            {
-                "path" : "/path/to/file/or/directory",
-                "ticket-id" : "String representation of a ticket."
-            }
+        "paths" : [
+            "/path/to/file/or/directory",
+            "/path/to/another/file/or/directory"
         ]
     }
-
-The "ticket-id" field is the user supplied string that is associated with the ticket. This is a
-required field.
 
 __Response Body__:
 
@@ -45,7 +40,7 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"tickets":[{"path" : "/path/to/file/or/directory","ticket-id" : "String representation of a ticket."}]}' 'http://127.0.0.1:3000/secured/filesystem/tickets?proxyToken=notReal&public=1'
+    curl -H "Content-Type:application/json" -d '{"paths":"/path/to/file/or/directory","/path/to/another/file/or/directory"]}' 'http://127.0.0.1:3000/secured/filesystem/tickets?proxyToken=notReal&public=1'
 
 
 Listing Tickets
