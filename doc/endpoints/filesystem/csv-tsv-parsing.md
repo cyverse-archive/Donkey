@@ -65,6 +65,7 @@ __Response Body__:
 	    ],
 	    "end": "3668",
 	    "file-size": "9502",
+	    "max-cols" : "17",
 	    "path": "/iplant/home/wregglej/download.csv",
 	    "start": "352",
 	    "success": true,

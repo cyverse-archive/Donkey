@@ -1533,11 +1533,13 @@
           front-trimmed (trim-to-line-start chunk line-ending)
           new-start-pos (calc-start-pos position chunk front-trimmed)
           trimmed-chunk (trim-to-last-line front-trimmed line-ending)
-          new-end-pos   (calc-end-pos position trimmed-chunk)]
+          new-end-pos   (calc-end-pos position trimmed-chunk)
+          the-csv       (read-csv separator trimmed-chunk)]
       {:path       path
        :user       user
+       :max-cols   (str (reduce #(if (>= %1 %2) %1 %2) (map count the-csv)))
        :start      (str new-start-pos)
        :end        (str new-end-pos)
        :chunk-size (str (count (.getBytes trimmed-chunk)))
        :file-size  (str (file-size cm path))
-       :csv        (read-csv separator trimmed-chunk)})))
+       :csv        the-csv})))
