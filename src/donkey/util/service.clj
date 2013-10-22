@@ -253,12 +253,17 @@
        (log/warn ~msg "-" (- finish# start#) "milliseconds"))
      result#))
 
+(defn not-found
+  "Throws an exception indicating that an object wasn't found."
+  [desc id]
+  (throw+ {:error_code ce/ERR_NOT_FOUND
+           :message    (string/join " " [desc id "not found"])}))
+
 (defn assert-found
   "Asserts that an object to modify or retrieve was found."
   [obj desc id]
   (when (nil? obj)
-    (throw+ {:error_code ce/ERR_NOT_FOUND
-             :message    (string/join " " [desc id "not found"])})))
+    (not-found desc id)))
 
 (defn assert-valid
   "Throws an exception if an arbitrary expression is false."

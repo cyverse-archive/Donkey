@@ -3,10 +3,11 @@
         [donkey.persistence.jobs :only [save-job count-jobs get-jobs get-job-by-id update-job]]
         [donkey.util.validators :only [validate-map]]
         [korma.db :only [transaction]]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
             [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.notifications :as dn]
@@ -167,11 +168,19 @@
         agave-states (load-agave-job-states agave jobs)]
     (map (partial format-job de-states de-apps agave-states) jobs)))
 
-(defn update-job-status
+(defn- get-agave-job
+  [agave id]
+  (try+
+   (not-empty (.listRawJob agave id))
+   (catch [:status 404] _ (service/not-found "HPC job" id))
+   (catch [:status 400] _ (service/not-found "HPC job" id))
+   (catch Object _ (service/request-failure "lookup for HPC job" id))))
+
+(defn- update-job-status
   ([id status end-date]
      (update-job id status (db/timestamp-from-str (str end-date))))
   ([agave id username prev-status]
-     (let [job-info (not-empty (.listRawJob agave id))]
+     (let [job-info (get-agave-job agave id)]
        (service/assert-found job-info "HPC job" id)
        (when-not (= (:status job-info) prev-status)
          (update-job id (:status job-info) (db/timestamp-from-str (str (:enddate job-info))))
@@ -300,10 +309,14 @@
       :timestamp (str (System/currentTimeMillis))
       :total     (.countJobs app-lister)})))
 
+(defn update-de-job-status
+  [id status end-date]
+  (update-job-status id status end-date))
+
 (defn update-agave-job-status
   [uuid]
   (let [{:keys [id username status] :as job} (get-job-by-id (UUID/fromString uuid))
-        username                             (string/replace username #"@.*" "")]
+        username                             (string/replace (or username "") #"@.*" "")]
     (service/assert-found job "job" uuid)
     (service/assert-valid (= agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
     (.updateJobStatus (get-app-lister username) id username status)))
