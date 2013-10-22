@@ -9,6 +9,7 @@
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]
             [donkey.clients.metadactyl :as metadactyl]
+            [donkey.clients.notifications :as dn]
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.util.config :as config]
@@ -38,13 +39,14 @@
 
 (defn- store-agave-job
   [agave id job]
+  (println "DEBUG - storing agave job:" job)
   (validate-map job agave-job-validation-map)
   (let [status (.translateJobStatus agave (:status job))]
     (save-job (:id job) (:name job) agave-job-type (:username current-user) status
               :id         id
               :app-name   (:analysis_name job)
-              :start-date (db/timestamp-from-millis (:submitTime job))
-              :end-date   (db/timestamp-from-millis (:endTime job)))))
+              :start-date (db/timestamp-from-str (str (:startdate job)))
+              :end-date   (db/timestamp-from-str (str (:enddate job))))))
 
 (defn- submit-agave-job
   [agave-client submission]
@@ -168,10 +170,12 @@
 (defn update-job-status
   ([id status end-date]
      (update-job id status (db/timestamp-from-str (str end-date))))
-  ([agave id]
-     (if-let [job-info (not-empty (.listRawJob agave id))]
-       (update-job id (:status job-info) (db/timestamp-from-str (str (:endTime job-info))))
-       (service/request-failure "HPC job" id "not found"))))
+  ([agave id username prev-status]
+     (let [job-info (not-empty (.listRawJob agave id))]
+       (service/assert-found job-info "HPC job" id)
+       (when-not (= (:status job-info) prev-status)
+         (update-job id (:status job-info) (db/timestamp-from-str (str (:enddate job-info))))
+         (dn/send-agave-job-status-update username job-info)))))
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
@@ -183,7 +187,7 @@
   (countJobs [this])
   (listJobs [this limit offset sort-field sort-order])
   (populateJobsTable [this])
-  (updateJobStatus [this id]))
+  (updateJobStatus [this id username prev-status]))
 
 (deftype DeOnlyAppLister []
   AppLister
@@ -203,7 +207,7 @@
     (list-de-jobs limit offset sort-field sort-order))
   (populateJobsTable [this]
     (dorun (map store-de-job (osm/list-jobs))))
-  (updateJobStatus [this id]
+  (updateJobStatus [this id username prev-status]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "HPC_JOBS_DISABLED"})))
 
@@ -234,8 +238,8 @@
     (list-all-jobs agave-client limit offset sort-field sort-order))
   (populateJobsTable [this]
     (dorun (map store-de-job (osm/list-jobs))))
-  (updateJobStatus [this id]
-    (update-job-status agave-client id)))
+  (updateJobStatus [this id username prev-status]
+    (update-job-status agave-client id username prev-status)))
 
 (defn- get-app-lister
   ([]
@@ -298,7 +302,8 @@
 
 (defn update-agave-job-status
   [uuid]
-  (let [job (get-job-by-id (UUID/fromString uuid))]
+  (let [{:keys [id username status] :as job} (get-job-by-id (UUID/fromString uuid))
+        username                             (string/replace username #"@.*" "")]
     (service/assert-found job "job" uuid)
     (service/assert-valid (= agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
-    (.updateJobStatus (get-app-lister (string/replace (:username job) #"@.*" "")) (:id job))))
+    (.updateJobStatus (get-app-lister username) id username status)))
