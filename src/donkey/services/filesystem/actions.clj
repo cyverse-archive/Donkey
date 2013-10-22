@@ -1508,17 +1508,18 @@
   (+ start-pos (- (count (.getBytes trimmed-chunk)) 1)))
 
 (defn read-csv
-  [csv-str]
+  [separator csv-str]
   (let [ba  (java.io.ByteArrayInputStream. (.getBytes csv-str))
         isr (java.io.InputStreamReader. ba "UTF-8")]
-    (mapv vec (.readAll (CSVReader. isr)))))
+    (mapv vec (.readAll (CSVReader. isr (.charAt separator 0))))))
 
 (defn read-csv-chunk
   "Reads a chunk of a file and parses it as a CSV. The position and chunk-size are not guaranteed, since
    we shouldn't try to parse partial rows. We scan forward from the starting position to find the first
    line-ending and then scan backwards from the last position for the last line-ending."
-  [user path position chunk-size line-ending]
+  [user path position chunk-size line-ending separator]
   (with-jargon (jargon-cfg) [cm]
+    (log/warn "[read-csv-chunk]" user path position chunk-size line-ending separator)
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-is-file cm path)
@@ -1539,4 +1540,4 @@
        :end        (str new-end-pos)
        :chunk-size (str (count (.getBytes trimmed-chunk)))
        :file-size  (str (file-size cm path))
-       :csv        (read-csv trimmed-chunk)})))
+       :csv        (read-csv separator trimmed-chunk)})))

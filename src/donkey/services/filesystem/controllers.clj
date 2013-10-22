@@ -676,11 +676,16 @@
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
-    (validate-map body {:path string? :position string? :chunk-size string? :line-ending string?})
+    (validate-map body {:path        string? 
+                        :position    string? 
+                        :chunk-size  string? 
+                        :line-ending string? 
+                        :separator   string?})
 
     (let [user   (:user params)
           path   (:path body)
           ending (:line-ending body)
+          sep    (:separator body)
           pos    (Long/parseLong (:position body))
           size   (Long/parseLong (:chunk-size body))]
-      (irods-actions/read-csv-chunk user path pos size ending))))
+      (irods-actions/read-csv-chunk user path pos size ending sep))))
