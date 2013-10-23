@@ -2,12 +2,33 @@ Here are the definitions of the data records used to communicate through the end
 
 # Table of Contents
 
-* [Filesystem Entry Record](#filesystem_entry_record)
-    * [File Record](#file_record)
-    * [Folder Record](#folder_record)
-* [Permission Record](#permission_record)
-* [User Identity Record](#user_identity_record)
-    * [User Details Record](#user_details_record)
+* [AVU Record](#avu-record)
+* [Filesystem Entry Record](#filesystem-entry-record)
+    * [File Record](#file-record)
+    * [Folder Record](#folder-record)
+* [Permission Record](#permission-record)
+* [User Identity Record](#user-identity-record)
+    * [User Details Record](#user-details-record)
+
+# AVU Record
+
+Here are the fields that describe and attribute-value-unit (AVU) triple.
+
+| Field     | Type   | Description |
+| --------- | ------ | ----------- |
+| attribute | string | the attribute's name |
+| value     | string | the attribute's value |
+| unit      | string | the attribute's unit, may be `null` |
+
+**Example**
+
+```json
+{
+    "attribute" : "length",
+    "value"     : "1.8",
+    "unit"      : "meter"
+}
+```
 
 # Filesystem Entry Record
 
@@ -58,6 +79,7 @@ describe a file.
 | creator     | object | a [user identity record](#user-identity-record) identifying the creator of the file |
 | file-size   | number | the size of the file in octets |
 | media-type  | string | the media type of the file, `null` if unknown |
+| metadata    | array  | the metadata attached to this file, an array of [AVU records](#avu-record) |
 
 **Example**
 
@@ -88,15 +110,31 @@ describe a file.
     "date-modified"    : 1381350485,
     "file-size"        : 14016,
     "label"            : "a.file",
-    "media-type"       : null
+    "media-type"       : null,
+    "metadata"         : [
+        {
+            "attribute" : "length",
+            "value"     : "1.8",
+            "unit"      : "meter",
+        },
+        {
+            "attribute" : "color",
+            "value"     : "red",
+            "unit"      : null
+        }
+    ]
 }
 ```
 
 ## Folder Record
 
-A folder extends a [filesystem entry](#filesystem-entry-record). It has the additional field
-`"creator"` that holds a [user identity record](#user-identity-record) identifying the creator of
-the folder.
+A folder extends a [filesystem entry](#filesystem-entry-record). Here are the additional fields that
+describe a folder.
+
+| Field       | Type   | Description |
+| ----------- | ------ | ----------- |
+| creator     | object | a [user identity record](#user-identity-record) identifying the creator of the folder |
+| metadata    | array  | the metadata attached to this folder, an array of [AVU records](#avu-record) |
 
 **Example**
 
@@ -125,7 +163,19 @@ the folder.
     },
     "date-created"     : 1381350485,
     "date-modified"    : 1381350485,
-    "label"            : "a-folder"
+    "label"            : "a-folder",
+    "metadata"         : [
+        {
+            "attribute" : "length",
+            "value"     : "1.8",
+            "unit"      : "meter",
+        },
+        {
+            "attribute" : "color",
+            "value"     : "red",
+            "unit"      : null
+        }
+    ]
 }
 ```
 
