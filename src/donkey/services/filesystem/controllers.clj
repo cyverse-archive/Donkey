@@ -394,6 +394,18 @@
     true
     (if (= "1" (:attachment params)) true false)))
 
+(defn- get-disposition
+  [params]
+  (cond
+    (not (contains? params :attachment))
+    (str "attachment; filename=\"" (utils/basename (:path params)) "\"")
+    
+    (not (attachment? params))
+    (str "filename=\"" (utils/basename (:path params)) "\"")
+    
+    :else
+    (str "attachment; filename=\"" (utils/basename (:path params)) "\"")))
+
 (defn do-special-download
   "Handles a file download
 
@@ -414,29 +426,14 @@
       (when (super-user? user)
         (throw+ {:error_code ERR_NOT_AUTHORIZED
                  :user       user}))
-
-      (cond
-        ;;; If disable is not included, assume the attachment
-        ;;; part should be left out.
-        (not (contains? params :attachment))
-        (rsp-utils/header
-          {:status               200
-           :body                 (irods-actions/download-file user path)}
-          "Content-Disposition" (str "attachment; filename=\""
-                                     (utils/basename path)
-                                     "\""))
-
-        (not (attachment? req-params))
-        (rsp-utils/header
-          {:status 200
-           :body (irods-actions/download-file user path)}
-          "Content-Disposition" (str "filename=\"" (utils/basename path) "\""))
-
-        :else
-        (rsp-utils/header
-          {:status 200
-           :body (irods-actions/download-file user path)}
-          "Content-Disposition" (str "attachment; filename=\"" (utils/basename path) "\""))))))
+      
+      (let [content      (irods-actions/download-file user path)
+            content-type @(future (irods-actions/tika-detect-type user path))
+            disposition  (get-disposition params)]
+        {:status               200
+         :body                 content
+         :headers {"Content-Disposition" disposition
+                   "Content-Type"        content-type}}))))
 
 (defn do-user-permissions
   "Handles returning the list of user permissions for a file
@@ -526,16 +523,13 @@
 
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
-    (validate-map params {:user string?})
-    (validate-map body {:tickets sequential?})
 
-    (when-not (check-tickets (:tickets body))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field      "tickets"}))
+    (validate-map params {:user string?})
+    (validate-map body {:paths sequential?})
 
     (let [pub-param (:public params)
           public    (if (and pub-param (= pub-param "1")) true false)]
-      (irods-actions/add-tickets (:user params) (:tickets body) public))))
+      (irods-actions/add-tickets (:user params) (:paths body) public))))
 
 (defn do-remove-tickets
   [req-params req-body]
@@ -682,11 +676,16 @@
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
-    (validate-map body {:path string? :position string? :chunk-size string? :line-ending string?})
+    (validate-map body {:path        string? 
+                        :position    string? 
+                        :chunk-size  string? 
+                        :line-ending string? 
+                        :separator   string?})
 
     (let [user   (:user params)
           path   (:path body)
           ending (:line-ending body)
+          sep    (:separator body)
           pos    (Long/parseLong (:position body))
           size   (Long/parseLong (:chunk-size body))]
-      (irods-actions/read-csv-chunk user path pos size ending))))
+      (irods-actions/read-csv-chunk user path pos size ending sep))))

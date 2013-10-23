@@ -28,6 +28,7 @@ __Response Body__:
             "date-created": "1380726835000",
             "date-modified": "1380726835000",
             "file-size": "4814",
+            "filter": false,
             "id": "/iplant/home/wregglej/Ara_Pheno.txt",
             "label": "Ara_Pheno.txt",
             "permissions": {
@@ -40,6 +41,7 @@ __Response Body__:
             "date-created": "1369848875000",
             "date-modified": "1380922646000",
             "file-size": "35",
+            "filter": false,
             "id": "/iplant/home/wregglej/asdfasdfasdfadsfasdfasdfasdfadsfa",
             "label": "asdfasdfasdfadsfasdfasdfasdfadsfa",
             "permissions": {
@@ -52,6 +54,7 @@ __Response Body__:
             "date-created": "1379519492000",
             "date-modified": "1379520049000",
             "file-size": "196903039",
+            "filter": false,
             "id": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
             "label": "centos-5.8-x86-64-minimal.box",
             "permissions": {
@@ -66,6 +69,7 @@ __Response Body__:
             "date-created": "1373927956000",
             "date-modified": "1374015533000",
             "file-size": 0,
+            "filter": false,
             "hasSubDirs": true,
             "id": "/iplant/home/wregglej/acsxfdqswfrdafds",
             "label": "acsxfdqswfrdafds",
@@ -79,6 +83,7 @@ __Response Body__:
             "date-created": "1371157127000",
             "date-modified": "1380909580000",
             "file-size": 0,
+            "filter": false,
             "hasSubDirs": true,
             "id": "/iplant/home/wregglej/analyses",
             "label": "analyses",
@@ -92,6 +97,7 @@ __Response Body__:
             "date-created": "1380814985000",
             "date-modified": "1380814985000",
             "file-size": 0,
+            "filter": false,
             "hasSubDirs": true,
             "id": "/iplant/home/wregglej/analyses3",
             "label": "analyses3",
@@ -106,6 +112,7 @@ __Response Body__:
     "hasSubDirs": true,
     "id": "/iplant/home/wregglej",
     "label": "wregglej",
+    "filter": false,
     "permissions": {
         "own": true,
         "read": true,
