@@ -326,6 +326,28 @@
             :file-size        "0")
           (page->map user (icat/paged-folder-listing user path scol sord limit offset)))))))
 
+(defn list-directories
+  [user path]
+  (let [path (ft/rm-last-slash path)]
+    (with-jargon (jargon-cfg) [cm]
+      (validators/user-exists cm user)
+      (validators/path-exists cm path)
+      (validators/path-readable cm user path)
+      (validators/path-is-dir cm path)
+      
+      (let [stat (stat cm path)]
+        (merge
+          (hash-map
+            :id            path
+            :label         (id->label cm user path)
+            :filter        (should-filter? user path)
+            :permissions   (collection-perm-map cm user path)
+            :hasSubDirs    true
+            :date-created  (:created stat)
+            :date-modified (:modified stat)
+            :file-size     "0")
+          (dissoc (page->map user (icat/list-folders-in-folder user path)) :files))))))
+
 (defn root-listing
   ([user root-path]
      (root-listing user root-path false))

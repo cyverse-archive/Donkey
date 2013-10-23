@@ -75,6 +75,48 @@
         files-to-filter (conj (fs-filter-files) comm-dir user-dir public-dir)]
     (irods-actions/shared-root-listing user (irods-home) inc-files files-to-filter)))
 
+(defn- top-level-listing
+  "Performs a top-level directory listing."
+  [params]
+  (log/warn "[top-level-listing]" (:user params) "files?:" (include-files? params))
+  (let [user       (:user params)
+        inc-files  (include-files? params)
+        comm-f     (future (gen-comm-data user inc-files))
+        share-f    (future (gen-sharing-data user inc-files))
+        home-f     (future (dir-list user (get-home-dir user) inc-files))]
+    {:roots [@home-f @comm-f @share-f]}))
+
+(defn- shared-with-me-listing?
+  [path]
+  (= (utils/add-trailing-slash path) (utils/add-trailing-slash (irods-home))))
+
+(defn- shared-with-me-listing
+  [params]
+  (log/warn "[shared-with-me-listing]" (:user params) "files?:" (include-files? params))
+  (irods-actions/shared-root-listing
+    (:user params)
+    (irods-home)
+    (include-files? params)
+    []))
+
+(defn- default-listing
+  [params]
+  (let [inc-files? (include-files? params)
+        user       (:user params)
+        path       (:path params)]
+    (cond
+      (irods-actions/user-trash-dir? user path)
+      (do (log/warn "[default-listing] trash directory for " user)
+        (dir-list user path inc-files? true))
+      
+      (false? inc-files?)
+      (do (log/warn "[default-listing]" path "for" user "without files")
+        (irods-actions/list-directories user path))
+      
+      :else
+      (do (log/warn "[default-listing]" path "for" user "with files =" inc-files?)
+        (dir-list user path inc-files?)))))
+
 (defn do-directory
   "Performs a list-dirs command.
 
@@ -90,26 +132,13 @@
     ;;; request and the community listing should be included.
     (cond
       (not (contains? params :path))
-      (let [user       (:user params)
-            inc-files  (include-files? params)
-            comm-f     (future (gen-comm-data user inc-files))
-            share-f    (future (gen-sharing-data user inc-files))
-            home-f     (future (dir-list user (get-home-dir user) inc-files))]
-        {:roots [@home-f @comm-f @share-f]})
-
-      (= (utils/add-trailing-slash (:path params)) (utils/add-trailing-slash (irods-home)))
-      (irods-actions/shared-root-listing
-        (:user params)
-        (irods-home)
-        (include-files? params)
-        [])
-
+      (top-level-listing params)
+      
+      (shared-with-me-listing? (:path params))
+      (shared-with-me-listing params)
+      
       :else
-      ;;; There's a path parameter, so simply list the directory.
-      (let [inc-files (include-files? params)]
-        (if (irods-actions/user-trash-dir? (:user params) (:path params))
-          (dir-list (:user params) (:path params) inc-files true)
-          (dir-list (:user params) (:path params) inc-files))))))
+      (default-listing params))))
 
 (defn do-root-listing
   [req-params]
