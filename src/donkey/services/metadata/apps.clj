@@ -40,14 +40,12 @@
 
 (defn- store-agave-job
   [agave id job]
-  (println "DEBUG - storing agave job:" job)
   (validate-map job agave-job-validation-map)
-  (let [status (.translateJobStatus agave (:status job))]
-    (save-job (:id job) (:name job) agave-job-type (:username current-user) status
-              :id         id
-              :app-name   (:analysis_name job)
-              :start-date (db/timestamp-from-str (str (:startdate job)))
-              :end-date   (db/timestamp-from-str (str (:enddate job))))))
+  (save-job (:id job) (:name job) agave-job-type (:username current-user) (:status job)
+            :id         id
+            :app-name   (:analysis_name job)
+            :start-date (db/timestamp-from-str (str (:startdate job)))
+            :end-date   (db/timestamp-from-str (str (:enddate job)))))
 
 (defn- submit-agave-job
   [agave-client submission]
