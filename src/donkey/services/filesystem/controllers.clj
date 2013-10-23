@@ -64,7 +64,10 @@
 
 (defn- gen-comm-data
   [user inc-files]
-  (let [cdata (dir-list user (fs-community-data) inc-files)]
+  (log/warn "[gen-comm-data]" user "files?:" inc-files)
+  (let [cdata (if-not inc-files
+                (irods-actions/list-directories user (fs-community-data))
+                (dir-list user (fs-community-data) inc-files))]
     (assoc cdata :label "Community Data")))
 
 (defn- gen-sharing-data
@@ -142,7 +145,7 @@
 
 (defn do-root-listing
   [req-params]
-  (log/debug "do-root-listing")
+  (log/warn "do-root-listing")
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
     (let [user           (:user params)

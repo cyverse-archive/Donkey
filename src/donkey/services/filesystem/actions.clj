@@ -327,6 +327,7 @@
           (page->map user (icat/paged-folder-listing user path scol sord limit offset)))))))
 
 (defn list-directories
+  "Lists the directories contained under path."
   [user path]
   (let [path (ft/rm-last-slash path)]
     (with-jargon (jargon-cfg) [cm]
@@ -354,6 +355,7 @@
 
   ([user root-path set-own?]
      (let [root-path (ft/rm-last-slash root-path)]
+       (log/warn "[root-listing]" "for" user "at" root-path "with set own as" set-own?)
        (with-jargon (jargon-cfg) [cm]
          (log-rulers
            cm [user]
@@ -362,16 +364,16 @@
            (validators/user-exists cm user)
 
            (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
-             (log/warn "Creating" root-path "for" user)
+             (log/warn "[root-listing] Creating" root-path "for" user)
              (mkdir cm root-path)
-             (log/warn "Setting own perms on" root-path "for" user)
+             (log/warn "[root-listing] Setting own perms on" root-path "for" user)
              (set-permissions cm user root-path false false true))
 
            (validators/path-exists cm root-path)
 
            (when (and set-own? (not (owns? cm user root-path)))
-             (log/warn "set-own? is true and" root-path "is not owned by" user)
-             (log/warn "Setting own perms on" root-path "for" user)
+             (log/warn "[root-listing] set-own? is true and" root-path "is not owned by" user)
+             (log/warn "[root-listing] Setting own perms on" root-path "for" user)
              (set-permissions cm user root-path false false true))
 
            (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
