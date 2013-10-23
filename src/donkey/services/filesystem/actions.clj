@@ -237,8 +237,7 @@
   "Returns true if the map is okay to include in a directory listing."
   [user path-to-check]
   (let [fpaths (set (filtered-paths user))]
-    (or  (fpaths path-to-check)
-         (fpaths path-to-check)
+    (or  (contains? fpaths path-to-check)
          (not (valid-path? path-to-check)))))
 
 (defn- page-entry->map
@@ -247,7 +246,8 @@
   [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id]}]
   (let [base-map {:id            full_path
                   :label         base_name
-                  :filter        (should-filter? user full_path)
+                  :filter        (or (should-filter? user full_path) 
+                                     (should-filter? user base_name))
                   :file-size     (str data_size)
                   :date-created  (str (* (Integer/parseInt create_ts) 1000))
                   :date-modified (str (* (Integer/parseInt modify_ts) 1000))
