@@ -237,8 +237,7 @@
   "Returns true if the map is okay to include in a directory listing."
   [user path-to-check]
   (let [fpaths (set (filtered-paths user))]
-    (or  (fpaths path-to-check)
-         (fpaths path-to-check)
+    (or  (contains? fpaths path-to-check)
          (not (valid-path? path-to-check)))))
 
 (defn- page-entry->map
@@ -247,7 +246,8 @@
   [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id]}]
   (let [base-map {:id            full_path
                   :label         base_name
-                  :filter        (should-filter? user full_path)
+                  :filter        (or (should-filter? user full_path) 
+                                     (should-filter? user base_name))
                   :file-size     (str data_size)
                   :date-created  (str (* (Integer/parseInt create_ts) 1000))
                   :date-modified (str (* (Integer/parseInt modify_ts) 1000))
@@ -325,6 +325,28 @@
             :date-modified    (:modified stat)
             :file-size        "0")
           (page->map user (icat/paged-folder-listing user path scol sord limit offset)))))))
+
+(defn list-directories
+  [user path]
+  (let [path (ft/rm-last-slash path)]
+    (with-jargon (jargon-cfg) [cm]
+      (validators/user-exists cm user)
+      (validators/path-exists cm path)
+      (validators/path-readable cm user path)
+      (validators/path-is-dir cm path)
+      
+      (let [stat (stat cm path)]
+        (merge
+          (hash-map
+            :id            path
+            :label         (id->label cm user path)
+            :filter        (should-filter? user path)
+            :permissions   (collection-perm-map cm user path)
+            :hasSubDirs    true
+            :date-created  (:created stat)
+            :date-modified (:modified stat)
+            :file-size     "0")
+          (dissoc (page->map user (icat/list-folders-in-folder user path)) :files))))))
 
 (defn root-listing
   ([user root-path]
