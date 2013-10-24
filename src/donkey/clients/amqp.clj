@@ -104,19 +104,23 @@
   "Sets up a channel, exchange, and queue, with the queue bound to the exchange and 'msg-fn' 
    registered as the callback."
   [msg-fn]
-  (let [conn (get-connection)
-        chan (get-channel)
-        q    (declare-queue @amqp-channel)]
-    
-    (declare-exchange
-      @amqp-channel
-      (cfg/rabbitmq-exchange) 
-      (cfg/rabbitmq-exchange-type)
-      :durable     (cfg/rabbitmq-exchange-durable?)
-      :auto-delete (cfg/rabbitmq-exchange-auto-delete?))
-    
-    (bind @amqp-channel q (cfg/rabbitmq-exchange) (cfg/rabbitmq-routing-key))
-    (subscribe @amqp-channel q msg-fn :auto-ack (cfg/rabbitmq-msg-auto-ack?))))
+  (dosync
+    (when (or (not (connection-okay? @amqp-conn)) 
+              (not (channel-okay? @amqp-channel)))
+      (log/warn "[amqp/configure] configuring message connection")
+      (let [conn (get-connection)
+            chan (get-channel)
+            q    (declare-queue @amqp-channel)]
+        
+        (declare-exchange
+          @amqp-channel
+          (cfg/rabbitmq-exchange) 
+          (cfg/rabbitmq-exchange-type)
+          :durable     (cfg/rabbitmq-exchange-durable?)
+          :auto-delete (cfg/rabbitmq-exchange-auto-delete?))
+        
+        (bind @amqp-channel q (cfg/rabbitmq-exchange) (cfg/rabbitmq-routing-key))
+        (subscribe @amqp-channel q msg-fn :auto-ack (cfg/rabbitmq-msg-auto-ack?))))))
 
 (defn conn-monitor
   "Starts an infinite loop in a new thread that checks the health of the connection and reconnects 
@@ -126,12 +130,10 @@
     (Thread. 
       (fn [] 
         (loop []
-          (when (or (not (connection-okay? @amqp-conn)) 
-                  (not (channel-okay? @amqp-channel)))
-            (log/warn "[conn-monitor] reconfiguring messaging connection.")
-            (try
-              (configure msg-fn)
-              (catch Exception e
-                (log/error "[conn-monitor]" (ce/format-exception e)))))
+          (log/warn "[amqp/conn-monitor] checking messaging connection.")
+          (try
+            (configure msg-fn)
+            (catch Exception e
+              (log/error "[amqp/conn-monitor]" (ce/format-exception e))))
           (Thread/sleep (cfg/rabbitmq-health-check-interval))
           (recur))))))
