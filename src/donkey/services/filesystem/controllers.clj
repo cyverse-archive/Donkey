@@ -93,14 +93,26 @@
   [path]
   (= (utils/add-trailing-slash path) (utils/add-trailing-slash (irods-home))))
 
+(defn- filter-shared-with-me
+  [user listing]
+  (let [folders    (:folders listing)
+        user-home  (get-home-dir user)
+        swm-folder (utils/path-join (irods-home) "shared")
+        pub-folder (utils/path-join (irods-home) "public")]
+    (assoc listing :folders 
+      (filter 
+        #(not (contains? #{user-home swm-folder pub-folder} (:id %))) 
+        folders))))
+
 (defn- shared-with-me-listing
   [params]
-  (log/warn "[shared-with-me-listing]" (:user params) "files?:" (include-files? params))
-  (irods-actions/shared-root-listing
-    (:user params)
-    (irods-home)
-    (include-files? params)
-    []))
+  (let [incl-files? (include-files? params)
+        user        (:user params)
+        dir         (irods-home)]
+    (log/warn "[shared-with-me-listing]" user "files?:" incl-files?)
+    (if incl-files?
+      (irods-actions/shared-root-listing user dir incl-files? [])
+      (irods-actions/list-directories user dir))))
 
 (defn- default-listing
   [params]
