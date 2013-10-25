@@ -41,24 +41,6 @@
     (clojure.pprint/write (conj args (symbol fn-name)) :stream w)
     (str w)))
 
-(defn not-filtered?
-  [cm user fpath ff]
-  (and (not (contains? ff fpath))
-       (not (contains? ff (ft/basename fpath)))
-       (is-readable? cm user fpath)))
-
-(defn directory-listing
-  [cm user dirpath filter-files]
-  (let [fs (:fileSystemAO cm)
-        ff (set filter-files)]
-    (filterv
-      #(not-filtered? cm user %1 ff)
-      (map
-        #(ft/path-join dirpath %)
-        (.getListInDir fs (file dirpath))))))
-
-(defn has-sub-dir [user abspath] true)
-
 (defn filtered-user-perms
   [cm user abspath]
   (let [filtered-users (set (conj (fs-perms-filter) user (irods-user)))]
@@ -138,19 +120,6 @@
    :else
    (ft/basename id)))
 
-(defn dir-map-entry
-  [cm user list-entry]
-  (let [abspath (.getAbsolutePath list-entry)
-        stat    (.initializeObjStatForFile list-entry)]
-    (hash-map
-     :id            abspath
-     :label         (id->label cm user abspath)
-     :permissions   (collection-perm-map cm user abspath)
-     :hasSubDirs    true
-     :date-created  (date-created-from-stat stat)
-     :date-modified (date-mod-from-stat stat)
-     :file-size     (size-from-stat stat))))
-
 (defn list-in-dir
   [cm fixed-path]
   (let [ffilter (proxy [java.io.FileFilter] [] (accept [stuff] true))]
@@ -170,60 +139,6 @@
 (defn valid-file-map? [map-to-check] (good-string? (:id map-to-check)))
 
 (defn valid-path? [path-to-check] (good-string? path-to-check))
-
-(defn gen-listing
-  [cm user path filter-files include-files]
-  (let [fixed-path     (ft/rm-last-slash path)
-        ff             (set filter-files)
-        fix-label      #(assoc %1 :label (id->label cm user (:id %1)))
-        listing        (fix-label (jargon/list-dir cm user path :include-files include-files))
-        filter-listing (fn [l] (remove #(or (ff (:id %))
-                                            (ff (:label %))
-                                            (not (valid-file-map? %))) l))]
-    (if include-files
-      (assoc listing
-        :folders (filter-listing (:folders listing))
-        :files   (filter-listing (:files listing)))
-      (assoc listing
-        :folders (filter-listing (:folders listing))))))
-
-(defn list-dir
-  "A non-recursive listing of a directory. Contains entries for files.
-
-   The map for the directory listing looks like this:
-     {:id \"full path to the top-level directory\"
-      :label \"basename of the path\"
-      :files A sequence of file maps
-      :folders A sequence of directory maps}
-
-   Parameters:
-     user - String containing the username of the user requesting the
-        listing.
-     path - String containing path to the top-level directory in iRODS.
-
-   Returns:
-     A tree of maps as described above."
-  ([user path filter-files]
-     (list-dir user path true filter-files false))
-
-  ([user path include-files filter-files set-own?]
-     (log/warn (str "list-dir " user " " path))
-
-     (let [path (ft/rm-last-slash path)]
-       (with-jargon (jargon-cfg) [cm]
-         (log-rulers
-           cm [user]
-           (format-call "list-dir" user path include-files filter-files set-own?)
-           (validators/user-exists cm user)
-           (validators/path-exists cm path)
-
-           (when (and set-own? (not (owns? cm user path)))
-             (log/warn "Setting own perms on" path "for" user)
-             (set-permissions cm user path false false true))
-
-           (validators/path-readable cm user path)
-
-           (gen-listing cm user path filter-files include-files))))))
 
 (defn- filtered-paths
   "Returns a seq of paths that should not be included in paged listing."
