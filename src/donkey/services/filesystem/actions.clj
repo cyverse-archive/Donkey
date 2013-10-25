@@ -245,6 +245,7 @@
    information that can be consumed by the front-end."
   [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id]}]
   (let [base-map {:id            full_path
+                  :path          full_path
                   :label         base_name
                   :filter        (or (should-filter? user full_path) 
                                      (should-filter? user base_name))
@@ -316,6 +317,7 @@
         (merge
           (hash-map
             :id               path
+            :path             path
             :label            (id->label cm user path)
             :filter           (should-filter? user path)
             :permissions      (collection-perm-map cm user path)
@@ -340,6 +342,7 @@
         (merge
           (hash-map
             :id            path
+            :path          path
             :label         (id->label cm user path)
             :filter        (should-filter? user path)
             :permissions   (collection-perm-map cm user path)
@@ -348,6 +351,46 @@
             :date-modified (:modified stat)
             :file-size     "0")
           (dissoc (page->map user (icat/list-folders-in-folder user path)) :files))))))
+
+(defn list-dir
+  "A non-recursive listing of a directory. Contains entries for files.
+
+   The map for the directory listing looks like this:
+     {:id \"full path to the top-level directory\"
+      :label \"basename of the path\"
+      :files A sequence of file maps
+      :folders A sequence of directory maps}
+
+   Parameters:
+     user - String containing the username of the user requesting the
+        listing.
+     path - String containing path to the top-level directory in iRODS.
+
+   Returns:
+     A tree of maps as described above."
+
+  ([user path filter-files set-own?]
+     (log/warn (str "list-dir " user " " path))
+
+     (let [path (ft/rm-last-slash path)]
+       (with-jargon (jargon-cfg) [cm]
+         (log-rulers
+           cm [user]
+           (format-call "list-dir" user path filter-files set-own?)
+           (validators/user-exists cm user)
+           (validators/path-exists cm path)
+
+           (when (and set-own? (not (owns? cm user path)))
+             (log/warn "Setting own perms on" path "for" user)
+             (set-permissions cm user path false false true))
+
+           (validators/path-readable cm user path)
+
+           (list-directories user path))))))
+
+(defn- create-trash-folder?
+  [cm user root-path]
+  (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path))))
 
 (defn root-listing
   ([user root-path]
@@ -363,7 +406,7 @@
            (log/warn "in (root-listing)")
            (validators/user-exists cm user)
 
-           (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
+           (when (create-trash-folder? cm user root-path)
              (log/warn "[root-listing] Creating" root-path "for" user)
              (mkdir cm root-path)
              (log/warn "[root-listing] Setting own perms on" root-path "for" user)
@@ -377,7 +420,10 @@
              (set-permissions cm user root-path false false true))
 
            (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
-             (assoc res :label (id->label cm user (:id res)))))))))
+             (assoc res 
+                    :label (id->label cm user (:id res))
+                    :path  (:id res)
+                    :id    (str "/root" (:id res)))))))))
 
 (defn create
   "Creates a directory at 'path' in iRODS and sets the user to 'user'.
