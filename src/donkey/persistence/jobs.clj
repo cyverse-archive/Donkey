@@ -87,6 +87,27 @@
           (offset (nil-if-zero row-offset))
           (limit (nil-if-zero row-limit))))
 
+(defn- add-job-type-clause
+  "Adds a where clause for a set of job types if the set of job types provided is not nil
+   or empty."
+  [query job-types]
+  (assert (or (nil? job-types) (sequential? job-types)))
+  (if-not (empty? job-types)
+    (where query {:jt.name [in job-types]})
+    query))
+
+(defn get-external-job-ids
+  "Gets a list of external job identifiers satisfying a query."
+  [username {:keys [job-types]}]
+  (->> (-> (select* [:jobs :j])
+           (join [:users :u] {:j.user_id :u.id})
+           (join [:job_types :jt] {:j.job_type_id :jt.id})
+           (fields [:j.external_id :id])
+           (where {:u.username username})
+           (add-job-type-clause job-types)
+           (select))
+       (map :id)))
+
 (defn get-job-by-id
   "Gets a single job by its internal identifier."
   [id]
@@ -106,8 +127,12 @@
 
 (defn update-job
   "Updates an existing job in the database."
-  [id status end-date]
-  (update :jobs
-          (set-fields (remove-nil-values {:status   status
-                                          :end_date end-date}))
-          (where {:external_id id})))
+  ([id {:keys [status end-date deleted]}]
+     (update :jobs
+             (set-fields (remove-nil-values {:status   status
+                                             :end_date end-date
+                                             :deleted  deleted}))
+             (where {:external_id id})))
+  ([id status end-date]
+     (update-job id {:status   status
+                     :end-date end-date})))

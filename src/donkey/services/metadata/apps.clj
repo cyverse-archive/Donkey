@@ -1,6 +1,5 @@
 (ns donkey.services.metadata.apps
   (:use [donkey.auth.user-attributes :only [current-user]]
-        [donkey.persistence.jobs :only [save-job count-jobs get-jobs get-job-by-id update-job]]
         [donkey.util.validators :only [validate-map]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+ try+]])
@@ -13,6 +12,7 @@
             [donkey.clients.notifications :as dn]
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
+            [donkey.persistence.jobs :as jp]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.service :as service]
@@ -41,11 +41,11 @@
 (defn- store-agave-job
   [agave id job]
   (validate-map job agave-job-validation-map)
-  (save-job (:id job) (:name job) agave-job-type (:username current-user) (:status job)
-            :id         id
-            :app-name   (:analysis_name job)
-            :start-date (db/timestamp-from-str (str (:startdate job)))
-            :end-date   (db/timestamp-from-str (str (:enddate job)))))
+  (jp/save-job (:id job) (:name job) agave-job-type (:username current-user) (:status job)
+               :id         id
+               :app-name   (:analysis_name job)
+               :start-date (db/timestamp-from-str (str (:startdate job)))
+               :end-date   (db/timestamp-from-str (str (:enddate job)))))
 
 (defn- submit-agave-job
   [agave-client submission]
@@ -73,17 +73,17 @@
 (defn- store-de-job
   [job]
   (validate-map job de-job-validation-map)
-  (save-job (:uuid job) (:name job) de-job-type (:username current-user) (:status job)
-            :app-name   (:analysis_name job)
-            :start-date (db/timestamp-from-str (str (:submission_date job)))
-            :end-date   (get-end-date job)
-            :deleted    (:deleted job)))
+  (jp/save-job (:uuid job) (:name job) de-job-type (:username current-user) (:status job)
+               :app-name   (:analysis_name job)
+               :start-date (db/timestamp-from-str (str (:submission_date job)))
+               :end-date   (get-end-date job)
+               :deleted    (:deleted job)))
 
 (defn- store-submitted-de-job
   [job]
-  (save-job (:id job) (:name job) de-job-type (:username current-user) (:status job)
-            :app-name   (:analysis_name job)
-            :start-date (db/timestamp-from-str (str (:startdate job)))))
+  (jp/save-job (:id job) (:name job) de-job-type (:username current-user) (:status job)
+               :app-name   (:analysis_name job)
+               :start-date (db/timestamp-from-str (str (:startdate job)))))
 
 (defn- format-de-job
   [states de-apps job]
@@ -110,11 +110,11 @@
 
 (defn- list-jobs-of-types
   [limit offset sort-field sort-order job-types]
-  (get-jobs (:username current-user) limit offset sort-field sort-order job-types))
+  (jp/get-jobs (:username current-user) limit offset sort-field sort-order job-types))
 
 (defn- count-jobs-of-types
   [job-types]
-  (count-jobs (:username current-user) job-types))
+  (jp/count-jobs (:username current-user) job-types))
 
 (defn- agave-job-id?
   [id]
@@ -131,7 +131,6 @@
 
 (defn- load-agave-job-states
   [agave jobs]
-  (clojure.pprint/pprint jobs)
   (let [agave-jobs (filter (comp agave-job-id? :id) jobs)]
     (if-not (empty? agave-jobs)
       (->> (.listJobs agave (map :id agave-jobs))
@@ -175,14 +174,29 @@
    (catch Object _ (service/request-failure "lookup for HPC job" id))))
 
 (defn- update-job-status
-  ([id status end-date]
-     (update-job id status (db/timestamp-from-str (str end-date))))
+  ([{:keys [id status end-date deleted]}]
+     (jp/update-job id {:status   status
+                        :end-date (db/timestamp-from-str (str end-date))
+                        :deleted  deleted}))
   ([agave id username prev-status]
      (let [job-info (get-agave-job agave id)]
        (service/assert-found job-info "HPC job" id)
        (when-not (= (:status job-info) prev-status)
-         (update-job id (:status job-info) (db/timestamp-from-str (str (:enddate job-info))))
+         (jp/update-job id (:status job-info) (db/timestamp-from-str (str (:enddate job-info))))
          (dn/send-agave-job-status-update username job-info)))))
+
+(defn- remove-deleted-de-jobs
+  "This function currently does nothing; the DE is notified any time one if its jobs is deleted."
+  [])
+
+(defn- remove-deleted-agave-jobs
+  "Marks jobs that have been deleted in Agave as deleted in the DE also."
+  [agave]
+  (let [extant-jobs (set (.listJobIds agave))]
+    (->> (jp/get-external-job-ids (:username current-user) {:job-types [agave-job-type]})
+         (remove extant-jobs)
+         (map #(jp/update-job % {:deleted true}))
+         (dorun))))
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
@@ -194,6 +208,7 @@
   (countJobs [this])
   (listJobs [this limit offset sort-field sort-order])
   (populateJobsTable [this])
+  (removeDeletedJobs [this])
   (updateJobStatus [this id username prev-status]))
 
 (deftype DeOnlyAppLister []
@@ -214,6 +229,8 @@
     (list-de-jobs limit offset sort-field sort-order))
   (populateJobsTable [this]
     (dorun (map store-de-job (osm/list-jobs))))
+  (removeDeletedJobs [this]
+    (remove-deleted-de-jobs))
   (updateJobStatus [this id username prev-status]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "HPC_JOBS_DISABLED"})))
@@ -245,6 +262,9 @@
     (list-all-jobs agave-client limit offset sort-field sort-order))
   (populateJobsTable [this]
     (dorun (map store-de-job (osm/list-jobs))))
+  (removeDeletedJobs [this]
+    (remove-deleted-de-jobs)
+    (remove-deleted-agave-jobs agave-client))
   (updateJobStatus [this id username prev-status]
     (update-job-status agave-client id username prev-status)))
 
@@ -266,7 +286,7 @@
   [app-lister]
   (let [username (:username current-user)]
     (transaction
-     (when (zero? (count-jobs username))
+     (when (zero? (jp/count-jobs username))
        (.populateJobsTable app-lister)))))
 
 (defn get-only-app-groups
@@ -302,6 +322,7 @@
         sort-order (keyword sort-order)
         app-lister (get-app-lister)]
     (populate-jobs-table app-lister)
+    (.removeDeletedJobs app-lister)
     (service/success-response
      {:analyses  (.listJobs app-lister limit offset sort-field sort-order)
       :timestamp (str (System/currentTimeMillis))
@@ -309,11 +330,13 @@
 
 (defn update-de-job-status
   [id status end-date]
-  (update-job-status id status end-date))
+  (update-job-status {:id       id
+                      :status   status
+                      :end-date end-date}))
 
 (defn update-agave-job-status
   [uuid]
-  (let [{:keys [id username status] :as job} (get-job-by-id (UUID/fromString uuid))
+  (let [{:keys [id username status] :as job} (jp/get-job-by-id (UUID/fromString uuid))
         username                             (string/replace (or username "") #"@.*" "")]
     (service/assert-found job "job" uuid)
     (service/assert-valid (= agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
