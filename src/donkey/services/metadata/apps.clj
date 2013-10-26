@@ -166,11 +166,11 @@
     (map (partial format-job de-states de-apps agave-states) jobs)))
 
 (defn- get-agave-job
-  [agave id]
+  [agave id not-found-fn]
   (try+
    (not-empty (.listRawJob agave id))
-   (catch [:status 404] _ (service/not-found "HPC job" id))
-   (catch [:status 400] _ (service/not-found "HPC job" id))
+   (catch [:status 404] _ (not-found-fn id))
+   (catch [:status 400] _ (not-found-fn id))
    (catch Object _ (service/request-failure "lookup for HPC job" id))))
 
 (defn- update-job-status
@@ -179,7 +179,7 @@
                         :end-date (db/timestamp-from-str (str end-date))
                         :deleted  deleted}))
   ([agave id username prev-status]
-     (let [job-info (get-agave-job agave id)]
+     (let [job-info (get-agave-job agave id (partial service/not-found "HPC job"))]
        (service/assert-found job-info "HPC job" id)
        (when-not (= (:status job-info) prev-status)
          (jp/update-job id (:status job-info) (db/timestamp-from-str (str (:enddate job-info))))
@@ -198,6 +198,46 @@
          (map #(jp/update-job % {:deleted true}))
          (dorun))))
 
+(defn- de-job-status-changed
+  [job curr-state]
+  (or (not= (:status job) (:status curr-state))
+      ((complement nil?) (get-end-date curr-state))
+      (:deleted curr-state)))
+
+(defn- sync-de-job-status
+  [job]
+  (let [curr-state (first (osm/get-jobs [(:external_id job)]))]
+    (if-not (nil? curr-state)
+      (when (de-job-status-changed job curr-state)
+        (jp/update-job-by-internal-id
+         (:id job)
+         {:status   (:status curr-state)
+          :end-date (get-end-date curr-state)
+          :deleted  (:deleted curr-state false)}))
+      (jp/update-job-by-internal-id (:id job) {:deleted true}))))
+
+(defn- agave-job-status-changed
+  [job curr-state]
+  (or (nil? curr-state)
+      (not= (:status job) (:status curr-state))
+      ((complement string/blank?) (:enddate curr-state))))
+
+(defn- sync-agave-job-status
+  [agave job]
+  (let [curr-state (get-agave-job agave (:external_id job) (constantly nil))]
+    (when (agave-job-status-changed job curr-state)
+      (jp/update-job-by-internal-id
+       (:id job)
+       {:status   (:status curr-state)
+        :end-date (db/timestamp-from-str (str (:enddate curr-state)))
+        :deleted  (nil? curr-state)}))))
+
+(defn- unrecognized-job-type
+  [job-type]
+  (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+           :argument   "job_type"
+           :value      job-type}))
+
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
   (listAppGroups [this])
@@ -207,6 +247,7 @@
   (submitJob [this workspace-id submission])
   (countJobs [this])
   (listJobs [this limit offset sort-field sort-order])
+  (syncJobStatus [this job])
   (populateJobsTable [this])
   (removeDeletedJobs [this])
   (updateJobStatus [this id username prev-status]))
@@ -227,6 +268,9 @@
     (count-jobs-of-types [de-job-type]))
   (listJobs [this limit offset sort-field sort-order]
     (list-de-jobs limit offset sort-field sort-order))
+  (syncJobStatus [this job]
+    (when (= (:job_type job) de-job-type)
+      (sync-de-job-status job)))
   (populateJobsTable [this]
     (dorun (map store-de-job (osm/list-jobs))))
   (removeDeletedJobs [this]
@@ -260,6 +304,11 @@
     (count-jobs-of-types [de-job-type agave-job-type]))
   (listJobs [this limit offset sort-field sort-order]
     (list-all-jobs agave-client limit offset sort-field sort-order))
+  (syncJobStatus [this job]
+    (condp = (:job_type job)
+      de-job-type    (sync-de-job-status job)
+      agave-job-type (sync-agave-job-status agave-client job)
+                     (unrecognized-job-type (:job_type job))))
   (populateJobsTable [this]
     (dorun (map store-de-job (osm/list-jobs))))
   (removeDeletedJobs [this]
@@ -341,3 +390,16 @@
     (service/assert-found job "job" uuid)
     (service/assert-valid (= agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
     (.updateJobStatus (get-app-lister username) id username status)))
+
+(defn- sync-job-status
+  [job]
+  (try+
+   (log/debug "synchronizing the job status for" (:id job))
+   (let [username (string/replace (:username job) #"@.*" "")]
+     (.syncJobStatus (get-app-lister username) job))
+   (catch Object e
+     (log/error e "unable to sync the job status for job" (:id job)))))
+
+(defn sync-job-statuses
+  []
+  (dorun (map sync-job-status (jp/list-incomplete-jobs))))

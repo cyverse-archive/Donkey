@@ -27,6 +27,7 @@
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
+            [donkey.services.metadata.apps :as apps]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.services.fileio.controllers :as fileio]
@@ -82,7 +83,8 @@
 (defn lein-ring-init
   []
   (load-configuration-from-file)
-  (start-nrepl))
+  (start-nrepl)
+  (future (apps/sync-job-statuses)))
 
 (defn load-configuration-from-zookeeper
   "Loads the configuration properties from Zookeeper."
@@ -121,4 +123,5 @@
   (register-specific-queries)
   (log/warn "Listening on" (config/listen-port))
   (start-nrepl)
+  (future (apps/sync-job-statuses))
   (jetty/run-jetty app {:port (config/listen-port)}))

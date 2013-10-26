@@ -136,3 +136,25 @@
   ([id status end-date]
      (update-job id {:status   status
                      :end-date end-date})))
+
+(defn update-job-by-internal-id
+  "Updates an existing job in the database using the internal identifier as the key."
+  [id {:keys [status end-date deleted]}]
+  (update :jobs
+          (set-fields (remove-nil-values {:status   status
+                                          :end_date end-date
+                                          :deleted  deleted}))
+          (where {:id id})))
+
+(defn list-incomplete-jobs
+  []
+  (select [:jobs :j]
+          (join [:users :u] {:j.user_id :u.id})
+          (join [:job_types :jt] {:j.job_type_id :jt.id})
+          (fields [:j.id          :id]
+                  [:j.external_id :external_id]
+                  [:j.status      :status]
+                  [:u.username    :username]
+                  [:jt.name       :job_type])
+          (where {:j.deleted  false
+                  :j.end_date nil})))
