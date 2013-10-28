@@ -77,12 +77,3 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
-
-(defn list-jobs
-  [workspace-id params]
-  (-> (client/get (secured-url "workspaces" workspace-id "executions" "list")
-                  {:query-params (secured-params params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)
-      (:analyses)))
