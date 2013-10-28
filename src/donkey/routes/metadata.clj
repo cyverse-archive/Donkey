@@ -31,9 +31,6 @@
    (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as {params :params}]
         (trap #(apps/list-jobs workspace-id params)))
 
-   (POST "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
-         (trap #(get-selected-experiments req workspace-id)))
-
    (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as req]
         (trap #(delete-experiments req workspace-id)))
 

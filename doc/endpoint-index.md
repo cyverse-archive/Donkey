@@ -149,7 +149,6 @@
 * [GET /secured/user-search/{search-string}](endpoints/collaborators.md#searching-for-users)
 * [PUT /secured/workspaces/{workspace-id}/executions/delete](endpoints/app-execution.md#deleting-jobs)
 * [GET /secured/workspaces/{workspace-id}/executions/list](endpoints/app-execution.md#listing-jobs)
-* [POST /secured/workspaces/{workspace-id}/executions/list](endpoints/app-execution.md#getting-status-information-for-selected-jobs)
 * [PUT /secured/workspaces/{workspace-id}/newexperiment](endpoints/app-execution.md#submitting-a-job-for-execution)
 * [POST /send-notification.](endpoints/notifications.md#sending-an-arbitrary-notification)
 * [POST /tool-request](endpoints/app-metadata.md#updating-a-tool-installation-request-administrator)

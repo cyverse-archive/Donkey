@@ -6,7 +6,6 @@
     * [Obtaining Information to Rerun a Job in the New Format](#obtaining-information-to-rerun-a-job-in-the-new-format)
     * [Submitting a Job for Execution](#submitting-a-job-for-execution)
     * [Listing Jobs](#listing-jobs)
-    * [Getting Status Information for Selected Jobs](#getting-status-information-for-selected-jobs)
     * [Deleting Jobs](#deleting-jobs)
     * [Stopping a Running Analysis](#stopping-a-running-analysis)
 
@@ -57,15 +56,6 @@ path. Please see the metadactyl documentation for more information.
 Secured Endpoint: GET /secured/workspaces/{workspace-id}/executions/list
 
 Delegates to metadactyl: GET /secured/workspaces/{workspace-id}/executions/list
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Getting Status Information for Selected Jobs
-
-Secured Endpoint: POST /secured/workspaces/{workspace-id}/executions/list
-
-Delegates to metadactyl: POST /secured/workspaces/{workspace-id}/executions/list
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
