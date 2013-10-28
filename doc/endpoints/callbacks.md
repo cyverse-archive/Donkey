@@ -125,7 +125,7 @@ $ curl -sd '' http://by-tor:8888/callbacks/agave-job/bd4c266f-11db-475b-a359-d66
 Here's an example of the case where the Agave job can't be found:
 
 ```
-$ curl -sd '' http://gargery:31325/callbacks/agave-job/bd4c266f-11db-475b-a359-d667593b5906 | python -mjson.tool
+$ curl -sd '' http://bt-tor:31325/callbacks/agave-job/bd4c266f-11db-475b-a359-d667593b5906 | python -mjson.tool
 {
     "error_code": "ERR_NOT_FOUND",
     "message": "HPC job 99999 not found",

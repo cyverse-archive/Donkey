@@ -41,22 +41,25 @@
                       :job_type_id job-type-id
                       :user_id     user-id})))))
 
+(defn- count-jobs-base
+  "The base query for counting the number of jobs in the database for a user."
+  ([username]
+     (-> (select* [:jobs :j])
+         (join [:users :u] {:j.user_id :u.id})
+         (aggregate (count :*) :count)
+         (where {:j.deleted  false
+                 :u.username username}))))
+
 (defn count-jobs
   "Counts the number of jobs in the database for a user."
   ([username]
      ((comp :count first)
-      (select [:jobs :j]
-              (join [:users :u] {:j.user_id :u.id})
-              (aggregate (count :*) :count)
-              (where {:u.username username}))))
+      (select (count-jobs-base username))))
   ([username job-types]
      ((comp :count first)
-      (select [:jobs :j]
-              (join [:users :u] {:j.user_id :u.id})
+      (select (count-jobs-base username)
               (join [:job_types :jt] {:j.job_type_id :jt.id})
-              (aggregate (count :*) :count)
-              (where {:u.username username
-                      :jt.name    [in job-types]})))))
+              (where {:jt.name [in job-types]})))))
 
 (defn- translate-sort-field
   "Translates the sort field sent to get-jobs to a value that can be used in the query."

@@ -53,12 +53,139 @@ path. Please see the metadactyl documentation for more information.
 
 ## Listing Jobs
 
-Secured Endpoint: GET /secured/workspaces/{workspace-id}/executions/list
+*Secured Endpoint:* GET /secured/workspaces/{workspace-id}/executions/list
 
-Delegates to metadactyl: GET /secured/workspaces/{workspace-id}/executions/list
+Information about the status of jobs that have previously been submitted for
+execution can be obtained using this service. The DE uses this service to
+populate the _Analyses_ window. The response body for this service is in the
+following format:
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+```json
+{
+    "analyses": [
+        {
+            "analysis_details": "analysis-description",
+            "analysis_id": "analysis-id",
+            "analysis_name": "analysis-name",
+            "app_disabled": false,
+            "description": "job-description",
+            "enddate": "end-date-as-milliseconds-since-epoch",
+            "id": "job-id",
+            "name": "job-name",
+            "resultfolderid": "path-to-result-folder",
+            "startdate": "start-date-as-milliseconds-since-epoch",
+            "status": "job-status-code",
+            "wiki_url": "analysis-documentation-link"
+        },
+        ...
+    ],
+    "success": true,
+    "timestamp": "timestamp",
+    "total": "total"
+}
+```
+
+With no query string parameters aside from `user` and `email`, this service
+returns information about all jobs ever run by the user that haven't been marked
+as deleted in descending order by start time (that is, the `startdate` field in
+the result). Several query-string parameters are available to alter the way this
+service behaves:
+
+<table border="1">
+     <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Default</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>limit</td>
+            <td>
+                The maximum number of results to return.  If this value is zero
+                or negative then all results will be returned.
+            </td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>offset</td>
+            <td>The index of the first result to return.</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>sort-field</td>
+            <td>
+                The name of the field that results are sorted by. Valid values
+                for this parameter are `name`, `analysis_name`, `startdate`,
+                `enddate`, and `status`.
+            </td>
+            <td>startdate</td>
+        </tr>
+        <tr>
+            <td>sort-order</td>
+            <td>
+                `asc` or `ASC` for ascending and `desc` or `DESC` for descending.
+            </td>
+            <td>desc</td>
+        </tr>
+    </tbody>
+</table>
+
+Here's an example using no parameters:
+
+```
+$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "analyses": [
+        {
+            "analysis_details": "Count words in a file",
+            "analysis_id": "wc-1.00u1",
+            "analysis_name": "Word Count",
+            "app-disabled": false,
+            "description": "",
+            "enddate": "1382979411000",
+            "id": "31499",
+            "name": "wc_10280954",
+            "resultfolderid": "/iplant/home/snow-dog/analyses/wc_10280954",
+            "startdate": "1382979299935",
+            "status": "Completed",
+            "wiki_url": ""
+        },
+        ...
+    ],
+    "success": true,
+    "timestamp": "1383000130668",
+    "total": 23
+}
+```
+
+Here's an example of a search with a limit of one result:
+
+```
+$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)&limit=1" | python -mjson.tool
+{
+    "analyses": [
+        {
+            "analysis_details": "Count words in a file",
+            "analysis_id": "wc-1.00u1",
+            "analysis_name": "Word Count",
+            "app-disabled": false,
+            "description": "",
+            "enddate": "1382979411000",
+            "id": "31499",
+            "name": "wc_10280954",
+            "resultfolderid": "/iplant/home/snow-dog/analyses/wc_10280954",
+            "startdate": "1382979299935",
+            "status": "Completed",
+            "wiki_url": ""
+        }
+    ],
+    "success": true,
+    "timestamp": "1383000130668",
+    "total": 23
+}
+```
 
 ## Deleting Jobs
 
