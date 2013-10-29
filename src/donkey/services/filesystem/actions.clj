@@ -338,7 +338,7 @@
              (assoc res 
                     :label (id->label cm user (:id res))
                     :path  (:id res)
-                    :id    (:id res) #_(str "/root" (:id res)))))))))
+                    :id    (str "/root" (:id res)))))))))
 
 (defn create
   "Creates a directory at 'path' in iRODS and sets the user to 'user'.
