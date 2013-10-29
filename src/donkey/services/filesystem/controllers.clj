@@ -20,30 +20,6 @@
   [username]
   (.equals username (irods-user)))
 
-(defn- dir-list
-  ([user directory include-files]
-     (dir-list user directory include-files false))
-
-  ([user directory include-files set-own?]
-     (when (super-user? user)
-       (throw+ {:error_code ERR_NOT_AUTHORIZED
-                :user user}))
-
-     (let [comm-dir   (fs-community-data)
-           user-dir   (utils/path-join (irods-home) user)
-           public-dir (utils/path-join (irods-home) "public")
-           files-to-filter (conj
-                            (fs-filter-files)
-                            comm-dir
-                            user-dir
-                            public-dir)]
-       (irods-actions/list-dir
-        user
-        directory
-        include-files
-        files-to-filter
-        set-own?))))
-
 (defn do-homedir
   "Returns the home directory for the listed user."
   [req-params]
@@ -56,24 +32,19 @@
   [user]
   (irods-actions/user-home-dir (irods-home) user true))
 
-(defn- include-files?
+(defn- top-level-listing
+  "Performs a top-level directory listing."
   [params]
-  (if (contains? params :includefiles)
-    (not= "0" (:includefiles params))
-    false))
+  (log/warn "[top-level-listing]" (:user params))
+  (let [user       (:user params)
+        comm-f     (future (irods-actions/list-directories user (fs-community-data)))
+        share-f    (future (irods-actions/list-directories user (irods-home)))
+        home-f     (future (irods-actions/list-directories user (get-home-dir user)))]
+    {:roots [@home-f @comm-f @share-f]}))
 
-(defn- gen-comm-data
-  [user inc-files]
-  (let [cdata (dir-list user (fs-community-data) inc-files)]
-    (assoc cdata :label "Community Data")))
-
-(defn- gen-sharing-data
-  [user inc-files]
-  (let [comm-dir        (fs-community-data)
-        user-dir        (utils/path-join (irods-home) user)
-        public-dir      (utils/path-join (irods-home) "public")
-        files-to-filter (conj (fs-filter-files) comm-dir user-dir public-dir)]
-    (irods-actions/shared-root-listing user (irods-home) inc-files files-to-filter)))
+(defn- shared-with-me-listing?
+  [path]
+  (= (utils/add-trailing-slash path) (utils/add-trailing-slash (irods-home))))
 
 (defn do-directory
   "Performs a list-dirs command.
@@ -90,30 +61,17 @@
     ;;; request and the community listing should be included.
     (cond
       (not (contains? params :path))
-      (let [user       (:user params)
-            inc-files  (include-files? params)
-            comm-f     (future (gen-comm-data user inc-files))
-            share-f    (future (gen-sharing-data user inc-files))
-            home-f     (future (dir-list user (get-home-dir user) inc-files))]
-        {:roots [@home-f @comm-f @share-f]})
-
-      (= (utils/add-trailing-slash (:path params)) (utils/add-trailing-slash (irods-home)))
-      (irods-actions/shared-root-listing
-        (:user params)
-        (irods-home)
-        (include-files? params)
-        [])
-
+      (top-level-listing params)
+      
+      (shared-with-me-listing? (:path params))
+      (irods-actions/list-directories (:user params) (irods-home))
+      
       :else
-      ;;; There's a path parameter, so simply list the directory.
-      (let [inc-files (include-files? params)]
-        (if (irods-actions/user-trash-dir? (:user params) (:path params))
-          (dir-list (:user params) (:path params) inc-files true)
-          (dir-list (:user params) (:path params) inc-files))))))
+      (irods-actions/list-directories (:user params) (:path params)))))
 
 (defn do-root-listing
   [req-params]
-  (log/debug "do-root-listing")
+  (log/warn "do-root-listing")
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string?})
     (let [user           (:user params)
@@ -394,6 +352,18 @@
     true
     (if (= "1" (:attachment params)) true false)))
 
+(defn- get-disposition
+  [params]
+  (cond
+    (not (contains? params :attachment))
+    (str "attachment; filename=\"" (utils/basename (:path params)) "\"")
+    
+    (not (attachment? params))
+    (str "filename=\"" (utils/basename (:path params)) "\"")
+    
+    :else
+    (str "attachment; filename=\"" (utils/basename (:path params)) "\"")))
+
 (defn do-special-download
   "Handles a file download
 
@@ -414,29 +384,14 @@
       (when (super-user? user)
         (throw+ {:error_code ERR_NOT_AUTHORIZED
                  :user       user}))
-
-      (cond
-        ;;; If disable is not included, assume the attachment
-        ;;; part should be left out.
-        (not (contains? params :attachment))
-        (rsp-utils/header
-          {:status               200
-           :body                 (irods-actions/download-file user path)}
-          "Content-Disposition" (str "attachment; filename=\""
-                                     (utils/basename path)
-                                     "\""))
-
-        (not (attachment? req-params))
-        (rsp-utils/header
-          {:status 200
-           :body (irods-actions/download-file user path)}
-          "Content-Disposition" (str "filename=\"" (utils/basename path) "\""))
-
-        :else
-        (rsp-utils/header
-          {:status 200
-           :body (irods-actions/download-file user path)}
-          "Content-Disposition" (str "attachment; filename=\"" (utils/basename path) "\""))))))
+      
+      (let [content      (irods-actions/download-file user path)
+            content-type @(future (irods-actions/tika-detect-type user path))
+            disposition  (get-disposition params)]
+        {:status               200
+         :body                 content
+         :headers {"Content-Disposition" disposition
+                   "Content-Type"        content-type}}))))
 
 (defn do-user-permissions
   "Handles returning the list of user permissions for a file
@@ -526,16 +481,13 @@
 
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
-    (validate-map params {:user string?})
-    (validate-map body {:tickets sequential?})
 
-    (when-not (check-tickets (:tickets body))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field      "tickets"}))
+    (validate-map params {:user string?})
+    (validate-map body {:paths sequential?})
 
     (let [pub-param (:public params)
           public    (if (and pub-param (= pub-param "1")) true false)]
-      (irods-actions/add-tickets (:user params) (:tickets body) public))))
+      (irods-actions/add-tickets (:user params) (:paths body) public))))
 
 (defn do-remove-tickets
   [req-params req-body]
@@ -682,11 +634,16 @@
   (let [params (add-current-user-to-map req-params)
         body   (parse-body (slurp req-body))]
     (validate-map params {:user string?})
-    (validate-map body {:path string? :position string? :chunk-size string? :line-ending string?})
+    (validate-map body {:path        string? 
+                        :position    string? 
+                        :chunk-size  string? 
+                        :line-ending string? 
+                        :separator   string?})
 
     (let [user   (:user params)
           path   (:path body)
           ending (:line-ending body)
+          sep    (:separator body)
           pos    (Long/parseLong (:position body))
           size   (Long/parseLong (:chunk-size body))]
-      (irods-actions/read-csv-chunk user path pos size ending))))
+      (irods-actions/read-csv-chunk user path pos size ending sep))))

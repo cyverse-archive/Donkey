@@ -31,7 +31,8 @@
                  [commons-net "3.3"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [net.sf.opencsv/opencsv "2.0"]
-                 [com.novemberain/langohr "1.4.1"]]
+                 [com.novemberain/langohr "1.4.1"]
+                 [clj-icat-direct "0.0.1"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
             [lein-ring "0.7.4"]
             [swank-clojure "1.4.2"]]
@@ -43,7 +44,7 @@
          :port 31325}
   :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
                :provides "donkey"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "iplant-clavin"]
+               :dependencies ["iplant-service-config >= 0.1.0-5" "iplant-clavin" "java-1.7.0-openjdk"]
                :exe-files ["resources/scripts/filetypes/guess-2.pl"]
                :config-files ["log4j.properties"]
                :config-path "conf/main"}

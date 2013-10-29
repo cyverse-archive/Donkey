@@ -12,13 +12,15 @@
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.garnish.irods :as filetypes]
             [ring.util.codec :as cdc]
-            [clj-jargon.lazy-listings :as ll])
+            [clj-jargon.lazy-listings :as ll]
+            [clj-icat-direct.icat :as icat])
   (:use [clj-jargon.jargon :exclude [init list-dir] :as jargon]
         [clojure-commons.error-codes]
         [donkey.util.config]
         [slingshot.slingshot :only [try+ throw+]])
   (:import [org.apache.tika Tika]
-           [au.com.bytecode.opencsv CSVReader]))
+           [au.com.bytecode.opencsv CSVReader]
+           [java.util UUID]))
 
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
@@ -38,24 +40,6 @@
   (with-open [w (java.io.StringWriter.)]
     (clojure.pprint/write (conj args (symbol fn-name)) :stream w)
     (str w)))
-
-(defn not-filtered?
-  [cm user fpath ff]
-  (and (not (contains? ff fpath))
-       (not (contains? ff (ft/basename fpath)))
-       (is-readable? cm user fpath)))
-
-(defn directory-listing
-  [cm user dirpath filter-files]
-  (let [fs (:fileSystemAO cm)
-        ff (set filter-files)]
-    (filterv
-      #(not-filtered? cm user %1 ff)
-      (map
-        #(ft/path-join dirpath %)
-        (.getListInDir fs (file dirpath))))))
-
-(defn has-sub-dir [user abspath] true)
 
 (defn filtered-user-perms
   [cm user abspath]
@@ -136,19 +120,6 @@
    :else
    (ft/basename id)))
 
-(defn dir-map-entry
-  [cm user list-entry]
-  (let [abspath (.getAbsolutePath list-entry)
-        stat    (.initializeObjStatForFile list-entry)]
-    (hash-map
-     :id            abspath
-     :label         (id->label cm user abspath)
-     :permissions   (collection-perm-map cm user abspath)
-     :hasSubDirs    true
-     :date-created  (date-created-from-stat stat)
-     :date-modified (date-mod-from-stat stat)
-     :file-size     (size-from-stat stat))))
-
 (defn list-in-dir
   [cm fixed-path]
   (let [ffilter (proxy [java.io.FileFilter] [] (accept [stuff] true))]
@@ -167,59 +138,7 @@
 
 (defn valid-file-map? [map-to-check] (good-string? (:id map-to-check)))
 
-(defn gen-listing
-  [cm user path filter-files include-files]
-  (let [fixed-path     (ft/rm-last-slash path)
-        ff             (set filter-files)
-        fix-label      #(assoc %1 :label (id->label cm user (:id %1)))
-        listing        (fix-label (jargon/list-dir cm user path :include-files include-files))
-        filter-listing (fn [l] (remove #(or (ff (:id %))
-                                            (ff (:label %))
-                                            (not (valid-file-map? %))) l))]
-    (if include-files
-      (assoc listing
-        :folders (filter-listing (:folders listing))
-        :files   (filter-listing (:files listing)))
-      (assoc listing
-        :folders (filter-listing (:folders listing))))))
-
-(defn list-dir
-  "A non-recursive listing of a directory. Contains entries for files.
-
-   The map for the directory listing looks like this:
-     {:id \"full path to the top-level directory\"
-      :label \"basename of the path\"
-      :files A sequence of file maps
-      :folders A sequence of directory maps}
-
-   Parameters:
-     user - String containing the username of the user requesting the
-        listing.
-     path - String containing path to the top-level directory in iRODS.
-
-   Returns:
-     A tree of maps as described above."
-  ([user path filter-files]
-     (list-dir user path true filter-files false))
-
-  ([user path include-files filter-files set-own?]
-     (log/warn (str "list-dir " user " " path))
-
-     (let [path (ft/rm-last-slash path)]
-       (with-jargon (jargon-cfg) [cm]
-         (log-rulers
-           cm [user]
-           (format-call "list-dir" user path include-files filter-files set-own?)
-           (validators/user-exists cm user)
-           (validators/path-exists cm path)
-
-           (when (and set-own? (not (owns? cm user path)))
-             (log/warn "Setting own perms on" path "for" user)
-             (set-permissions cm user path false false true))
-
-           (validators/path-readable cm user path)
-
-           (gen-listing cm user path filter-files include-files))))))
+(defn valid-path? [path-to-check] (good-string? path-to-check))
 
 (defn- filtered-paths
   "Returns a seq of paths that should not be included in paged listing."
@@ -229,44 +148,58 @@
         (ft/path-join (irods-home) user)
         (ft/path-join (irods-home) "public")))
 
-(defn- not-include-in-page?
+(defn- should-filter?
   "Returns true if the map is okay to include in a directory listing."
-  [user file-map]
+  [user path-to-check]
   (let [fpaths (set (filtered-paths user))]
-    (or (fpaths (:id file-map))
-        (fpaths (:label file-map))
-        (not (valid-file-map? file-map)))))
+    (or  (contains? fpaths path-to-check)
+         (not (valid-path? path-to-check)))))
 
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory
    information that can be consumed by the front-end."
-  [page-entry]
-  (let [[id label size created lastmod perm-val entry-type] page-entry
-        base-map {:id            id
-                  :label         label
-                  :file-size     (str size)
-                  :date-created  (str (* (Integer/parseInt created) 1000))
-                  :date-modified (str (* (Integer/parseInt lastmod) 1000))
-                  :permissions   (perm-map-for perm-val)}]
-    (if (= entry-type "dataobject")
+  [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id]}]
+  (let [base-map {:id            full_path
+                  :path          full_path
+                  :label         base_name
+                  :filter        (or (should-filter? user full_path) 
+                                     (should-filter? user base_name))
+                  :file-size     (str data_size)
+                  :date-created  (str (* (Integer/parseInt create_ts) 1000))
+                  :date-modified (str (* (Integer/parseInt modify_ts) 1000))
+                  :permissions   (perm-map-for (str access_type_id))}]
+    (if (= type "dataobject")
       base-map
       (merge base-map {:hasSubDirs true
                        :file-size  "0"}))))
-
-(defn- filtered-path-map-seq
-  [ffunc list-to-filter]
-  (doall (remove ffunc (map page-entry->map list-to-filter))))
 
 (defn- page->map
   "Transforms an entire page of results for a paged listing in a map that
    can be returned to the client."
   [user page]
-  (let [entry-types (group-by #(last %) page)
+  (let [entry-types (group-by :type page)
         do          (get entry-types "dataobject")
         collections (get entry-types "collection")
-        include?    (partial not-include-in-page? user)]
-    {:files   (mapv page-entry->map do)
-     :folders (mapv page-entry->map collections)}))
+        xformer     (partial page-entry->map user)]
+    {:files   (mapv xformer do)
+     :folders (mapv xformer collections)}))
+
+(defn- user-col->api-col
+  [sort-col]
+  (case sort-col
+    "NAME"         :base-name
+    "ID"           :full-path
+    "LASTMODIFIED" :modify-ts
+    "DATECREATED"  :create-ts
+    "SIZE"         :data-size
+                   :base-name))
+
+(defn- user-order->api-order
+  [sort-order]
+  (case sort-order
+    "ASC"  :asc
+    "DESC" :desc
+           :asc))
 
 (defn paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
@@ -293,18 +226,86 @@
         (throw+ {:error_code "ERR_INVALID_SORT_ORDER"
                  :sort-order sort-order}))
 
-      (let [stat (stat cm path)]
+      (let [stat (stat cm path)
+            scol (user-col->api-col sort-col)
+            sord (user-order->api-order sort-order)]
         (merge
           (hash-map
             :id               path
+            :path             path
             :label            (id->label cm user path)
+            :filter           (should-filter? user path)
             :permissions      (collection-perm-map cm user path)
             :hasSubDirs       true
-            :total            (ll/count-list-entries cm user path)
+            :total            (icat/number-of-items-in-folder user path)
             :date-created     (:created stat)
             :date-modified    (:modified stat)
             :file-size        "0")
-          (page->map user (ll/paged-list-entries cm user path sort-col sort-order limit offset)))))))
+          (page->map user (icat/paged-folder-listing user path scol sord limit offset)))))))
+
+(defn list-directories
+  "Lists the directories contained under path."
+  [user path]
+  (let [path (ft/rm-last-slash path)]
+    (with-jargon (jargon-cfg) [cm]
+      (validators/user-exists cm user)
+      (validators/path-exists cm path)
+      (validators/path-readable cm user path)
+      (validators/path-is-dir cm path)
+      
+      (let [stat (stat cm path)]
+        (merge
+          (hash-map
+            :id            path
+            :path          path
+            :label         (id->label cm user path)
+            :filter        (should-filter? user path)
+            :permissions   (collection-perm-map cm user path)
+            :hasSubDirs    true
+            :date-created  (:created stat)
+            :date-modified (:modified stat)
+            :file-size     "0")
+          (dissoc (page->map user (icat/list-folders-in-folder user path)) :files))))))
+
+(defn list-dir
+  "A non-recursive listing of a directory. Contains entries for files.
+
+   The map for the directory listing looks like this:
+     {:id \"full path to the top-level directory\"
+      :label \"basename of the path\"
+      :files A sequence of file maps
+      :folders A sequence of directory maps}
+
+   Parameters:
+     user - String containing the username of the user requesting the
+        listing.
+     path - String containing path to the top-level directory in iRODS.
+
+   Returns:
+     A tree of maps as described above."
+
+  ([user path filter-files set-own?]
+     (log/warn (str "list-dir " user " " path))
+
+     (let [path (ft/rm-last-slash path)]
+       (with-jargon (jargon-cfg) [cm]
+         (log-rulers
+           cm [user]
+           (format-call "list-dir" user path filter-files set-own?)
+           (validators/user-exists cm user)
+           (validators/path-exists cm path)
+
+           (when (and set-own? (not (owns? cm user path)))
+             (log/warn "Setting own perms on" path "for" user)
+             (set-permissions cm user path false false true))
+
+           (validators/path-readable cm user path)
+
+           (list-directories user path))))))
+
+(defn- create-trash-folder?
+  [cm user root-path]
+  (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path))))
 
 (defn root-listing
   ([user root-path]
@@ -312,6 +313,7 @@
 
   ([user root-path set-own?]
      (let [root-path (ft/rm-last-slash root-path)]
+       (log/warn "[root-listing]" "for" user "at" root-path "with set own as" set-own?)
        (with-jargon (jargon-cfg) [cm]
          (log-rulers
            cm [user]
@@ -319,21 +321,24 @@
            (log/warn "in (root-listing)")
            (validators/user-exists cm user)
 
-           (when (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path)))
-             (log/warn "Creating" root-path "for" user)
+           (when (create-trash-folder? cm user root-path)
+             (log/warn "[root-listing] Creating" root-path "for" user)
              (mkdir cm root-path)
-             (log/warn "Setting own perms on" root-path "for" user)
+             (log/warn "[root-listing] Setting own perms on" root-path "for" user)
              (set-permissions cm user root-path false false true))
 
            (validators/path-exists cm root-path)
 
            (when (and set-own? (not (owns? cm user root-path)))
-             (log/warn "set-own? is true and" root-path "is not owned by" user)
-             (log/warn "Setting own perms on" root-path "for" user)
+             (log/warn "[root-listing] set-own? is true and" root-path "is not owned by" user)
+             (log/warn "[root-listing] Setting own perms on" root-path "for" user)
              (set-permissions cm user root-path false false true))
 
            (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
-             (assoc res :label (id->label cm user (:id res)))))))))
+             (assoc res 
+                    :label (id->label cm user (:id res))
+                    :path  (:id res)
+                    :id    (str "/root" (:id res)))))))))
 
 (defn create
   "Creates a directory at 'path' in iRODS and sets the user to 'user'.
@@ -634,8 +639,8 @@
 (defn merge-counts
   [stat-map cm user path]
   (if (is-dir? cm path)
-    (merge stat-map {:file-count (ll/num-dataobjects-under-path cm user path)
-                     :dir-count  (ll/num-collections-under-path cm user path)})
+    (merge stat-map {:file-count (icat/number-of-files-in-folder user path)
+                     :dir-count  (icat/number-of-folders-in-folder user path)})
     stat-map))
 
 (defn merge-shares
@@ -711,17 +716,22 @@
          :mime-type    (.detect (Tika.) (input-stream cm path))
          :preview      (preview-url user path)}))))
 
+(defn tika-detect-type
+  [user file-path]
+  (with-jargon (jargon-cfg) [cm-new]
+    (validators/user-exists cm-new user)
+    (validators/path-exists cm-new file-path)
+    (validators/path-readable cm-new user file-path)
+    (.detect (Tika.) (input-stream cm-new file-path))))
+
 (defn download-file
   [user file-path]
   (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "download-file" user file-path)
-     (validators/user-exists cm user)
-     (validators/path-exists cm file-path)
-     (validators/path-readable cm user file-path)
-
-     (if (zero? (file-size cm file-path)) "" (input-stream cm file-path)))))
+    (validators/user-exists cm user)
+    (validators/path-exists cm file-path)
+    (validators/path-readable cm user file-path)
+    
+    (if (zero? (file-size cm file-path)) "" (input-stream cm file-path))))
 
 (defn download
   [user filepaths]
@@ -1223,29 +1233,41 @@
        {:trash trash-dir
         :paths trash-list}))))
 
+
+(defn- ticket-uuids?
+  [cm user new-uuids]
+  (try+
+    (validators/all-tickets-nonexistant cm user new-uuids)
+    true
+    (catch error? e false)))
+
+(defn- gen-uuids
+  [cm user num-uuids]
+  (let [new-uuids (doall (repeatedly num-uuids #(string/upper-case (str (UUID/randomUUID)))))]
+    (if (ticket-uuids? cm user new-uuids)
+      new-uuids
+      (recur cm user num-uuids)) ))
+
 (defn add-tickets
-  [user tickets public?]
+  [user paths public?]
   (with-jargon (jargon-cfg) [cm]
     (log-rulers
      cm [user]
-     (format-call "add-tickets" user tickets public?)
-     (validators/user-exists cm user)
-
-     (let [all-paths      (mapv :path tickets)
-           all-ticket-ids (mapv :ticket-id tickets)]
-       (validators/all-paths-exist cm all-paths)
-       (validators/all-paths-writeable cm user all-paths)
-       (validators/all-tickets-nonexistant cm user all-ticket-ids)
-
-       (doseq [tm tickets]
-         (create-ticket cm (:username cm) (:path tm) (:ticket-id tm))
+     (format-call "add-tickets" user paths public?)
+     (let [new-uuids (gen-uuids cm user (count paths))] 
+       (validators/user-exists cm user)
+       (validators/all-paths-exist cm paths)
+       (validators/all-paths-writeable cm user paths)
+       
+       (doseq [[path uuid] (map list paths new-uuids)]
+         (log/warn "[add-tickets] adding ticket for " path "as" uuid)
+         (create-ticket cm (:username cm) path uuid)
          (when public?
-           (.addTicketGroupRestriction
-            (ticket-admin-service cm (:username cm))
-            (:ticket-id tm)
-            "public")))
-
-       {:user user :tickets (mapv #(ticket-map cm (:username cm) %) all-ticket-ids)}))))
+           (log/warn "[add-tickets] making ticket" uuid "public")
+           (doto (ticket-admin-service cm (:username cm))
+             (.addTicketGroupRestriction uuid "public"))))
+     
+       {:user user :tickets (mapv #(ticket-map cm (:username cm) %) new-uuids)}))))
 
 (defn remove-tickets
   [user ticket-ids]
@@ -1471,17 +1493,18 @@
   (+ start-pos (- (count (.getBytes trimmed-chunk)) 1)))
 
 (defn read-csv
-  [csv-str]
+  [separator csv-str]
   (let [ba  (java.io.ByteArrayInputStream. (.getBytes csv-str))
         isr (java.io.InputStreamReader. ba "UTF-8")]
-    (mapv vec (.readAll (CSVReader. isr)))))
+    (mapv vec (.readAll (CSVReader. isr (.charAt separator 0))))))
 
 (defn read-csv-chunk
   "Reads a chunk of a file and parses it as a CSV. The position and chunk-size are not guaranteed, since
    we shouldn't try to parse partial rows. We scan forward from the starting position to find the first
    line-ending and then scan backwards from the last position for the last line-ending."
-  [user path position chunk-size line-ending]
+  [user path position chunk-size line-ending separator]
   (with-jargon (jargon-cfg) [cm]
+    (log/warn "[read-csv-chunk]" user path position chunk-size line-ending separator)
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-is-file cm path)
@@ -1495,11 +1518,13 @@
           front-trimmed (trim-to-line-start chunk line-ending)
           new-start-pos (calc-start-pos position chunk front-trimmed)
           trimmed-chunk (trim-to-last-line front-trimmed line-ending)
-          new-end-pos   (calc-end-pos position trimmed-chunk)]
+          new-end-pos   (calc-end-pos position trimmed-chunk)
+          the-csv       (read-csv separator trimmed-chunk)]
       {:path       path
        :user       user
+       :max-cols   (str (reduce #(if (>= %1 %2) %1 %2) (map count the-csv)))
        :start      (str new-start-pos)
        :end        (str new-end-pos)
        :chunk-size (str (count (.getBytes trimmed-chunk)))
        :file-size  (str (file-size cm path))
-       :csv        (read-csv trimmed-chunk)})))
+       :csv        the-csv})))

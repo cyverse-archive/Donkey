@@ -29,6 +29,7 @@
             [donkey.util.config :as config]
             [donkey.services.fileio.controllers :as fileio]
             [donkey.util.messaging :as messages]
+            [donkey.util.icat :as icat]
             [clojure.tools.nrepl.server :as nrepl]))
 
 (defn- flagged-routes
@@ -91,6 +92,7 @@
   (load-configuration-from-file)
   (register-specific-queries)
   (messages/messaging-initialization)
+  (icat/configure-icat)
   (start-nrepl))
 
 (defn load-configuration-from-zookeeper
@@ -124,4 +126,5 @@
   (log/warn "Listening on" (config/listen-port))
   (start-nrepl)
   (messages/messaging-initialization)
+  (icat/configure-icat)
   (jetty/run-jetty app {:port (config/listen-port)}))
