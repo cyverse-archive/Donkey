@@ -504,12 +504,12 @@
   "Loads the configuration settings from a file."
   []
   (cc/load-config-from-file (System/getenv "IPLANT_CONF_DIR") "donkey.properties" props)
-  (cc/log-config props)
+  (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
   (validate-config))
 
 (defn load-config-from-zookeeper
   "Loads the configuration settings from Zookeeper."
   []
   (cc/load-config-from-zookeeper props "donkey")
-  (cc/log-config props)
+  (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
   (validate-config))
