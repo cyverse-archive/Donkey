@@ -44,7 +44,7 @@
          :port 31325}
   :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
                :provides "donkey"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "iplant-clavin"]
+               :dependencies ["iplant-service-config >= 0.1.0-5" "iplant-clavin" "java-1.7.0-openjdk"]
                :exe-files ["resources/scripts/filetypes/guess-2.pl"]
                :config-files ["log4j.properties"]
                :config-path "conf/main"}
