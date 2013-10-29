@@ -43,23 +43,25 @@
 
 (defn- count-jobs-base
   "The base query for counting the number of jobs in the database for a user."
-  ([username]
-     (-> (select* [:jobs :j])
-         (join [:users :u] {:j.user_id :u.id})
-         (aggregate (count :*) :count)
-         (where {:j.deleted  false
-                 :u.username username}))))
+  [username]
+  (-> (select* [:jobs :j])
+      (join [:users :u] {:j.user_id :u.id})
+      (aggregate (count :*) :count)
+      (where {:u.username username})))
+
+(defn count-all-jobs
+  "Counts the total number of jobs in the database for a user."
+  [username]
+  ((comp :count first) (select (count-jobs-base username))))
 
 (defn count-jobs
-  "Counts the number of jobs in the database for a user."
-  ([username]
-     ((comp :count first)
-      (select (count-jobs-base username))))
-  ([username job-types]
-     ((comp :count first)
-      (select (count-jobs-base username)
-              (join [:job_types :jt] {:j.job_type_id :jt.id})
-              (where {:jt.name [in job-types]})))))
+  "Counts the number of undeleted jobs in the database for a user."
+  [username job-types]
+  ((comp :count first)
+   (select (count-jobs-base username)
+           (join [:job_types :jt] {:j.job_type_id :jt.id})
+           (where {:jt.name   [in job-types]
+                   :j.deleted false}))))
 
 (defn- translate-sort-field
   "Translates the sort field sent to get-jobs to a value that can be used in the query."
@@ -161,3 +163,16 @@
                   [:jt.name       :job_type])
           (where {:j.deleted  false
                   :j.end_date nil})))
+
+(defn list-jobs-to-delete
+  [ids]
+  (select [:jobs :j]
+          (fields [:j.external_id :id]
+                  [:j.deleted     :deleted])
+          (where {:j.external_id [in ids]})))
+
+(defn delete-jobs
+  [ids]
+  (update :jobs
+          (set-fields {:deleted true})
+          (where {:external_id [in ids]})))

@@ -335,7 +335,7 @@
   [app-lister]
   (let [username (:username current-user)]
     (transaction
-     (when (zero? (jp/count-jobs username))
+     (when (zero? (jp/count-all-jobs username))
        (.populateJobsTable app-lister)))))
 
 (defn get-only-app-groups
@@ -360,11 +360,11 @@
    (.submitJob (get-app-lister) workspace-id (service/decode-json body))))
 
 (defn list-jobs
-  [workspace-id {:keys [limit offset sort-field sort-order]
-                 :or   {limit      "0"
-                        offset     "0"
-                        sort-field :startdate
-                        sort-order :desc}}]
+  [{:keys [limit offset sort-field sort-order]
+    :or   {limit      "0"
+           offset     "0"
+           sort-field :startdate
+           sort-order :desc}}]
   (let [limit      (Long/parseLong limit)
         offset     (Long/parseLong offset)
         sort-field (keyword sort-field)
@@ -403,3 +403,20 @@
 (defn sync-job-statuses
   []
   (dorun (map sync-job-status (jp/list-incomplete-jobs))))
+
+(defn log-already-deleted-jobs
+  [ids]
+  (let [jobs-by-id (into {} (map (juxt :id identity) (jp/list-jobs-to-delete ids)))
+        log-it     (fn [desc id] (log/warn "attempt to delete" desc "job" id "ignored"))]
+    (dorun (map (fn [id] (cond (nil? (jobs-by-id id))            (log-it "missing" id)
+                              (get-in jobs-by-id [id :deleted]) (log-it "deleted" id)))
+                ids))))
+
+(defn delete-jobs
+  [body]
+  (let [body (service/decode-json body)
+        _    (validate-map body {:executions vector?})
+        ids  (set (:executions body))]
+    (log-already-deleted-jobs ids)
+    (jp/delete-jobs ids)
+    (service/success-response)))

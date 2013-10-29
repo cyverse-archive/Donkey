@@ -395,13 +395,6 @@
   [req uuid]
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
-(defn delete-experiments
-  "This service marks experiments as deleted so that they no longer show up
-   in the Analyses window."
-  [req workspace-id]
-  (let [url (build-metadactyl-secured-url req "workspaces" workspace-id "executions" "delete")]
-    (forward-put url req)))
-
 (defn rate-app
   "This service adds a user's rating to an app."
   [req]

@@ -28,11 +28,11 @@
    (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
         (trap #(apps/submit-job workspace-id body)))
 
-   (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as {params :params}]
-        (trap #(apps/list-jobs workspace-id params)))
+   (GET "/workspaces/:workspace-id/executions/list" [_ :as {params :params}]
+        (trap #(apps/list-jobs params)))
 
-   (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as req]
-        (trap #(delete-experiments req workspace-id)))
+   (PUT "/workspaces/:workspace-id/executions/delete" [_ :as {body :body}]
+        (trap #(apps/delete-jobs body)))
 
    (DELETE "/stop-analysis/:uuid" [uuid :as req]
            (trap #(jex/stop-analysis req uuid)))
