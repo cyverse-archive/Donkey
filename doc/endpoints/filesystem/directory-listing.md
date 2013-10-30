@@ -30,6 +30,7 @@ __Response Body__:
             "file-size": "4814",
             "filter": false,
             "id": "/iplant/home/wregglej/Ara_Pheno.txt",
+            "path": "/iplant/home/wregglej/Ara_Pheno.txt",
             "label": "Ara_Pheno.txt",
             "permissions": {
                 "own": true,
@@ -43,6 +44,7 @@ __Response Body__:
             "file-size": "35",
             "filter": false,
             "id": "/iplant/home/wregglej/asdfasdfasdfadsfasdfasdfasdfadsfa",
+            "path": "/iplant/home/wregglej/asdfasdfasdfadsfasdfasdfasdfadsfa",
             "label": "asdfasdfasdfadsfasdfasdfasdfadsfa",
             "permissions": {
                 "own": true,
@@ -56,6 +58,7 @@ __Response Body__:
             "file-size": "196903039",
             "filter": false,
             "id": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
+            "path": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
             "label": "centos-5.8-x86-64-minimal.box",
             "permissions": {
                 "own": true,
@@ -72,6 +75,7 @@ __Response Body__:
             "filter": false,
             "hasSubDirs": true,
             "id": "/iplant/home/wregglej/acsxfdqswfrdafds",
+            "path": "/iplant/home/wregglej/acsxfdqswfrdafds",
             "label": "acsxfdqswfrdafds",
             "permissions": {
                 "own": true,
@@ -86,6 +90,7 @@ __Response Body__:
             "filter": false,
             "hasSubDirs": true,
             "id": "/iplant/home/wregglej/analyses",
+            "path": "/iplant/home/wregglej/analyses",
             "label": "analyses",
             "permissions": {
                 "own": true,
@@ -100,6 +105,7 @@ __Response Body__:
             "filter": false,
             "hasSubDirs": true,
             "id": "/iplant/home/wregglej/analyses3",
+            "path": "/iplant/home/wregglej/analyses3",
             "label": "analyses3",
             "permissions": {
                 "own": true,
@@ -111,6 +117,7 @@ __Response Body__:
     ],
     "hasSubDirs": true,
     "id": "/iplant/home/wregglej",
+    "path": "/iplant/home/wregglej",
     "label": "wregglej",
     "filter": false,
     "permissions": {
@@ -171,7 +178,8 @@ __Response Body__:
                 "date-created": "1379519492000",
                 "date-modified": "1379520049000",
                 "file-size": "196903039",
-                "id": "/home/irods/iRODS/Vault/home/wregglej/centos-5.8-x86-64-minimal.box",
+                "id": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
+                "path": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
                 "label": "centos-5.8-x86-64-minimal.box",
                 "permissions": {
                     "own": true,
@@ -187,6 +195,7 @@ __Response Body__:
                 "file-size": "0",
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/asdfafa",
+                "path": "/iplant/home/wregglej/asdfafa",
                 "label": "asdfafa",
                 "permissions": {
                     "own": true,
@@ -200,6 +209,7 @@ __Response Body__:
                 "file-size": "0",
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/asdf bar",
+                "path": "/iplant/home/wregglej/asdf bar",
                 "label": "asdf bar",
                 "permissions": {
                     "own": true,
@@ -213,6 +223,7 @@ __Response Body__:
                 "file-size": "0",
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
+                "path": "/iplant/home/wregglej/Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
                 "label": "Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
                 "permissions": {
                     "own": true,
@@ -226,6 +237,7 @@ __Response Body__:
                 "file-size": "0",
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/zaaaaaaaa",
+                "path": "/iplant/home/wregglej/zaaaaaaaa",
                 "label": "zaaaaaaaa",
                 "permissions": {
                     "own": true,
@@ -236,6 +248,7 @@ __Response Body__:
         ],
         "hasSubDirs": true,
         "id": "/iplant/home/wregglej",
+        "path": "/iplant/home/wregglej",
         "label": "wregglej",
         "permissions": {
             "own": true,

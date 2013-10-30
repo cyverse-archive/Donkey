@@ -28,7 +28,7 @@ __Response Body__:
              },
              "date-created":"1335217160000",
              "label":"wregglej",
-             "id":"\/iplant\/home\/wregglej"
+             "id":"\/root\/iplant\/home\/wregglej"
           },
           {
              "date-modified":"1335476028000",
@@ -40,7 +40,7 @@ __Response Body__:
              },
              "date-created":"1335217387000",
              "label":"Community Data",
-             "id":"\/iplant\/home\/shared"
+             "id":"\/root\/iplant\/home\/shared"
           }
        ]
     }
