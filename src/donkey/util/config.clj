@@ -500,16 +500,23 @@
   (when-not (cc/validate-config configs config-valid)
     (throw+ {:error_code ce/ERR_CONFIG_INVALID})))
 
+(defn- exception-filters
+  []
+  (mapv #(re-pattern (str %)) 
+        [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-pass)]))
+
 (defn load-config-from-file
   "Loads the configuration settings from a file."
   []
   (cc/load-config-from-file (System/getenv "IPLANT_CONF_DIR") "donkey.properties" props)
   (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
-  (validate-config))
+  (validate-config)
+  (ce/register-filters (exception-filters)))
 
 (defn load-config-from-zookeeper
   "Loads the configuration settings from Zookeeper."
   []
   (cc/load-config-from-zookeeper props "donkey")
   (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
-  (validate-config))
+  (validate-config)
+  (ce/register-filters (exception-filters)))
