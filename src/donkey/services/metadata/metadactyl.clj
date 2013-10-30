@@ -483,12 +483,6 @@
   [app-id]
   (cheshire/encode (dm/app-publishable? app-id)))
 
-(defn get-property-values
-  "Gets the property values for a previously submitted job."
-  [req job-id]
-  (let [url (build-metadactyl-unprotected-url req "get-property-values" job-id)]
-    (forward-get url req)))
-
 (defn get-app-rerun-info
   "Gets the information required to rerun a previously executed app."
   [req job-id]

@@ -1,11 +1,20 @@
 (ns donkey.clients.osm
   (:use [donkey.auth.user-attributes :only [current-user]])
-  (:require [clojure-commons.osm :as osm]
+  (:require [clojure.string :as string]
+            [clojure-commons.osm :as osm]
             [donkey.util.service :as service]
             [donkey.util.config :as config]))
 
-(def ^:private osm-jobs-client
-  (memoize (fn [] (osm/create (config/osm-base-url) (config/osm-jobs-bucket)))))
+(def ^:private osm-client
+  (memoize (fn [bucket] (osm/create (config/osm-base-url) bucket))))
+
+(defn- osm-jobs-client
+  []
+  (osm-client (config/osm-jobs-bucket)))
+
+(defn- osm-job-request-client
+  []
+  (osm-client (config/osm-job-request-bucket)))
 
 (defn list-jobs
   []

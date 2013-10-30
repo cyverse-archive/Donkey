@@ -73,18 +73,25 @@
     :enddate       :j.end_date
     :status        :j.status))
 
+(defn- job-base-query
+  "The base query used for retrieving job information from the database."
+  []
+  (-> (select* [:jobs :j])
+      (join [:users :u] {:j.user_id :u.id})
+      (join [:job_types :jt] {:j.job_type_id :jt.id})
+      (fields [:j.external_id :id]
+              [:j.job_name    :name]
+              [:j.app_name    :analysis_name]
+              [:j.start_date  :startdate]
+              [:j.end_date    :enddate]
+              [:j.status      :status]
+              [:jt.name       :job_type]
+              [:u.username    :username])))
+
 (defn get-jobs
   "Gets a list of jobs satisfying a query."
   [username row-limit row-offset sort-field sort-order job-types]
-  (select [:jobs :j]
-          (join [:users :u] {:j.user_id :u.id})
-          (join [:job_types :jt] {:j.job_type_id :jt.id})
-          (fields [:j.external_id :id]
-                  [:j.job_name    :name]
-                  [:j.app_name    :analysis_name]
-                  [:j.start_date  :startdate]
-                  [:j.end_date    :enddate]
-                  [:j.status      :status])
+  (select (job-base-query)
           (where {:j.deleted  false
                   :u.username username
                   :jt.name    [in job-types]})
@@ -116,19 +123,12 @@
 (defn get-job-by-id
   "Gets a single job by its internal identifier."
   [id]
-  (first
-   (select [:jobs :j]
-           (join [:users :u] {:j.user_id :u.id})
-           (join [:job_types :jt] {:j.job_type_id :jt.id})
-           (fields [:j.external_id :id]
-                   [:j.job_name    :name]
-                   [:j.app_name    :analysis_name]
-                   [:j.start_date  :startdate]
-                   [:j.end_date    :enddate]
-                   [:j.status      :status]
-                   [:jt.name       :job_type]
-                   [:u.username    :username])
-           (where {:j.id id}))))
+  (first (select (job-base-query) (where {:j.id id}))))
+
+(defn get-job-by-external-id
+  "Gets a single job by its external identifier."
+  [id]
+  (first (select (job-base-query) (where {:j.external_id id}))))
 
 (defn update-job
   "Updates an existing job in the database."

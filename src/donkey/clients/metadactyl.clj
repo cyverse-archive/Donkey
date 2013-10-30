@@ -77,3 +77,11 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn get-property-values
+  [job-id]
+  (-> (client/get (unsecured-url "get-property-values" job-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))

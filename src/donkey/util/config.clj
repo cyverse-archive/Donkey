@@ -343,6 +343,11 @@
    submitted."
   [props config-valid configs]
   "donkey.osm.jobs-bucket")
+
+(cc/defprop-str osm-job-request-bucket
+  "The OSM bucket containing information about job requests."
+  [props config-valid configs]
+  "donkey.osm.job-request-bucket")
 ;;;End OSM connection information
 
 (def jargon-cfg

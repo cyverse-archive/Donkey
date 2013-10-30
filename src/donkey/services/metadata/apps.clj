@@ -232,6 +232,14 @@
         :end-date (db/timestamp-from-str (str (:enddate curr-state)))
         :deleted  (nil? curr-state)}))))
 
+(defn- get-de-job-params
+  [job-id]
+  (metadactyl/get-property-values job-id))
+
+(defn- get-agave-job-params
+  [agave job-id]
+  (.getJobParams agave job-id))
+
 (defn- unrecognized-job-type
   [job-type]
   (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
@@ -250,7 +258,8 @@
   (syncJobStatus [this job])
   (populateJobsTable [this])
   (removeDeletedJobs [this])
-  (updateJobStatus [this id username prev-status]))
+  (updateJobStatus [this id username prev-status])
+  (getJobParams [this job-id]))
 
 (deftype DeOnlyAppLister []
   AppLister
@@ -277,7 +286,9 @@
     (remove-deleted-de-jobs))
   (updateJobStatus [this id username prev-status]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
-             :reason     "HPC_JOBS_DISABLED"})))
+             :reason     "HPC_JOBS_DISABLED"}))
+  (getJobParams [this job-id]
+    (get-de-job-params job-id)))
 
 (deftype DeHpcAppLister [agave-client]
   AppLister
@@ -315,7 +326,14 @@
     (remove-deleted-de-jobs)
     (remove-deleted-agave-jobs agave-client))
   (updateJobStatus [this id username prev-status]
-    (update-job-status agave-client id username prev-status)))
+    (update-job-status agave-client id username prev-status))
+  (getJobParams [this job-id]
+    (let [job (jp/get-job-by-external-id job-id)]
+      (condp = (:job_type job)
+        nil            (service/not-found "job" job-id)
+        de-job-type    (get-de-job-params job-id)
+        agave-job-type (get-agave-job-params agave-client job-id)
+                       (unrecognized-job-type (:job_type job))))))
 
 (defn- get-app-lister
   ([]
@@ -420,3 +438,7 @@
     (log-already-deleted-jobs ids)
     (jp/delete-jobs ids)
     (service/success-response)))
+
+(defn get-property-values
+  [job-id]
+  (service/success-response (.getJobParams (get-app-lister) job-id)))

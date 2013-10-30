@@ -17,12 +17,9 @@ information.
 
 ## Obtaining Property Values for a Previously Executed Job
 
-Unsecured Endpoint: GET /get-property-values/{job-id}
+Secured Endpoint: GET /secured/get-property-values/{job-id}
 
-Delegates to metadactyl: GET /get-property-values/{job-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+TODO: Rewrite the documentation for this endpoint.
 
 ## Obtaining Information to Rerun a Job
 
