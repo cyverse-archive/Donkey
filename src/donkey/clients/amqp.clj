@@ -130,7 +130,7 @@
     (Thread. 
       (fn [] 
         (loop []
-          (log/warn "[amqp/conn-monitor] checking messaging connection.")
+          (log/info "[amqp/conn-monitor] checking messaging connection.")
           (try
             (configure msg-fn)
             (catch Exception e
