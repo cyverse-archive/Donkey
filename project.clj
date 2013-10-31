@@ -33,7 +33,7 @@
                  [net.sf.opencsv/opencsv "2.0"]
                  [com.novemberain/langohr "1.4.1"]
                  [clj-icat-direct "0.0.1"]
-                 [dire "0.5.0"]]
+                 [dire "0.5.1"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
             [lein-ring "0.7.4"]
             [swank-clojure "1.4.2"]]
