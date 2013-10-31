@@ -1,6 +1,8 @@
 Directory List (Non-Recursive)
 ------------------------------
 
+Only lists subdirectories of the directory path passed into it.
+
 The following characters are considered invalid since they cause issues:
 
     =!\"#$'%*+,\\:?@[]^{}|&;<>`~\n\t\\
@@ -81,7 +83,7 @@ __Response Body__:
         "write": true
     },
     "success": true
-}
+    }
 
 __Curl Command__:
 
