@@ -438,6 +438,11 @@
   "The characters that are considered invalid in iRODS dir- and filenames."
   [props config-valid configs filesystem-routes-enabled]
   "donkey.fs.filter-chars")
+
+(cc/defprop-int fs-max-paths-in-request
+  "The number of paths that are allowable in an API request."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.max-paths-in-request")
 ;;; End Filesystem configuration
 
 (cc/defprop-int default-user-search-result-limit

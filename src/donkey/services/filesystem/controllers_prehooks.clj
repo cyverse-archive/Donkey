@@ -8,6 +8,16 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
+(defn num-paths-okay?
+  [paths]
+  (<= (count paths) (fs-max-paths-in-request)))
+
+(defn validate-num-paths
+  [paths]
+  (if-not (num-paths-okay? paths)
+    (throw+ {:error_code "ERR_TOO_MANY_PATHS"
+             :count  (str (count paths))})))
+
 (with-pre-hook! #'do-homedir
   (fn [params]
     (log/warn "[call][do-homedir]" params)
@@ -28,6 +38,7 @@
     (log/warn "[call][do-delete]" params body)
     (validate-map params {:user string?})
     (validate-map body   {:paths sequential?})
+    (validate-num-paths (:paths body))
     
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
@@ -77,13 +88,15 @@
     (log/warn "[call][do-share]" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential? :permissions map?})
-    (validate-map (:permissions body) {:read boolean? :write boolean? :own boolean?})))
+    (validate-map (:permissions body) {:read boolean? :write boolean? :own boolean?})
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-unshare
   (fn [params body]
     (log/warn "[call][do-unshare]" params body)
     (validate-map params {:user string?})
-    (validate-map body {:paths sequential? :users sequential?})))
+    (validate-map body {:paths sequential? :users sequential?})
+    (validate-num-paths (:paths body))))
 
 (defn- check-adds
   [adds]
@@ -127,13 +140,15 @@
   (fn [params body]
     (log/warn "[call][do-exists]" params)
     (validate-map params {:user string?})
-    (validate-map body {:paths vector?})))
+    (validate-map body {:paths vector?})
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-stat
   (fn [params body]
     (log/warn "[call][do-stat]" params body)
     (validate-map params {:user string?})
-    (validate-map body {:paths vector?})))
+    (validate-map body {:paths vector?})
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-manifest
   (fn [params]
@@ -143,7 +158,8 @@
   (fn [params body]
     (log/warn "[call][do-download]" params body)
     (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})))
+    (validate-map body {:paths sequential?})
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-special-download
   (fn [params]
@@ -162,19 +178,22 @@
   (fn [params body]
     (log/warn "[call][do-user-permissions]" params body)    
     (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})))
+    (validate-map body {:paths sequential?})
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-restore
   (fn [params body]
     (log/warn "[call][do-restore]" params body)
     (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})))
+    (validate-map body {:paths sequential?})
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-copy
   (fn [params body]
     (log/warn "[call][do-copy]" params body)
     (validate-map params {:user string?})
-    (validate-map body {:paths sequential? :destination string?})))
+    (validate-map body {:paths sequential? :destination string?})
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-groups
   (fn [params]
@@ -200,7 +219,8 @@
   (fn [params body]
     (log/warn "[call][do-add-tickets]" params body)
     (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})))
+    (validate-map body {:paths sequential?})
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-remove-tickets
   (fn [params body]
@@ -218,7 +238,8 @@
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field      "paths"}))))
+               :field      "paths"}))
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-paths-contain-space
   (fn [params body]
@@ -227,7 +248,8 @@
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field      "paths"}))))
+               :field      "paths"}))
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-replace-spaces
   (fn [params body]
@@ -236,7 +258,8 @@
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field      "paths"}))))
+               :field      "paths"}))
+    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-read-chunk
   (fn [params body]
