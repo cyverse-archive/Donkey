@@ -12,10 +12,6 @@
   []
   (osm-client (config/osm-jobs-bucket)))
 
-(defn- osm-job-request-client
-  []
-  (osm-client (config/osm-job-request-bucket)))
-
 (defn list-jobs
   []
   (map :state
