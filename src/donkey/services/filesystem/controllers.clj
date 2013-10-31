@@ -67,7 +67,6 @@
 
 (defn do-rename
   [{user :user} {source :source dest :dest}]
-  (throw+ {:error_code "ERR_OMG" :field "test"})
   (irods-actions/rename-path user source dest))
 
 (defn do-delete
