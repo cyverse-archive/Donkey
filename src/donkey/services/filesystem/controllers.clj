@@ -40,9 +40,10 @@
   (= (utils/add-trailing-slash path) (utils/add-trailing-slash (irods-home))))
 
 (defn do-directory
-  [{user :user path :path :as params}]
+  [{:keys [user path] :or {path nil} :as params}]
+  (log/warn "path" path)
   (cond
-    (not (nil? path))
+    (nil? path)
     (top-level-listing params)
       
     (shared-with-me-listing? path)
@@ -66,6 +67,7 @@
 
 (defn do-rename
   [{user :user} {source :source dest :dest}]
+  (throw+ {:error_code "ERR_OMG" :field "test"})
   (irods-actions/rename-path user source dest))
 
 (defn do-delete

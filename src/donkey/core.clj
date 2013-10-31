@@ -95,6 +95,12 @@
   (icat/configure-icat)
   (start-nrepl))
 
+(defn repl-init
+  []
+  (load-configuration-from-file)
+  (register-specific-queries)
+  (icat/configure-icat))
+
 (defn load-configuration-from-zookeeper
   "Loads the configuration properties from Zookeeper."
   []

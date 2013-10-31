@@ -2,7 +2,7 @@
   (:use [compojure.core]
         [donkey.auth.user-attributes]
         [donkey.services.filesystem.controllers]
-        [donkey.services.filesystem.controllers-preconditions]
+        [donkey.services.filesystem.controllers-prehooks]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]
