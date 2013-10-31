@@ -19,7 +19,108 @@ information.
 
 Secured Endpoint: GET /secured/get-property-values/{job-id}
 
-TODO: Rewrite the documentation for this endpoint.
+This service is used to obtain the property values that were passed to a
+previously submitted job. For DE jobs, this service delegates to the metadactyl
+endpoint, GET /get-property-values/{job-id}. For Agave jobs, the information in
+the response body is obtained from various Agave endpoints.
+
+The response body is in the following format:
+
+```json
+{
+    "analysis_id": "analysis-id",
+    "parameters": [
+        {
+            "full_param_id": "fully-qualified-parameter-id",
+            "param_id": "parameter-id",
+            "param_name": "parameter-name",
+            "param_value": {
+                "value": "parameter-value"
+            },
+            "param_type": "parameter-type",
+            "info_type": "info-type-name",
+            "data_format": "data-format-name",
+            "is_default_value": "default-value-flag",
+            "is_visible": "visibility-flag"
+        },
+        ...
+    ]
+}
+```
+
+Note that the information type and data format only apply to input files. For
+other types of parameters, these fields will be blank. The `is_default_value`
+flag indicates whether or not the default value was used in the job submission.
+The value of this flag is determined by comparing the actual property value
+listed in the job submission to the default property value in the application
+definition. If the default value in the application definition is not blank and
+the actual value equals the default value then this flag will be set to `true`.
+Otherwise, this flag will be set to `false`. The `is_visible` flag indicates
+whether or not the property is visible in the user interface for the
+application. This value is copied directly from the application definition.
+
+Here's an example:
+
+```
+$ curl -s http://gargery:31325/secured/get-property-values/6DA82049-93A7-483B-8E21-36D84AFCC29F?proxyToken=$(cas-ticket) | python -mjson.tool{
+    "analysis_id": "t5b1ca8927563499ba919675ae434fddf",
+    "parameters": [
+        {
+            "data_format": "Unspecified",
+            "full_param_id": "Detect text file types_91110D85-C0BC-4AFB-A1C6-0C90B0A4BA92",
+            "info_type": "File",
+            "is_default_value": false,
+            "is_visible": true,
+            "param_id": "99229E18-4C91-4512-B459-35CD316ACC25",
+            "param_name": "Files to examine",
+            "param_type": "Input",
+            "param_value": {
+                "value": "/iplant/home/dennis/50K_final_newick.tre"
+            }
+        },
+        {
+            "data_format": "Unspecified",
+            "full_param_id": "Detect text file types_91110D85-C0BC-4AFB-A1C6-0C90B0A4BA92",
+            "info_type": "File",
+            "is_default_value": false,
+            "is_visible": true,
+            "param_id": "114154A7-F3C6-44CD-B443-594582761792",
+            "param_name": "Files to examine",
+            "param_type": "Input",
+            "param_value": {
+                "value": "/iplant/home/dennis/accepted_hits_10k.sam"
+            }
+        },
+        {
+            "data_format": "",
+            "full_param_id": "Detect text file types_519583DD-1850-4432-AC6B-85E171654A3D",
+            "info_type": "",
+            "is_default_value": true,
+            "is_visible": true,
+            "param_id": "519583DD-1850-4432-AC6B-85E171654A3D",
+            "param_name": "Sample size",
+            "param_type": "Integer",
+            "param_value": {
+                "value": "1000"
+            }
+        },
+        {
+            "data_format": "Unspecified",
+            "full_param_id": "Detect text file types_085FB3DD-30E6-4187-8033-ECA57CF72EF0",
+            "info_type": "PlainText",
+            "is_default_value": true,
+            "is_visible": true,
+            "param_id": "085FB3DD-30E6-4187-8033-ECA57CF72EF0",
+            "param_name": "Output file name",
+            "param_type": "Output",
+            "param_value": {
+                "value": "types.txt"
+            }
+        }
+    ],
+    "success": true
+}
+```
 
 ## Obtaining Information to Rerun a Job
 
