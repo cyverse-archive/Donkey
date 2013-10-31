@@ -14,7 +14,6 @@ __Error Codes__: ERR_NOT_A_USER, ERR_NOT_READABLE
 __Request Query Params__:
 
 * proxyToken - A valid CAS ticket.
-* includefiles - If set to a value, returns the files in the directory. Optional.
 * path - The path to list. Optional. If ommitted, the user's home directory is used.
 
 __Response Body__:
@@ -130,13 +129,7 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl http://127.0.0.1:3000/secured/filesystem/directory?proxyToken=notReal&includefiles=1
-
-If the "includefiles" is 0 or left out of the params, then the files section will be empty.
-If you want to list a directory other than rods' home directory, then include a URL encoded
-path parameter, like so:
-
-    curl http://127.0.0.1:3000/secured/filesystem/directory?proxyToken=notReal&includefiles=1&path=/iplant/home/wregglej/ugh
+    curl http://127.0.0.1:3000/secured/filesystem/directory?proxyToken=notReal
 
 
 Paged Directory Listing
