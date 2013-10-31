@@ -22,50 +22,6 @@ __Response Body__:
     "date-created": "1369778522000",
     "date-modified": "1381177547000",
     "file-size": 0,
-    "files": [
-        {
-            "date-created": "1380726835000",
-            "date-modified": "1380726835000",
-            "file-size": "4814",
-            "filter": false,
-            "id": "/iplant/home/wregglej/Ara_Pheno.txt",
-            "path": "/iplant/home/wregglej/Ara_Pheno.txt",
-            "label": "Ara_Pheno.txt",
-            "permissions": {
-                "own": true,
-                "read": true,
-                "write": true
-            }
-        },
-        {
-            "date-created": "1369848875000",
-            "date-modified": "1380922646000",
-            "file-size": "35",
-            "filter": false,
-            "id": "/iplant/home/wregglej/asdfasdfasdfadsfasdfasdfasdfadsfa",
-            "path": "/iplant/home/wregglej/asdfasdfasdfadsfasdfasdfasdfadsfa",
-            "label": "asdfasdfasdfadsfasdfasdfasdfadsfa",
-            "permissions": {
-                "own": true,
-                "read": true,
-                "write": true
-            }
-        },
-        {
-            "date-created": "1379519492000",
-            "date-modified": "1379520049000",
-            "file-size": "196903039",
-            "filter": false,
-            "id": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
-            "path": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
-            "label": "centos-5.8-x86-64-minimal.box",
-            "permissions": {
-                "own": true,
-                "read": true,
-                "write": true
-            }
-        },
-    ],
     "folders": [
         {
             "date-created": "1373927956000",
