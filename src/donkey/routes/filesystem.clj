@@ -3,6 +3,7 @@
         [donkey.auth.user-attributes]
         [donkey.services.filesystem.controllers]
         [donkey.services.filesystem.controllers-prehooks]
+        [donkey.services.filesystem.controllers-posthooks]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]
