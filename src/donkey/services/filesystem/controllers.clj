@@ -17,17 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-read-chunk
-  [{user :user} {path :path position :position chunk-size :chunk-size}]
-  (let [pos  (Long/parseLong position)
-        size (Long/parseLong chunk-size)]
-    (irods-actions/read-file-chunk user path pos size)))
-
-(defn do-overwrite-chunk
-  [{user :user} {path :path position :position update :update}]
-  (let [pos  (Long/parseLong position)]
-    (irods-actions/overwrite-file-chunk user path pos update)))
-
 (defn do-get-csv-page
   [{user :user} {path :path delim :delim chunk-size :chunk-size page :page :as body}]
   (let [delim     (first delim)

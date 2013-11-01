@@ -10,18 +10,6 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(with-pre-hook! #'do-read-chunk
-  (fn [params body]
-    (log/warn "[call][do-read-chunk]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:path string? :position string? :chunk-size string?})))
-
-(with-pre-hook! #'do-overwrite-chunk
-  (fn [params body]
-    (log/warn "[call][do-overwrite-chunk]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:path string? :position string? :update string?})))
-
 (with-pre-hook! #'do-get-csv-page
   (fn [params body]
     (log/warn "[call][do-get-csv-page]" params body)
