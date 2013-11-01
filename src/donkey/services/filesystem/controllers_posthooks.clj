@@ -5,8 +5,6 @@
             [clojure.tools.logging :as log]))
 
 
-(with-post-hook! #'do-exists (log-func "do-exists"))
-(with-post-hook! #'do-stat (log-func "do-stat"))
 (with-post-hook! #'do-manifest (log-func "do-manifest"))
 (with-post-hook! #'do-download (log-func "do-download"))
 (with-post-hook! #'do-special-download (log-func "do-special-download"))

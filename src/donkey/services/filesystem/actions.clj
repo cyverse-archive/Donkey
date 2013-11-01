@@ -84,83 +84,19 @@
      (validators/user-exists cm user)
      (user-groups cm user))))
 
-(defn url-encoded?
-  [string-to-check]
-  (re-seq #"\%[A-Fa-f0-9]{2}" string-to-check))
-
-(defn url-decode
-  [string-to-decode]
-  (if (url-encoded? string-to-decode)
-    (url/url-decode string-to-decode)
-    string-to-decode))
-
-(defn path-exists?
-  ([path]
-     (path-exists? "" path))
-  ([user path]
-    (let [path (ft/rm-last-slash path)]
-      (with-jargon (jargon-cfg) [cm]
-        (log-rulers
-          cm [user]
-          (format-call "path-exists?" user path)
-          (exists? cm (url-decode path)))))))
-
-(defn path-is-dir?
-  [path]
-  (let [path (url-decode path)]
-    (with-jargon (jargon-cfg) [cm]
-      (and (exists? cm path) (is-dir? cm path)))))
+#_((defn path-is-dir?
+   [path]
+   (let [path (url-decode path)]
+     (with-jargon (jargon-cfg) [cm]
+       (and (exists? cm path) (is-dir? cm path)))))
 
 (defn path-is-file?
   [path]
   (let [path (url-decode path)]
     (with-jargon (jargon-cfg) [cm]
-      (and (exists? cm path) (is-file? cm path)))))
+      (and (exists? cm path) (is-file? cm path))))))
 
-(defn count-shares
-  [cm user path]
-  (let [filter-users (set (conj (fs-perms-filter) user (irods-user)))
-        full-listing (list-user-perms cm path)]
-    (count
-     (filterv
-      #(not (contains? filter-users (:user %1)))
-      full-listing))))
 
-(defn merge-counts
-  [stat-map cm user path]
-  (if (is-dir? cm path)
-    (merge stat-map {:file-count (icat/number-of-files-in-folder user path)
-                     :dir-count  (icat/number-of-folders-in-folder user path)})
-    stat-map))
-
-(defn merge-shares
-  [stat-map cm user path]
-  (if (owns? cm user path)
-    (merge stat-map {:share-count (count-shares cm user path)})
-    stat-map))
-
-(defn merge-type-info
-  [stat-map cm user path]
-  (if-not (is-dir? cm path)
-    (-> stat-map
-      (merge {:info-type (filetypes/get-types cm user path)})
-      (merge {:mime-type (.detect (Tika.) (input-stream cm path))}))
-    stat-map))
-
-(defn path-stat
-  [user path]
-  (let [path (ft/rm-last-slash path)]
-    (log/warn "[path-stat] user:" user "path:" path)
-    (with-jargon (jargon-cfg) [cm]
-      (log-rulers
-        cm [user]
-        (format-call "path-stat" user path)
-        (validators/path-exists cm path)
-        (-> (stat cm path)
-          (merge {:permissions (permissions cm user path)})
-          (merge-type-info cm user path)
-          (merge-shares cm user path)
-          (merge-counts cm user path))))))
 
 (defn- format-tree-urls
   [treeurl-maps]

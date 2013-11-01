@@ -17,16 +17,7 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-exists
-  [{user :user} {paths :paths}]
-  {:paths
-   (apply
-     conj {}
-     (map #(hash-map %1 (irods-actions/path-exists? user %1)) paths))})
 
-(defn do-stat
-  [{user :user} {paths :paths}]
-  {:paths (into {} (map #(vector % (irods-actions/path-stat user %)) paths))})
 
 (defn do-manifest
   [{user :user path :path}]

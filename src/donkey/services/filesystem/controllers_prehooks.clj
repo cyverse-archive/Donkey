@@ -10,19 +10,7 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(with-pre-hook! #'do-exists
-  (fn [params body]
-    (log/warn "[call][do-exists]" params)
-    (validate-map params {:user string?})
-    (validate-map body {:paths vector?})
-    (validate-num-paths (:paths body))))
 
-(with-pre-hook! #'do-stat
-  (fn [params body]
-    (log/warn "[call][do-stat]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths vector?})
-    (validate-num-paths (:paths body))))
 
 (with-pre-hook! #'do-manifest
   (fn [params]
