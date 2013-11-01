@@ -17,26 +17,6 @@
     (validate-map body {:paths sequential? :destination string?})
     (validate-num-paths (:paths body))))
 
-(with-pre-hook! #'do-paths-contain-space
-  (fn [params body]
-    (log/warn "[call][do-path-contain-space]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
-    (when-not (every? true? (mapv string? (:paths body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field      "paths"}))
-    (validate-num-paths (:paths body))))
-
-(with-pre-hook! #'do-replace-spaces
-  (fn [params body]
-    (log/warn "[call][do-substitute-spaces]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
-    (when-not (every? true? (mapv string? (:paths body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field      "paths"}))
-    (validate-num-paths (:paths body))))
-
 (with-pre-hook! #'do-read-chunk
   (fn [params body]
     (log/warn "[call][do-read-chunk]" params body)

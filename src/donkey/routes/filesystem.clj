@@ -20,7 +20,8 @@
          manifest
          updown
          tickets
-         users]
+         users
+         space-handling]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]

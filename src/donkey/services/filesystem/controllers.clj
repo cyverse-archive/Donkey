@@ -25,14 +25,6 @@
      :to   destination}
     (fs-copy-attribute)))
 
-(defn do-paths-contain-space
-  [params {paths :paths}]
-  {:paths (irods-actions/paths-contain-char paths " ")})
-
-(defn do-replace-spaces
-  [{user :user} {paths :paths}]
-  (irods-actions/replace-spaces user paths "_"))
-
 (defn do-read-chunk
   [{user :user} {path :path position :position chunk-size :chunk-size}]
   (let [pos  (Long/parseLong position)
