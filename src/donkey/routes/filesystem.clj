@@ -4,24 +4,24 @@
         [donkey.services.filesystem.controllers]
         [donkey.services.filesystem.controllers-prehooks]
         [donkey.services.filesystem.controllers-posthooks]
-        [donkey.services.filesystem
-         root 
-         directory 
-         home 
-         rename 
-         trash 
-         move 
-         create 
-         metadata 
-         sharing 
-         preview 
-         exists 
-         stat
-         manifest
-         updown
-         tickets
-         users
-         space-handling]
+        [donkey.services.filesystem.root] 
+        [donkey.services.filesystem.directory] 
+        [donkey.services.filesystem.home] 
+        [donkey.services.filesystem.rename] 
+        [donkey.services.filesystem.trash] 
+        [donkey.services.filesystem.move] 
+        [donkey.services.filesystem.create] 
+        [donkey.services.filesystem.metadata] 
+        [donkey.services.filesystem.sharing] 
+        [donkey.services.filesystem.preview] 
+        [donkey.services.filesystem.exists] 
+        [donkey.services.filesystem.stat]
+        [donkey.services.filesystem.manifest]
+        [donkey.services.filesystem.updown]
+        [donkey.services.filesystem.tickets]
+        [donkey.services.filesystem.users]
+        [donkey.services.filesystem.space-handling]
+        [donkey.services.filesystem.copy]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]

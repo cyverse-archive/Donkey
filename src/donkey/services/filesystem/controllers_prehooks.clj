@@ -10,13 +10,6 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(with-pre-hook! #'do-copy
-  (fn [params body]
-    (log/warn "[call][do-copy]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential? :destination string?})
-    (validate-num-paths (:paths body))))
-
 (with-pre-hook! #'do-read-chunk
   (fn [params body]
     (log/warn "[call][do-read-chunk]" params body)

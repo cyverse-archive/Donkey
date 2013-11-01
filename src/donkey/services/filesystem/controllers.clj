@@ -17,14 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-copy
-  [{user :user} {paths :paths destination :destination}]
-  (irods-actions/copy-path
-    {:user user
-     :from paths
-     :to   destination}
-    (fs-copy-attribute)))
-
 (defn do-read-chunk
   [{user :user} {path :path position :position chunk-size :chunk-size}]
   (let [pos  (Long/parseLong position)

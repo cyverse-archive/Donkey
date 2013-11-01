@@ -45,35 +45,6 @@
     (json/decode (:value (first (seq treeurl-maps))) true)
     []))
 
-(defn copy-path
-  ([copy-map]
-     (copy-path copy-map "ipc-de-copy-from"))
-
-  ([{:keys [user from to]} copy-key]
-     (with-jargon (jargon-cfg) [cm]
-       (log-rulers
-        cm [user]
-        (format-call "copy-path" {:user user :from from :to to} copy-key)
-        (validators/user-exists cm user)
-        (validators/all-paths-exist cm from)
-        (validators/all-paths-readable cm user from)
-        (validators/path-exists cm to)
-        (validators/path-writeable cm user to)
-        (validators/path-is-dir cm to)
-        (validators/no-paths-exist cm (mapv #(ft/path-join to (ft/basename %)) from))
-
-        (when (some true? (mapv #(= to %1) from))
-          (throw+ {:error_code ERR_INVALID_COPY
-                   :paths (filterv #(= to %1) from)}))
-
-        (doseq [fr from]
-          (let [metapath (ft/rm-last-slash (ft/path-join to (ft/basename fr)))]
-            (copy cm fr to)
-            (set-metadata cm metapath copy-key fr "")
-            (set-owner cm to user)))
-
-        {:sources from :dest to}))))
-
 (defn read-file-chunk
   "Reads a chunk of a file starting at 'position' and reading a chunk of length 'chunk-size'."
   [user path position chunk-size]
