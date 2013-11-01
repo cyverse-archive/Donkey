@@ -4,10 +4,6 @@
   (:require [dire.core :refer [with-post-hook!]]
             [clojure.tools.logging :as log]))
 
-
-
-(with-post-hook! #'do-download (log-func "do-download"))
-(with-post-hook! #'do-special-download (log-func "do-special-download"))
 (with-post-hook! #'do-user-permissions (log-func "do-user-permissions"))
 (with-post-hook! #'do-copy (log-func "do-copy"))
 (with-post-hook! #'do-groups (log-func "do-groups"))
@@ -21,4 +17,3 @@
 (with-post-hook! #'do-overwrite-chunk (log-func "do-overwrite-chunk"))
 (with-post-hook! #'do-get-csv-page (log-func "do-get-csv-page"))
 (with-post-hook! #'do-read-csv-chunk (log-func "do-read-csv-chunk"))
-(with-post-hook! #'do-upload (log-func "do-upload"))

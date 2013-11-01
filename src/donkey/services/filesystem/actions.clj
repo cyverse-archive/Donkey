@@ -104,66 +104,6 @@
     (json/decode (:value (first (seq treeurl-maps))) true)
     []))
 
-(defn tika-detect-type
-  [user file-path]
-  (with-jargon (jargon-cfg) [cm-new]
-    (validators/user-exists cm-new user)
-    (validators/path-exists cm-new file-path)
-    (validators/path-readable cm-new user file-path)
-    (.detect (Tika.) (input-stream cm-new file-path))))
-
-(defn download-file
-  [user file-path]
-  (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm file-path)
-    (validators/path-readable cm user file-path)
-    
-    (if (zero? (file-size cm file-path)) "" (input-stream cm file-path))))
-
-(defn download
-  [user filepaths]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "download" user filepaths)
-     (validators/user-exists cm user)
-
-     (let [cart-key (str (System/currentTimeMillis))
-           account  (:irodsAccount cm)]
-       {:action "download"
-        :status "success"
-        :data
-        {:user user
-         :home (ft/path-join "/" (irods-zone) "home" user)
-         :password (store-cart cm user cart-key filepaths)
-         :host (.getHost account)
-         :port (.getPort account)
-         :zone (.getZone account)
-         :defaultStorageResource (.getDefaultStorageResource account)
-         :key cart-key}}))))
-
-(defn upload
-  [user]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "upload" user)
-     (validators/user-exists cm user)
-
-     (let [account (:irodsAccount cm)]
-       {:action "upload"
-        :status "success"
-        :data
-        {:user user
-         :home (ft/path-join "/" (irods-zone) "home" user)
-         :password (temp-password cm user)
-         :host (.getHost account)
-         :port (.getPort account)
-         :zone (.getZone account)
-         :defaultStorageResource (.getDefaultStorageResource account)
-         :key (str (System/currentTimeMillis))}}))))
-
 (defn get-quota
   [user]
   (with-jargon (jargon-cfg) [cm]

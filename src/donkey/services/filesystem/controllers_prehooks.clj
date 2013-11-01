@@ -10,30 +10,6 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-
-
-
-
-(with-pre-hook! #'do-download
-  (fn [params body]
-    (log/warn "[call][do-download]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
-    (validate-num-paths (:paths body))))
-
-(with-pre-hook! #'do-special-download
-  (fn [params]
-    (log/warn "[call][do-special-download] params")
-    (validate-map params {:user string? :path string?})
-    (let [user (:user params)
-          path (:path params)]
-      (log/info "User for download: " user)
-      (log/info "Path to download: " path)
-    
-      (when (super-user? user)
-        (throw+ {:error_code ERR_NOT_AUTHORIZED
-                 :user       user})))))
-
 (with-pre-hook! #'do-user-permissions
   (fn [params body]
     (log/warn "[call][do-user-permissions]" params body)    
@@ -137,7 +113,4 @@
                         :line-ending string? 
                         :separator   string?})))
 
-(with-pre-hook! #'do-upload
-  (fn [params]
-    (log/warn "[call][do-upload]" params)
-    (validate-map params {:user string?})))
+
