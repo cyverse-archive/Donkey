@@ -62,40 +62,6 @@
      (validators/user-owns-paths cm user abspaths)
      (mapv (partial list-perm cm user) abspaths))))
 
-(defn- preview-buffer
-  [cm path size]
-  (let [realsize (file-size cm path)
-        buffsize (if (<= realsize size) realsize size)
-        buff     (char-array buffsize)]
-    (read-file cm path buff)
-    (.append (StringBuilder.) buff)))
-
-(defn gen-preview
-  [cm path size]
-  (if (zero? (file-size cm path))
-    ""
-    (str (preview-buffer cm path size))))
-
-(defn preview
-  "Grabs a preview of a file in iRODS.
-
-   Parameters:
-     user - The username of the user requesting the preview.
-     path - The path to the file in iRODS that will be previewed.
-     size - The size (in bytes) of the preview to be created."
-  [user path size]
-  (let [path (ft/rm-last-slash path)]
-    (with-jargon (jargon-cfg) [cm]
-      (log-rulers
-        cm [user]
-        (format-call "preview" user path size)
-        (log/debug (str "preview " user " " path " " size))
-        (validators/user-exists cm user)
-        (validators/path-exists cm path)
-        (validators/path-readable cm user path)
-        (validators/path-is-file cm path)
-        (gen-preview cm path size)))))
-
 (defn list-user-groups
   [user]
   "Returns a list of names for the groups a user is in.
@@ -299,53 +265,6 @@
          :zone (.getZone account)
          :defaultStorageResource (.getDefaultStorageResource account)
          :key (str (System/currentTimeMillis))}}))))
-
-#_((defn list-of-homedirs-with-shared-files
-   [cm user]
-   (mapv
-    #(let [stat (.getObjStat (:fileSystemAO cm) %1)]
-       (hash-map
-        :id            %1
-        :label         (id->label cm user %1)
-        :hasSubDirs    true
-        :date-created  (date-created-from-stat stat)
-        :date-modified (date-mod-from-stat stat)
-        :permissions   (collection-perm-map cm user %1)
-        :file-size     (size-from-stat stat)))
-    (filterv
-     #(is-readable? cm user %1)
-     (list-collections-with-attr-units cm user shared-with-attr))))
-
-(defn list-sharing
-  [cm user path]
-  (log/warn "entered list-sharing")
-  (let [dirs (list-of-homedirs-with-shared-files cm user)]
-    (hash-map
-     :id            path
-     :label         (id->label cm user path)
-     :hasSubDirs    true
-     :date-created  (created-date cm path)
-     :date-modified (lastmod-date cm path)
-     :permissions   (collection-perm-map cm user path)
-     :folders       dirs)))
-
-(defn sharing-data
-  [cm user root-dir]
-  (list-sharing cm user (ft/rm-last-slash root-dir)))
-
-(defn shared-root-listing
-  [user root-dir inc-files filter-files]
-
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "shared-root-listing" user root-dir inc-files filter-files)
-     (when-not (is-readable? cm user root-dir)
-       (log/warn "Setting read perms on" (ft/rm-last-slash root-dir) "for" user)
-       (set-permissions cm user (ft/rm-last-slash root-dir) true false false))
-
-     (let [listing (sharing-data cm user root-dir)]
-       (assoc listing :label (id->label cm user (:id listing))))))))
 
 (defn get-quota
   [user]

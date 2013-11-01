@@ -10,15 +10,6 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(with-pre-hook! #'do-preview
-  (fn [params]
-    (log/warn "[call][do-preview]" params)
-    (validate-map params {:user string? :path string?})
-    (when (super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user (:user params)
-               :path (:path params)}))))
-
 (with-pre-hook! #'do-exists
   (fn [params body]
     (log/warn "[call][do-exists]" params)

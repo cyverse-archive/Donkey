@@ -17,10 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-preview
-  [{user :user path :path}]
-  {:preview (irods-actions/preview user path (fs-preview-size))})
-
 (defn do-exists
   [{user :user} {paths :paths}]
   {:paths
