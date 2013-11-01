@@ -21,10 +21,6 @@
   [username]
   (.equals username (irods-user)))
 
-(defn do-homedir
-  [{user :user}]
-  (irods-actions/user-home-dir (irods-home) user false))
-
 (defn do-rename
   [{user :user} {source :source dest :dest}]
   (irods-actions/rename-path user source dest))

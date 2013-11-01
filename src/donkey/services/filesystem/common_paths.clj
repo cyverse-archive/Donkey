@@ -4,6 +4,10 @@
   (:require [clojure-commons.file-utils :as ft]
             [clojure.set :as set]))
 
+(defn user-home-dir
+  [user]
+  (ft/path-join "/" (irods-zone) "home" user))
+
 (defn string-contains?
   [container-str str-to-check]
   (pos? (count (set/intersection (set (seq container-str)) (set (seq str-to-check))))))

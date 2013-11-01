@@ -7,7 +7,6 @@
   [func-name]
   )
 
-(with-post-hook! #'do-homedir (log-func "do-homedir"))
 (with-post-hook! #'do-delete (log-func "do-delete"))
 (with-post-hook! #'do-rename (log-func "do-rename"))
 (with-post-hook! #'do-move (log-func "do-move"))

@@ -6,6 +6,7 @@
         [donkey.services.filesystem.controllers-posthooks]
         [donkey.services.filesystem.root]
         [donkey.services.filesystem.directory]
+        [donkey.services.filesystem home]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]

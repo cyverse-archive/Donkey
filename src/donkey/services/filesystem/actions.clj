@@ -182,21 +182,6 @@
         (validators/path-is-file cm path)
         (gen-preview cm path size)))))
 
-(defn user-home-dir
-  ([user]
-     (ft/path-join "/" (irods-zone) "home" user))
-  ([staging-dir user set-owner?]
-     (with-jargon (jargon-cfg) [cm]
-       (log-rulers
-        cm [user]
-        (format-call "user-home-dir" staging-dir user set-owner?)
-        (validators/user-exists cm user)
-
-        (let [user-home (ft/path-join staging-dir user)]
-          (if (not (exists? cm user-home))
-            (mkdirs cm user-home))
-          user-home)))))
-
 (defn fix-unit
   [avu]
   (if (= (:unit avu) IPCRESERVED)

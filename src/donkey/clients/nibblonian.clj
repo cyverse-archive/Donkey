@@ -8,12 +8,13 @@
             [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.actions :as fs]))
 
 (defn home-dir
   "Determines the home folder for the current user."
   []
-  (fs/user-home-dir (:shortUsername current-user)))
+  (cp/user-home-dir (:shortUsername current-user)))
 
 (defn create
   "Creates a directory."

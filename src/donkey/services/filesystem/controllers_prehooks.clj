@@ -18,11 +18,6 @@
     (throw+ {:error_code "ERR_TOO_MANY_PATHS"
              :count  (str (count paths))})))
 
-(with-pre-hook! #'do-homedir
-  (fn [params]
-    (log/warn "[call][do-homedir]" params)
-    (validate-map params {:user string?})))
-
 (with-pre-hook! #'do-delete
   (fn [params body] 
     (log/warn "[call][do-delete]" params body)

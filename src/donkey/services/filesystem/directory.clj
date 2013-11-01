@@ -153,15 +153,11 @@
          (validators/path-readable cm user path)
          (list-directories user path)))))
 
-(defn- get-home-dir
-  [user]
-  (irods-actions/user-home-dir (irods-home) user true))
-
 (defn- top-level-listing
   [{user :user}]
   (let [comm-f     (future (list-directories user (fs-community-data)))
         share-f    (future (list-directories user (irods-home)))
-        home-f     (future (list-directories user (get-home-dir user)))]
+        home-f     (future (list-directories user (user-home-dir user)))]
     {:roots [@home-f @comm-f @share-f]}))
 
 (defn- shared-with-me-listing?
