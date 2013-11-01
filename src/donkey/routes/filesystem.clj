@@ -23,6 +23,7 @@
         [donkey.services.filesystem.space-handling]
         [donkey.services.filesystem.copy]
         [donkey.services.filesystem.page-file]
+        [donkey.services.filesystem.page-csv]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]

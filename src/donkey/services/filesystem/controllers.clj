@@ -17,21 +17,4 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-get-csv-page
-  [{user :user} {path :path delim :delim chunk-size :chunk-size page :page :as body}]
-  (let [delim     (first delim)
-        size      (Long/parseLong chunk-size)
-        page      (Long/parseLong page)
-        positions (mapv #(Long/parseLong %) (:page-positions body ["0"]))]
-    (irods-actions/get-csv-page user path delim positions page size)))
 
-(defn do-read-csv-chunk
-  [{user :user} 
-   {path :path 
-    line-ending :line-ending 
-    separator :separator 
-    position :position 
-    chunk-size :chunk-size}]
-  (let [pos    (Long/parseLong position)
-        size   (Long/parseLong chunk-size)]
-    (irods-actions/read-csv-chunk user path pos size line-ending separator)))
