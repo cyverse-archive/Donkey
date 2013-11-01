@@ -2,10 +2,16 @@
   (:use [donkey.util.config]
         [clj-jargon.jargon])
   (:require [clojure-commons.file-utils :as ft]
+            [clojure.tools.logging :as log]
             [clojure.set :as set]))
 
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
+
+(defn log-func
+  [func-name]
+  (fn [result]
+    (log/warn (str "[result][" func-name "]") result))) 
 
 (defn super-user?
   [username]

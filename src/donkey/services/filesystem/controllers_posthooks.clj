@@ -1,14 +1,9 @@
 (ns donkey.services.filesystem.controllers-posthooks
-  (:use [donkey.services.filesystem.controllers])
+  (:use [donkey.services.filesystem.controllers]
+        [donkey.services.filesystem.common-paths])
   (:require [dire.core :refer [with-post-hook!]]
             [clojure.tools.logging :as log]))
 
-(defn- log-func
-  [func-name]
-  )
-
-
-(with-post-hook! #'do-move (log-func "do-move"))
 (with-post-hook! #'do-create (log-func "do-create"))
 (with-post-hook! #'do-metadata-get (log-func "do-metadata-get"))
 (with-post-hook! #'do-metadata-set (log-func "do-metadata-set"))

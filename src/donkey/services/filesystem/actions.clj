@@ -89,35 +89,6 @@
         (set-owner cm fixed-path user)
         {:path fixed-path :permissions (collection-perm-map cm user fixed-path)}))))
 
-(defn source->dest
-  [source-path dest-path]
-  (ft/path-join dest-path (ft/basename source-path)))
-
-(defn move-paths
-  "Moves directories listed in 'sources' into the directory listed in 'dest'. This
-   works by calling move and passing it move-dir."
-  [user sources dest]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "move-paths" user sources dest)
-     (let [path-list  (conj sources dest)
-           all-paths  (apply merge (mapv #(hash-map (source->dest %1 dest) %1) sources))
-           dest-paths (keys all-paths)
-           sources    (mapv ft/rm-last-slash sources)
-           dest       (ft/rm-last-slash dest)]
-       (validators/user-exists cm user)
-       (validators/all-paths-exist cm sources)
-       (validators/all-paths-exist cm [dest])
-       (validators/path-is-dir cm dest)
-       (validators/user-owns-paths cm user sources)
-       (validators/path-writeable cm user dest)
-       (validators/no-paths-exist cm dest-paths)
-       (move-all cm sources dest :user user :admin-users (irods-admins))
-       {:sources sources :dest dest}))))
-
-
-
 (defn- preview-buffer
   [cm path size]
   (let [realsize (file-size cm path)

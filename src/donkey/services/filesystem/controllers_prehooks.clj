@@ -10,16 +10,6 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(with-pre-hook! #'do-move
-  (fn [params body]
-    (log/warn "[call][do-move]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:sources sequential? :dest string?})
-    (log/info "Body: " (json/encode body))
-    (when (super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user (:user params)}))))
-
 (with-pre-hook! #'do-create
   (fn [params body]
     (log/warn "[call][do-create]" params body)

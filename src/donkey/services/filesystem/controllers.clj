@@ -17,10 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-move
-  [{user :user} {sources :sources dest :dest}]  
-  (irods-actions/move-paths user sources dest))
-
 (defn do-create
   [{user :user} {path :path}]
   (irods-actions/create user path))
