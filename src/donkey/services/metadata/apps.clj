@@ -240,6 +240,14 @@
   [agave job-id]
   (.getJobParams agave job-id))
 
+(defn- get-de-app-rerun-info
+  [job-id]
+  (metadactyl/get-app-rerun-info job-id))
+
+(defn- get-agave-app-rerun-info
+  [agave job-id]
+  (.getAppRerunInfo agave job-id))
+
 (defn- unrecognized-job-type
   [job-type]
   (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
@@ -259,7 +267,8 @@
   (populateJobsTable [this])
   (removeDeletedJobs [this])
   (updateJobStatus [this id username prev-status])
-  (getJobParams [this job-id]))
+  (getJobParams [this job-id])
+  (getAppRerunInfo [this job-id]))
 
 (deftype DeOnlyAppLister []
   AppLister
@@ -288,7 +297,9 @@
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "HPC_JOBS_DISABLED"}))
   (getJobParams [this job-id]
-    (get-de-job-params job-id)))
+    (get-de-job-params job-id))
+  (getAppRerunInfo [this job-id]
+    (get-de-app-rerun-info job-id)))
 
 (deftype DeHpcAppLister [agave-client]
   AppLister
@@ -333,6 +344,13 @@
         nil            (service/not-found "job" job-id)
         de-job-type    (get-de-job-params job-id)
         agave-job-type (get-agave-job-params agave-client job-id)
+                       (unrecognized-job-type (:job_type job)))))
+  (getAppRerunInfo [this job-id]
+    (let [job (jp/get-job-by-external-id job-id)]
+      (condp = (:job_type job)
+        nil            (service/not-found "job" job-id)
+        de-job-type    (get-de-app-rerun-info job-id)
+        agave-job-type (get-agave-app-rerun-info agave-client job-id)
                        (unrecognized-job-type (:job_type job))))))
 
 (defn- get-app-lister
@@ -442,3 +460,7 @@
 (defn get-property-values
   [job-id]
   (service/success-response (.getJobParams (get-app-lister) job-id)))
+
+(defn get-app-rerun-info
+  [job-id]
+  (service/success-response (.getAppRerunInfo (get-app-lister) job-id)))

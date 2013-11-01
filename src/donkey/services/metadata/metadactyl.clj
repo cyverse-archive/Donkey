@@ -483,21 +483,6 @@
   [app-id]
   (cheshire/encode (dm/app-publishable? app-id)))
 
-(defn get-app-rerun-info
-  "Gets the information required to rerun a previously executed app."
-  [req job-id]
-  (forward-get
-   (build-metadactyl-unprotected-url req "analysis-rerun-info" job-id)
-   req))
-
-(defn get-new-app-rerun-info
-  "Gets the information required to rerun a previously executed app in the new format required
-   by the DE."
-  [req job-id]
-  (forward-get
-   (build-metadactyl-unprotected-url req "app-rerun-info" job-id)
-   req))
-
 (defn- add-user-details
   "Adds user details to the results from a request to obtain a list of
    collaborators."

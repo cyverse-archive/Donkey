@@ -3,7 +3,6 @@
 * [Application Execution Endpoints](#application-execution-endpoints)
     * [Obtaining Property Values for a Previously Executed Job](#obtaining-property-values-for-a-previously-executed-job)
     * [Obtaining Information to Rerun a Job](#obtaining-information-to-rerun-a-job)
-    * [Obtaining Information to Rerun a Job in the New Format](#obtaining-information-to-rerun-a-job-in-the-new-format)
     * [Submitting a Job for Execution](#submitting-a-job-for-execution)
     * [Listing Jobs](#listing-jobs)
     * [Deleting Jobs](#deleting-jobs)
@@ -62,7 +61,7 @@ application. This value is copied directly from the application definition.
 Here's an example:
 
 ```
-$ curl -s http://gargery:31325/secured/get-property-values/6DA82049-93A7-483B-8E21-36D84AFCC29F?proxyToken=$(cas-ticket) | python -mjson.tool{
+$ curl -s http://by-tor:8888/secured/get-property-values/6DA82049-93A7-483B-8E21-36D84AFCC29F?proxyToken=$(cas-ticket) | python -mjson.tool{
     "analysis_id": "t5b1ca8927563499ba919675ae434fddf",
     "parameters": [
         {
@@ -124,21 +123,133 @@ $ curl -s http://gargery:31325/secured/get-property-values/6DA82049-93A7-483B-8E
 
 ## Obtaining Information to Rerun a Job
 
-Unsecured Endpoint: GET /analysis-rerun-info/{job-id}
+*Secured Endpoint:* GET /secured/app-rerun-info/{job-id}
 
-Delegates to metadactyl: GET /analysis-rerun-info/{job-id}
+It's occasionally nice to be able to rerun a job that was prevously executed,
+possibly with some tweaked values. The UI uses this service to obtain analysis
+information in the same format as the `/app/{analysis-id}` service with the
+property values from a specific job plugged in.
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+For DE jobs, this service delegates to the metadactyl endpoint,
+`/app-rerun-info/{job-id}`. For Agave jobs, this service obtains the information
+that it needs from various services in Agave.
 
-## Obtaining Information to Rerun a Job in the New Format
+Here's an example:
 
-Unsecured Endpoint: GET /app-rerun-info/{job-id}
-
-Delegates to metadactyl: GET /app-rerun-info/{job-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+```
+$ curl -s http://by-tor:8888/app-rerun-info/D3AE0C5C-CC74-4A98-8D26-224D6366F9D6?proxyTicket=$(cas-ticket) | python -mjson.tool
+{
+    "disabled": false,
+    "groups": [
+        {
+            "id": "63D82E2F-30AC-426E-87BB-724FB148A1B0",
+            "label": "Input",
+            "name": "",
+            "properties": [
+                {
+                    "arguments": [],
+                    "defaultValue": {
+                        "value": [
+                            "/iplant/home/nobody/clojure-keybindings.el"
+                        ]
+                    },
+                    "description": "Select the files to concatenate.",
+                    "id": "Jaguarundi_3FC12E6D-63C1-49DF-8E8F-60819BCB69E3",
+                    "isVisible": true,
+                    "label": "Files",
+                    "name": "",
+                    "required": true,
+                    "type": "MultiFileSelector",
+                    "validators": []
+                }
+            ],
+            "type": ""
+        },
+        {
+            "id": "9FBCACA8-1070-4F50-9E59-E4B86AA46549",
+            "label": "Options",
+            "name": "",
+            "properties": [
+                {
+                    "arguments": [
+                        {
+                            "display": "No special formatting.",
+                            "name": " ",
+                            "value": ""
+                        },
+                        {
+                            "display": "Number output lines.",
+                            "name": "-n",
+                            "value": ""
+                        },
+                        {
+                            "display": "Number non-blank output lines.",
+                            "name": "-b",
+                            "value": ""
+                        }
+                    ],
+                    "defaultValue": {
+                        "display": "No special formatting.",
+                        "name": " ",
+                        "value": ""
+                    },
+                    "description": "Select the display mode for the output.",
+                    "id": "Jaguarundi_6F32FBAD-4836-4C56-BF37-3A2D0547450D",
+                    "isVisible": true,
+                    "label": "Line Numbering",
+                    "name": "",
+                    "required": true,
+                    "type": "Selection",
+                    "validators": []
+                },
+                {
+                    "arguments": [
+                        {
+                            "display": "Do not display.",
+                            "name": " ",
+                            "value": ""
+                        },
+                        {
+                            "display": "Display non-whitespace characters.",
+                            "name": "-v",
+                            "value": ""
+                        },
+                        {
+                            "display": "Display non-whitespace and tab characters.",
+                            "name": "-t",
+                            "value": ""
+                        },
+                        {
+                            "display": "Display non-whitespace characters and end-of-line markers.",
+                            "name": "-e",
+                            "value": ""
+                        }
+                    ],
+                    "defaultValue": {
+                        "display": "Do not display.",
+                        "name": " ",
+                        "value": ""
+                    },
+                    "description": "Options for displaying non-printable characters.",
+                    "id": "Jaguarundi_C1393000-E8E3-4FA3-9A4B-6CF858057FA1",
+                    "isVisible": true,
+                    "label": "Non-Printing Characters",
+                    "name": "",
+                    "required": false,
+                    "type": "Selection",
+                    "validators": []
+                }
+            ],
+            "type": ""
+        }
+    ],
+    "id": "A00D750F-D8B3-4169-B976-FAAA161CB3E3",
+    "label": "Jaguarundi",
+    "name": "Jaguarundi",
+    "success": true,
+    "type": ""
+}
+```
 
 ## Submitting a Job for Execution
 

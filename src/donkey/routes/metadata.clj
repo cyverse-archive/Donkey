@@ -37,6 +37,9 @@
    (GET "/get-property-values/:job-id" [job-id]
         (trap #(apps/get-property-values job-id)))
 
+   (GET "/app-rerun-info/:job-id" [job-id]
+        (trap #(apps/get-app-rerun-info job-id)))
+
    (DELETE "/stop-analysis/:uuid" [uuid :as req]
            (trap #(jex/stop-analysis req uuid)))
 
@@ -209,12 +212,6 @@
 
    (POST "/update-analysis" [:as req]
          (trap #(update-app req)))
-
-   (GET "/analysis-rerun-info/:job-id" [job-id :as req]
-        (trap #(get-app-rerun-info req job-id)))
-
-   (GET "/app-rerun-info/:job-id" [job-id :as req]
-        (trap #(get-new-app-rerun-info req job-id)))
 
    (POST "/submit-tool-request" [:as req]
          (trap #(submit-tool-request req)))

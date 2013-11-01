@@ -85,3 +85,11 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn get-app-rerun-info
+  [job-id]
+  (-> (client/get (unsecured-url "app-rerun-info" job-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
