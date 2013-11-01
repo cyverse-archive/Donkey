@@ -17,6 +17,7 @@
   (:use [clj-jargon.jargon :exclude [init list-dir] :as jargon]
         [clojure-commons.error-codes]
         [donkey.util.config]
+        [donkey.services.filesystem.common-paths]
         [slingshot.slingshot :only [try+ throw+]])
   (:import [org.apache.tika Tika]
            [au.com.bytecode.opencsv CSVReader]
@@ -64,62 +65,6 @@
      (validators/user-owns-paths cm user abspaths)
      (mapv (partial list-perm cm user) abspaths))))
 
-(defn date-mod-from-stat
-  [stat]
-  (str (long (.. stat getModifiedAt getTime))))
-
-(defn date-created-from-stat
-  [stat]
-  (str (long (.. stat getCreatedAt getTime))))
-
-(defn size-from-stat
-  [stat]
-  (str (.getObjSize stat)))
-
-(defn sharing?
-  [abs]
-  (= (ft/rm-last-slash (irods-home))
-     (ft/rm-last-slash abs)))
-
-(defn community? [abs] (= (fs-community-data) abs))
-
-(defn user-trash-dir
-  ([user]
-     (with-jargon (jargon-cfg) [cm]
-       (user-trash-dir cm user)))
-  ([cm user]
-     (log-rulers
-      cm [user]
-      (format-call "user-trash-dir" 'cm user)
-      (trash-base-dir cm user))))
-
-(defn user-trash-dir?
-  ([user path-to-check]
-     (with-jargon (jargon-cfg) [cm]
-       (user-trash-dir? cm user path-to-check)))
-  ([cm user path-to-check]
-     (log-rulers
-      cm [user]
-      (format-call "user-trash-dir?" 'cm user path-to-check)
-      (= (ft/rm-last-slash path-to-check)
-         (ft/rm-last-slash (user-trash-dir cm user))))))
-
-(defn id->label
-  "Generates a label given a listing ID (read as absolute path)."
-  [cm user id]
-  (cond
-   (user-trash-dir? cm user id)
-   "Trash"
-
-   (sharing? (ft/add-trailing-slash id))
-   "Shared With Me"
-
-   (community? id)
-   "Community Data"
-
-   :else
-   (ft/basename id)))
-
 (defn list-in-dir
   [cm fixed-path]
   (let [ffilter (proxy [java.io.FileFilter] [] (accept [stuff] true))]
@@ -127,218 +72,6 @@
       (:fileSystemAO cm)
       (file cm fixed-path)
       ffilter)))
-
-(defn string-contains?
-  [container-str str-to-check]
-  (pos? (count (set/intersection (set (seq container-str)) (set (seq str-to-check))))))
-
-(defn good-string?
-  [str-to-check]
-  (not (string-contains? (fs-filter-chars) str-to-check)))
-
-(defn valid-file-map? [map-to-check] (good-string? (:id map-to-check)))
-
-(defn valid-path? [path-to-check] (good-string? path-to-check))
-
-(defn- filtered-paths
-  "Returns a seq of paths that should not be included in paged listing."
-  [user]
-  (conj (fs-filter-files) 
-        (fs-community-data) 
-        (ft/path-join (irods-home) user)
-        (ft/path-join (irods-home) "public")))
-
-(defn- should-filter?
-  "Returns true if the map is okay to include in a directory listing."
-  [user path-to-check]
-  (let [fpaths (set (filtered-paths user))]
-    (or  (contains? fpaths path-to-check)
-         (not (valid-path? path-to-check)))))
-
-(defn- page-entry->map
-  "Turns a entry in a paged listing result into a map containing file/directory
-   information that can be consumed by the front-end."
-  [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id]}]
-  (let [base-map {:id            full_path
-                  :path          full_path
-                  :label         base_name
-                  :filter        (or (should-filter? user full_path) 
-                                     (should-filter? user base_name))
-                  :file-size     (str data_size)
-                  :date-created  (str (* (Integer/parseInt create_ts) 1000))
-                  :date-modified (str (* (Integer/parseInt modify_ts) 1000))
-                  :permissions   (perm-map-for (str access_type_id))}]
-    (if (= type "dataobject")
-      base-map
-      (merge base-map {:hasSubDirs true
-                       :file-size  "0"}))))
-
-(defn- page->map
-  "Transforms an entire page of results for a paged listing in a map that
-   can be returned to the client."
-  [user page]
-  (let [entry-types (group-by :type page)
-        do          (get entry-types "dataobject")
-        collections (get entry-types "collection")
-        xformer     (partial page-entry->map user)]
-    {:files   (mapv xformer do)
-     :folders (mapv xformer collections)}))
-
-(defn- user-col->api-col
-  [sort-col]
-  (case sort-col
-    "NAME"         :base-name
-    "ID"           :full-path
-    "LASTMODIFIED" :modify-ts
-    "DATECREATED"  :create-ts
-    "SIZE"         :data-size
-                   :base-name))
-
-(defn- user-order->api-order
-  [sort-order]
-  (case sort-order
-    "ASC"  :asc
-    "DESC" :desc
-           :asc))
-
-(defn paged-dir-listing
-  "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [user path limit offset & {:keys [sort-col sort-order]
-                             :or {:sort-col   "NAME"
-                                  :sort-order "ASC"}}]
-  (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
-  (let [path      (ft/rm-last-slash path)
-        sort-col  (string/upper-case sort-col)
-        sort-oder (string/upper-case sort-order)] 
-    (with-jargon (jargon-cfg) [cm]
-      (validators/user-exists cm user)
-      (validators/path-exists cm path)
-      (validators/path-readable cm user path)
-      (validators/path-is-dir cm path)
-      
-      (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE"} sort-col)
-        (log/warn "invalid sort column" sort-col)
-        (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
-                 :column sort-col}))
-
-      (when-not (contains? #{"ASC" "DESC"} sort-order)
-        (log/warn "invalid sort order" sort-order)
-        (throw+ {:error_code "ERR_INVALID_SORT_ORDER"
-                 :sort-order sort-order}))
-
-      (let [stat (stat cm path)
-            scol (user-col->api-col sort-col)
-            sord (user-order->api-order sort-order)]
-        (merge
-          (hash-map
-            :id               path
-            :path             path
-            :label            (id->label cm user path)
-            :filter           (should-filter? user path)
-            :permissions      (collection-perm-map cm user path)
-            :hasSubDirs       true
-            :total            (icat/number-of-items-in-folder user path)
-            :date-created     (:created stat)
-            :date-modified    (:modified stat)
-            :file-size        "0")
-          (page->map user (icat/paged-folder-listing user path scol sord limit offset)))))))
-
-(defn list-directories
-  "Lists the directories contained under path."
-  [user path]
-  (let [path (ft/rm-last-slash path)]
-    (with-jargon (jargon-cfg) [cm]
-      (validators/user-exists cm user)
-      (validators/path-exists cm path)
-      (validators/path-readable cm user path)
-      (validators/path-is-dir cm path)
-      
-      (let [stat (stat cm path)]
-        (merge
-          (hash-map
-            :id            path
-            :path          path
-            :label         (id->label cm user path)
-            :filter        (should-filter? user path)
-            :permissions   (collection-perm-map cm user path)
-            :hasSubDirs    true
-            :date-created  (:created stat)
-            :date-modified (:modified stat)
-            :file-size     "0")
-          (dissoc (page->map user (icat/list-folders-in-folder user path)) :files))))))
-
-(defn list-dir
-  "A non-recursive listing of a directory. Contains entries for files.
-
-   The map for the directory listing looks like this:
-     {:id \"full path to the top-level directory\"
-      :label \"basename of the path\"
-      :files A sequence of file maps
-      :folders A sequence of directory maps}
-
-   Parameters:
-     user - String containing the username of the user requesting the
-        listing.
-     path - String containing path to the top-level directory in iRODS.
-
-   Returns:
-     A tree of maps as described above."
-
-  ([user path filter-files set-own?]
-     (log/warn (str "list-dir " user " " path))
-
-     (let [path (ft/rm-last-slash path)]
-       (with-jargon (jargon-cfg) [cm]
-         (log-rulers
-           cm [user]
-           (format-call "list-dir" user path filter-files set-own?)
-           (validators/user-exists cm user)
-           (validators/path-exists cm path)
-
-           (when (and set-own? (not (owns? cm user path)))
-             (log/warn "Setting own perms on" path "for" user)
-             (set-permissions cm user path false false true))
-
-           (validators/path-readable cm user path)
-
-           (list-directories user path))))))
-
-(defn- create-trash-folder?
-  [cm user root-path]
-  (and (= root-path (user-trash-dir cm user)) (not (exists? cm root-path))))
-
-(defn root-listing
-  ([user root-path]
-     (root-listing user root-path false))
-
-  ([user root-path set-own?]
-     (let [root-path (ft/rm-last-slash root-path)]
-       (log/warn "[root-listing]" "for" user "at" root-path "with set own as" set-own?)
-       (with-jargon (jargon-cfg) [cm]
-         (log-rulers
-           cm [user]
-           (format-call "root-listing" user root-path)
-           (log/warn "in (root-listing)")
-           (validators/user-exists cm user)
-
-           (when (create-trash-folder? cm user root-path)
-             (log/warn "[root-listing] Creating" root-path "for" user)
-             (mkdir cm root-path)
-             (log/warn "[root-listing] Setting own perms on" root-path "for" user)
-             (set-permissions cm user root-path false false true))
-
-           (validators/path-exists cm root-path)
-
-           (when (and set-own? (not (owns? cm user root-path)))
-             (log/warn "[root-listing] set-own? is true and" root-path "is not owned by" user)
-             (log/warn "[root-listing] Setting own perms on" root-path "for" user)
-             (set-permissions cm user root-path false false true))
-
-           (when-let [res (jargon/list-dir cm user root-path :include-subdirs false)]
-             (assoc res 
-                    :label (id->label cm user (:id res))
-                    :path  (:id res)
-                    :id    (str "/root" (:id res)))))))))
 
 (defn create
   "Creates a directory at 'path' in iRODS and sets the user to 'user'.
@@ -851,10 +584,6 @@
 
     {:user share-with :path fpath}))
 
-(defn- in-trash?
-  [cm user fpath]
-  (.startsWith fpath (user-trash-dir cm user)))
-
 (defn- share-paths
   [cm user share-withs fpaths perms]
   (for [share-with share-withs
@@ -1054,7 +783,7 @@
      cm [user]
      (format-call "user-trash" user)
      (validators/user-exists cm user)
-     {:trash (user-trash-dir cm user)})))
+     {:trash (user-trash-path cm user)})))
 
 (def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
 
@@ -1065,7 +794,7 @@
 (defn randomized-trash-path
   [cm user path-to-inc]
   (ft/path-join
-   (user-trash-dir cm user)
+   (user-trash-path cm user)
    (str (ft/basename path-to-inc) "." (rand-str 7))))
 
 (defn move-to-trash
@@ -1106,7 +835,7 @@
              (doseq [path-ticket path-tickets]
                (delete-ticket cm (:username cm) path-ticket)))
 
-           (if-not (.startsWith p (user-trash-dir cm user))
+           (if-not (.startsWith p (user-trash-path cm user))
              (move-to-trash cm p user)
              (delete cm p)))
 
@@ -1226,7 +955,7 @@
      (format-call "delete-trash" user)
      (validators/user-exists cm user)
 
-     (let [trash-dir  (user-trash-dir cm user)
+     (let [trash-dir  (user-trash-path cm user)
            trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
        (doseq [trash-path trash-list]
          (delete cm trash-path))

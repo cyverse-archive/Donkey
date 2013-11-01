@@ -23,16 +23,6 @@
     (log/warn "[call][do-homedir]" params)
     (validate-map params {:user string?})))
 
-(with-pre-hook! #'do-directory
-  (fn [params]
-    (log/warn "[call][do-directory]" params)
-    (validate-map params {:user string?})))
-
-(with-pre-hook! #'do-root-listing
-  (fn [params]
-    (log/warn "[call][do-root-listing]" params)
-    (validate-map params {:user string?})))
-
 (with-pre-hook! #'do-delete
   (fn [params body] 
     (log/warn "[call][do-delete]" params body)
@@ -272,16 +262,6 @@
     (log/warn "[call][do-overwrite-chunk]" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string? :position string? :update string?})))
-
-(with-pre-hook! #'do-paged-listing
-  (fn [params]
-    (log/warn "[call][do-paged-listing]" params)
-    (validate-map params {:user string? :path string? :limit string? :offset string?})))
-
-(with-pre-hook! #'do-unsecured-paged-listing
-  (fn [params]
-    (log/warn "[call][do-unsecured-paged-listing]" params)
-    (validate-map params {:path string? :limit string? :offset string?})))
 
 (with-pre-hook! #'do-get-csv-page
   (fn [params body]

@@ -7,7 +7,7 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
             [donkey.services.fileio.controllers :as fileio]
-            [donkey.services.filesystem.actions :as fs]
+            [donkey.services.filesystem.common-paths :as cp]
             [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
@@ -39,7 +39,7 @@
         user     (irods-user)
         home     (irods-home)
         temp-dir (fileio-temp-dir)]
-    (if-not (fs/good-string? orig-filename)
+    (if-not (cp/good-string? orig-filename)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :path orig-filename}))
     (with-jargon (jargon-cfg) [cm]
@@ -58,7 +58,7 @@
   (let [user    (get req-params "user")
         dest    (get req-params "dest")
         up-path (get req-multipart "file")]
-    (if-not (fs/good-string? up-path)
+    (if-not (cp/good-string? up-path)
       {:status 500
        :body   (json/generate-string
                  {:error_code ERR_BAD_OR_MISSING_FIELD

@@ -5,12 +5,9 @@
 
 (defn- log-func
   [func-name]
-  (fn [result]
-    (log/warn (str "[result][" func-name "]") result)))
+  )
 
 (with-post-hook! #'do-homedir (log-func "do-homedir"))
-(with-post-hook! #'do-directory (log-func "do-directory"))
-(with-post-hook! #'do-root-listing (log-func "do-root-listing"))
 (with-post-hook! #'do-delete (log-func "do-delete"))
 (with-post-hook! #'do-rename (log-func "do-rename"))
 (with-post-hook! #'do-move (log-func "do-move"))
@@ -41,8 +38,6 @@
 (with-post-hook! #'do-replace-spaces (log-func "do-replace-spaces"))
 (with-post-hook! #'do-read-chunk (log-func "do-read-chunk"))
 (with-post-hook! #'do-overwrite-chunk (log-func "do-overwrite-chunk"))
-(with-post-hook! #'do-paged-listing (log-func "do-paged-listing"))
-(with-post-hook! #'do-unsecured-paged-listing (log-func "do-unsecured-paged-listing"))
 (with-post-hook! #'do-get-csv-page (log-func "do-get-csv-page"))
 (with-post-hook! #'do-read-csv-chunk (log-func "do-read-csv-chunk"))
 (with-post-hook! #'do-upload (log-func "do-upload"))

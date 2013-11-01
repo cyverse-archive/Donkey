@@ -3,6 +3,7 @@
         [clojure.java.classpath]
         [donkey.util.config]
         [donkey.util.validators]
+        [donkey.services.filesystem.common-paths]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as json]
@@ -23,47 +24,6 @@
 (defn do-homedir
   [{user :user}]
   (irods-actions/user-home-dir (irods-home) user false))
-
-(defn- get-home-dir
-  [user]
-  (irods-actions/user-home-dir (irods-home) user true))
-
-(defn- top-level-listing
-  [{user :user}]
-  (let [comm-f     (future (irods-actions/list-directories user (fs-community-data)))
-        share-f    (future (irods-actions/list-directories user (irods-home)))
-        home-f     (future (irods-actions/list-directories user (get-home-dir user)))]
-    {:roots [@home-f @comm-f @share-f]}))
-
-(defn- shared-with-me-listing?
-  [path]
-  (= (utils/add-trailing-slash path) (utils/add-trailing-slash (irods-home))))
-
-(defn do-directory
-  [{:keys [user path] :or {path nil} :as params}]
-  (log/warn "path" path)
-  (cond
-    (nil? path)
-    (top-level-listing params)
-      
-    (shared-with-me-listing? path)
-    (irods-actions/list-directories user (irods-home))
-      
-    :else
-    (irods-actions/list-directories user path)))
-
-(defn do-root-listing
-  [{user :user}]
-  (let [uhome          (utils/path-join (irods-home) user)
-        user-root-list (partial irods-actions/root-listing user)
-        user-trash-dir (irods-actions/user-trash-dir user)]
-    {:roots
-     (remove
-       nil?
-       [(user-root-list uhome)
-        (user-root-list (fs-community-data))
-        (user-root-list (irods-home))
-        (user-root-list user-trash-dir true)])}))
 
 (defn do-rename
   [{user :user} {source :source dest :dest}]
@@ -184,7 +144,7 @@
   (irods-actions/restore-path
     {:user  user
      :paths paths
-     :user-trash (irods-actions/user-trash-dir user)}))
+     :user-trash (user-trash-path user)}))
 
 (defn do-copy
   [{user :user} {paths :paths destination :destination}]
@@ -246,33 +206,6 @@
   [{user :user} {path :path position :position update :update}]
   (let [pos  (Long/parseLong position)]
     (irods-actions/overwrite-file-chunk user path pos update)))
-
-(defn do-paged-listing
-  [{user       :user 
-    path       :path 
-    limit      :limit 
-    offset     :offset
-    sort-col   :sort-col
-    sort-order :sort-order
-    :as params}]
-  (let [limit      (Integer/parseInt limit)
-        offset     (Integer/parseInt offset)
-        sort-col   (if sort-col sort-col "NAME")
-        sort-order (if sort-order sort-order "ASC")]
-    (irods-actions/paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
-
-(defn do-unsecured-paged-listing
-  [{path       :path 
-    limit      :limit 
-    offset     :offset 
-    sort-col   :sort-col 
-    sort-order :sort-order}]
-  (let [user       "ipctest"
-        limit      (Integer/parseInt limit)
-        offset     (Integer/parseInt offset)
-        sort-col   (if sort-col sort-col "NAME")
-        sort-order (if sort-order sort-order "ASC")]
-    (irods-actions/paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
 
 (defn do-get-csv-page
   [{user :user} {path :path delim :delim chunk-size :chunk-size page :page :as body}]
