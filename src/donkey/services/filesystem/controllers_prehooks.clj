@@ -12,9 +12,7 @@
 
 
 
-(with-pre-hook! #'do-manifest
-  (fn [params]
-    (log/warn "[call][do-manifest]" params)))
+
 
 (with-pre-hook! #'do-download
   (fn [params body]

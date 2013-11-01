@@ -19,10 +19,6 @@
 
 
 
-(defn do-manifest
-  [{user :user path :path}]
-  (irods-actions/manifest user path (fs-data-threshold)))
-
 (defn do-download
   [{user :user} {paths :paths}]
   (irods-actions/download user paths))

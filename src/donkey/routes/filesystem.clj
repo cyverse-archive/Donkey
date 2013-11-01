@@ -4,7 +4,20 @@
         [donkey.services.filesystem.controllers]
         [donkey.services.filesystem.controllers-prehooks]
         [donkey.services.filesystem.controllers-posthooks]
-        [donkey.services.filesystem root directory home rename trash move create metadata sharing preview exists stat]
+        [donkey.services.filesystem
+         root 
+         directory 
+         home 
+         rename 
+         trash 
+         move 
+         create 
+         metadata 
+         sharing 
+         preview 
+         exists 
+         stat
+         manifest]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]

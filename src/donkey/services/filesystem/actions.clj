@@ -104,44 +104,6 @@
     (json/decode (:value (first (seq treeurl-maps))) true)
     []))
 
-(defn preview-url
-  [user path]
-  (str "file/preview?user=" (cdc/url-encode user) "&path=" (cdc/url-encode path)))
-
-(defn content-type
-  [cm path]
-  (.detect (Tika.) (input-stream cm path)))
-
-(defn extract-tree-urls
-  [cm fpath]
-  (if (attribute? cm fpath "tree-urls")
-    (-> (get-attribute cm fpath "tree-urls")
-        first
-        :value
-        riak/get-tree-urls
-        (json/decode true)
-        :tree-urls)
-    []))
-
-(defn manifest
-  [user path data-threshold]
-  (let [path (ft/rm-last-slash path)]
-    (with-jargon (jargon-cfg) [cm]
-      (log-rulers
-        cm [user]
-        (format-call "manifest" user path data-threshold)
-        (validators/user-exists cm user)
-        (validators/path-exists cm path)
-        (validators/path-is-file cm path)
-        (validators/path-readable cm user path)
-
-        {:action       "manifest"
-         :content-type (content-type cm path)
-         :tree-urls    (extract-tree-urls cm path)
-         :info-type    (filetypes/get-types cm user path)
-         :mime-type    (.detect (Tika.) (input-stream cm path))
-         :preview      (preview-url user path)}))))
-
 (defn tika-detect-type
   [user file-path]
   (with-jargon (jargon-cfg) [cm-new]
