@@ -10,21 +10,6 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(with-pre-hook! #'do-share
-  (fn [params body]
-    (log/warn "[call][do-share]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential? :users sequential? :permissions map?})
-    (validate-map (:permissions body) {:read boolean? :write boolean? :own boolean?})
-    (validate-num-paths (:paths body))))
-
-(with-pre-hook! #'do-unshare
-  (fn [params body]
-    (log/warn "[call][do-unshare]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential? :users sequential?})
-    (validate-num-paths (:paths body))))
-
 (with-pre-hook! #'do-preview
   (fn [params]
     (log/warn "[call][do-preview]" params)

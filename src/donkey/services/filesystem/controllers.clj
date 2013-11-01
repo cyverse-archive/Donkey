@@ -17,29 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn- fix-username
-  [username]
-  (if (re-seq #"@" username)
-    (subs username 0 (.indexOf username "@"))
-    username))
-
-(defn boolean?
-  [flag]
-  (or (true? flag) (false? flag)))
-
-(defn do-share
-  [{user :user} {users :users paths :paths permissions :permissions}]
-  (let [user        (fix-username user)
-        share-withs (map fix-username users)]
-    (irods-actions/share user share-withs paths permissions)))
-
-(defn do-unshare
-  [{user :user} {users :users paths :paths}]
-  (let [user        (fix-username user)
-        share-withs (map fix-username users)
-        fpaths      paths]
-    (irods-actions/unshare user share-withs fpaths)))
-
 (defn do-preview
   [{user :user path :path}]
   {:preview (irods-actions/preview user path (fs-preview-size))})

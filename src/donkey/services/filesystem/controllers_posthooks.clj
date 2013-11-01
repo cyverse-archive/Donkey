@@ -4,8 +4,6 @@
   (:require [dire.core :refer [with-post-hook!]]
             [clojure.tools.logging :as log]))
 
-(with-post-hook! #'do-share (log-func "do-share"))
-(with-post-hook! #'do-unshare (log-func "do-unshare"))
 (with-post-hook! #'do-preview (log-func "do-preview"))
 (with-post-hook! #'do-exists (log-func "do-exists"))
 (with-post-hook! #'do-stat (log-func "do-stat"))
