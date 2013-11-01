@@ -3,12 +3,9 @@
         [donkey.services.filesystem.common-paths])
   (:require [dire.core :refer [with-post-hook!]]
             [clojure.tools.logging :as log]))
-(with-post-hook! #'do-metadata-get (log-func "do-metadata-get"))
-(with-post-hook! #'do-metadata-set (log-func "do-metadata-set"))
+
 (with-post-hook! #'do-share (log-func "do-share"))
 (with-post-hook! #'do-unshare (log-func "do-unshare"))
-(with-post-hook! #'do-metadata-batch-set (log-func "do-metadata-batch-set"))
-(with-post-hook! #'do-metadata-delete (log-func "do-metadata-delete"))
 (with-post-hook! #'do-preview (log-func "do-preview"))
 (with-post-hook! #'do-exists (log-func "do-exists"))
 (with-post-hook! #'do-stat (log-func "do-stat"))

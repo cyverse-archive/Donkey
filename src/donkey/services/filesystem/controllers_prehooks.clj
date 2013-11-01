@@ -10,17 +10,6 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(with-pre-hook! #'do-metadata-get
-  (fn [params]
-    (log/warn "[call][do-metadata-get]" params)
-    (validate-map params {:user string? :path string?})))
-
-(with-pre-hook! #'do-metadata-set
-  (fn [params body]
-    (log/warn "[call][do-metadata-set]" params body)
-    (validate-map params {:user string? :path string?})
-    (validate-map body {:attr string? :value string? :unit string?})))
-
 (with-pre-hook! #'do-share
   (fn [params body]
     (log/warn "[call][do-share]" params body)
@@ -35,35 +24,6 @@
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential?})
     (validate-num-paths (:paths body))))
-
-(defn- check-adds
-  [adds]
-  (mapv #(= (set (keys %)) (set [:attr :value :unit])) adds))
-
-(defn- check-dels
-  [dels]
-  (mapv string? dels))
-
-(with-pre-hook! #'do-metadata-batch-set
-  (fn [params body]
-    (log/warn "[call][do-metadata-set]" params body)
-    (validate-map params {:user string? :path string?})
-    (validate-map body {:add sequential? :delete sequential?})
-    (let [user (:user params)
-          path (:path params)
-          adds (:add body)
-          dels (:delete body)]
-      (when (pos? (count adds))
-        (if (not (every? true? (check-adds adds)))
-          (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "add"})))
-      (when (pos? (count dels))
-        (if-not (every? true? (check-dels dels))
-          (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "add"}))))))
-
-(with-pre-hook! #'do-metadata-delete
-  (fn [params]
-    (log/warn "[call][do-metadata-delete]" params)
-    (validate-map params {:user string? :path string? :attr string?})))
 
 (with-pre-hook! #'do-preview
   (fn [params]

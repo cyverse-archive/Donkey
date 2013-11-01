@@ -17,14 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-metadata-get
-  [{user :user path :path}]
-  (irods-actions/metadata-get user path))
-
-(defn do-metadata-set
-  [{user :user path :path} body]
-  (irods-actions/metadata-set user path body))
-
 (defn- fix-username
   [username]
   (if (re-seq #"@" username)
@@ -47,14 +39,6 @@
         share-withs (map fix-username users)
         fpaths      paths]
     (irods-actions/unshare user share-withs fpaths)))
-
-(defn do-metadata-batch-set
-  [{user :user} {path :path :as body}]
-  (irods-actions/metadata-batch-set user path body))
-
-(defn do-metadata-delete
-  [{user :user path :path attr :attr}]
-  (irods-actions/metadata-delete user path attr))
 
 (defn do-preview
   [{user :user path :path}]
