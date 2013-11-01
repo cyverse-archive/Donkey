@@ -4,6 +4,9 @@
   (:require [clojure-commons.file-utils :as ft]
             [clojure.set :as set]))
 
+(def IPCRESERVED "ipc-reserved-unit")
+(def IPCSYSTEM "ipc-system-avu")
+
 (defn super-user?
   [username]
   (.equals username (irods-user)))

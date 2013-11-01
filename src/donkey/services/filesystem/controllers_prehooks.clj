@@ -1,6 +1,7 @@
 (ns donkey.services.filesystem.controllers-prehooks
   (:use [clojure-commons.error-codes]
         [donkey.services.filesystem.common-paths]
+        [donkey.services.filesystem.validators]
         [donkey.util.validators]
         [donkey.util.config]
         [donkey.services.filesystem.controllers]
@@ -8,27 +9,6 @@
   (:require [dire.core :refer [with-pre-hook!]]
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
-
-(defn num-paths-okay?
-  [paths]
-  (<= (count paths) (fs-max-paths-in-request)))
-
-(defn validate-num-paths
-  [paths]
-  (if-not (num-paths-okay? paths)
-    (throw+ {:error_code "ERR_TOO_MANY_PATHS"
-             :count  (str (count paths))})))
-
-(with-pre-hook! #'do-delete
-  (fn [params body] 
-    (log/warn "[call][do-delete]" params body)
-    (validate-map params {:user string?})
-    (validate-map body   {:paths sequential?})
-    (validate-num-paths (:paths body))
-    
-    (when (super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user       (:user params)}))))
 
 (with-pre-hook! #'do-move
   (fn [params body]
@@ -158,13 +138,6 @@
     (validate-map body {:paths sequential?})
     (validate-num-paths (:paths body))))
 
-(with-pre-hook! #'do-restore
-  (fn [params body]
-    (log/warn "[call][do-restore]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
-    (validate-num-paths (:paths body))))
-
 (with-pre-hook! #'do-copy
   (fn [params body]
     (log/warn "[call][do-copy]" params body)
@@ -180,16 +153,6 @@
 (with-pre-hook! #'do-quota
   (fn [params]
     (log/warn "[call][do-quota]" params)
-    (validate-map params {:user string?})))
-
-(with-pre-hook! #'do-user-trash
-  (fn [params]
-    (log/warn "[call][do-user-trash]" params)
-    (validate-map params {:user string?})))
-
-(with-pre-hook! #'do-delete-trash
-  (fn [params]
-    (log/warn "[call][do-delete-trash]" params)
     (validate-map params {:user string?})))
 
 (with-pre-hook! #'do-add-tickets

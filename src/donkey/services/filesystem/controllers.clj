@@ -17,10 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-delete
-  [{user :user} {paths :paths}]  
-  (irods-actions/delete-paths user paths))
-
 (defn do-move
   [{user :user} {sources :sources dest :dest}]  
   (irods-actions/move-paths user sources dest))
@@ -127,13 +123,6 @@
   [{user :user} {paths :paths}]
   {:paths (irods-actions/list-perms user paths)})
 
-(defn do-restore
-  [{user :user} {paths :paths}]
-  (irods-actions/restore-path
-    {:user  user
-     :paths paths
-     :user-trash (user-trash-path user)}))
-
 (defn do-copy
   [{user :user} {paths :paths destination :destination}]
   (irods-actions/copy-path
@@ -149,14 +138,6 @@
 (defn do-quota
   [{user :user}]
   {:quotas (irods-actions/get-quota user)})
-
-(defn do-user-trash
-  [{user :user}]
-  (irods-actions/user-trash user))
-
-(defn do-delete-trash
-  [{user :user}]
-  (irods-actions/delete-trash user))
 
 (defn check-tickets
   [tickets]

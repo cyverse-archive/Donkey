@@ -7,7 +7,7 @@
   [func-name]
   )
 
-(with-post-hook! #'do-delete (log-func "do-delete"))
+
 (with-post-hook! #'do-move (log-func "do-move"))
 (with-post-hook! #'do-create (log-func "do-create"))
 (with-post-hook! #'do-metadata-get (log-func "do-metadata-get"))
@@ -23,12 +23,9 @@
 (with-post-hook! #'do-download (log-func "do-download"))
 (with-post-hook! #'do-special-download (log-func "do-special-download"))
 (with-post-hook! #'do-user-permissions (log-func "do-user-permissions"))
-(with-post-hook! #'do-restore (log-func "do-restore"))
 (with-post-hook! #'do-copy (log-func "do-copy"))
 (with-post-hook! #'do-groups (log-func "do-groups"))
 (with-post-hook! #'do-quota (log-func "do-quota"))
-(with-post-hook! #'do-user-trash (log-func "do-user-trash"))
-(with-post-hook! #'do-delete-trash (log-func "do-delete-trash"))
 (with-post-hook! #'do-add-tickets (log-func "do-add-tickets"))
 (with-post-hook! #'do-remove-tickets (log-func "do-remove-tickets"))
 (with-post-hook! #'do-list-tickets (log-func "do-list-tickets"))

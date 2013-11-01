@@ -1,7 +1,18 @@
 (ns donkey.services.filesystem.validators
   (:use [clj-jargon.jargon]
+        [donkey.util.config]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]]))
+
+(defn num-paths-okay?
+  [paths]
+  (<= (count paths) (fs-max-paths-in-request)))
+
+(defn validate-num-paths
+  [paths]
+  (if-not (num-paths-okay? paths)
+    (throw+ {:error_code "ERR_TOO_MANY_PATHS"
+             :count  (str (count paths))})))
 
 (defn user-exists
   [cm user]
