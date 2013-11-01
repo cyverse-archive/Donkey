@@ -127,26 +127,7 @@
        (move-all cm sources dest :user user :admin-users (irods-admins))
        {:sources sources :dest dest}))))
 
-(defn rename-path
-  "High-level file renaming. Calls rename-func, passing it file-rename as the mv-func param."
-  [user source dest]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "rename-path" user source dest)
-     (let [source (ft/rm-last-slash source)
-           dest   (ft/rm-last-slash dest)]
-       (validators/user-exists cm user)
-       (validators/path-exists cm source)
-       (validators/user-owns-path cm user source)
-       (validators/path-not-exists cm dest)
 
-       (let [result (move cm source dest :user user :admin-users (irods-admins))]
-         (when-not (nil? result)
-           (throw+ {:error_code ERR_INCOMPLETE_RENAME
-                    :paths result
-                    :user user}))
-         {:source source :dest dest :user user})))))
 
 (defn- preview-buffer
   [cm path size]

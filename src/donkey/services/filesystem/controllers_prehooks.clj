@@ -1,5 +1,6 @@
 (ns donkey.services.filesystem.controllers-prehooks
   (:use [clojure-commons.error-codes]
+        [donkey.services.filesystem.common-paths]
         [donkey.util.validators]
         [donkey.util.config]
         [donkey.services.filesystem.controllers]
@@ -25,15 +26,6 @@
     (validate-map body   {:paths sequential?})
     (validate-num-paths (:paths body))
     
-    (when (super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user       (:user params)}))))
-
-(with-pre-hook! #'do-rename
-  (fn [params body]
-    (log/warn "[call][do-rename]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:source string? :dest string?})
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))))

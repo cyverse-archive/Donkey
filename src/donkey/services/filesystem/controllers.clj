@@ -17,14 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn super-user?
-  [username]
-  (.equals username (irods-user)))
-
-(defn do-rename
-  [{user :user} {source :source dest :dest}]
-  (irods-actions/rename-path user source dest))
-
 (defn do-delete
   [{user :user} {paths :paths}]  
   (irods-actions/delete-paths user paths))

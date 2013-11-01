@@ -4,6 +4,10 @@
   (:require [clojure-commons.file-utils :as ft]
             [clojure.set :as set]))
 
+(defn super-user?
+  [username]
+  (.equals username (irods-user)))
+
 (defn user-home-dir
   [user]
   (ft/path-join "/" (irods-zone) "home" user))

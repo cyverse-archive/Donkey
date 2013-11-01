@@ -8,7 +8,6 @@
   )
 
 (with-post-hook! #'do-delete (log-func "do-delete"))
-(with-post-hook! #'do-rename (log-func "do-rename"))
 (with-post-hook! #'do-move (log-func "do-move"))
 (with-post-hook! #'do-create (log-func "do-create"))
 (with-post-hook! #'do-metadata-get (log-func "do-metadata-get"))
