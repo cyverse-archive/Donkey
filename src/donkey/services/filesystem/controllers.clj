@@ -37,24 +37,6 @@
   [{user :user}]
   {:quotas (irods-actions/get-quota user)})
 
-(defn check-tickets
-  [tickets]
-  (every? true? (mapv #(= (set (keys %)) (set [:path :ticket-id])) tickets)))
-
-(defn do-add-tickets
-  [{public :public user :user} {paths :paths}]
-  (let [pub-param public
-        public    (if (and public (= public "1")) true false)]
-    (irods-actions/add-tickets user paths public)))
-
-(defn do-remove-tickets
-  [{user :user} {tickets :tickets}]
-  (irods-actions/remove-tickets user tickets))
-
-(defn do-list-tickets
-  [{user :user} {paths :paths}]
-  (irods-actions/list-tickets-for-paths user paths))
-
 (defn do-paths-contain-space
   [params {paths :paths}]
   {:paths (irods-actions/paths-contain-char paths " ")})

@@ -96,8 +96,6 @@
     (with-jargon (jargon-cfg) [cm]
       (and (exists? cm path) (is-file? cm path))))))
 
-
-
 (defn- format-tree-urls
   [treeurl-maps]
   (if (pos? (count treeurl-maps))
@@ -141,69 +139,6 @@
             (set-owner cm to user)))
 
         {:sources from :dest to}))))
-
-(defn- ticket-uuids?
-  [cm user new-uuids]
-  (try+
-    (validators/all-tickets-nonexistant cm user new-uuids)
-    true
-    (catch error? e false)))
-
-(defn- gen-uuids
-  [cm user num-uuids]
-  (let [new-uuids (doall (repeatedly num-uuids #(string/upper-case (str (UUID/randomUUID)))))]
-    (if (ticket-uuids? cm user new-uuids)
-      new-uuids
-      (recur cm user num-uuids)) ))
-
-(defn add-tickets
-  [user paths public?]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "add-tickets" user paths public?)
-     (let [new-uuids (gen-uuids cm user (count paths))] 
-       (validators/user-exists cm user)
-       (validators/all-paths-exist cm paths)
-       (validators/all-paths-writeable cm user paths)
-       
-       (doseq [[path uuid] (map list paths new-uuids)]
-         (log/warn "[add-tickets] adding ticket for " path "as" uuid)
-         (create-ticket cm (:username cm) path uuid)
-         (when public?
-           (log/warn "[add-tickets] making ticket" uuid "public")
-           (doto (ticket-admin-service cm (:username cm))
-             (.addTicketGroupRestriction uuid "public"))))
-     
-       {:user user :tickets (mapv #(ticket-map cm (:username cm) %) new-uuids)}))))
-
-(defn remove-tickets
-  [user ticket-ids]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "remove-tickets" user ticket-ids)
-     (validators/user-exists cm user)
-     (validators/all-tickets-exist cm user ticket-ids)
-
-     (let [all-paths (mapv #(.getIrodsAbsolutePath (ticket-by-id cm (:username cm) %)) ticket-ids)]
-       (validators/all-paths-writeable cm user all-paths)
-       (doseq [ticket-id ticket-ids]
-         (delete-ticket cm (:username cm) ticket-id))
-       {:user user :tickets ticket-ids}))))
-
-(defn list-tickets-for-paths
-  [user paths]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "list-tickets-for-paths" user paths)
-     (validators/user-exists cm user)
-     (validators/all-paths-exist cm paths)
-     (validators/all-paths-readable cm user paths)
-
-     {:tickets
-      (apply merge (mapv #(hash-map %1 (ticket-ids-for-path cm (:username cm) %1)) paths))})))
 
 (defn paths-contain-char
   [paths char]

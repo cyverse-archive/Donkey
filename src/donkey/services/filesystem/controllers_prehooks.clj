@@ -34,32 +34,6 @@
     (log/warn "[call][do-quota]" params)
     (validate-map params {:user string?})))
 
-(with-pre-hook! #'do-add-tickets
-  (fn [params body]
-    (log/warn "[call][do-add-tickets]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
-    (validate-num-paths (:paths body))))
-
-(with-pre-hook! #'do-remove-tickets
-  (fn [params body]
-    (log/warn "[call][do-remove-tickets]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:tickets sequential?})
-    (when-not (every? true? (mapv string? (:tickets body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field     "tickets"}))))
-
-(with-pre-hook! #'do-list-tickets
-  (fn [params body]
-    (log/warn "[call][do-list-tickets]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
-    (when-not (every? true? (mapv string? (:paths body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :field      "paths"}))
-    (validate-num-paths (:paths body))))
-
 (with-pre-hook! #'do-paths-contain-space
   (fn [params body]
     (log/warn "[call][do-path-contain-space]" params body)
