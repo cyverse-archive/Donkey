@@ -10,29 +10,12 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(with-pre-hook! #'do-user-permissions
-  (fn [params body]
-    (log/warn "[call][do-user-permissions]" params body)    
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
-    (validate-num-paths (:paths body))))
-
 (with-pre-hook! #'do-copy
   (fn [params body]
     (log/warn "[call][do-copy]" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :destination string?})
     (validate-num-paths (:paths body))))
-
-(with-pre-hook! #'do-groups
-  (fn [params]
-    (log/warn "[call][do-groups]" params)
-    (validate-map params {:user string?})))
-
-(with-pre-hook! #'do-quota
-  (fn [params]
-    (log/warn "[call][do-quota]" params)
-    (validate-map params {:user string?})))
 
 (with-pre-hook! #'do-paths-contain-space
   (fn [params body]

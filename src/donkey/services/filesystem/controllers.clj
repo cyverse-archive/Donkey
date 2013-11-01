@@ -17,10 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-user-permissions
-  [{user :user} {paths :paths}]
-  {:paths (irods-actions/list-perms user paths)})
-
 (defn do-copy
   [{user :user} {paths :paths destination :destination}]
   (irods-actions/copy-path
@@ -28,14 +24,6 @@
      :from paths
      :to   destination}
     (fs-copy-attribute)))
-
-(defn do-groups
-  [{user :user}]
-  {:groups (irods-actions/list-user-groups user)})
-
-(defn do-quota
-  [{user :user}]
-  {:quotas (irods-actions/get-quota user)})
 
 (defn do-paths-contain-space
   [params {paths :paths}]

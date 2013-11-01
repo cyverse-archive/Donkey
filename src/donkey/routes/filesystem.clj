@@ -19,7 +19,8 @@
          stat
          manifest
          updown
-         tickets]
+         tickets
+         users]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]

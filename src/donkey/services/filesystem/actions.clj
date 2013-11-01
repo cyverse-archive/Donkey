@@ -39,50 +39,6 @@
     (clojure.pprint/write (conj args (symbol fn-name)) :stream w)
     (str w)))
 
-(defn filtered-user-perms
-  [cm user abspath]
-  (let [filtered-users (set (conj (fs-perms-filter) user (irods-user)))]
-    (filter
-     #(not (contains? filtered-users (:user %1)))
-     (list-user-perms cm abspath))))
-
-(defn- list-perm
-  [cm user abspath]
-  {:path abspath
-   :user-permissions (filtered-user-perms cm user abspath)})
-
-(defn list-perms
-  [user abspaths]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "list-perms" user abspaths)
-     (validators/user-exists cm user)
-     (validators/all-paths-exist cm abspaths)
-     (validators/user-owns-paths cm user abspaths)
-     (mapv (partial list-perm cm user) abspaths))))
-
-(defn list-user-groups
-  [user]
-  "Returns a list of names for the groups a user is in.
-
-   Parameters:
-     user - the user's iRODS account name
-
-   Returns:
-     A list of group names
-
-   Preconditions:
-     clj-jargon must have been initialized
-
-   Throws:
-     ERR_NOT_A_USER - This is thrown if user is not a valid iRODS account name."
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "list-user-groups" user)
-     (validators/user-exists cm user)
-     (user-groups cm user))))
 
 #_((defn path-is-dir?
    [path]
@@ -101,15 +57,6 @@
   (if (pos? (count treeurl-maps))
     (json/decode (:value (first (seq treeurl-maps))) true)
     []))
-
-(defn get-quota
-  [user]
-  (with-jargon (jargon-cfg) [cm]
-    (log-rulers
-     cm [user]
-     (format-call "get-quota" user)
-     (validators/user-exists cm user)
-     (quota cm user))))
 
 (defn copy-path
   ([copy-map]
