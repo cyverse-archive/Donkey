@@ -52,7 +52,8 @@
   (let [id     (UUID/randomUUID)
         cb-url (str (curl/url (config/agave-callback-base) (str id)))
         job    (.submitJob agave-client (assoc-in submission [:config :callbackUrl] cb-url))]
-    (store-agave-job agave-client id job)))
+    (store-agave-job agave-client id job)
+    (dn/send-agave-job-status-update (:shortUsername current-user) job)))
 
 (def ^:private de-job-validation-map
   "The validation map to use for DE jobs."
