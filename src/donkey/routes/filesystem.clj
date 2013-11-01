@@ -4,7 +4,7 @@
         [donkey.services.filesystem.controllers]
         [donkey.services.filesystem.controllers-prehooks]
         [donkey.services.filesystem.controllers-posthooks]
-        [donkey.services.filesystem root directory home rename trash move]
+        [donkey.services.filesystem root directory home rename trash move create]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]

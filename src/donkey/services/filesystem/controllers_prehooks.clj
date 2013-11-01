@@ -10,15 +10,6 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]))
 
-(with-pre-hook! #'do-create
-  (fn [params body]
-    (log/warn "[call][do-create]" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:path string?})
-    (log/info "Body: " body)
-    (when (super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))))
-
 (with-pre-hook! #'do-metadata-get
   (fn [params]
     (log/warn "[call][do-metadata-get]" params)

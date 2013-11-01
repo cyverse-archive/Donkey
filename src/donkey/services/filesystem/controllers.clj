@@ -17,10 +17,6 @@
             [ring.util.codec :as cdc]
             [ring.util.response :as rsp-utils]))
 
-(defn do-create
-  [{user :user} {path :path}]
-  (irods-actions/create user path))
-
 (defn do-metadata-get
   [{user :user path :path}]
   (irods-actions/metadata-get user path))
