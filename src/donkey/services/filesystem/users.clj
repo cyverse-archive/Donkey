@@ -11,10 +11,9 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.actions :as irods-actions]))
+            [donkey.services.filesystem.validators :as validators]))
 
-(defn- list-user-groups
+(defn list-user-groups
   [user]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)

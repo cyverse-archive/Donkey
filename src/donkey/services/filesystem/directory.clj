@@ -9,7 +9,6 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.actions :as irods-actions]
             [clj-icat-direct.icat :as icat]))
 
 (defn- filtered-paths

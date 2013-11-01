@@ -11,10 +11,9 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.actions :as irods-actions]))
+            [donkey.services.filesystem.validators :as validators]))
 
-(defn- create
+(defn create
   [user path]
   (log/debug (str "create " user " " path))
   (with-jargon (jargon-cfg) [cm]

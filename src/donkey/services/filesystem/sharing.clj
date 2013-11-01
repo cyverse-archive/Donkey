@@ -11,8 +11,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.actions :as irods-actions]))
+            [donkey.services.filesystem.validators :as validators]))
 
 (def shared-with-attr "ipc-contains-obj-shared-with")
 
@@ -98,7 +97,7 @@
           (shared? cm share-with fpath perms) (skip-share share-with fpath :already-shared)
           :else                               (share-path cm user share-with perms fpath))))
 
-(defn- share
+(defn share
   [user share-withs fpaths perms]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
@@ -182,7 +181,7 @@
     (log/warn "Removing shared with AVU on" fpath "for" unshare-with)
     (remove-user-shared-with cm fpath unshare-with)))
 
-(defn- unshare
+(defn unshare
   "Allows 'user' to unshare file 'fpath' with user 'unshare-with'."
   [user unshare-withs fpaths]
   (log/debug "entered unshare")
@@ -221,7 +220,7 @@
   [{user :user} {users :users paths :paths permissions :permissions}]
   (let [user        (fix-username user)
         share-withs (map fix-username users)]
-    (irods-actions/share user share-withs paths permissions)))
+    (share user share-withs paths permissions)))
 
 (with-post-hook! #'do-share (log-func "do-share"))
 
@@ -238,7 +237,7 @@
   (let [user        (fix-username user)
         share-withs (map fix-username users)
         fpaths      paths]
-    (irods-actions/unshare user share-withs fpaths)))
+    (unshare user share-withs fpaths)))
 
 (with-pre-hook! #'do-unshare
   (fn [params body]

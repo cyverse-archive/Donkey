@@ -12,8 +12,7 @@
             [cheshire.core :as json]
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.actions :as irods-actions]))
+            [donkey.services.filesystem.validators :as validators]))
 
 (defn- fix-unit
   [avu]
@@ -34,7 +33,7 @@
     IPCRESERVED
     (:unit avu-map)))
 
-(defn- metadata-get
+(defn metadata-get
   [user path]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
@@ -42,7 +41,7 @@
     (validators/path-readable cm user path)
     {:metadata (list-path-metadata cm path)}))
 
-(defn- metadata-set
+(defn metadata-set
   [user path avu-map]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
@@ -93,7 +92,7 @@
             (set-metadata cm new-path attr value new-unit))))
       {:path new-path :user user})))
 
-(defn- metadata-delete
+(defn metadata-delete
   [user path attr]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)

@@ -10,8 +10,7 @@
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.actions :as irods-actions]))
+            [donkey.services.filesystem.validators :as validators]))
 
 (def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
 

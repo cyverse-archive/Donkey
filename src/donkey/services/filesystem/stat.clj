@@ -12,7 +12,6 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.actions :as irods-actions]
             [donkey.services.garnish.irods :as filetypes]
             [clj-icat-direct.icat :as icat])
   (:import [org.apache.tika Tika]))
@@ -47,7 +46,13 @@
       (merge {:mime-type (.detect (Tika.) (input-stream cm path))}))
     stat-map))
 
-(defn- path-stat
+(defn path-is-dir?
+  [path]
+  (with-jargon (jargon-cfg) [cm]
+    (validators/path-exists cm path)
+    (is-dir? cm path)))
+
+(defn path-stat
   [user path]
   (let [path (ft/rm-last-slash path)]
     (log/warn "[path-stat] user:" user "path:" path)

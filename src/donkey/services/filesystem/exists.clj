@@ -12,8 +12,7 @@
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.actions :as irods-actions]))
+            [donkey.services.filesystem.validators :as validators]))
 
 (defn- url-encoded?
   [string-to-check]
@@ -25,7 +24,7 @@
     (url/url-decode string-to-decode)
     string-to-decode))
 
-(defn- path-exists?
+(defn path-exists?
   ([path]
      (path-exists? "" path))
   ([user path]

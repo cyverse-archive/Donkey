@@ -9,7 +9,9 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [donkey.services.filesystem.common-paths :as cp]
-            [donkey.services.filesystem.actions :as fs]))
+            [donkey.services.filesystem.create :as cr]
+            [donkey.services.filesystem.stat :as st]
+            [donkey.services.filesystem.exists :as e]))
 
 (defn home-dir
   "Determines the home folder for the current user."
@@ -19,17 +21,17 @@
 (defn create
   "Creates a directory."
   [path]
-  (fs/create (:shortUsername current-user) path))
+  (cr/create (:shortUsername current-user) path))
 
 (defn exists?
   "Determines whether or not a path exists."
   [path]
-  (fs/path-exists? path))
+  (e/path-exists? path))
 
 (defn stat
   "Obtains file status information for a path."
   [path]
-  (fs/path-stat (:shortUsername current-user) path))
+  (st/path-stat (:shortUsername current-user) path))
 
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
@@ -37,8 +39,8 @@
    Otherwise, a new directory is created and the path is returned."
   [path]
   (log/debug "getting or creating dir: path =" path)
-  (cond (fs/path-is-dir? path) path
-        (fs/path-exists? path) nil
+  (cond (st/path-is-dir? path) path
+        (e/path-exists? path) nil
         :else                  (create path)))
 
 (defn gen-output-dir
