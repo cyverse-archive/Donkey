@@ -102,12 +102,6 @@
   (let [url (build-metadactyl-unprotected-url req "get-analysis" app-id)]
     (forward-get url req)))
 
-(defn get-app-details
-  "A service used to get high-level details about an app."
-  [req app-id]
-  (let [url (build-metadactyl-unprotected-url req "analysis-details" app-id)]
-    (forward-get url req)))
-
 (defn get-app-secured
   "A secured service used to get an app in the format required by the DE."
   [req app-id]

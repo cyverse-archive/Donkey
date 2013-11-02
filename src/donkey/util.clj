@@ -13,6 +13,10 @@
     (donkey-response resp-val (:status resp-val))
     (success-response resp-val)))
 
+(defn clj-http-error?
+  [{:keys [status body]}]
+  (and (number? status) ((comp not nil?) body)))
+
 (defn trap
   "Traps any exception thrown by a service and returns an appropriate
    repsonse."
@@ -32,27 +36,14 @@
 
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))
-   (catch Throwable t (error-response t))))
+   (catch Throwable t (error-response t))
+   (catch clj-http-error? o o)
+   (catch Object o (error-response (Exception. (str "unexpected error: " o))))))
 
 (defn trap-handler
   [handler]
   (fn [req]
-    (try+
-      (determine-response (handler req))
-      (catch [:type :error-status] {:keys [res]} res)
-      (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
-      (catch [:type :invalid-argument] {:keys [arg val reason]}
-        (invalid-arg-response arg val reason))
-      (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
-      (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
-
-      (catch ce/error? err
-        (log/error (ce/format-exception (:throwable &throw-context)))
-        (error-response err))
-
-      (catch IllegalArgumentException e (failure-response e))
-      (catch IllegalStateException e (failure-response e))
-      (catch Throwable t (error-response t)))))
+    (trap #(handler req))))
 
 (defn req-logger
   [handler]

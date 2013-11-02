@@ -261,6 +261,7 @@
   (listApps [this group-id])
   (getApp [this app-id])
   (getAppDeployedComponents [this app-id])
+  (getAppDetails [this app-id])
   (submitJob [this workspace-id submission])
   (countJobs [this])
   (listJobs [this limit offset sort-field sort-order])
@@ -281,6 +282,8 @@
     (metadactyl/get-app app-id))
   (getAppDeployedComponents [this app-id]
     (metadactyl/get-deployed-components-in-app app-id))
+  (getAppDetails [this app-id]
+    (metadactyl/get-app-details app-id))
   (submitJob [this workspace-id submission]
     (store-submitted-de-job (metadactyl/submit-job workspace-id submission)))
   (countJobs [this]
@@ -319,6 +322,10 @@
     (if (is-uuid? app-id)
       (metadactyl/get-deployed-components-in-app app-id)
       {:deployed_components [(.getAppDeployedComponent agave-client app-id)]}))
+  (getAppDetails [this app-id]
+    (if (is-uuid? app-id)
+      (metadactyl/get-app-details app-id)
+      (.getAppDetails agave-client app-id)))
   (submitJob [this workspace-id submission]
     (if (is-uuid? (:analysis_id submission))
       (store-submitted-de-job (metadactyl/submit-job workspace-id submission))
@@ -390,6 +397,10 @@
 (defn get-deployed-components-in-app
   [app-id]
   (service/success-response (.getAppDeployedComponents (get-app-lister) app-id)))
+
+(defn get-app-details
+  [app-id]
+  (service/success-response (.getAppDetails (get-app-lister) app-id)))
 
 (defn submit-job
   [workspace-id body]

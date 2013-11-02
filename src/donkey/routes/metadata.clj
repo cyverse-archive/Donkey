@@ -25,6 +25,9 @@
    (GET "/app/:app-id" [app-id]
         (trap #(apps/get-app app-id)))
 
+   (GET "/app-details/:app-id" [app-id]
+        (trap #(apps/get-app-details app-id)))
+
    (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
         (trap #(apps/submit-job workspace-id body)))
 
@@ -158,9 +161,6 @@
 
    (GET "/get-analysis/:app-id" [app-id :as req]
         (trap #(get-app req app-id)))
-
-   (GET "/analysis-details/:app-id" [app-id :as req]
-        (trap #(get-app-details req app-id)))
 
    (GET "/public-app-groups" [req]
         (trap #(get-public-app-groups req)))
