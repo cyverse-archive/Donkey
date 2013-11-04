@@ -63,10 +63,16 @@
 
 (defn- trim-to-line-start
   [str-chunk line-ending]
-  (let [line-pos (.indexOf str-chunk line-ending)]
-    (if (<= line-pos 0)
+  (let [line-pos (+ (.indexOf str-chunk line-ending) 1)]
+    (cond
+      (<= line-pos 1) 
       str-chunk
-      (.substring str-chunk (+ line-pos 1)))))
+      
+      (>= line-pos (- (count str-chunk) 1))
+      ""
+      
+      :else
+      (.substring str-chunk line-pos))))
 
 (defn- calc-start-pos
   "Calculates the new start position after (trim-to-line-start) has been called."
@@ -102,11 +108,12 @@
     (validators/path-exists cm path)
     (validators/path-is-file cm path)
     (validators/path-readable cm user path)
-    (when-not (contains? #{"\r\n" "\n"} line-ending)
-      (throw+ {:error_code "ERR_INVALID_LINE_ENDING"
-               :line-ending line-ending}))
+    (when-not (< position (- (file-size cm path) 1))
+      (throw+ {:error_code "ERR_POSITION_TOO_FAR"
+               :position   (str position)
+               :file-size  (str (file-size cm path))}))
     (let [chunk         (read-at-position cm path position chunk-size)
-          front-trimmed (trim-to-line-start chunk line-ending)
+          front-trimmed (if (= position 0) chunk (trim-to-line-start chunk line-ending))
           new-start-pos (calc-start-pos position chunk front-trimmed)
           trimmed-chunk (trim-to-last-line front-trimmed line-ending)
           new-end-pos   (calc-end-pos position trimmed-chunk)
@@ -119,6 +126,20 @@
        :chunk-size (str (count (.getBytes trimmed-chunk)))
        :file-size  (str (file-size cm path))
        :csv        the-csv})))
+
+(with-pre-hook! #'read-csv-chunk
+  (fn [user path position chunk-size line-ending separator]
+    (when-not (contains? #{"\r\n" "\n"} line-ending)
+      (throw+ {:error_code "ERR_INVALID_LINE_ENDING"
+               :line-ending line-ending}))
+    (when-not (>= position 0)
+      (throw+ {:error_code "ERR_POSITION_NOT_POS"
+               :position   (str position)}))
+    (when-not (pos? chunk-size)
+      (throw+ {:error_code "ERR_CHUNK_TOO_SMALL"
+               :chunk-size (str chunk-size)}))
+    (when (string/blank? separator)
+      (throw+ {:error_code "ERR_SEPARATOR_BLANK"}))))
 
 (defn do-get-csv-page
   [{user :user} {path :path delim :delim chunk-size :chunk-size page :page :as body}]
