@@ -8,6 +8,9 @@
   (:require [clojure-commons.error-codes :as ce])
   (:import [java.util UUID]))
 
+(def de-job-type "DE")
+(def agave-job-type "Agave")
+
 (defn- nil-if-zero
   "Returns nil if the argument value is zero."
   [v]
@@ -98,6 +101,10 @@
           (order sort-field sort-order)
           (offset (nil-if-zero row-offset))
           (limit (nil-if-zero row-limit))))
+
+(defn list-jobs-of-types
+  [username limit offset sort-field sort-order job-types]
+  (get-jobs username limit offset sort-field sort-order job-types))
 
 (defn- add-job-type-clause
   "Adds a where clause for a set of job types if the set of job types provided is not nil
