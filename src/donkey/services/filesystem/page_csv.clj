@@ -74,6 +74,12 @@
       :else
       (.substring str-chunk line-pos))))
 
+(defn- trim-front
+  [position chunk line-ending]
+  (if (= position 0) 
+    chunk 
+    (trim-to-line-start chunk line-ending)))
+
 (defn- calc-start-pos
   "Calculates the new start position after (trim-to-line-start) has been called."
   [start-pos orig-chunk trimmed-chunk]
@@ -84,6 +90,12 @@
   (let [calced-pos (- (.lastIndexOf str-chunk line-ending) 1)
         last-pos   (if-not (pos? calced-pos) 1 calced-pos)]
     (.substring str-chunk 0 last-pos)))
+
+(defn- trim-back
+  [path position file-size chunk front-trimmed-chunk line-ending]
+  (if (= position (- file-size 1)) 
+    chunk 
+    (trim-to-last-line front-trimmed-chunk line-ending)))
 
 (defn- calc-end-pos
   "Calculates the new ending byte based on the start position and the current size of the chunk."
@@ -113,9 +125,9 @@
                :position   (str position)
                :file-size  (str (file-size cm path))}))
     (let [chunk         (read-at-position cm path position chunk-size)
-          front-trimmed (if (= position 0) chunk (trim-to-line-start chunk line-ending))
+          front-trimmed (trim-front position chunk line-ending)
           new-start-pos (calc-start-pos position chunk front-trimmed)
-          trimmed-chunk (trim-to-last-line front-trimmed line-ending)
+          trimmed-chunk (trim-back path position (file-size cm path) chunk front-trimmed line-ending)
           new-end-pos   (calc-end-pos position trimmed-chunk)
           the-csv       (read-csv separator trimmed-chunk)]
       {:path       path
