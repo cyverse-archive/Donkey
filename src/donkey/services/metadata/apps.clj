@@ -1,7 +1,7 @@
 (ns donkey.services.metadata.apps
   (:use [donkey.auth.user-attributes :only [current-user]]
         [donkey.util.validators :only [validate-map]]
-        [korma.db :only [transaction]]
+        [korma.db :only [transaction with-db]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
@@ -226,28 +226,34 @@
 
 (defn get-only-app-groups
   []
-  (service/success-response (.listAppGroups (get-app-lister))))
+  (with-db db/de
+    (service/success-response (.listAppGroups (get-app-lister)))))
 
 (defn apps-in-group
   [group-id]
-  (service/success-response (.listApps (get-app-lister) group-id)))
+  (with-db db/de
+    (service/success-response (.listApps (get-app-lister) group-id))))
 
 (defn get-app
   [app-id]
-  (service/success-response (.getApp (get-app-lister) app-id)))
+  (with-db db/de
+    (service/success-response (.getApp (get-app-lister) app-id))))
 
 (defn get-deployed-components-in-app
   [app-id]
-  (service/success-response (.getAppDeployedComponents (get-app-lister) app-id)))
+  (with-db db/de
+    (service/success-response (.getAppDeployedComponents (get-app-lister) app-id))))
 
 (defn get-app-details
   [app-id]
-  (service/success-response (.getAppDetails (get-app-lister) app-id)))
+  (with-db db/de
+    (service/success-response (.getAppDetails (get-app-lister) app-id))))
 
 (defn submit-job
   [workspace-id body]
-  (service/success-response
-   (.submitJob (get-app-lister) workspace-id (service/decode-json body))))
+  (with-db db/de
+    (service/success-response
+     (.submitJob (get-app-lister) workspace-id (service/decode-json body)))))
 
 (defn list-jobs
   [{:keys [limit offset sort-field sort-order]
@@ -255,31 +261,34 @@
            offset     "0"
            sort-field :startdate
            sort-order :desc}}]
-  (let [limit      (Long/parseLong limit)
-        offset     (Long/parseLong offset)
-        sort-field (keyword sort-field)
-        sort-order (keyword sort-order)
-        app-lister (get-app-lister)]
-    (populate-jobs-table app-lister)
-    (.removeDeletedJobs app-lister)
-    (service/success-response
-     {:analyses  (.listJobs app-lister limit offset sort-field sort-order)
-      :timestamp (str (System/currentTimeMillis))
-      :total     (.countJobs app-lister)})))
+  (with-db db/de
+    (let [limit      (Long/parseLong limit)
+          offset     (Long/parseLong offset)
+          sort-field (keyword sort-field)
+          sort-order (keyword sort-order)
+          app-lister (get-app-lister)]
+      (populate-jobs-table app-lister)
+      (.removeDeletedJobs app-lister)
+      (service/success-response
+       {:analyses  (.listJobs app-lister limit offset sort-field sort-order)
+        :timestamp (str (System/currentTimeMillis))
+        :total     (.countJobs app-lister)}))))
 
 (defn update-de-job-status
   [id status end-date]
-  (update-job-status {:id       id
-                      :status   status
-                      :end-date end-date}))
+  (with-db db/de
+    (update-job-status {:id       id
+                        :status   status
+                        :end-date end-date})))
 
 (defn update-agave-job-status
   [uuid]
-  (let [{:keys [id username status] :as job} (jp/get-job-by-id (UUID/fromString uuid))
-        username                             (string/replace (or username "") #"@.*" "")]
-    (service/assert-found job "job" uuid)
-    (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
-    (.updateJobStatus (get-app-lister username) id username status)))
+  (with-db db/de
+    (let [{:keys [id username status] :as job} (jp/get-job-by-id (UUID/fromString uuid))
+          username                             (string/replace (or username "") #"@.*" "")]
+      (service/assert-found job "job" uuid)
+      (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
+      (.updateJobStatus (get-app-lister username) id username status))))
 
 (defn- sync-job-status
   [job]
@@ -292,9 +301,10 @@
 
 (defn sync-job-statuses
   []
-  (dorun (map sync-job-status (jp/list-incomplete-jobs))))
+  (with-db db/de
+    (dorun (map sync-job-status (jp/list-incomplete-jobs)))))
 
-(defn log-already-deleted-jobs
+(defn- log-already-deleted-jobs
   [ids]
   (let [jobs-by-id (into {} (map (juxt :id identity) (jp/list-jobs-to-delete ids)))
         log-it     (fn [desc id] (log/warn "attempt to delete" desc "job" id "ignored"))]
@@ -304,17 +314,20 @@
 
 (defn delete-jobs
   [body]
-  (let [body (service/decode-json body)
-        _    (validate-map body {:executions vector?})
-        ids  (set (:executions body))]
-    (log-already-deleted-jobs ids)
-    (jp/delete-jobs ids)
-    (service/success-response)))
+  (with-db db/de
+    (let [body (service/decode-json body)
+          _    (validate-map body {:executions vector?})
+          ids  (set (:executions body))]
+      (log-already-deleted-jobs ids)
+      (jp/delete-jobs ids)
+      (service/success-response))))
 
 (defn get-property-values
   [job-id]
-  (service/success-response (.getJobParams (get-app-lister) job-id)))
+  (with-db db/de
+    (service/success-response (.getJobParams (get-app-lister) job-id))))
 
 (defn get-app-rerun-info
   [job-id]
-  (service/success-response (.getAppRerunInfo (get-app-lister) job-id)))
+  (with-db db/de
+    (service/success-response (.getAppRerunInfo (get-app-lister) job-id))))
