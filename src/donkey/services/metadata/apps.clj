@@ -63,139 +63,145 @@
            :argument   "job_type"
            :value      job-type}))
 
+(defn- process-job
+  ([agave-client job-id processing-fns]
+     (process-job agave-client job-id (jp/get-job-by-external-id job-id) processing-fns))
+  ([agave-client job-id job {:keys [process-agave-job process-de-job]}]
+     (condp = (:job_type job)
+       nil               (service/not-found "job" job-id)
+       jp/de-job-type    (process-de-job job)
+       jp/agave-job-type (process-agave-job agave-client job)
+       (unrecognized-job-type (:job_type job)))))
+
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
-  (listAppGroups [this])
-  (listApps [this group-id])
-  (getApp [this app-id])
-  (getAppDeployedComponents [this app-id])
-  (getAppDetails [this app-id])
-  (submitJob [this workspace-id submission])
-  (countJobs [this])
-  (listJobs [this limit offset sort-field sort-order])
-  (syncJobStatus [this job])
-  (populateJobsTable [this])
-  (removeDeletedJobs [this])
-  (updateJobStatus [this id username prev-status])
-  (getJobParams [this job-id])
-  (getAppRerunInfo [this job-id]))
+  (listAppGroups [_])
+  (listApps [_ group-id])
+  (getApp [_ app-id])
+  (getAppDeployedComponents [_ app-id])
+  (getAppDetails [_ app-id])
+  (submitJob [_ workspace-id submission])
+  (countJobs [_])
+  (listJobs [_ limit offset sort-field sort-order])
+  (syncJobStatus [_ job])
+  (populateJobsTable [_])
+  (removeDeletedJobs [_])
+  (updateJobStatus [_ id username prev-status])
+  (getJobParams [_ job-id])
+  (getAppRerunInfo [_ job-id]))
+;; AppLister
 
 (deftype DeOnlyAppLister []
   AppLister
 
-  (listAppGroups [this]
+  (listAppGroups [_]
     (metadactyl/get-only-app-groups))
 
-  (listApps [this group-id]
+  (listApps [_ group-id]
     (metadactyl/apps-in-group group-id))
 
-  (getApp [this app-id]
+  (getApp [_ app-id]
     (metadactyl/get-app app-id))
 
-  (getAppDeployedComponents [this app-id]
+  (getAppDeployedComponents [_ app-id]
     (metadactyl/get-deployed-components-in-app app-id))
 
-  (getAppDetails [this app-id]
+  (getAppDetails [_ app-id]
     (metadactyl/get-app-details app-id))
 
-  (submitJob [this workspace-id submission]
+  (submitJob [_ workspace-id submission]
     (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission)))
 
-  (countJobs [this]
+  (countJobs [_]
     (count-jobs-of-types [jp/de-job-type]))
 
-  (listJobs [this limit offset sort-field sort-order]
+  (listJobs [_ limit offset sort-field sort-order]
     (da/list-de-jobs limit offset sort-field sort-order))
 
-  (syncJobStatus [this job]
+  (syncJobStatus [_ job]
     (when (= (:job_type job) jp/de-job-type)
       (da/sync-de-job-status job)))
 
-  (populateJobsTable [this]
+  (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
 
-  (removeDeletedJobs [this]
+  (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs))
 
-  (updateJobStatus [this id username prev-status]
+  (updateJobStatus [_ id username prev-status]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "HPC_JOBS_DISABLED"}))
 
-  (getJobParams [this job-id]
+  (getJobParams [_ job-id]
     (da/get-de-job-params job-id))
 
-  (getAppRerunInfo [this job-id]
+  (getAppRerunInfo [_ job-id]
     (da/get-de-app-rerun-info job-id)))
+;; DeOnlyAppLister
 
 (deftype DeHpcAppLister [agave-client]
   AppLister
 
-  (listAppGroups [this]
+  (listAppGroups [_]
     (-> (metadactyl/get-only-app-groups)
         (update-in [:groups] conj (.publicAppGroup agave-client))))
 
-  (listApps [this group-id]
+  (listApps [_ group-id]
     (if (= group-id (:id (.publicAppGroup agave-client)))
       (.listPublicApps agave-client)
       (metadactyl/apps-in-group group-id)))
 
-  (getApp [this app-id]
+  (getApp [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-app app-id)
       (.getApp agave-client app-id)))
 
-  (getAppDeployedComponents [this app-id]
+  (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-deployed-components-in-app app-id)
       {:deployed_components [(.getAppDeployedComponent agave-client app-id)]}))
 
-  (getAppDetails [this app-id]
+  (getAppDetails [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-app-details app-id)
       (.getAppDetails agave-client app-id)))
 
-  (submitJob [this workspace-id submission]
+  (submitJob [_ workspace-id submission]
     (if (is-uuid? (:analysis_id submission))
       (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission))
       (aa/submit-agave-job agave-client submission)))
 
-  (countJobs [this]
+  (countJobs [_]
     (count-jobs-of-types [jp/de-job-type jp/agave-job-type]))
 
-  (listJobs [this limit offset sort-field sort-order]
+  (listJobs [_ limit offset sort-field sort-order]
     (list-all-jobs agave-client limit offset sort-field sort-order))
 
-  (syncJobStatus [this job]
-    (condp = (:job_type job)
-      jp/de-job-type    (da/sync-de-job-status job)
-      jp/agave-job-type (aa/sync-agave-job-status agave-client job)
-                        (unrecognized-job-type (:job_type job))))
+  (syncJobStatus [_ job]
+    (process-job agave-client (:id job) job
+                 {:process-de-job    da/sync-de-job-status
+                  :process-agave-job aa/sync-agave-job-status}))
 
-  (populateJobsTable [this]
+  (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
 
-  (removeDeletedJobs [this]
+  (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs)
     (aa/remove-deleted-agave-jobs agave-client))
 
-  (updateJobStatus [this id username prev-status]
+  (updateJobStatus [_ id username prev-status]
     (update-job-status agave-client id username prev-status))
 
-  (getJobParams [this job-id]
-    (let [job (jp/get-job-by-external-id job-id)]
-      (condp = (:job_type job)
-        nil               (service/not-found "job" job-id)
-        jp/de-job-type    (da/get-de-job-params job-id)
-        jp/agave-job-type (aa/get-agave-job-params agave-client job-id)
-                          (unrecognized-job-type (:job_type job)))))
+  (getJobParams [_ job-id]
+    (process-job agave-client job-id
+                 {:process-de-job    da/get-de-job-params
+                  :process-agave-job aa/get-agave-job-params}))
 
-  (getAppRerunInfo [this job-id]
-    (let [job (jp/get-job-by-external-id job-id)]
-      (condp = (:job_type job)
-        nil               (service/not-found "job" job-id)
-        jp/de-job-type    (da/get-de-app-rerun-info job-id)
-        jp/agave-job-type (aa/get-agave-app-rerun-info agave-client job-id)
-                          (unrecognized-job-type (:job_type job))))))
+  (getAppRerunInfo [_ job-id]
+    (process-job agave-client job-id
+                 {:process-de-job    da/get-de-app-rerun-info
+                  :process-agave-job aa/get-agave-app-rerun-info})))
+;; DeHpcAppLister
 
 (defn- get-app-lister
   ([]
