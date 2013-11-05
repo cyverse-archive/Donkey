@@ -13,7 +13,6 @@
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
             [donkey.services.metadata.agave-apps :as aa]
-            [donkey.services.metadata.common-apps :as ca]
             [donkey.services.metadata.de-apps :as da]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
@@ -33,9 +32,13 @@
   [job-types]
   (jp/count-jobs (:username current-user) job-types))
 
+(defn- agave-job-id?
+  [id]
+  (re-matches #"\d+" id))
+
 (defn- format-job
   [de-states de-apps agave-states {:keys [id] :as job}]
-  (if (ca/agave-job-id? id)
+  (if (agave-job-id? id)
     (aa/format-agave-job job (agave-states id))
     (da/format-de-job de-states de-apps job)))
 
@@ -44,9 +47,10 @@
   (let [username     (:username current-user)
         types        [jp/de-job-type jp/agave-job-type]
         jobs         (jp/list-jobs-of-types username limit offset sort-field sort-order types)
-        de-states    (da/load-de-job-states jobs)
+        grouped-jobs (group-by :job_type jobs)
+        de-states    (da/load-de-job-states (grouped-jobs jp/de-job-type []))
         de-apps      (da/load-app-details (map :analysis_id de-states))
-        agave-states (aa/load-agave-job-states agave jobs)]
+        agave-states (aa/load-agave-job-states agave (grouped-jobs jp/agave-job-type []))]
     (map (partial format-job de-states de-apps agave-states) jobs)))
 
 (defn- update-job-status

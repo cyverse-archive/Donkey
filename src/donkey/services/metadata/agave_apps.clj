@@ -6,7 +6,6 @@
             [clojure.string :as string]
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
-            [donkey.services.metadata.common-apps :as ca]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.service :as service])
@@ -47,13 +46,12 @@
     :status        (:status job)))
 
 (defn load-agave-job-states
-  [agave jobs]
-  (let [agave-jobs (filter (comp ca/agave-job-id? :id) jobs)]
-    (if-not (empty? agave-jobs)
-      (->> (.listJobs agave (map :id agave-jobs))
-           (map (juxt :id identity))
-           (into {}))
-      {})))
+  [agave agave-jobs]
+  (if-not (empty? agave-jobs)
+    (->> (.listJobs agave (map :id agave-jobs))
+         (map (juxt :id identity))
+         (into {}))
+    {}))
 
 (defn get-agave-job
   [agave id not-found-fn]

@@ -5,7 +5,6 @@
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
-            [donkey.services.metadata.common-apps :as ca]
             [donkey.util.db :as db]))
 
 (def ^:private de-job-validation-map
@@ -54,13 +53,12 @@
      :resultfolderid   (:output_dir state))))
 
 (defn load-de-job-states
-  [jobs]
-  (let [de-jobs (remove (comp ca/agave-job-id? :id) jobs)]
-    (if-not (empty? de-jobs)
-      (->> (osm/get-jobs (map :id de-jobs))
-           (map (juxt :uuid identity))
-           (into {}))
-      {})))
+  [de-jobs]
+  (if-not (empty? de-jobs)
+    (->> (osm/get-jobs (map :id de-jobs))
+         (map (juxt :uuid identity))
+         (into {}))
+    {}))
 
 (defn load-app-details
   [ids]
