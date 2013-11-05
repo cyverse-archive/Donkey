@@ -1,5 +1,8 @@
 (ns donkey.services.filesystem.validators
-  (:use [clj-jargon.jargon]
+  (:use [clj-jargon.item-info]
+        [clj-jargon.permissions]
+        [clj-jargon.tickets]
+        [clj-jargon.users]
         [donkey.util.config]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]]))

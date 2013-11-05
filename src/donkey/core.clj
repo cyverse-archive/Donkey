@@ -3,7 +3,7 @@
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [clj-jargon.jargon :only [with-jargon]]
+        [clj-jargon.init :only [with-jargon]]
         [clj-jargon.lazy-listings :only [define-specific-queries delete-specific-queries]]
         [compojure.core]
         [donkey.routes.admin]

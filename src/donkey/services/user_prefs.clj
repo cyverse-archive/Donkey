@@ -1,6 +1,9 @@
 (ns donkey.services.user-prefs
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
+        [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-ops :only [mkdir]]
+        [clj-jargon.permissions :only [set-owner]]
         [donkey.clients.nibblonian]
         [donkey.util.config]
         [donkey.util.service]
@@ -10,7 +13,7 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
-            [clj-jargon.jargon :as jg]))
+            [clj-jargon.item-info :as jinfo]))
 
 (def default-output-dir-key :defaultOutputFolder)
 
@@ -97,15 +100,12 @@
   [prefs]
   (let [sys-output-dir (ft/rm-last-slash (:systemDefaultOutputDir prefs))
         output-dir     (ft/rm-last-slash (extract-default-output-dir prefs))]
-    (jg/with-jargon (jargon-cfg) [cm]
-      (log/warn "SYS OUTPUT:" sys-output-dir)
-      (log/warn "EQUAL?" (= sys-output-dir output-dir))
-      (log/warn "EXISTS?" (jg/exists? cm sys-output-dir))
+    (with-jargon (jargon-cfg) [cm]
       (when (and (not (string/blank? sys-output-dir)) 
                (= sys-output-dir output-dir) 
-               (not (jg/exists? cm sys-output-dir)))
-        (jg/mkdir cm sys-output-dir)
-        (jg/set-owner cm sys-output-dir (:shortUsername current-user))))
+               (not (jinfo/exists? cm sys-output-dir)))
+        (mkdir cm sys-output-dir)
+        (set-owner cm sys-output-dir (:shortUsername current-user))))
     prefs))
 
 (defn handle-blank-default-output-dir

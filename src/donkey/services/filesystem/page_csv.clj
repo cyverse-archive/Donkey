@@ -4,7 +4,9 @@
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
-        [clj-jargon.jargon]
+        [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info]
+        [clj-jargon.paging :only [read-at-position]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
@@ -33,12 +35,10 @@
      (validators/path-exists cm path)
      (validators/path-is-file cm path)
      (validators/path-readable cm user path)
-     
      (when-not (< position (- (file-size cm path) 1))
        (throw+ {:error_code "ERR_POSITION_TOO_FAR"
                 :position   (str position)
                 :file-size  (str (file-size cm path))}))
-     
      (let [chunk   (read-at-position cm path position chunk-size)
            the-csv (read-csv separator chunk)]
        {:path       path

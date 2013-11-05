@@ -2,7 +2,9 @@
   (:use [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
-        [clj-jargon.jargon]
+        [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info]
+        [clj-jargon.permissions]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]

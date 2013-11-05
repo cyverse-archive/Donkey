@@ -1,6 +1,7 @@
 (ns donkey.services.filesystem.common-paths
   (:use [donkey.util.config]
-        [clj-jargon.jargon])
+        [clj-jargon.init]
+        [clj-jargon.item-info])
   (:require [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
             [clojure.set :as set]))

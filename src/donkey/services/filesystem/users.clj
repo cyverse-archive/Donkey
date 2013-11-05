@@ -4,7 +4,10 @@
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
-        [clj-jargon.jargon]
+        [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info :only [quota]]
+        [clj-jargon.permissions :only [list-user-perms]]
+        [clj-jargon.users]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]

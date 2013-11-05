@@ -8,10 +8,10 @@
                  [org.clojure/java.classpath "0.2.0"]
                  [org.apache.tika/tika-core "1.3"]
                  [org.iplantc/clj-cas "1.0.1-SNAPSHOT"]
-                 [org.iplantc/clj-jargon "0.2.13-SNAPSHOT"
+                 [org.iplantc/clj-jargon "0.3.1"
                   :exclusions [[xerces/xmlParserAPIs]
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
-                 [org.iplantc/clojure-commons "1.4.6-SNAPSHOT"]
+                 [org.iplantc/clojure-commons "1.4.7"]
                  [org.iplantc/deliminator "0.1.0-SNAPSHOT"]
                  [org.iplantc/mescal "0.1.0-SNAPSHOT"]
                  [org/forester "1.005" ]

@@ -4,7 +4,12 @@
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
-        [clj-jargon.jargon]
+        [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info :only [trash-base-dir is-dir?]]
+        [clj-jargon.metadata]
+        [clj-jargon.permissions]
+        [clj-jargon.gen-query]
+        [clj-jargon.listings]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]

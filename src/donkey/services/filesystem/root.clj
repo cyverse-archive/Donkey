@@ -2,7 +2,11 @@
   (:use [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
-        [clj-jargon.jargon])
+        [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info :only [exists?]]
+        [clj-jargon.item-ops :only [mkdir]]
+        [clj-jargon.permissions :only [set-permissions owns?]]
+        [clj-jargon.listings :only [list-dir]])
   (:require [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]

@@ -1,5 +1,8 @@
 (ns donkey.services.fileio.controllers
-  (:use [clj-jargon.jargon]
+  (:use [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info]
+        [clj-jargon.permissions]
+        [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]

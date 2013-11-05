@@ -3,7 +3,7 @@
   (:require [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
             [clojure.core.memoize :as memo]
-            [clj-jargon.jargon :as jg]))
+            [clj-jargon.init :as jg]))
 
 (def ^:private props
   "A ref for storing the configuration properties."
