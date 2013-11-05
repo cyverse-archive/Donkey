@@ -81,7 +81,7 @@
 
 (defn- trim-front
   [position chunk]
-  (if (= position 0) 
+  (if-not (pos? position) 
     chunk 
     (trim-to-line-start chunk)))
 
@@ -92,15 +92,17 @@
 
 (defn- trim-to-last-line
   [str-chunk]
-  (let [calced-pos (- (.lastIndexOf str-chunk line-ending) 1)
-        last-pos   (if-not (pos? calced-pos) 0 calced-pos)]
+  (let [calced-pos (log/spy (- (.lastIndexOf str-chunk line-ending) 1))
+        last-pos   (log/spy (if-not (pos? calced-pos) 0 calced-pos))]
     (.substring str-chunk 0 last-pos)))
 
 (defn- trim-back
   [path position file-size chunk front-trimmed-chunk]
-  (if (= position (- file-size 1)) 
-    chunk 
-    (trim-to-last-line front-trimmed-chunk)))
+  (log/warn front-trimmed-chunk)
+  (if (>= (+ position (- (count (.getBytes chunk)) 1)) 
+          (- file-size 1)) 
+    front-trimmed-chunk
+    (log/spy (trim-to-last-line front-trimmed-chunk))))
 
 (defn- calc-end-pos
   "Calculates the new ending byte based on the start position and the current size of the chunk."
