@@ -25,17 +25,23 @@
    (GET "/app/:app-id" [app-id]
         (trap #(apps/get-app app-id)))
 
+   (GET "/app-details/:app-id" [app-id]
+        (trap #(apps/get-app-details app-id)))
+
    (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
         (trap #(apps/submit-job workspace-id body)))
 
-   (GET "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
-        (trap #(get-experiments req workspace-id)))
+   (GET "/workspaces/:workspace-id/executions/list" [_ :as {params :params}]
+        (trap #(apps/list-jobs params)))
 
-   (POST "/workspaces/:workspace-id/executions/list" [workspace-id :as req]
-         (trap #(get-selected-experiments req workspace-id)))
+   (PUT "/workspaces/:workspace-id/executions/delete" [_ :as {body :body}]
+        (trap #(apps/delete-jobs body)))
 
-   (PUT "/workspaces/:workspace-id/executions/delete" [workspace-id :as req]
-        (trap #(delete-experiments req workspace-id)))
+   (GET "/get-property-values/:job-id" [job-id]
+        (trap #(apps/get-property-values job-id)))
+
+   (GET "/app-rerun-info/:job-id" [job-id]
+        (trap #(apps/get-app-rerun-info job-id)))
 
    (DELETE "/stop-analysis/:uuid" [uuid :as req]
            (trap #(jex/stop-analysis req uuid)))
@@ -156,9 +162,6 @@
    (GET "/get-analysis/:app-id" [app-id :as req]
         (trap #(get-app req app-id)))
 
-   (GET "/analysis-details/:app-id" [app-id :as req]
-        (trap #(get-app-details req app-id)))
-
    (GET "/public-app-groups" [req]
         (trap #(get-public-app-groups req)))
 
@@ -209,15 +212,6 @@
 
    (POST "/update-analysis" [:as req]
          (trap #(update-app req)))
-
-   (GET "/get-property-values/:job-id" [job-id :as req]
-        (trap #(get-property-values req job-id)))
-
-   (GET "/analysis-rerun-info/:job-id" [job-id :as req]
-        (trap #(get-app-rerun-info req job-id)))
-
-   (GET "/app-rerun-info/:job-id" [job-id :as req]
-        (trap #(get-new-app-rerun-info req job-id)))
 
    (POST "/submit-tool-request" [:as req]
          (trap #(submit-tool-request req)))

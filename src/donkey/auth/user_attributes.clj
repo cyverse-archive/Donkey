@@ -8,7 +8,7 @@
     :dynamic true}
    current-user nil)
 
-(defn- user-from-attributes
+(defn user-from-attributes
   "Creates a map of values from user attributes stored in the request by
    validate-cas-proxy-ticket."
   [{:keys [user-attributes]}]
@@ -47,3 +47,10 @@
   (fn [req]
     (binding [current-user (fake-user-from-attributes req)]
       (handler req))))
+
+(defmacro with-user
+  "Performs a task with the given user information bound to current-user. This macro is used
+   for debugging in the REPL."
+  [[user] & body]
+  `(binding [current-user (user-from-attributes {:user-attributes ~user})]
+     (do ~@body)))

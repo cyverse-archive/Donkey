@@ -316,6 +316,59 @@
   "The admin users in iRODS."
   [props config-valid configs fileio-routes-enabled]
   "donkey.irods.admin-users")
+;;;End iRODS connection information
+
+;;;Database connection information
+(cc/defprop-str db-driver-class
+  "The name of the JDBC driver to use."
+  [props config-valid configs]
+  "donkey.db.driver" )
+
+(cc/defprop-str db-subprotocol
+  "The subprotocol to use when connecting to the database (e.g.
+   postgresql)."
+  [props config-valid configs]
+  "donkey.db.subprotocol")
+
+(cc/defprop-str db-host
+  "The host name or IP address to use when
+   connecting to the database."
+  [props config-valid configs]
+  "donkey.db.host")
+
+(cc/defprop-str db-port
+  "The port number to use when connecting to the database."
+  [props config-valid configs]
+  "donkey.db.port")
+
+(cc/defprop-str db-name
+  "The name of the database to connect to."
+  [props config-valid configs]
+  "donkey.db.name")
+
+(cc/defprop-str db-user
+  "The username to use when authenticating to the database."
+  [props config-valid configs]
+  "donkey.db.user")
+
+(cc/defprop-str db-password
+  "The password to use when authenticating to the database."
+  [props config-valid configs]
+  "donkey.db.password")
+;;;End database connection information
+
+;;;OSM connection information
+(cc/defprop-str osm-base-url
+  "The base URL to use when connecting to the OSM."
+  [props config-valid configs]
+  "donkey.osm.base-url")
+
+(cc/defprop-str osm-jobs-bucket
+  "The OSM bucket containing information about jobs that the user has
+   submitted."
+  [props config-valid configs]
+  "donkey.osm.jobs-bucket")
+;;;End OSM connection information
 
 (def jargon-cfg
   (memo/memo
@@ -493,6 +546,11 @@
   "The password to use when authenticating to Agave."
   [props config-valid configs agave-enabled]
   "donkey.agave.pass")
+
+(cc/defprop-str agave-callback-base
+  "The base URL for receiving job status update callbacks from Agave."
+  [props config-valid configs #(and (agave-enabled) (agave-jobs-enabled))]
+  "donkey.agave.callback-base")
 
 (cc/defprop-str default-output-dir
   "The default name of the default job output directory."
