@@ -565,8 +565,7 @@
 
 (defn- exception-filters
   []
-  (mapv #(re-pattern (str %)) 
-        [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-pass)]))
+  (filter #(not (nil? %)) [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-pass)]))
 
 (defn load-config-from-file
   "Loads the configuration settings from a file."

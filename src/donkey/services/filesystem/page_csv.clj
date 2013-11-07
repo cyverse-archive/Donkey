@@ -9,6 +9,7 @@
         [clj-jargon.paging :only [read-at-position]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
+            [cemerick.url :as url]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
@@ -155,9 +156,7 @@
                :position   (str position)}))
     (when-not (pos? chunk-size)
       (throw+ {:error_code "ERR_CHUNK_TOO_SMALL"
-               :chunk-size (str chunk-size)}))
-    (when (string/blank? separator)
-      (throw+ {:error_code "ERR_SEPARATOR_BLANK"}))))
+               :chunk-size (str chunk-size)}))))
 
 (defn do-get-csv-page
   [{user :user} {path :path delim :delim chunk-size :chunk-size page :page :as body}]
@@ -188,7 +187,7 @@
     chunk-size :chunk-size}]
   (let [pos    (Long/parseLong position)
         size   (Long/parseLong chunk-size)]
-    (read-csv-chunk user path pos size separator)))
+    (read-csv-chunk user path pos size (url/url-decode separator))))
 
 (with-pre-hook! #'do-read-csv-chunk
   (fn [params body]
