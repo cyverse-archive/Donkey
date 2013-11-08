@@ -4,8 +4,10 @@
   (:use [clojure-commons.core :only [remove-nil-values]]
         [kameleon.queries :only [get-user-id]]
         [korma.core]
+        [korma.db :only [with-db]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce])
+  (:require [clojure-commons.error-codes :as ce]
+            [donkey.util.db :as db])
   (:import [java.util UUID]))
 
 (def de-job-type "DE")
@@ -28,21 +30,22 @@
 (defn save-job
   "Saves information about a job in the database."
   [job-id job-name job-type username status & {:keys [id app-name start-date end-date deleted]}]
-  (let [job-type-id (get-job-type-id job-type)
-        user-id     (get-user-id username)
-        id          (or id (UUID/randomUUID))]
-    (insert :jobs
-            (values (remove-nil-values
-                     {:id          id
-                      :external_id (str job-id)
-                      :job_name    job-name
-                      :app_name    app-name
-                      :start_date  start-date
-                      :end_date    end-date
-                      :status      status
-                      :deleted     deleted
-                      :job_type_id job-type-id
-                      :user_id     user-id})))))
+  (with-db db/de
+    (let [job-type-id (get-job-type-id job-type)
+          user-id     (get-user-id username)
+          id          (or id (UUID/randomUUID))]
+      (insert :jobs
+              (values (remove-nil-values
+                       {:id          id
+                        :external_id (str job-id)
+                        :job_name    job-name
+                        :app_name    app-name
+                        :start_date  start-date
+                        :end_date    end-date
+                        :status      status
+                        :deleted     deleted
+                        :job_type_id job-type-id
+                        :user_id     user-id}))))))
 
 (defn- count-jobs-base
   "The base query for counting the number of jobs in the database for a user."
@@ -55,16 +58,18 @@
 (defn count-all-jobs
   "Counts the total number of jobs in the database for a user."
   [username]
-  ((comp :count first) (select (count-jobs-base username))))
+  (with-db db/de
+    ((comp :count first) (select (count-jobs-base username)))))
 
 (defn count-jobs
   "Counts the number of undeleted jobs in the database for a user."
   [username job-types]
-  ((comp :count first)
-   (select (count-jobs-base username)
-           (join [:job_types :jt] {:j.job_type_id :jt.id})
-           (where {:jt.name   [in job-types]
-                   :j.deleted false}))))
+  (with-db db/de
+    ((comp :count first)
+     (select (count-jobs-base username)
+             (join [:job_types :jt] {:j.job_type_id :jt.id})
+             (where {:jt.name   [in job-types]
+                     :j.deleted false})))))
 
 (defn- translate-sort-field
   "Translates the sort field sent to get-jobs to a value that can be used in the query."
@@ -94,13 +99,14 @@
 (defn get-jobs
   "Gets a list of jobs satisfying a query."
   [username row-limit row-offset sort-field sort-order job-types]
-  (select (job-base-query)
-          (where {:j.deleted  false
-                  :u.username username
-                  :jt.name    [in job-types]})
-          (order sort-field sort-order)
-          (offset (nil-if-zero row-offset))
-          (limit (nil-if-zero row-limit))))
+  (with-db db/de
+    (select (job-base-query)
+            (where {:j.deleted  false
+                    :u.username username
+                    :jt.name    [in job-types]})
+            (order sort-field sort-order)
+            (offset (nil-if-zero row-offset))
+            (limit (nil-if-zero row-limit)))))
 
 (defn list-jobs-of-types
   [username limit offset sort-field sort-order job-types]
@@ -118,33 +124,37 @@
 (defn get-external-job-ids
   "Gets a list of external job identifiers satisfying a query."
   [username {:keys [job-types]}]
-  (->> (-> (select* [:jobs :j])
-           (join [:users :u] {:j.user_id :u.id})
-           (join [:job_types :jt] {:j.job_type_id :jt.id})
-           (fields [:j.external_id :id])
-           (where {:u.username username})
-           (add-job-type-clause job-types)
-           (select))
-       (map :id)))
+  (with-db db/de
+    (->> (-> (select* [:jobs :j])
+             (join [:users :u] {:j.user_id :u.id})
+             (join [:job_types :jt] {:j.job_type_id :jt.id})
+             (fields [:j.external_id :id])
+             (where {:u.username username})
+             (add-job-type-clause job-types)
+             (select))
+         (map :id))))
 
 (defn get-job-by-id
   "Gets a single job by its internal identifier."
   [id]
-  (first (select (job-base-query) (where {:j.id id}))))
+  (with-db db/de
+    (first (select (job-base-query) (where {:j.id id})))))
 
 (defn get-job-by-external-id
   "Gets a single job by its external identifier."
   [id]
-  (first (select (job-base-query) (where {:j.external_id id}))))
+  (with-db db/de
+    (first (select (job-base-query) (where {:j.external_id id})))))
 
 (defn update-job
   "Updates an existing job in the database."
   ([id {:keys [status end-date deleted]}]
-     (update :jobs
-             (set-fields (remove-nil-values {:status   status
-                                             :end_date end-date
-                                             :deleted  deleted}))
-             (where {:external_id id})))
+     (with-db db/de
+       (update :jobs
+               (set-fields (remove-nil-values {:status   status
+                                               :end_date end-date
+                                               :deleted  deleted}))
+               (where {:external_id id}))))
   ([id status end-date]
      (update-job id {:status   status
                      :end-date end-date})))
@@ -152,34 +162,38 @@
 (defn update-job-by-internal-id
   "Updates an existing job in the database using the internal identifier as the key."
   [id {:keys [status end-date deleted]}]
-  (update :jobs
-          (set-fields (remove-nil-values {:status   status
-                                          :end_date end-date
-                                          :deleted  deleted}))
-          (where {:id id})))
+  (with-db db/de
+    (update :jobs
+            (set-fields (remove-nil-values {:status   status
+                                            :end_date end-date
+                                            :deleted  deleted}))
+            (where {:id id}))))
 
 (defn list-incomplete-jobs
   []
-  (select [:jobs :j]
-          (join [:users :u] {:j.user_id :u.id})
-          (join [:job_types :jt] {:j.job_type_id :jt.id})
-          (fields [:j.id          :id]
-                  [:j.external_id :external_id]
-                  [:j.status      :status]
-                  [:u.username    :username]
-                  [:jt.name       :job_type])
-          (where {:j.deleted  false
-                  :j.end_date nil})))
+  (with-db db/de
+    (select [:jobs :j]
+            (join [:users :u] {:j.user_id :u.id})
+            (join [:job_types :jt] {:j.job_type_id :jt.id})
+            (fields [:j.id          :id]
+                    [:j.external_id :external_id]
+                    [:j.status      :status]
+                    [:u.username    :username]
+                    [:jt.name       :job_type])
+            (where {:j.deleted  false
+                    :j.end_date nil}))))
 
 (defn list-jobs-to-delete
   [ids]
-  (select [:jobs :j]
-          (fields [:j.external_id :id]
-                  [:j.deleted     :deleted])
-          (where {:j.external_id [in ids]})))
+  (with-db db/de
+    (select [:jobs :j]
+            (fields [:j.external_id :id]
+                    [:j.deleted     :deleted])
+            (where {:j.external_id [in ids]}))))
 
 (defn delete-jobs
   [ids]
-  (update :jobs
-          (set-fields {:deleted true})
-          (where {:external_id [in ids]})))
+  (with-db db/de
+    (update :jobs
+           (set-fields {:deleted true})
+           (where {:external_id [in ids]}))))
