@@ -77,7 +77,7 @@ __position__ is the starting position, in bytes, that we'll attempt to start par
 
 __chunk-size__ is the max-size of the chunk to read. The actual size of the chunk may be smaller than the chunk requested. This is because the parsing logic will seek backwards from the end of the chunk until it hits a '\n'. This should be the last line ending in the file. The actual end point of the chunk is reported back as the __end__ field in the JSON response body.
 
-__separator__ is a single character that the CSV parser uses to split fields. Common values are "," and "\t". We don't do any validation on this field so that we can support a wider-range of parsing options. The only constraint on this field is that it needs to be readable as a single char.
+__separator__ is a single character that the CSV parser uses to split fields. Common values are "," and "\t". We don't do any validation on this field so that we can support a wider-range of parsing options. The only constraints on this field is that it needs to be readable as a single char and it must be URL encoded.
 
 __Notes and Limitations__:
 
@@ -86,3 +86,6 @@ This *should* work fine with files that use \r\n as the line ending, but it will
 If the chunk-size is set so that it doesn't cover an entire line, a blank page will be returned.
 
 The code that trims and resizes the pages to end on line breaks will detect '\n' that are embedded in double quoted cells as a line break. This is because we're not tracking opening and closing double quotes across pages. We're looking into ways of doing this, but it isn't in yet.
+
+The URL encoded value for \t characters is '%09', without the quotes. If you aren't sending '%09' for the separator when you're trying to parse a TSV, then you're going to have a bad time.
+
