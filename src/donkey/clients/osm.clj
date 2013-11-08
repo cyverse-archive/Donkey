@@ -16,7 +16,9 @@
   []
   (map :state
        ((comp :objects service/decode-json)
-        (osm/query (osm-jobs-client) {:state.user (:shortUsername current-user)}))))
+        (osm/query (osm-jobs-client)
+                   {:state.user        (:shortUsername current-user)
+                    :state.analysis_id {"$exists" true}}))))
 
 (defn get-jobs
   [ids]
