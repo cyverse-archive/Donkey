@@ -71,6 +71,11 @@ __Response Body__:
 	    "user": "wregglej"
 	}
 
+__CURL Command__:
+
+    curl -d '{"path" : "/iplant/home/testuser/test-tsv", "position" : "0", "chunk-size" : "400", "separator" : "%09"}' http://127.0.0.1:31325/secured/filesystem/read-csv-chunk?proxyToken=$(./cas-ticket)
+
+
 __path__ is the path to the file in iRODS that should be parsed as a CSV. Note that there isn't any checking in place to make sure that the file is actually a CSV or TSV. This is because we can't depend on the filetype detection to detect all possible types of CSV files (i.e. tab-delimited, pipe-delimited, hash-delimited, etc.).
 
 __position__ is the starting position, in bytes, that we'll attempt to start parsing from. The parser may not actually start at this position, however, since it will search out the first available '\n' and begin the parsing from that point. The actual parsing position is reported back in the response body as the __start__ field in the JSON response body.
