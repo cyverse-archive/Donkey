@@ -23,7 +23,7 @@
                  [com.cemerick/url "0.0.7"]
                  [ring "1.2.0"]
                  [compojure "1.1.5"]
-                 [heuristomancer "0.1.1-SNAPSHOT"]
+                 [heuristomancer "0.1.3-SNAPSHOT"]
                  [clojurewerkz/elastisch "1.2.0"]
                  [hoot "0.1.0-SNAPSHOT"]
                  [com.novemberain/validateur "1.5.0"]
