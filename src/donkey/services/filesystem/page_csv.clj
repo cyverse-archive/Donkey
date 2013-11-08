@@ -18,52 +18,6 @@
             [deliminator.core :as deliminator])
   (:import [au.com.bytecode.opencsv CSVReader]))
 
-(defn- closest-page
-  [page-positions page-number]
-  (let [idx (dec page-number)
-        len (count page-positions)]
-    (if (<= page-number len)
-      [(page-positions idx) page-number]
-      [(last page-positions) len])))
-
-(defn- csv-page-result
-  [path user delim file-size chunk-size page-positions page csv]
-  {:path           path
-   :user           user
-   :delim          (str delim)
-   :file-size      (str file-size)
-   :chunk-size     (str chunk-size)
-   :page-positions (mapv str page-positions)
-   :page           (str page)
-   :csv            csv})
-
-(defn- get-csv-page
-  "Retrieves a CSV page for a given chunk size. `delim` is the character that is used as a field
-   separator in the file. `page-positions` is a vector of positions of pages within the file,
-   which is used as an optimization when retrieving a CSV page. Without it, it would be necessary
-   to sequentially scan for the requested page with every call. `page-number` is the requsted page
-   number. `chunk-size` is the maximum size of a page."
-  [user path delim page-positions page-number chunk-size]
-  (with-jargon (jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-is-file cm path)
-    (validators/path-readable cm user path)
-    (let [size       (file-size cm path)
-          get-chunk  (fn [pos] (read-at-position cm path pos chunk-size))
-          parse-page (fn [chunk] (deliminator/parse-excerpt chunk delim))
-          get-page   (comp parse-page get-chunk)
-          add-pos    (fn [ps p] (if (> p (last ps)) (conj ps p) ps))
-          build-res  (partial csv-page-result path user delim size chunk-size)]
-      (loop [[pos page] (closest-page page-positions page-number)
-             positions  page-positions
-             [csv len]  (get-page pos)]
-        (let [next-pos  (+ pos len)
-              positions (add-pos positions next-pos)]
-          (cond (= page page-number) (build-res positions page csv)
-                (< next-pos size)    (recur [next-pos (inc page)] positions (get-page next-pos))
-                :else                (build-res positions page csv)))))))
-
 (def line-ending "\n")
 
 (defn- trim-to-line-start
@@ -130,10 +84,6 @@
     (validators/path-exists cm path)
     (validators/path-is-file cm path)
     (validators/path-readable cm user path)
-    (when-not (< position (- (file-size cm path) 1))
-      (throw+ {:error_code "ERR_POSITION_TOO_FAR"
-               :position   (str position)
-               :file-size  (str (file-size cm path))}))
     (let [chunk         (read-at-position cm path position chunk-size)
           front-trimmed (trim-front position chunk)
           new-start-pos (calc-start-pos position chunk front-trimmed)
@@ -157,27 +107,6 @@
     (when-not (pos? chunk-size)
       (throw+ {:error_code "ERR_CHUNK_TOO_SMALL"
                :chunk-size (str chunk-size)}))))
-
-(defn do-get-csv-page
-  [{user :user} {path :path delim :delim chunk-size :chunk-size page :page :as body}]
-  (let [delim     (first delim)
-        size      (Long/parseLong chunk-size)
-        page      (Long/parseLong page)
-        positions (mapv #(Long/parseLong %) (:page-positions body ["0"]))]
-    (get-csv-page user path delim positions page size)))
-
-(with-pre-hook! #'do-get-csv-page
-  (fn [params body]
-    (log/warn "[call][do-get-csv-page]" params body)
-    (validate-map params {:user string?})
-    (validate-map
-      body
-      {:path       string?
-       :delim      string?
-       :chunk-size string?
-       :page       string?})))
-
-(with-post-hook! #'do-get-csv-page (log-func "do-get-csv-page"))
 
 (defn do-read-csv-chunk
   [{user :user} 
