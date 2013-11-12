@@ -49,12 +49,11 @@ __Response Body__:
             "2": "0.12.7"
         }
     ],
-    "end": "1037",
     "file-size": "1041",
+    "page" : "4",
     "max-cols": "3",
     "number-pages": "3",
     "path": "/iplant/home/testuser/test-tsv",
-    "start": "803",
     "success": true,
     "user": "wregglej"
 }
@@ -69,7 +68,7 @@ __path__ is the path to the file in iRODS that should be parsed as a CSV. Note t
 
 __page__ is the page to start at in the file. Your first request should be at page 0 for any file so you can get back the maximum number of pages in the __number-pages__ field.
 
-__chunk-size__ is the max-size of the chunk to read. The actual size of the chunk may be smaller than the chunk requested. This is because the parsing logic will seek backwards from the end of the chunk until it hits a '\n'. This should be the last line ending in the file. The actual end point of the chunk is reported back as the __end__ field in the JSON response body.
+__chunk-size__ is the size to use when calculating the number of pages that a file contains. This should be in bytes.
 
 __separator__ is a single character that the CSV parser uses to split fields. Common values are "," and "\t". We don't do any validation on this field so that we can support a wider-range of parsing options. The only constraints on this field is that it needs to be readable as a single char and it must be URL encoded.
 
@@ -82,4 +81,3 @@ If the chunk-size is set so that it doesn't cover an entire line, a blank page w
 The code that trims and resizes the pages to end on line breaks will detect '\n' that are embedded in double quoted cells as a line break. This is because we're not tracking opening and closing double quotes across pages. We're looking into ways of doing this, but it isn't in yet.
 
 The URL encoded value for \t characters is '%09', without the quotes. If you aren't sending '%09' for the separator when you're trying to parse a TSV, then you're going to have a bad time.
-
