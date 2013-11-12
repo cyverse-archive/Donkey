@@ -21,7 +21,7 @@
   [channel {:keys [routing-key content-type delivery-tag type] :as meta} ^bytes payload]
   (log/warn (format "[message-handler] [%s] [%s]" routing-key (String. payload "UTF-8")))
   (case routing-key
-    "data-object.added" (dataobject-added payload)
+    "data-object.add" (dataobject-added payload)
     nil))
 
 (defn- receive
