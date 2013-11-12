@@ -68,12 +68,36 @@
       (:body)
       (service/decode-json)))
 
+(defn get-app-details
+  [app-id]
+  (-> (client/get (unsecured-url "analysis-details" app-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
 (defn submit-job
   [workspace-id submission]
   (-> (client/put (secured-url "workspaces" workspace-id "newexperiment")
                   {:query-params (secured-params)
                    :content-type :json
                    :body         (cheshire/encode submission)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn get-property-values
+  [job-id]
+  (-> (client/get (unsecured-url "get-property-values" job-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn get-app-rerun-info
+  [job-id]
+  (-> (client/get (unsecured-url "app-rerun-info" job-id)
+                  {:query-params (secured-params)
                    :as           :stream})
       (:body)
       (service/decode-json)))

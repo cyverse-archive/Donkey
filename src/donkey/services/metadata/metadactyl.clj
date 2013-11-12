@@ -4,7 +4,6 @@
         [donkey.util.transformers]
         [donkey.auth.user-attributes]
         [donkey.services.user-info :only [get-user-details]]
-        [donkey.services.filesystem.actions :only [user-home-dir]]
         [donkey.services.fileio.actions :only [upload]]
         [donkey.util.email]
         [donkey.util.service]
@@ -100,12 +99,6 @@
   "A service used to get an app in the format required by the DE."
   [req app-id]
   (let [url (build-metadactyl-unprotected-url req "get-analysis" app-id)]
-    (forward-get url req)))
-
-(defn get-app-details
-  "A service used to get high-level details about an app."
-  [req app-id]
-  (let [url (build-metadactyl-unprotected-url req "analysis-details" app-id)]
     (forward-get url req)))
 
 (defn get-app-secured
@@ -395,26 +388,6 @@
   [req uuid]
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
-(defn get-experiments
-  "This service retrieves information about jobs that a user has submitted."
-  [req workspace-id]
-  (let [url (build-metadactyl-secured-url req "workspaces" workspace-id "executions" "list")]
-    (forward-get url req)))
-
-(defn get-selected-experiments
-  "This service retrieves information about selected jobs that a user has
-   submitted."
-  [req workspace-id]
-  (let [url (build-metadactyl-secured-url req "workspaces" workspace-id "executions" "list")]
-    (forward-post url req)))
-
-(defn delete-experiments
-  "This service marks experiments as deleted so that they no longer show up
-   in the Analyses window."
-  [req workspace-id]
-  (let [url (build-metadactyl-secured-url req "workspaces" workspace-id "executions" "delete")]
-    (forward-put url req)))
-
 (defn rate-app
   "This service adds a user's rating to an app."
   [req]
@@ -502,27 +475,6 @@
   "This service determines whether or not an app can safely be made public."
   [app-id]
   (cheshire/encode (dm/app-publishable? app-id)))
-
-(defn get-property-values
-  "Gets the property values for a previously submitted job."
-  [req job-id]
-  (let [url (build-metadactyl-unprotected-url req "get-property-values" job-id)]
-    (forward-get url req)))
-
-(defn get-app-rerun-info
-  "Gets the information required to rerun a previously executed app."
-  [req job-id]
-  (forward-get
-   (build-metadactyl-unprotected-url req "analysis-rerun-info" job-id)
-   req))
-
-(defn get-new-app-rerun-info
-  "Gets the information required to rerun a previously executed app in the new format required
-   by the DE."
-  [req job-id]
-  (forward-get
-   (build-metadactyl-unprotected-url req "app-rerun-info" job-id)
-   req))
 
 (defn- add-user-details
   "Adds user details to the results from a request to obtain a list of

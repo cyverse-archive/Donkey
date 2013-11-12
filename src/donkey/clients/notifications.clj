@@ -121,3 +121,20 @@
                                             :comments      comments)})
       (catch Exception e
         (log/warn e "unable to send tool request update notification for" tool-req)))))
+
+(defn send-agave-job-status-update
+  "Sends notification of an Agave job status update to the user."
+  [username job-info]
+  (try
+    (send-notification
+     {:type           "analysis"
+      :user           username
+      :subject        (str (:name job-info) " status changed.")
+      :message        (str (:name job-info) " " (string/lower-case (:status job-info)))
+      :email          (if (#{"Completed" "Failed"} (:status job-info)) true false)
+      :email-template "analysis_status_change"
+      :payload        (assoc job-info
+                        :action "job_status_change"
+                        :user   username)})
+    (catch Exception e
+      (log/warn e "unable to send job status update notification for" (:id job-info)))))

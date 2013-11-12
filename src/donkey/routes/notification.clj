@@ -2,7 +2,8 @@
   (:use [compojure.core]
         [donkey.services.metadata.metadactyl]
         [donkey.util])
-  (:require [donkey.util.config :as config]))
+  (:require [clojure.tools.logging :as log]
+            [donkey.util.config :as config]))
 
 (defn secured-notification-routes
   []

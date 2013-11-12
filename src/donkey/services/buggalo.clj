@@ -26,7 +26,6 @@
   "Builds the meta-URL for to use when saving tree files in Riak.  The SHA1 hash
    of the contents of the tree file is used as the key in Riak."
   [sha1]
-  (println (riak-base-url) (tree-url-bucket) sha1)
   (->> [(riak-base-url) (tree-url-bucket) sha1]
        (map #(string/replace % #"^/|/$" ""))
        (string/join "/")))

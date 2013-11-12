@@ -3,12 +3,13 @@
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure-commons.client :as cc]
-            [donkey.services.filesystem.actions :as fs]))
+            [donkey.services.filesystem.metadata :as mt]
+            [donkey.services.filesystem.users :as u]))
 
 (defn get-avus
   "Retrieves the AVUs associated with a file."
   [user path]
-  (:metadata (fs/metadata-get user path)))
+  (:metadata (mt/metadata-get user path)))
 
 (defn avu-exists?
   "Determines if an AVU is associated with a file."
@@ -20,7 +21,7 @@
   "Removes an AVU from a file."
   [user path attr]
   (when (avu-exists? user path attr)
-    (fs/metadata-delete user path attr)))
+    (mt/metadata-delete user path attr)))
 
 (defn delete-tree-urls
   "Removes all of the tree URLs associated with a file."
@@ -43,12 +44,12 @@
   "Saves the URL used to get saved tree URLs.  The metaurl argument should
    contain the URL used to obtain the tree URLs."
   [user path metaurl]
-  (fs/metadata-set user path {:attr "tree-urls" :value metaurl :unit ""}))
+  (mt/metadata-set user path {:attr "tree-urls" :value metaurl :unit ""}))
 
 (defn get-tree-metaurl
   "Gets the URL used to get saved tree URLs."
   [user path]
-  (->> (fs/metadata-get user path)
+  (->> (mt/metadata-get user path)
     (:metadata)
     (:filter #(= (:attr %) "tree-urls"))
     (first)
@@ -57,4 +58,4 @@
 (defn get-user-groups
   "Retrieves the set of groups a user belongs to."
   [user]
-  (set (fs/list-user-groups user)))
+  (set (u/list-user-groups user)))

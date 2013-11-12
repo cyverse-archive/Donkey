@@ -1,6 +1,8 @@
 (ns donkey.services.garnish.messages
   (:use [donkey.services.garnish.irods]
-        [clj-jargon.jargon]
+        [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info :only [exists?]]
+        [clj-jargon.metadata :only [attribute? add-metadata]]
         [donkey.util.config]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.tools.logging :as log]

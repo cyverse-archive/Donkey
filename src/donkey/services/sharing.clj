@@ -11,7 +11,7 @@
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
             [donkey.clients.notifications :as dn]
-            [donkey.services.filesystem.actions :as fs]))
+            [donkey.services.filesystem.sharing :as sh]))
 
 (def file-list-threshold 10)
 
@@ -53,7 +53,7 @@
         perms       (:permissions share)]
     (try+
       (log/warn "share" paths "with" share-withs "by" sharer)
-      (fs/share sharer share-withs paths perms)
+      (sh/share sharer share-withs paths perms)
       (merge {:success true} share)
       (catch map? e
         (log/error "nibblonian error: " e)
@@ -68,7 +68,7 @@
         unshare-withs [user]]
     (try+
       (log/warn "unshare" path "from" user "by" unsharer)
-      (fs/unshare unsharer unshare-withs (vector path))
+      (sh/unshare unsharer unshare-withs (vector path))
       {:success true
        :path path}
       (catch map? e
