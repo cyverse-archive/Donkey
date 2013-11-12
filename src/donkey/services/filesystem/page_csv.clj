@@ -35,10 +35,16 @@
         (recur (dec pos))
         (if (= pos 0) 0 (inc pos))))))
 
+(defn- end-pos
+  [chunk page pages]
+  (if (= page (dec pages))
+    (dec (.length chunk))
+    (seek-prev-line chunk (dec (.length chunk)))))
+
 (defn- trim-chunk
-  [chunk page chunk-size]
+  [chunk chunk-size page pages]
   (let [lstart (seek-prev-line chunk (chunk-start page chunk-size))
-        lend   (seek-prev-line chunk (dec (.length chunk)))]
+        lend   (end-pos chunk page pages)]
     (.substring chunk lstart lend)))
 
 (defn- fix-record
@@ -94,9 +100,10 @@
                  :page         (str page)
                  :number-pages (str pages)}))
 
-      (let [chunk   (trim-chunk (read-at-position cm path load-pos full-chunk-size) page chunk-size)
+      (let [chunk   (trim-chunk (read-at-position cm path load-pos full-chunk-size) chunk-size page pages)
             the-csv (read-csv chunk separator)]
         {:path         path
+         :page         (str (inc page))
          :number-pages (str pages)
          :user         user
          :max-cols     (str (reduce #(if (>= %1 %2) %1 %2) (map count the-csv)))
