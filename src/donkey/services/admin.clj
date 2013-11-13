@@ -1,12 +1,13 @@
 (ns donkey.services.admin
+  (:use [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info :only [exists?]])
   (:require [clojure.tools.logging :as log]
             [cemerick.url :as url]
             [cheshire.core :as json]
             [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
             [donkey.util.config :as config]
-            [clj-http.client :as client]
-            [clj-jargon.jargon :as jg]))
+            [clj-http.client :as client]))
 (defn config
   "Returns JSON containing Donkey's configuration, passwords filtered out."
   []
@@ -49,8 +50,8 @@
 (defn perform-irods-check
   []
   (try
-    (jg/with-jargon (config/jargon-cfg) [cm] 
-      (jg/exists? cm (:home cm)))
+    (with-jargon (config/jargon-cfg) [cm] 
+      (exists? cm (:home cm)))
     (catch Exception e
       (log/error "Error performing iRODS status check:")
       (log/error (ce/format-exception e)) 

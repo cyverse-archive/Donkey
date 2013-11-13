@@ -12,7 +12,7 @@
     * [Determining if an Analysis Can be Exported](#determining-if-an-analysis-can-be-exported)
     * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
-    * [Getting Analysis Details](#getting-analysis-details)
+    * [Getting App Details](#getting-app-details)
     * [Listing Analysis Groups](#listing-analysis-groups)
     * [Listing Individual Analyses](#listing-individual-analyses)
     * [Exporting a Template](#exporting-a-template)
@@ -155,14 +155,127 @@ Delegates to metadactyl: GET /get-analysis/{analysis-id}
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Getting Analysis Details
+## Getting App Details
 
-Unsecured Endpoint: GET /analysis-details/{analysis-id}
+Secured Endpoint: GET /secured/app-details/{app-id}
 
-Delegates to metadactyl: GET /analysis-details/{anaysis-id}
+This service is used by the DE to obtain high-level details about a single
+analysis. The response body is in the following format:
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+```json
+{
+    "components": [
+        {
+            "id": "component-id",
+            "name": "component-name",
+            "description": "component-description",
+            "location": "component-location",
+            "type": "executable",
+            "version": "component-version",
+            "attribution": "component-attribution"
+        }
+    ],
+    "description": "analysis-description",
+    "edited_date": "edited-date-milliseconds",
+    "id": "analysis-id",
+    "label": "analysis-label",
+    "name": "analysis-name",
+    "published_date": "published-date-milliseconds",
+    "references": [
+        "reference-1",
+        "reference-2",
+        ...,
+        "reference-n"
+    ],
+    "groups": [
+        {
+            "name": "Beta",
+            "id": "g5401bd146c144470aedd57b47ea1b979"
+        }
+    ],
+    "tito": "analysis-id",
+    "type": "component-type"
+}
+```
+
+For DE apps, this service delegates the call to the metadactyl endpoint,
+`/analysis-details/:app-id`. For Agave apps, this service retrieves the
+information it needs to format the response from Agave.
+
+Here's an example of a DE app listing:
+
+```
+$ curl -s "http://by-tor:8888/secured/app-details/0309394C-37C9-4A64-A806-C12674D2D4F8?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "components": [
+        {
+            "attribution": "Rice P, Longden I, Bleasby A. EMBOSS: the European Molecular Biology Open Software Suite. Trends Genet. 2000 Jun;16(6):276-7",
+            "description": "Needleman-Wunsch global alignment",
+            "id": "c3610c827b37d4c4ba5f18cc1edeb72e5",
+            "location": "/usr/local3/bin/emboss/bin",
+            "name": "needle",
+            "type": "executable",
+            "version": "6.4.0"
+        }
+    ],
+    "description": "needle reads two input sequences and writes their optimal global sequence alignment to file.",
+    "edited_date": "1334734950952",
+    "groups": [
+        {
+            "id": "4B3A8586-9A55-441C-8ED2-D730D60BF5F1",
+            "name": "EMBOSS"
+        }
+    ],
+    "id": "0309394C-37C9-4A64-A806-C12674D2D4F8",
+    "label": "",
+    "name": "EMBOSS Needle",
+    "published_date": "1334734995546",
+    "references": [],
+    "success": true,
+    "suggested_groups": [],
+    "tito": "0309394C-37C9-4A64-A806-C12674D2D4F8"
+}
+```
+
+Here's an example of an Agave app listing:
+
+```
+ curl -s "http://gargery:31325/secured/app-details/wc-1.00u1?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "components": [
+        {
+            "attribution": "",
+            "description": "Count words in a file",
+            "id": "wc-1.00u1",
+            "location": "/ipcservices/applications",
+            "name": "wc-1.00u1.zip",
+            "type": "HPC",
+            "version": "1.00"
+        }
+    ],
+    "description": "Count words in a file",
+    "edited_date": "1383351103584",
+    "groups": [
+        {
+            "id": "HPC",
+            "name": "High-Performance Computing"
+        }
+    ],
+    "id": "wc-1.00u1",
+    "label": "Word Count",
+    "name": "Word Count",
+    "published_date": "1383351103584",
+    "refrences": [],
+    "success": true,
+    "suggested_groups": [
+        {
+            "id": "HPC",
+            "name": "High-Performance Computing"
+        }
+    ],
+    "tito": "wc-1.00u1"
+}
+```
 
 ## Listing Analysis Groups
 

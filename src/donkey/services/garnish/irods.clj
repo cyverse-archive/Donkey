@@ -1,6 +1,12 @@
 (ns donkey.services.garnish.irods
   (:use [donkey.util.config]
-        [clj-jargon.jargon]
+        [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info :only [exists?]]
+        [clj-jargon.item-ops :only [input-stream]]
+        [clj-jargon.metadata]
+        [clj-jargon.permissions]
+        [clj-jargon.users :only [user-exists?]]
+        [clj-jargon.validations]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as json] 

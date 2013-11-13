@@ -1,5 +1,10 @@
 (ns donkey.services.fileio.actions
-  (:use [clj-jargon.jargon]
+  (:use [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-info]
+        [clj-jargon.item-ops]
+        [clj-jargon.metadata]
+        [clj-jargon.users :only [user-exists?]]
+        [clj-jargon.permissions]
         [donkey.util.config]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])

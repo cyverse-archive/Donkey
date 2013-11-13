@@ -3,10 +3,11 @@
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [clj-jargon.jargon :only [with-jargon]]
+        [clj-jargon.init :only [with-jargon]]
         [clj-jargon.lazy-listings :only [define-specific-queries delete-specific-queries]]
         [compojure.core]
         [donkey.routes.admin]
+        [donkey.routes.callbacks]
         [donkey.routes.data]
         [donkey.routes.fileio]
         [donkey.routes.metadata]
@@ -26,15 +27,13 @@
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
+            [donkey.services.metadata.apps :as apps]
             [donkey.util.config :as config]
+            [donkey.util.db :as db]
             [donkey.services.fileio.controllers :as fileio]
             [donkey.util.messaging :as messages]
             [donkey.util.icat :as icat]
             [clojure.tools.nrepl.server :as nrepl]))
-
-(defn- flagged-routes
-  [& handlers]
-  (apply routes (remove nil? handlers)))
 
 (defn secured-routes
   []
@@ -66,6 +65,7 @@
    (unsecured-metadata-routes)
    (unsecured-tree-viewer-routes)
    (unsecured-fileio-routes)
+   (unsecured-callback-routes)
 
    (context "/secured" []
             (cas-store-user (secured-routes) config/cas-server config/server-name))
@@ -85,7 +85,8 @@
 (defn load-configuration-from-file
   "Loads the configuration properties from a file."
   []
-  (config/load-config-from-file))
+  (config/load-config-from-file)
+  (db/define-database))
 
 (defn lein-ring-init
   []
@@ -93,12 +94,20 @@
   (register-specific-queries)
   (messages/messaging-initialization)
   (icat/configure-icat)
-  (start-nrepl))
+  (start-nrepl)
+  (future (apps/sync-job-statuses)))
+
+(defn repl-init
+  []
+  (load-configuration-from-file)
+  (register-specific-queries)
+  (icat/configure-icat))
 
 (defn load-configuration-from-zookeeper
   "Loads the configuration properties from Zookeeper."
   []
-  (config/load-config-from-zookeeper))
+  (config/load-config-from-zookeeper)
+  (db/define-database))
 
 (defn delayed-handler
   [routes-fn]
@@ -127,4 +136,5 @@
   (start-nrepl)
   (messages/messaging-initialization)
   (icat/configure-icat)
+  (future (apps/sync-job-statuses))
   (jetty/run-jetty app {:port (config/listen-port)}))
