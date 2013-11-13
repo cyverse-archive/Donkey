@@ -137,7 +137,7 @@
 (with-post-hook! #'do-metadata-set (log-func "do-metadata-set"))
 
 (defn do-metadata-batch-set
-  [{user :user} {path :path :as body}]
+  [{user :user path :path} body]
   (metadata-batch-set user path body))
 
 (with-pre-hook! #'do-metadata-batch-set
