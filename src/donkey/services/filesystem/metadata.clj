@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.metadata
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -142,7 +142,7 @@
 
 (with-pre-hook! #'do-metadata-batch-set
   (fn [params body]
-    (log/warn "[call][do-metadata-set]" params body)
+    (log/warn "[call][do-metadata-batch-set]" params body)
     (validate-map params {:user string? :path string?})
     (validate-map body {:add sequential? :delete sequential?})
     (let [user (:user params)
@@ -168,4 +168,3 @@
     (validate-map params {:user string? :path string? :attr string?})))
 
 (with-post-hook! #'do-metadata-delete (log-func "do-metadata-delete"))
-
