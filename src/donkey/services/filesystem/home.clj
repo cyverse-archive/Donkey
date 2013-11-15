@@ -17,7 +17,8 @@
     (let [user-home (ft/path-join staging-dir user)]
       (if (not (exists? cm user-home))
         (mkdirs cm user-home))
-      user-home)))
+      {:id   (str "/root" user-home)
+       :path user-home})))
 
 (defn do-homedir
   [{user :user}]
@@ -28,6 +29,6 @@
     (log/warn "[call][do-homedir]" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-homedir 
+(with-post-hook! #'do-homedir
   (fn [result]
     (log/warn "[result][do-homedir]" result)))
