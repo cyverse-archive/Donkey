@@ -69,12 +69,14 @@
   "Adds the default output directory to a set of user preferences."
   [prefs path]
   (assoc prefs
-    default-output-dir-key path))
+    default-output-dir-key {:id path :path path}))
 
 (defn- extract-default-output-dir
   "Gets the default output directory from a set of user preferences."
   [prefs]
-  (default-output-dir-key prefs))
+  (if (map? (default-output-dir-key prefs))
+    (:path (default-output-dir-key prefs))
+    (default-output-dir-key prefs)))
 
 (defn- system-default-output-dir
   []
@@ -92,17 +94,28 @@
   "Adds system default output directory to the preferences that are passed in."
   [prefs]
   (if-not (contains? prefs :systemDefaultOutputDir)
-    (assoc prefs :systemDefaultOutputDir (system-default-output-dir))
-    prefs))
+    (assoc prefs :systemDefaultOutputDir {:id   (system-default-output-dir)
+                                          :path (system-default-output-dir)})
+    (if-not (map? (:systemDefaultOutputDir prefs))
+      (assoc prefs :systemDefaultOutputDir {:id (:systemDefaultOutputDir prefs)
+                                            :path (:systemDefaultOutputDir prefs)})
+      prefs)))
+
+(defn- sysdefoutdir
+  [prefs]
+  (let [out-dir (:systemDefaultOutputDir prefs)]
+    (if (map? out-dir)
+      (:path out-dir)
+      out-dir)))
 
 (defn- create-system-default-output-dir
   "Creates the system defaultm output dir."
   [prefs]
-  (let [sys-output-dir (ft/rm-last-slash (:systemDefaultOutputDir prefs))
+  (let [sys-output-dir (ft/rm-last-slash (sysdefoutdir prefs))
         output-dir     (ft/rm-last-slash (extract-default-output-dir prefs))]
     (with-jargon (jargon-cfg) [cm]
-      (when (and (not (string/blank? sys-output-dir)) 
-               (= sys-output-dir output-dir) 
+      (when (and (not (string/blank? sys-output-dir))
+               (= sys-output-dir output-dir)
                (not (jinfo/exists? cm sys-output-dir)))
         (mkdir cm sys-output-dir)
         (set-owner cm sys-output-dir (:shortUsername current-user))))
@@ -115,13 +128,22 @@
       (generate-default-output-dir prefs)
       prefs)))
 
+(defn handle-string-default-output-dir
+  [prefs]
+  (let [output-dir (default-output-dir-key prefs)]
+    (if-not (map? output-dir)
+      (assoc prefs default-output-dir-key {:id output-dir
+                                           :path output-dir})
+      prefs)))
+
 (defn- get-user-prefs
   [prefs]
   (-> prefs
-    (handle-blank-default-output-dir)
-    (add-system-default-output-dir)
-    (create-system-default-output-dir)
-    (cheshire/encode)))
+      (handle-blank-default-output-dir)
+      (handle-string-default-output-dir)
+      (add-system-default-output-dir)
+      (create-system-default-output-dir)
+      (cheshire/encode)))
 
 (defn- set-user-prefs
   [prefs]
@@ -137,7 +159,7 @@
      (let [prefs (cheshire/decode (settings riak-prefs-bucket) true)]
        (get-user-prefs prefs)))
   ([req-prefs-string]
-    (let [prefs (cheshire/decode req-prefs-string true)] 
+    (let [prefs (cheshire/decode req-prefs-string true)]
       (set-user-prefs prefs))))
 
 (def remove-prefs (partial remove-settings riak-prefs-bucket))
