@@ -34,20 +34,20 @@ Here are the fields that describe and attribute-value-unit (AVU) triple.
 
 Here are the fields that describe a filesystem entry.
 
-| Field            | Type   | Description |
-| ---------------- | ------ | ----------- |
-| id               | string | the logical path to the entry |
-| user-permissions | array  | an array of [permission records](#permission-record) identifying the permissions users have on this entry |
-| date-created     | number | the time when the file was created in seconds since the POSIX epoch |
-| date-modified    | number | the time when the file was last modified in seconds since the POSIX epoch |
-| label            | string | the logical name of the entry |
+| Field           | Type   | Description |
+| --------------- | ------ | ----------- |
+| id              | string | the logical path to the entry |
+| userPermissions | array  | an array of [permission records](#permission-record) identifying the permissions users have on this entry |
+| dateCreated     | string | the time when the file was created in ISO 8601 format |
+| dateModified    | string | the time when the file was last modified in ISO 8601 format |
+| label           | string | the logical name of the entry |
 
 **Example**
 
 ```json
 {
-    "id"               : "/iplant/home/tedgin/an-entry",
-    "user-permissions" : [
+    "id"              : "/iplant/home/tedgin/an-entry",
+    "userPermissions" : [
         {
             "permission" : "own",
             "user"       : {
@@ -63,9 +63,9 @@ Here are the fields that describe a filesystem entry.
             }
         }
     ],
-    "date-created"     : 1381350485,
-    "date-modified"    : 1381350485,
-    "label"            : "an-entry"
+    "dateCreated"     : "2013-11-21T01:46:06.001Z",
+    "dateModified"    : "2013-11-21T01:46:06.001Z",
+    "label"           : "an-entry"
 }
 ```
 
@@ -74,19 +74,19 @@ Here are the fields that describe a filesystem entry.
 A file extends a [filesystem entry](#filesystem-entry-record). Here are the additional fields that
 describe a file.
 
-| Field       | Type   | Description |
-| ----------- | ------ | ----------- |
-| creator     | object | a [user identity record](#user-identity-record) identifying the creator of the file |
-| file-size   | number | the size of the file in octets |
-| media-type  | string | the media type of the file, `null` if unknown |
-| metadata    | array  | the metadata attached to this file, an array of [AVU records](#avu-record) |
+| Field    | Type   | Description |
+| -------- | ------ | ----------- |
+| creator  | object | a [user identity record](#user-identity-record) identifying the creator of the file |
+| fileSize | number | the size of the file in octets |
+| fileType | string | the type of the file, `null` if unknown |
+| metadata | array  | the metadata attached to this file, an array of [AVU records](#avu-record) |
 
 **Example**
 
 ```json
 {
-    "id"               : "/iplant/home/tedgin/a.file",
-    "user-permissions" : [
+    "id"              : "/iplant/home/tedgin/a.file",
+    "userPermissions" : [
         {
             "permission" : "own",
             "user"       : {
@@ -102,16 +102,16 @@ describe a file.
             }
         }
     ],
-    "creator"          : {
+    "creator"         : {
         "username" : "tedgin",
         "zone"     : "iplant"
     },
-    "date-created"     : 1381350485,
-    "date-modified"    : 1381350485,
-    "file-size"        : 14016,
-    "label"            : "a.file",
-    "media-type"       : null,
-    "metadata"         : [
+    "dateCreated"     : "2013-11-21T01:46:06.001Z",
+    "dateModified"    : "2013-11-21T01:46:06.001Z",
+    "fileSize"        : 14016,
+    "label"           : "a.file",
+    "fileType"        : null,
+    "metadata"        : [
         {
             "attribute" : "length",
             "value"     : "1.8",
@@ -140,8 +140,8 @@ describe a folder.
 
 ```json
 {
-    "id"               : "/iplant/home/tedgin/a-folder",
-    "user-permissions" : [
+    "id"              : "/iplant/home/tedgin/a-folder",
+    "userPermissions" : [
         {
             "permission" : "own",
             "user"       : {
@@ -157,14 +157,14 @@ describe a folder.
             }
         }
     ],
-    "creator"          : {
+    "creator"         : {
         "username" : "tedgin",
         "zone"     : "iplant"
     },
-    "date-created"     : 1381350485,
-    "date-modified"    : 1381350485,
-    "label"            : "a-folder",
-    "metadata"         : [
+    "dateCreated"     : "2013-11-21T01:46:06.001Z",
+    "dateModified"    : "2013-11-21T01:46:06.001Z",
+    "label"           : "a-folder",
+    "metadata"        : [
         {
             "attribute" : "length",
             "value"     : "1.8",
