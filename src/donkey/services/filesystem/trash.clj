@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.trash
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -48,19 +48,19 @@
         (validators/user-exists cm user)
         (validators/all-paths-exist cm paths)
         (validators/user-owns-paths cm user paths)
-        
+
         (when (some true? (mapv home-matcher paths))
           (throw+ {:error_code ERR_NOT_AUTHORIZED
                    :paths (filterv home-matcher paths)}))
-        
+
         (doseq [p paths]
           (log/debug "path" p)
           (log/debug "readable?" user (owns? cm user p))
-          
+
           (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
             (doseq [path-ticket path-tickets]
               (delete-ticket cm (:username cm) path-ticket)))
-          
+
           (if-not (.startsWith p (user-trash-path cm user))
             (move-to-trash cm p user)
             (delete cm p)))
@@ -127,16 +127,16 @@
       (validators/user-exists cm user)
       (validators/all-paths-exist cm paths)
       (validators/all-paths-writeable cm user paths)
-      
+
       (let [retval (atom (hash-map))]
         (doseq [path paths]
           (let [fully-restored      (ft/rm-last-slash (restoration-path cm user path))
                 restored-to-homedir (restore-to-homedir? cm path)]
             (log/warn "Restoring " path " to " fully-restored)
-            
+
             (validators/path-not-exists cm fully-restored)
             (log/warn fully-restored " does not exist. That's good.")
-            
+
             (restore-parent-dirs cm user fully-restored)
             (log/warn "Done restoring parent dirs for " fully-restored)
 
@@ -175,21 +175,21 @@
        :paths trash-list})))
 
 (defn do-delete
-  [{user :user} {paths :paths}]  
+  [{user :user} {paths :paths}]
   (delete-paths user paths))
 
 (with-pre-hook! #'do-delete
-  (fn [params body] 
+  (fn [params body]
     (log/warn "[call][do-delete]" params body)
     (validate-map params {:user string?})
     (validate-map body   {:paths sequential?})
     (validate-num-paths (:paths body))
-    
+
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))))
 
-(with-post-hook! #'do-delete 
+(with-post-hook! #'do-delete
   (fn [result]
     (log/warn "[result][do-delete]" result)))
 
@@ -200,7 +200,7 @@
      :paths paths
      :user-trash (user-trash-path user)}))
 
-(with-post-hook! #'do-restore 
+(with-post-hook! #'do-restore
   (fn [result]
     (log/warn "[result][do-restore]" result)))
 
@@ -213,14 +213,15 @@
 
 (defn do-user-trash
   [{user :user}]
-  (user-trash user))
+  {:id   (str "/root" (:trash (user-trash user)))
+   :path (:trash (user-trash user))})
 
 (with-pre-hook! #'do-user-trash
   (fn [params]
     (log/warn "[call][do-user-trash]" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-user-trash 
+(with-post-hook! #'do-user-trash
   (fn [result]
     (log/warn "[result][do-user-trash]" result)))
 
@@ -228,7 +229,7 @@
   [{user :user}]
   (delete-trash user))
 
-(with-post-hook! #'do-delete-trash 
+(with-post-hook! #'do-delete-trash
   (fn [result]
     (log/warn "[result][do-delete-trash]" result)))
 

@@ -13,7 +13,8 @@ __Response Body__:
 
     {
         "status" : "success",
-        "trash" : "/iplant/trash/home/proxy-user/johnworth"
+        "id" : "/root/iplant/trash/home/proxy-user/johnworth",
+        "path" : "/iplant/trash/home/proxy-user/johnworth"
     }
 
 __Curl Command__:

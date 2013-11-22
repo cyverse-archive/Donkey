@@ -91,12 +91,12 @@ $ curl \
                     "name": "rods",
                     "zone": "iplant"
                 },
-                "date-created": 1381350424,
-                "date-modified": 1381350424,
-                "file-size": 13225,
+                "dateCreated": "2013-10-09T13:27:04.090Z",
+                "dateModified": "2013-11-21T01:46:06.001Z",
+                "fileSize": 13225,
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "label": "read1_10k.fq",
-                "media-type": null,
+                "fileType": null,
                 "metadata": [],
                 "user-permissions": [
                     {
@@ -124,12 +124,12 @@ $ curl \
                     "name": "rods",
                     "zone": "iplant"
                 },
-                "date-created": 1381350485,
-                "date-modified": 1381350485,
-                "file-size": 14016,
+                "dateCreated": "2013-10-09T13:28:05.602Z",
+                "dateModified": "2013-11-21T01:46:06.001Z",
+                "fileSize": 14016,
+                "fileType": null,
                 "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
                 "label": "read1_10k.fq",
-                "media-type": null,
                 "metadata": [
                     {
                         "attribute": "color",
@@ -137,7 +137,7 @@ $ curl \
                         "value": "red"
                     }
                 ],
-                "user-permissions": [
+                "userPermissions": [
                     {
                         "permission": "read",
                         "user": {
@@ -178,21 +178,21 @@ There are no additional request parameters.
 
 ### Response
 
-| Field                 | Type   | Description |
-| --------------------- | ------ | ----------- |
-| lag                   | number | This is the estimated number of seconds the index state lags the data store state. |
-| size                  | number | This is the number of entries in the index. |
-| last-sync-time        | number | This is the time when the last successful synchronization was requested in seconds since the POSIX epoch. |
-| sync-state            | string | This is the current synchronizer state of the index. It must be `"idle"`, `"indexing"` or `"pruning"`.\* |
-| sync-processing-count | number | This is the total number of elements to consider for indexing or pruning during the current synchronizer state. |
-| sync-processed-count  | number | This is the total number of elements that have be indexed or pruned during the current synchronizer state. |
+| Field               | Type   | Description |
+| ------------------- | ------ | ----------- |
+| lag                 | number | This is the estimated number of seconds the index state lags the data store state. |
+| size                | number | This is the number of entries in the index. |
+| lastSyncTime        | string | This is the time when the last successful synchronization was requested in ISO 8601 format. |
+| syncState           | string | This is the current synchronizer state of the index. It must be `"idle"`, `"indexing"` or `"pruning"`.\* |
+| syncProcessingCount | number | This is the total number of elements to consider for indexing or pruning during the current synchronizer state. |
+| syncProcessedCount  | number | This is the total number of elements that have be indexed or pruned during the current synchronizer state. |
 
-\* Unless a synchronization has been requested, the `sync-state` will be `"idle"`. When a
-synchronization has been requested, `sync-state` is transitioned to `"indexing`". This means that
-the data store is being crawled and entries missing from the search index are being added. When
-indexing has been completed, `sync-state` is transitioned to `"pruning"`. This means that the search
-index is scanned and entries that are no longer in the data store are removed. Finally, when pruning
-has completed, `sync-state` is transitioned back to `"idle"`.
+\* Unless a synchronization has been requested, the `syncState` will be `"idle"`. When a
+synchronization has been requested, `syncState` is transitioned to `"indexing`". This means that the
+data store is being crawled and entries missing from the search index are being added. When indexing
+has been completed, `syncState` is transitioned to `"pruning"`. This means that the search index is
+scanned and entries that are no longer in the data store are removed. Finally, when pruning has
+completed, `syncState` is transitioned back to `"idle"`.
 
 ### Error Codes
 
@@ -205,12 +205,12 @@ $ curl http://localhost:8888/secured/filesystem/index/status?proxyToken=$(cas-ti
 > | python -mjson.tool
 {
     "lag": 11,
-    "last-sync-time": 1209923323,
+    "lastSyncTime": "2013-11-21T19:54:00.000Z",
     "size": 110432665,
     "success": true,
-    "sync-processed-count": 0,
-    "sync-processing-count": 0,
-    "sync-state": "idle"
+    "syncProcessedCount": 0,
+    "syncProcessingCount": 0,
+    "syncState": "idle"
 }
 ```
 
@@ -263,14 +263,14 @@ $ curl \
                     "name": "rods",
                     "zone": "iplant"
                 },
-                "date-created": 1381350424,
-                "date-modified": 1381350424,
-                "file-size": 13225,
+                "dateCreated": "2013-10-09T13:27:04.090Z",
+                "dateModified": "2013-10-09T13:27:04.090Z",
+                "fileSize": 13225,
+                "fileType": null,
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "label": "read1_10k.fq",
-                "media-type": null,
                 "metadata": [],
-                "user-permissions": [
+                "userPermissions": [
                     {
                         "permission": "read",
                         "user": {
@@ -296,12 +296,12 @@ $ curl \
                     "name": "rods",
                     "zone": "iplant"
                 },
-                "date-created": 1381350485,
-                "date-modified": 1381350485,
-                "file-size": 14016,
+                "dateCreated": "2013-10-09T13:28:05.602Z",
+                "dateModified": "2013-10-09T13:28:05.602Z",
+                "fileSize": 14016,
+                "fileType": null,
                 "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
                 "label": "read1_10k.fq",
-                "media-type": null,
                 "metadata": [
                     {
                         "attribute": "color",
@@ -309,7 +309,7 @@ $ curl \
                         "value": "red"
                     }
                 ],
-                "user-permissions": [
+                "userPermissions": [
                     {
                         "permission": "read",
                         "user": {
