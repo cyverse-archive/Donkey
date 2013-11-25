@@ -42,6 +42,19 @@
     (validators/path-readable cm user path)
     {:metadata (list-path-metadata cm path)}))
 
+(defn- common-metadata-set
+  [cm path avu-map]
+  (let [fixed-path (ft/rm-last-slash path)
+        new-unit   (reserved-unit avu-map)
+        attr       (:attr avu-map)
+        value      (:value avu-map)]
+    (log/warn "Fixed Path:" fixed-path)
+    (log/warn "check" (true? (attr-value? cm fixed-path attr value)))
+    (when-not (attr-value? cm fixed-path attr value)
+      (log/warn "Adding " attr value "to" fixed-path)
+      (set-metadata cm fixed-path attr value new-unit))
+    fixed-path))
+
 (defn metadata-set
   [user path avu-map]
   (with-jargon (jargon-cfg) [cm]
@@ -50,16 +63,17 @@
       (throw+ {:error_code ERR_INVALID_JSON}))
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
-    (let [fixed-path (ft/rm-last-slash path)
-          new-unit   (reserved-unit avu-map)
-          attr       (:attr avu-map)
-          value      (:value avu-map)]
-      (log/warn "Fixed Path:" fixed-path)
-      (log/warn "check" (true? (attr-value? cm fixed-path attr value)))
-      (when-not (attr-value? cm fixed-path attr value)
-        (log/warn "Adding " attr value "to" fixed-path)
-        (set-metadata cm fixed-path attr value new-unit))
-      {:path fixed-path :user user})))
+    {:path (common-metadata-set cm path avu-map)
+     :user user}))
+
+(defn admin-metadata-set
+  [path avu-map]
+  (with-jargon (jargon-cfg) [cm]
+    (when (= "failure" (:status avu-map))
+      (throw+ {:error_code ERR_INVALID_JSON}))
+    (validators/path-exists cm path)
+    (validators/path-writeable cm (irods-user) path)
+    (common-metadata-set cm path avu-map)))
 
 (defn- encode-str
   [str-to-encode]
