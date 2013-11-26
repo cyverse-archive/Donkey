@@ -14,17 +14,16 @@
             [clj-icat-direct.icat :as icat]))
 
 (defn- filtered-paths
-  "Returns a seq of paths that should not be included in paged listing."
+  "Returns a seq of full paths that should not be included in paged listing."
   [user]
-  (conj (fs-filter-files) 
-        (fs-community-data) 
-        (ft/path-join (irods-home) user)
-        (ft/path-join (irods-home) "public")))
+  [(fs-community-data)
+   (ft/path-join (irods-home) user)
+   (ft/path-join (irods-home) "public")])
 
 (defn- should-filter?
   "Returns true if the map is okay to include in a directory listing."
   [user path-to-check]
-  (let [fpaths (set (filtered-paths user))]
+  (let [fpaths (set (concat (fs-filter-files) (filtered-paths user)))]
     (or  (contains? fpaths path-to-check)
          (not (valid-path? path-to-check)))))
 
@@ -110,10 +109,14 @@
             :filter           (should-filter? user path)
             :permissions      (collection-perm-map cm user path)
             :hasSubDirs       true
-            :total            (icat/number-of-items-in-folder user path)
             :date-created     (:created stat)
             :date-modified    (:modified stat)
             :file-size        "0")
+          (icat/number-of-items-in-folder user path)
+          (icat/number-of-filtered-items-in-folder user path
+                                                   (fs-filter-chars)
+                                                   (fs-filter-files)
+                                                   (filtered-paths user))
           (page->map user (icat/paged-folder-listing user path scol sord limit offset)))))))
 
 (defn list-directories

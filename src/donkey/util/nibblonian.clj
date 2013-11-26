@@ -43,8 +43,8 @@
 (defn save-tree-metaurl
   "Saves the URL used to get saved tree URLs.  The metaurl argument should
    contain the URL used to obtain the tree URLs."
-  [user path metaurl]
-  (mt/metadata-set user path {:attr "tree-urls" :value metaurl :unit ""}))
+  [path metaurl]
+  (mt/admin-metadata-set path {:attr "tree-urls" :value metaurl :unit ""}))
 
 (defn get-tree-metaurl
   "Gets the URL used to get saved tree URLs."
