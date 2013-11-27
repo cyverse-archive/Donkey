@@ -34,7 +34,7 @@
   (let [base-map {:id            full_path
                   :path          full_path
                   :label         base_name
-                  :filter        (or (should-filter? user full_path) 
+                  :filter        (or (should-filter? user full_path)
                                      (should-filter? user base_name))
                   :file-size     (str data_size)
                   :date-created  (str (* (Integer/parseInt create_ts) 1000))
@@ -81,13 +81,13 @@
   (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
   (let [path      (ft/rm-last-slash path)
         sort-col  (string/upper-case sort-col)
-        sort-order (string/upper-case sort-order)] 
+        sort-order (string/upper-case sort-order)]
     (with-jargon (jargon-cfg) [cm]
       (validators/user-exists cm user)
       (validators/path-exists cm path)
       (validators/path-readable cm user path)
       (validators/path-is-dir cm path)
-      
+
       (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE"} sort-col)
         (log/warn "invalid sort column" sort-col)
         (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
@@ -100,7 +100,8 @@
 
       (let [stat (stat cm path)
             scol (user-col->api-col sort-col)
-            sord (user-order->api-order sort-order)]
+            sord (user-order->api-order sort-order)
+            zone (irods-zone)]
         (merge
           (hash-map
             :id               path
@@ -112,12 +113,12 @@
             :date-created     (:created stat)
             :date-modified    (:modified stat)
             :file-size        "0")
-          (icat/number-of-items-in-folder user path)
-          (icat/number-of-filtered-items-in-folder user path
+          (icat/number-of-items-in-folder user zone path)
+          (icat/number-of-filtered-items-in-folder user zone path
                                                    (fs-filter-chars)
                                                    (fs-filter-files)
                                                    (filtered-paths user))
-          (page->map user (icat/paged-folder-listing user path scol sord limit offset)))))))
+          (page->map user (icat/paged-folder-listing user zone path scol sord limit offset)))))))
 
 (defn list-directories
   "Lists the directories contained under path."
@@ -128,7 +129,7 @@
       (validators/path-exists cm path)
       (validators/path-readable cm user path)
       (validators/path-is-dir cm path)
-      
+
       (let [stat (stat cm path)]
         (merge
           (hash-map
@@ -146,7 +147,7 @@
 #_(defn list-dir
    ([user path filter-files set-own?]
      (log/warn (str "list-dir " user " " path))
-    
+
      (let [path (ft/rm-last-slash path)]
        (with-jargon (jargon-cfg) [cm]
          (validators/user-exists cm user)
@@ -174,17 +175,17 @@
   (cond
     (nil? path)
     (top-level-listing params)
-      
+
     (shared-with-me-listing? path)
     (list-directories user (irods-home))
-      
+
     :else
     (list-directories user path)))
 
 (defn do-paged-listing
-  [{user       :user 
-    path       :path 
-    limit      :limit 
+  [{user       :user
+    path       :path
+    limit      :limit
     offset     :offset
     sort-col   :sort-col
     sort-order :sort-order
@@ -196,10 +197,10 @@
     (paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
 
 (defn do-unsecured-paged-listing
-  [{path       :path 
-    limit      :limit 
-    offset     :offset 
-    sort-col   :sort-col 
+  [{path       :path
+    limit      :limit
+    offset     :offset
+    sort-col   :sort-col
     sort-order :sort-order}]
   (let [user       "ipctest"
         limit      (Integer/parseInt limit)
@@ -222,7 +223,7 @@
     (log/warn "[call][do-paged-listing]" params)
     (validate-map params {:user string? :path string? :limit string? :offset string?})))
 
-(with-post-hook! #'do-paged-listing 
+(with-post-hook! #'do-paged-listing
   (fn [result]
     (log/warn "[result][do-paged-listing]" result)))
 
@@ -231,6 +232,6 @@
     (log/warn "[call][do-unsecured-paged-listing]" params)
     (validate-map params {:path string? :limit string? :offset string?})))
 
-(with-post-hook! #'do-unsecured-paged-listing 
+(with-post-hook! #'do-unsecured-paged-listing
   (fn [result]
     (log/warn "[result][do-unsecured-paged-listing]" result)))
