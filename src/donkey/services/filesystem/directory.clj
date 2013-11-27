@@ -100,7 +100,8 @@
 
       (let [stat (stat cm path)
             scol (user-col->api-col sort-col)
-            sord (user-order->api-order sort-order)]
+            sord (user-order->api-order sort-order)
+            zone (irods-zone)]
         (merge
           (hash-map
             :id               path
@@ -112,12 +113,12 @@
             :date-created     (:created stat)
             :date-modified    (:modified stat)
             :file-size        "0")
-          (icat/number-of-items-in-folder user path)
-          (icat/number-of-filtered-items-in-folder user path
+          (icat/number-of-items-in-folder user zone path)
+          (icat/number-of-filtered-items-in-folder user zone path
                                                    (fs-filter-chars)
                                                    (fs-filter-files)
                                                    (filtered-paths user))
-          (page->map user (icat/paged-folder-listing user path scol sord limit offset)))))))
+          (page->map user (icat/paged-folder-listing user zone path scol sord limit offset)))))))
 
 (defn list-directories
   "Lists the directories contained under path."
