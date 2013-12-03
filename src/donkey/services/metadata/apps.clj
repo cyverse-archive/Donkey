@@ -67,11 +67,12 @@
 (defn- process-job
   ([agave-client job-id processing-fns]
      (process-job agave-client job-id (jp/get-job-by-external-id job-id) processing-fns))
-  ([agave-client job-id job {:keys [process-agave-job process-de-job]}]
+  ([agave-client job-id job {:keys [process-agave-job process-de-job preprocess-job]
+                             :or {preprocess-job identity}}]
      (condp = (:job_type job)
        nil               (service/not-found "job" job-id)
-       jp/de-job-type    (process-de-job job)
-       jp/agave-job-type (process-agave-job agave-client job)
+       jp/de-job-type    (process-de-job (preprocess-job job))
+       jp/agave-job-type (process-agave-job agave-client (preprocess-job job))
        (unrecognized-job-type (:job_type job)))))
 
 (defprotocol AppLister
@@ -196,12 +197,14 @@
   (getJobParams [_ job-id]
     (process-job agave-client job-id
                  {:process-de-job    da/get-de-job-params
-                  :process-agave-job aa/get-agave-job-params}))
+                  :process-agave-job aa/get-agave-job-params
+                  :preprocess-job    :id}))
 
   (getAppRerunInfo [_ job-id]
     (process-job agave-client job-id
                  {:process-de-job    da/get-de-app-rerun-info
-                  :process-agave-job aa/get-agave-app-rerun-info})))
+                  :process-agave-job aa/get-agave-app-rerun-info
+                  :preprocess-job    :id})))
 ;; DeHpcAppLister
 
 (defn- get-app-lister
