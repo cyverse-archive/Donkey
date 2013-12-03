@@ -130,7 +130,8 @@
       (validators/path-readable cm user path)
       (validators/path-is-dir cm path)
 
-      (let [stat (stat cm path)]
+      (let [stat (stat cm path)
+            zone (irods-zone)]
         (merge
           (hash-map
             :id            path
@@ -142,7 +143,7 @@
             :date-created  (:created stat)
             :date-modified (:modified stat)
             :file-size     "0")
-          (dissoc (page->map user (icat/list-folders-in-folder user path)) :files))))))
+          (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
 
 #_(defn list-dir
    ([user path filter-files set-own?]

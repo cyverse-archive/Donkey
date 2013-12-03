@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.stat
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -31,8 +31,8 @@
 (defn- merge-counts
   [stat-map cm user path]
   (if (is-dir? cm path)
-    (merge stat-map {:file-count (icat/number-of-files-in-folder user path)
-                     :dir-count  (icat/number-of-folders-in-folder user path)})
+    (merge stat-map {:file-count (icat/number-of-files-in-folder user (irods-zone) path)
+                     :dir-count  (icat/number-of-folders-in-folder user (irods-zone) path)})
     stat-map))
 
 (defn- merge-shares
