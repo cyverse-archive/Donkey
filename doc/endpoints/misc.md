@@ -3,19 +3,17 @@
 * [Miscellaneous Donkey Endpoints](#miscellaneous-donkey-endpoints)
     * [Verifying that Donkey is Running](#verifying-that-donkey-is-running)
     * [Initializing a User's Workspace](#initializing-a-users-workspace)
-    * [Saving User Session Data](#saving-user-session-data)
-    * [Retrieving User Session Data](#retrieving-user-session-data)
-    * [Removing User Seession Data](#removing-user-seession-data)
     * [Saving User Preferences](#saving-user-preferences)
     * [Retrieving User Preferences](#retrieving-user-preferences)
     * [Removing User Preferences](#removing-user-preferences)
-    * [Saving User Search History](#saving-user-search-history)
-    * [Retrieving User Search History](#retrieving-user-search-history)
-    * [Deleting User Search History](#deleting-user-search-history)
     * [Determining a User's Default Output Directory](#determining-a-users-default-output-directory)
     * [Resetting a user's default output directory.](#resetting-a-users-default-output-directory.)
     * [Obtaining Identifiers](#obtaining-identifiers)
     * [Submitting User Feedback](#submitting-user-feedback)
+    * [Secured /user-data](#secured-user-data)
+        * [POST](#post)
+        * [GET](#get)
+        * [DELETE](#delete)
 
 # Miscellaneous Donkey Endpoints
 
@@ -87,70 +85,6 @@ $ curl -s "http://by-tor:8888/secured/logout?proxyToken=$(cas-ticket)&ip-address
 }
 ```
 
-## Saving User Session Data
-
-Secured Endpoint: POST /secured/sessions
-
-This service can be used to save arbitrary user session information. The post
-body is stored as-is and can be retrieved by sending an HTTP GET request to the
-same URL.
-
-Here's an example:
-
-```
-$ curl -sd data "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)"
-```
-
-## Retrieving User Session Data
-
-Secured Endpoint: GET /secured/sessions
-
-This service can be used to retrieve user session information that was
-previously saved by sending a POST request to the same service.
-
-Here's an example:
-
-```
-$ curl "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)"
-data
-```
-
-## Removing User Seession Data
-
-Secured Endpoint: DELETE /secured/sessions
-
-This service can be used to remove saved user session information. This is
-helpful in cases where the user's session is in an unusable state and saving the
-session information keeps all of the user's future sessions in an unusable
-state.
-
-Here's an example:
-
-```
-$ curl -XDELETE "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "success": true
-}
-```
-
-An attempt to remove session data that doesn't already exist will be silently
-ignored.
-
-## Saving User Preferences
-
-Secured Endpoint: POST /secured/preferences
-
-This service can be used to save arbitrary user preferences. The POST body is
-stored without modification and can be retrieved by sending a GET request to the
-same URL.
-
-Example:
-
-```
-$ curl -sd data "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
-data
-```
-
 ## Retrieving User Preferences
 
 Secured Endpoint: GET /secured/preferences
@@ -182,46 +116,6 @@ $ curl -X DELETE "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket
 An attempt to remove preference data that doesn't already exist will be silently
 ignored.
 
-## Saving User Search History
-
-Secured Endpoint: POST /secured/search-history
-
-This service can be used to save arbitrary user search history information. The
-POST body is stored without modification and be retrieved by sending a GET
-request to the same URL.
-
-Example:
-
-```
-$ curl -sd data "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
-data
-```
-
-## Retrieving User Search History
-
-Secured Endpoint: GET /secured/search-history
-
-This service can be used to retrieve a user's search history.
-
-Example:
-
-```
-$ curl -s "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
-data
-```
-
-## Deleting User Search History
-
-This service can be used to delete a user's search history.
-
-Example:
-
-```
-$ curl -XDELETE -s "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
-{
-    "success" : true
-}
-```
 
 ## Determining a User's Default Output Directory
 
@@ -343,3 +237,65 @@ $ curl -XPUT -s "http://by-tor:8888/secured/feedback?proxyToken=$(cas-ticket)" -
     "success": true
 }
 ```
+
+## Secured /user-data
+
+Supported HTTP methods: POST, GET, DELETE
+
+This endpoint provides access to a key/value store, and can be used to store any
+arbitrary data under a specified key.
+
+All HTTP methods require a user authentication token, and a key. A unique key 
+will be constructed from a combination of the user's unique identifying information
+and the specified key.
+
+There are some keys which are used explicitly by the DE, and are listed below.
+User's should use these keys at their own risk.
+
+<table>
+   <thead>
+	<tr><th>Key</th><th>Description</th></tr>
+   </thead>
+   <tbody>
+        <tr>
+          <td>sessions</td>
+          <td>
+              User session data
+          </td>
+        </tr>
+        <tr>
+           <td>dataQueryTemplates</td>
+           <td>
+              Saved search filters from the data window
+           </td>
+        </tr>
+   </tbody>
+</table>
+
+
+### POST
+
+Used to store data under the specified key.
+
+Here's an example:
+
+```
+$ curl -sd data "http://by-tor:8888/secured/user-data?proxyToken=$(cas-ticket)&key=uniqKey"
+````
+
+### GET
+
+Used to retrieve the data which is stored under the specified key.
+If no data exists under the specified key, then an HTTP `204 No Content` code will be returned.
+
+
+Here's an example:
+
+```
+$ curl -s "http://by-tor:8888/secured/user-data?proxyToken=$(cas-ticket)&key=uniqKey" 
+[stored data]
+````
+
+### DELETE
+
+Used to clear any data which is stored under the specified key.
