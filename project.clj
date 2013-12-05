@@ -6,7 +6,7 @@
                  [org.clojure/data.codec "0.1.0"]
                  [org.clojure/java.classpath "0.2.0"]
                  [org.apache.tika/tika-core "1.3"]
-                 [org.iplantc/clj-cas "1.0.1-SNAPSHOT"]
+                 [org.iplantc/clj-cas "1.2.0-SNAPSHOT"]
                  [org.iplantc/clj-jargon "0.3.1"
                   :exclusions [[xerces/xmlParserAPIs]
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
