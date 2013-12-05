@@ -64,6 +64,7 @@
 (defn do-move-contents
   [{user :user} {source :source dest :dest}]
   (validators/validate-num-paths-under-folder user source)
+  (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm source))
   (let [sources (get-paths-in-folder user source)]
     (move-paths user sources dest)))
 

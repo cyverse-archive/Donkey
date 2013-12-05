@@ -66,6 +66,7 @@
 * [POST /secured/filesystem/metadata](endpoints/filesystem/metadata.md#setting-metadata-)
 * [POST /secured/filesystem/metadata-batch](endpoints/filesystem/metadata.md#setting-metadata-as-a-batch-operation-)
 * [POST /secured/filesystem/move](endpoints/filesystem/move.md#moving-files-andor-directories-)
+* [POST /secured/filesystem/move-contents](endpoints/filesystem/move.md#moving-all-items-in-a-directory)
 * [POST /secured/filesystem/overwrite-chunk](endpoints/filesystem/overwrite-chunk.md#overwriting-a-chunk-of-a-file-)
 * [POST /secured/filesystem/paths-contain-space](endpoints/filesystem/paths-contain-space.md#checking-for-spaces-in-paths-andor-directories-)
 * [GET /secured/filesystem/quota](endpoints/filesystem/quotas.md#listing-a-users-quotas-)

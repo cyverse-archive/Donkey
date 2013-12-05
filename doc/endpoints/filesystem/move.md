@@ -66,8 +66,6 @@ __Request Body__:
         "dest": "/tempZone/home/rods/test"
     }
 
-"sources" can contain a mix of files and directories.
-
 __Response__:
 
     {
