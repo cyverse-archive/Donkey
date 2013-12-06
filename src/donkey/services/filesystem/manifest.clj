@@ -41,7 +41,7 @@
 (defn- extract-coge-view
   [cm fpath]
   (if (attribute? cm fpath "ipc-coge")
-    ((comp :value first) (get-attribute))))
+    ((comp :value first) (get-attribute cm fpath "ipc-coge"))))
 
 (defn- manifest
   [user path data-threshold]
