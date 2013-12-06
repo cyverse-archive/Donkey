@@ -32,9 +32,10 @@
 
 (defn render-ticket-tmpl
   [cm ticket-map tmpl]
-  (stache/render tmpl {:url       (kifshare-external-url)
-                       :ticket-id (:ticket-id ticket-map)
-                       :filename  (ft/basename (:path ticket-map))}))
+  (assoc ticket-map :ticket-id
+         (stache/render tmpl {:url       (kifshare-external-url)
+                              :ticket-id (:ticket-id ticket-map)
+                              :filename  (ft/basename (:path ticket-map))})))
 
 (defn- add-tickets
   [user paths public?]
