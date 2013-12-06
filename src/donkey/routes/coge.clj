@@ -9,5 +9,5 @@
   []
   (optional-routes
     [config/coge-enabled]
-    (POST "/view-genomes" [:as {body :body}]
+    (POST "/coge/load-genomes" [:as {body :body}]
           (trap #(get-genome-viewer-url body)))))
