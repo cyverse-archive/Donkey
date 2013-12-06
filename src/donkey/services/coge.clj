@@ -43,8 +43,9 @@
 (defn- request-coge-genome-url
   "Sends a request for a genome viewer URL to the COGE service."
   [paths]
-  (let [request (build-coge-request paths)
-        coge-url (str (config/coge-genome-load-url) "?ticket=" "foo") ;; FIXME use real CAS ticket
+  (let [request  (build-coge-request paths)
+        ticket   (get-proxy-ticket (config/coge-genome-load-url))
+        coge-url (str (config/coge-genome-load-url) "?ticket=" ticket)
         response (client/post coge-url request)]
     (when-not (< 199 (:status response) 300)
       (coge-genome-service-error (:body response)))

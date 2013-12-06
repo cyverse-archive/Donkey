@@ -1,7 +1,7 @@
 (ns donkey.auth.user-attributes
-  (:use [clj-cas.cas-proxy-auth :only (validate-cas-proxy-ticket)]
-        [donkey.util.config])
-  (:require [clojure.tools.logging :as log]))
+  (:use [donkey.util.config])
+  (:require [clj-cas.cas-proxy-auth :as cas]
+            [clojure.tools.logging :as log]))
 
 (def
   ^{:doc "The authenticated user or nil if the service is unsecured."
@@ -36,7 +36,7 @@
    current-user to a map that is built from the user attributes that
    validate-cas-proxy-ticket stores in the request."
   [handler cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn]
-  (validate-cas-proxy-ticket
+  (cas/validate-cas-proxy-ticket
     (fn [request]
       (binding [current-user (user-from-attributes request)]
         (handler request)))
@@ -48,6 +48,11 @@
   (fn [req]
     (binding [current-user (fake-user-from-attributes req)]
       (handler req))))
+
+(defn get-proxy-ticket
+  "Obtains a CAS proxy ticket for authentication to another service."
+  [url]
+  (cas/get-proxy-ticket (:principal current-user) url))
 
 (defmacro with-user
   "Performs a task with the given user information bound to current-user. This macro is used
