@@ -18,7 +18,8 @@
    :email         (get user-attributes "email"),
    :shortUsername (get user-attributes "uid")
    :firstName     (get user-attributes "firstName")
-   :lastName      (get user-attributes "lastName")})
+   :lastName      (get user-attributes "lastName")
+   :principal     (get user-attributes "principal")})
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
@@ -34,16 +35,16 @@
   "Authenticates the user using validate-cas-proxy-ticket and binds
    current-user to a map that is built from the user attributes that
    validate-cas-proxy-ticket stores in the request."
-  [handler cas-server-fn server-name-fn]
+  [handler cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn]
   (validate-cas-proxy-ticket
     (fn [request]
       (binding [current-user (user-from-attributes request)]
         (handler request)))
-    cas-server-fn server-name-fn))
+    cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn))
 
 (defn fake-store-current-user
   "Fake storage of a user"
-  [handler cas-server-fn server-name-fn]
+  [handler cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn]
   (fn [req]
     (binding [current-user (fake-user-from-attributes req)]
       (handler req))))

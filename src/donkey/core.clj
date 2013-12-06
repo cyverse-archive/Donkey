@@ -36,6 +36,12 @@
             [donkey.util.icat :as icat]
             [clojure.tools.nrepl.server :as nrepl]))
 
+(defn delayed-handler
+  [routes-fn]
+  (fn [req]
+    (let [handler ((memoize routes-fn))]
+      (handler req))))
+
 (defn secured-routes
   []
   (flagged-routes
@@ -53,10 +59,17 @@
    (route/not-found (unrecognized-path-response))))
 
 (defn cas-store-user
-  [routes cas-server server-name]
-  (if (System/getenv "IPLANT_CAS_FAKE")
-    (fake-store-current-user (secured-routes) config/cas-server config/server-name)
-    (store-current-user (secured-routes) config/cas-server config/server-name)))
+  [routes]
+  (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-user)]
+    (f (secured-routes)
+       config/cas-server
+       config/server-name
+       config/pgt-callback-base
+       config/pgt-callback-path)))
+
+(def secured-handler
+  (-> (delayed-handler secured-routes)
+      (cas-store-user)))
 
 (defn donkey-routes
   []
@@ -69,8 +82,7 @@
    (unsecured-callback-routes)
    (unsecured-search-routes)
 
-   (context "/secured" []
-            (cas-store-user (secured-routes) config/cas-server config/server-name))
+   (context "/secured" [] secured-handler)
 
    (route/not-found (unrecognized-path-response))))
 
@@ -110,12 +122,6 @@
   []
   (config/load-config-from-zookeeper)
   (db/define-database))
-
-(defn delayed-handler
-  [routes-fn]
-  (fn [req]
-    (let [handler ((memoize routes-fn))]
-      (handler req))))
 
 (defn site-handler
   [routes-fn]

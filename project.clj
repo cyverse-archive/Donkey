@@ -20,7 +20,7 @@
                  [cheshire "5.0.1"]
                  [clj-http "0.7.7"]
                  [clj-time "0.6.0"]
-                 [com.cemerick/url "0.0.7"]
+                 [com.cemerick/url "0.1.0"]
                  [ring "1.2.0"]
                  [compojure "1.1.5"]
                  [heuristomancer "0.1.3-SNAPSHOT"]
