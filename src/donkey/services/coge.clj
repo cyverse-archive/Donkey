@@ -1,6 +1,6 @@
 (ns donkey.services.coge
   (:use [donkey.auth.user-attributes]
-        [donkey.util.service :only [decode-json prepare-forwarded-request]]
+        [donkey.util.service :only [decode-json]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
@@ -11,9 +11,10 @@
 
 (defn- build-coge-request
   "Builds a request object with the given paths for the COGE genome viewer service."
-  [paths]
-  (let [body {:restricted "true" ;; URL in response can be made public by setting this to "false".
-              :items (map #(hash-map :type "irods" :path %) paths)}]
+  [paths ticket]
+  (let [body {:restricted true ;; URL in response can be made public by setting this to false.
+              :items (map #(hash-map :type "irods" :path %) paths)
+              :ticket ticket}]
     {:content-type "application/json; charset=utf-8"
      :body (cheshire/encode body)
      :throw-exceptions true
@@ -43,8 +44,8 @@
 (defn- request-coge-genome-url
   "Sends a request for a genome viewer URL to the COGE service."
   [paths]
-  (let [request  (build-coge-request paths)
-        ticket   (get-proxy-ticket (config/coge-genome-load-url))
+  (let [ticket   (get-proxy-ticket (config/coge-genome-load-url))
+        request  (build-coge-request paths ticket)
         coge-url (str (config/coge-genome-load-url) "?ticket=" ticket)
         response (client/post coge-url request)]
     (when-not (< 199 (:status response) 300)
