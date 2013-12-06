@@ -56,7 +56,7 @@
   "Parses a response from the COGE genome viewer for errors or the genome's URL."
   [response]
   (let [response (decode-json response)]
-    (when (= (:status response) "error")
+    (when-not (:success response)
       (coge-genome-service-error (:error response)))
     {:coge_genome_url (:link response)}))
 
