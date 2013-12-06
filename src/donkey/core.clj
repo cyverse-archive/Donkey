@@ -20,6 +20,7 @@
         [donkey.routes.collaborator]
         [donkey.routes.filesystem]
         [donkey.routes.search]
+        [donkey.routes.coge]
         [donkey.auth.user-attributes]
         [donkey.util]
         [donkey.util.service]
@@ -55,6 +56,7 @@
    (secured-session-routes)
    (secured-fileio-routes)
    (secured-filesystem-routes)
+   (secured-coge-routes)
    (secured-admin-routes)
    (route/not-found (unrecognized-path-response))))
 

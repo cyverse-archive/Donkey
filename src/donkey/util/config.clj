@@ -118,6 +118,11 @@
   [props config-valid configs]
   "donkey.routes.search" true)
 
+(cc/defprop-optboolean coge-enabled
+  "Enables or disables COGE endpoints."
+  [props config-valid configs]
+  "donkey.routes.coge" true)
+
 (cc/defprop-optboolean agave-enabled
   "Enables or disables all features that require connections to Agave."
   [props config-valid configs]
@@ -566,6 +571,16 @@
   "The base URL for receiving job status update callbacks from Agave."
   [props config-valid configs #(and (agave-enabled) (agave-jobs-enabled))]
   "donkey.agave.callback-base")
+
+(cc/defprop-str coge-genome-load-url
+  "The COGE service URL for loading genomes and creating viewer URLs."
+  [props config-valid configs coge-enabled]
+  "donkey.coge.genome-load-url")
+
+(cc/defprop-str coge-user
+  "The COGE user that needs file sharing permissions for genome viewer services."
+  [props config-valid configs coge-enabled]
+  "donkey.coge.user")
 
 (cc/defprop-str default-output-dir
   "The default name of the default job output directory."
