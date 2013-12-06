@@ -1,17 +1,17 @@
 (ns donkey.routes.filesystem
   (:use [compojure.core]
         [donkey.auth.user-attributes]
-        [donkey.services.filesystem.root] 
-        [donkey.services.filesystem.directory] 
-        [donkey.services.filesystem.home] 
-        [donkey.services.filesystem.rename] 
-        [donkey.services.filesystem.trash] 
-        [donkey.services.filesystem.move] 
-        [donkey.services.filesystem.create] 
-        [donkey.services.filesystem.metadata] 
-        [donkey.services.filesystem.sharing] 
-        [donkey.services.filesystem.preview] 
-        [donkey.services.filesystem.exists] 
+        [donkey.services.filesystem.root]
+        [donkey.services.filesystem.directory]
+        [donkey.services.filesystem.home]
+        [donkey.services.filesystem.rename]
+        [donkey.services.filesystem.trash]
+        [donkey.services.filesystem.move]
+        [donkey.services.filesystem.create]
+        [donkey.services.filesystem.metadata]
+        [donkey.services.filesystem.sharing]
+        [donkey.services.filesystem.preview]
+        [donkey.services.filesystem.exists]
         [donkey.services.filesystem.stat]
         [donkey.services.filesystem.manifest]
         [donkey.services.filesystem.updown]
@@ -47,8 +47,8 @@
 
 (defn controller
   [req func & args]
-  (let [p (if (contains? (set args) :body) 
-            (partial ctlr req true func) 
+  (let [p (if (contains? (set args) :body)
+            (partial ctlr req true func)
             (partial ctlr req false func))]
       (apply p args)))
 

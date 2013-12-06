@@ -33,6 +33,7 @@
                  [net.sf.opencsv/opencsv "2.0"]
                  [com.novemberain/langohr "1.5.0"]
                  [clj-icat-direct "0.0.1"]
+                 [de.ubercode.clostache/clostache "1.3.1"]
                  [dire "0.5.1"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
             [lein-ring "0.8.7"]

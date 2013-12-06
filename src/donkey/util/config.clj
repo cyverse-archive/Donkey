@@ -582,6 +582,16 @@
   [props config-valid configs coge-enabled]
   "donkey.coge.user")
 
+(cc/defprop-str kifshare-download-template
+  "The mustache template for the kifshare URL."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.kifshare-download-template")
+
+(cc/defprop-str kifshare-external-url
+  "The external URL for kifshare."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.kifshare-external-url")
+
 (cc/defprop-str default-output-dir
   "The default name of the default job output directory."
   [props config-valid configs]
