@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.manifest
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -38,6 +38,11 @@
         :tree-urls)
     []))
 
+(defn- extract-coge-view
+  [cm fpath]
+  (if (attribute? cm fpath "ipc-coge")
+    ((comp :value first) (get-attribute))))
+
 (defn- manifest
   [user path data-threshold]
   (let [path (ft/rm-last-slash path)]
@@ -46,10 +51,11 @@
       (validators/path-exists cm path)
       (validators/path-is-file cm path)
       (validators/path-readable cm user path)
-      
+
       {:action       "manifest"
        :content-type (content-type cm path)
        :tree-urls    (extract-tree-urls cm path)
+       :coge-view    (extract-coge-view cm path)
        :info-type    (filetypes/get-types cm user path)
        :mime-type    (.detect (Tika.) (input-stream cm path))
        :preview      (preview-url user path)})))
@@ -63,4 +69,3 @@
     (log/warn "[call][do-manifest]" params)))
 
 (with-post-hook! #'do-manifest (log-func "do-manifest"))
-
