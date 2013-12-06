@@ -41,7 +41,13 @@
 (defn- extract-coge-view
   [cm fpath]
   (if (attribute? cm fpath "ipc-coge")
-    ((comp :value first) (get-attribute cm fpath "ipc-coge"))))
+    [{:label "gene_0"
+      :url   ((comp :value first) (get-attribute cm fpath "ipc-coge"))}]
+    []))
+
+(defn- extract-urls
+  [cm fpath]
+  (into [] (concat (extract-tree-urls cm fpath) (extract-coge-view cm fpath))))
 
 (defn- manifest
   [user path data-threshold]
@@ -54,8 +60,7 @@
 
       {:action       "manifest"
        :content-type (content-type cm path)
-       :tree-urls    (extract-tree-urls cm path)
-       :coge-view    (extract-coge-view cm path)
+       :urls         (extract-urls cm path)
        :info-type    (filetypes/get-types cm user path)
        :mime-type    (.detect (Tika.) (input-stream cm path))
        :preview      (preview-url user path)})))
