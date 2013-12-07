@@ -1,6 +1,6 @@
 (ns donkey.services.coge
   (:use [donkey.auth.user-attributes]
-        [donkey.util.service :only [decode-json]]
+        [donkey.util.service :only [decode-json prepare-forwarded-request]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
@@ -15,23 +15,28 @@
   (let [body {:restricted true ;; URL in response can be made public by setting this to false.
               :items (map #(hash-map :type "irods" :path %) paths)
               :ticket ticket}]
-    {:content-type "application/json; charset=utf-8"
-     :body (cheshire/encode body)
-     :throw-exceptions true
-     :as :stream}))
+    (prepare-forwarded-request
+      {:content-type "application/json; charset=utf-8"}
+      (cheshire/encode body))))
 
 (defn- coge-genome-service-error
   "Throws an exception indicating that the COGE genome service encountered an error."
-  [details]
-  (log/error "the COGE genome service encountered an error:" details)
-  (let [body {:action  "coge_genome_viewer"
+  [error]
+  (let [details (if (string? error)
+                  error
+                  (slurp (:body error)))
+        body {:action  "coge_genome_viewer"
               :message "unable to parse COGE genome viewer data"
               :details details
               :success false}]
-   (throw+ {:type :error-status
-            :res  {:status       500
-                   :content-type :json
-                   :body         (cheshire/generate-string body)}})))
+    (log/error "the COGE genome service encountered an error:" details)
+    (throw+ {:type :error-status
+             :res  {:status       (if (or (string? error)
+                                          (not (:status error)))
+                                    500
+                                    (:status error))
+                    :content-type :json
+                    :body         (cheshire/generate-string body)}})))
 
 (defn- share-paths
   "Shares the given paths with the COGE user so the genome viewer service can access them."
@@ -46,10 +51,9 @@
   [paths]
   (let [ticket   (get-proxy-ticket (config/coge-genome-load-url))
         request  (build-coge-request paths ticket)
-        coge-url (str (config/coge-genome-load-url) "?ticket=" ticket)
-        response (client/post coge-url request)]
+        response (client/post (config/coge-genome-load-url) request)]
     (when-not (< 199 (:status response) 300)
-      (coge-genome-service-error (:body response)))
+      (coge-genome-service-error response))
     (string/trim (slurp (:body response)))))
 
 (defn- parse-genome-viewer-response
