@@ -50,6 +50,7 @@
 * [POST /secured/fileio/saveas](endpoints/fileio.md#save-as)
 * [POST /secured/fileio/urlupload](endpoints/fileio.md#url-uploads)
 * [POST /secured/filesystem/delete](endpoints/filesystem/delete.md#deleting-files-andor-directories-)
+* [POST /secured/filesystem/delete-contents](endpoints/filesystem/delete.md#deleting-all-items-in-a-directory)
 * [POST /secured/filesystem/delete-tickets](endpoints/filesystem/tickets.md#deleting-tickets-)
 * [GET /secured/filesystem/directory](endpoints/filesystem/directory-listing.md#directory-list-non-recursive-)
 * [POST /secured/filesystem/directory/create](endpoints/filesystem/directory-create.md#directory-creation-)

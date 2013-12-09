@@ -93,6 +93,9 @@
     (POST "/filesystem/delete" [:as req]
           (controller req do-delete :params :body))
 
+    (POST "/filesystem/delete-contents" [:as req]
+          (controller req do-delete-contents :params :body))
+
     (POST "/filesystem/move" [:as req]
           (controller req do-move :params :body))
 
