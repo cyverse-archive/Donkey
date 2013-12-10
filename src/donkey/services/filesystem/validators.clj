@@ -9,23 +9,30 @@
         [slingshot.slingshot :only [try+ throw+]]))
 
 (defn num-paths-okay?
-  [paths]
-  (<= (count paths) (fs-max-paths-in-request)))
+  [path-count]
+  (<= path-count (fs-max-paths-in-request)))
+
+(defn- validate-path-count
+  [count]
+  (if-not (num-paths-okay? count)
+    (throw+ {:error_code "ERR_TOO_MANY_PATHS"
+             :count count
+             :limit (fs-max-paths-in-request)})))
 
 (defn validate-num-paths
   [paths]
-  (if-not (num-paths-okay? paths)
-    (throw+ {:error_code "ERR_TOO_MANY_PATHS"
-             :count  (str (count paths))
-             :limit (fs-max-paths-in-request)})))
+  (validate-path-count (count paths)))
 
 (defn validate-num-paths-under-folder
   [user folder]
   (let [total (icat/number-of-all-items-under-folder user (irods-zone) folder)]
-    (when (> total (fs-max-paths-in-request))
-      (throw+ {:error_code "ERR_TOO_MANY_PATHS"
-               :count total
-               :limit (fs-max-paths-in-request)}))))
+    (validate-path-count total)))
+
+(defn validate-num-paths-under-paths
+  [user paths]
+  (let [sum-fn #(+ %1 (icat/number-of-all-items-under-folder user (irods-zone) %2))
+        total (reduce sum-fn 0 paths)]
+    (validate-path-count total)))
 
 (defn user-exists
   [cm user]

@@ -8,7 +8,7 @@ __Error codes__: ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EX
 
 The ERR_DOES_NOT_EXIST error code pops up when the destination directory does not exist and when one of the "sources" directories does not exist.
 The ERR_EXISTS code pops up when one of the new destination directories already exists.
-The ERR_TOO_MANY_PATHS error code is returned when the "sources" exceed the maximum number of paths that can be processed by this endpoint.
+The ERR_TOO_MANY_PATHS error code is returned when all of the "sources" and the items and sub-directories under them exceed the maximum number of paths that can be processed by this endpoint.
 
 __Request Query Parameters__:
 

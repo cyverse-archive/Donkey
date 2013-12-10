@@ -4,7 +4,9 @@ __URL Path__: /secured/filesystem/rename
 
 __HTTP Method__: POST
 
-__Error codes__: ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER
+__Error codes__: ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS
+
+The ERR_TOO_MANY_PATHS error code is returned when the items and sub-directories under the "source" folder exceed the maximum number of paths that can be processed by this endpoint.
 
 __Request Query Parameters__:
 

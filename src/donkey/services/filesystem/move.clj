@@ -40,7 +40,7 @@
       {:sources sources :dest dest})))
 
 (defn do-move
-  [{user :user} {sources :sources dest :dest}]  
+  [{user :user} {sources :sources dest :dest}]
   (move-paths user sources dest))
 
 (with-pre-hook! #'do-move
@@ -51,7 +51,8 @@
     (log/info "Body: " (json/encode body))
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user (:user params)}))))
+               :user (:user params)}))
+    (validators/validate-num-paths-under-paths (:user params) (:sources body))))
 
 (with-post-hook! #'do-move (log-func "do-move"))
 
@@ -63,7 +64,6 @@
 
 (defn do-move-contents
   [{user :user} {source :source dest :dest}]
-  (validators/validate-num-paths-under-folder user source)
   (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm source))
   (let [sources (get-paths-in-folder user source)]
     (move-paths user sources dest)))
@@ -76,6 +76,7 @@
     (log/info "Body: " (json/encode body))
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user (:user params)}))))
+               :user (:user params)}))
+    (validators/validate-num-paths-under-folder (:user params) (:source body))))
 
 (with-post-hook! #'do-move-contents (log-func "do-move-contents"))

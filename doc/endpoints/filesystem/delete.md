@@ -8,7 +8,7 @@ __Action__: "delete"
 
 __Error Codes__: ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_TOO_MANY_PATHS, ERR_NOT_A_USER
 
-The ERR_TOO_MANY_PATHS error code is returned when the "paths" exceed the maximum number that can be processed by this endpoint.
+The ERR_TOO_MANY_PATHS error code is returned when all of the "paths" and the items and sub-directories under them exceed the maximum number of paths that can be processed by this endpoint.
 
 __Request Parameters__:
 
