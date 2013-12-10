@@ -75,6 +75,7 @@
 * [POST /secured/filesystem/rename](endpoints/filesystem/rename.md#renaming-a-file-or-directory-)
 * [POST /secured/filesystem/replace-spaces](endpoints/filesystem/replace-spaces.md#replacing-spaces-with-underscores-)
 * [POST /secured/filesystem/restore](endpoints/filesystem/restore.md#restoring-a-file-or-directory-from-a-users-trash-)
+* [POST /secured/filesystem/restore-all](endpoints/filesystem/restore.md#restoring-all-items-in-a-users-trash)
 * [GET /secured/filesystem/root](endpoints/filesystem/root-listing.md#top-level-root-listing-)
 * [POST /secured/filesystem/share](endpoints/filesystem/sharing.md#sharing-)
 * [POST /secured/filesystem/stat](endpoints/filesystem/stat.md#file-and-directory-status-information-)

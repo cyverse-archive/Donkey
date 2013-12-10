@@ -237,6 +237,26 @@
     (validate-map body {:paths sequential?})
     (validate-num-paths (:paths body))))
 
+(defn do-restore-all
+  [{user :user}]
+  (let [trash (user-trash-path user)]
+    (validators/validate-num-paths-under-folder user trash)
+    (restore-path
+      {:user       user
+       :paths      (get-paths-in-folder user trash)
+       :user-trash trash})))
+
+(with-pre-hook! #'do-restore-all
+  (fn [params]
+    (log/warn "[call][do-restore-all]" params)
+    (validate-map params {:user string?})
+
+    (when (super-user? (:user params))
+      (throw+ {:error_code ERR_NOT_AUTHORIZED
+               :user       (:user params)}))))
+
+(with-post-hook! #'do-restore-all (log-func "do-restore-all"))
+
 (defn do-user-trash
   [{user :user}]
   {:id   (str "/root" (:trash (user-trash user)))

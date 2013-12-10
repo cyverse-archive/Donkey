@@ -138,6 +138,9 @@
     (POST "/filesystem/restore" [:as req]
           (controller req do-restore :params :body))
 
+    (POST "/filesystem/restore-all" [:as req]
+          (controller req do-restore-all :params))
+
     (POST "/filesystem/tickets" [:as req]
           (controller req do-add-tickets :params :body))
 

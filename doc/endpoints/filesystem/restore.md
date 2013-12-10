@@ -5,7 +5,7 @@ __URL Path__: /secured/filesystem/restore
 
 __HTTP Method__: POST
 
-__Error Codes__: ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_NOT_WRITEABLE
+__Error Codes__: ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_NOT_WRITEABLE, ERR_TOO_MANY_PATHS
 
 __Request Query Parameters__:
 
@@ -41,3 +41,52 @@ If a file is deleted and then the directory that the file originally lived in is
 __Curl Command__:
 
     curl -d '{"paths" : ["/iplant/trash/home/proxy-user/johnworth/foo.fq", "/iplant/trash/home/proxy-user/johnworth/foo1.fq"]}' http://sample.nibblonian.org/secured/filesystem/restore?proxyToken=notReal
+
+
+Restoring all items in a user's trash
+--------------
+
+__URL Path__: /secured/filesystem/restore-all
+
+__HTTP Method__: POST
+
+__Error Codes__: ERR_EXISTS, ERR_NOT_A_USER, ERR_NOT_WRITEABLE, ERR_TOO_MANY_PATHS
+
+The ERR_TOO_MANY_PATHS error code is returned when all items in the user's trash and its sub-directories exceed the maximum number of paths that can be processed by this endpoint.
+
+__Request Query Parameters__:
+
+* proxyToken - A valid CAS ticket.
+
+__Request Body__:
+
+    No body is required for this request.
+
+__Response__:
+
+    {
+        "success" : true,
+        "restored" : {
+            "/iplant/trash/home/proxy-user/johnworth/foo.fq" :  {
+                "restored-path" : /iplant/home/johnworth/foo.fq",
+                "partial-restore" : true
+            },
+            "/iplant/trash/home/proxy-user/johnworth/foo1.fq" : {
+                "restored-path" : "/iplant/home/johnworth/foo1.fq"
+                "partial-restore" : true
+            }
+        }
+    }
+
+__Example ERR_TOO_MANY_PATHS Error Response__:
+
+    {
+        "success": false,
+        "error_code": "ERR_TOO_MANY_PATHS",
+        "count": 250,
+        "limit": 100
+    }
+
+__Curl Command__:
+
+    curl -H "Content-Type:application/json" -X POST http://127.0.0.1:3000/secured/filesystem/restore-all?proxyToken=notReal
