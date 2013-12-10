@@ -14,6 +14,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
+            [clj-icat-direct.icat :as icat]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]))
 
@@ -193,6 +194,31 @@
   (fn [result]
     (log/warn "[result][do-delete]" result)))
 
+(defn- get-paths-in-folder
+  [user folder]
+  (let [limit   (fs-max-paths-in-request)
+        listing (icat/paged-folder-listing user (irods-zone) folder :base-name :asc limit 0)]
+    (map :full_path listing)))
+
+(defn do-delete-contents
+  [{user :user} {path :path}]
+  (validators/validate-num-paths-under-folder user path)
+  (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm path))
+  (let [paths (get-paths-in-folder user path)]
+    (delete-paths user paths)))
+
+(with-pre-hook! #'do-delete-contents
+  (fn [params body]
+    (log/warn "[call][do-delete-contents]" params body)
+    (validate-map params {:user string?})
+    (validate-map body   {:path string?})
+
+    (when (super-user? (:user params))
+      (throw+ {:error_code ERR_NOT_AUTHORIZED
+               :user       (:user params)}))))
+
+(with-post-hook! #'do-delete-contents (log-func "do-delete-contents"))
+
 (defn do-restore
   [{user :user} {paths :paths}]
   (restore-path
@@ -210,6 +236,26 @@
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (validate-num-paths (:paths body))))
+
+(defn do-restore-all
+  [{user :user}]
+  (let [trash (user-trash-path user)]
+    (validators/validate-num-paths-under-folder user trash)
+    (restore-path
+      {:user       user
+       :paths      (get-paths-in-folder user trash)
+       :user-trash trash})))
+
+(with-pre-hook! #'do-restore-all
+  (fn [params]
+    (log/warn "[call][do-restore-all]" params)
+    (validate-map params {:user string?})
+
+    (when (super-user? (:user params))
+      (throw+ {:error_code ERR_NOT_AUTHORIZED
+               :user       (:user params)}))))
+
+(with-post-hook! #'do-restore-all (log-func "do-restore-all"))
 
 (defn do-user-trash
   [{user :user}]

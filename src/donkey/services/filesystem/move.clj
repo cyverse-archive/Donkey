@@ -12,6 +12,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [clj-icat-direct.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- source->dest
@@ -54,3 +55,27 @@
 
 (with-post-hook! #'do-move (log-func "do-move"))
 
+(defn- get-paths-in-folder
+  [user folder]
+  (let [limit   (fs-max-paths-in-request)
+        listing (icat/paged-folder-listing user (irods-zone) folder :base-name :asc limit 0)]
+    (map :full_path listing)))
+
+(defn do-move-contents
+  [{user :user} {source :source dest :dest}]
+  (validators/validate-num-paths-under-folder user source)
+  (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm source))
+  (let [sources (get-paths-in-folder user source)]
+    (move-paths user sources dest)))
+
+(with-pre-hook! #'do-move-contents
+  (fn [params body]
+    (log/warn "[call][do-move-contents]" params body)
+    (validate-map params {:user string?})
+    (validate-map body {:source string? :dest string?})
+    (log/info "Body: " (json/encode body))
+    (when (super-user? (:user params))
+      (throw+ {:error_code ERR_NOT_AUTHORIZED
+               :user (:user params)}))))
+
+(with-post-hook! #'do-move-contents (log-func "do-move-contents"))

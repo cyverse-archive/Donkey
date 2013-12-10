@@ -3,6 +3,7 @@
         [clj-jargon.permissions]
         [clj-jargon.tickets]
         [clj-jargon.users]
+        [clj-icat-direct.icat :as icat]
         [donkey.util.config]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]]))
@@ -15,7 +16,16 @@
   [paths]
   (if-not (num-paths-okay? paths)
     (throw+ {:error_code "ERR_TOO_MANY_PATHS"
-             :count  (str (count paths))})))
+             :count  (str (count paths))
+             :limit (fs-max-paths-in-request)})))
+
+(defn validate-num-paths-under-folder
+  [user folder]
+  (let [total (icat/number-of-all-items-under-folder user (irods-zone) folder)]
+    (when (> total (fs-max-paths-in-request))
+      (throw+ {:error_code "ERR_TOO_MANY_PATHS"
+               :count total
+               :limit (fs-max-paths-in-request)}))))
 
 (defn user-exists
   [cm user]

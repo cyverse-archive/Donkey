@@ -93,8 +93,14 @@
     (POST "/filesystem/delete" [:as req]
           (controller req do-delete :params :body))
 
+    (POST "/filesystem/delete-contents" [:as req]
+          (controller req do-delete-contents :params :body))
+
     (POST "/filesystem/move" [:as req]
           (controller req do-move :params :body))
+
+    (POST "/filesystem/move-contents" [:as req]
+          (controller req do-move-contents :params :body))
 
     (GET "/filesystem/file/preview" [:as req]
          (controller req do-preview :params))
@@ -131,6 +137,9 @@
 
     (POST "/filesystem/restore" [:as req]
           (controller req do-restore :params :body))
+
+    (POST "/filesystem/restore-all" [:as req]
+          (controller req do-restore-all :params))
 
     (POST "/filesystem/tickets" [:as req]
           (controller req do-add-tickets :params :body))
