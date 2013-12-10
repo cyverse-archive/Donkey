@@ -44,4 +44,5 @@
     (validate-map body {:source string? :dest string?})
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user       (:user params)}))))
+               :user       (:user params)}))
+    (validators/validate-num-paths-under-folder (:user params) (:source body))))

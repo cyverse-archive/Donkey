@@ -7,6 +7,8 @@ __HTTP Method__: POST
 
 __Error Codes__: ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_NOT_WRITEABLE, ERR_TOO_MANY_PATHS
 
+The ERR_TOO_MANY_PATHS error code is returned when all of the "paths" and the items and sub-directories under them exceed the maximum number of paths that can be processed by this endpoint.
+
 __Request Query Parameters__:
 
 * proxyToken - A valid CAS ticket.

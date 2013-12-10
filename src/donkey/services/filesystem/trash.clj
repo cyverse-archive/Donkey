@@ -184,11 +184,10 @@
     (log/warn "[call][do-delete]" params body)
     (validate-map params {:user string?})
     (validate-map body   {:paths sequential?})
-    (validate-num-paths (:paths body))
-
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user       (:user params)}))))
+               :user       (:user params)}))
+    (validators/validate-num-paths-under-paths (:user params) (:paths body))))
 
 (with-post-hook! #'do-delete
   (fn [result]
@@ -202,7 +201,6 @@
 
 (defn do-delete-contents
   [{user :user} {path :path}]
-  (validators/validate-num-paths-under-folder user path)
   (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm path))
   (let [paths (get-paths-in-folder user path)]
     (delete-paths user paths)))
@@ -215,7 +213,8 @@
 
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user       (:user params)}))))
+               :user       (:user params)}))
+    (validators/validate-num-paths-under-folder (:user params) (:path body))))
 
 (with-post-hook! #'do-delete-contents (log-func "do-delete-contents"))
 
@@ -235,12 +234,11 @@
     (log/warn "[call][do-restore]" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
-    (validate-num-paths (:paths body))))
+    (validators/validate-num-paths-under-paths (:user params) (:paths body))))
 
 (defn do-restore-all
   [{user :user}]
   (let [trash (user-trash-path user)]
-    (validators/validate-num-paths-under-folder user trash)
     (restore-path
       {:user       user
        :paths      (get-paths-in-folder user trash)
@@ -251,9 +249,11 @@
     (log/warn "[call][do-restore-all]" params)
     (validate-map params {:user string?})
 
-    (when (super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user       (:user params)}))))
+    (let [user (:user params)]
+      (when (super-user? user)
+        (throw+ {:error_code ERR_NOT_AUTHORIZED
+                 :user       user}))
+      (validators/validate-num-paths-under-folder user (user-trash-path user)))))
 
 (with-post-hook! #'do-restore-all (log-func "do-restore-all"))
 
