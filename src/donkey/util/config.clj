@@ -582,3 +582,9 @@
   (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
   (validate-config)
   (ce/register-filters (exception-filters)))
+
+(defn load-config-from-file?
+  "Returns true if Donkey should read the config from a file."
+  []
+  (and (System/getenv "IPLANT_CONF_LOAD_FILE")
+       (System/getenv "IPLANT_CONF_DIR")))

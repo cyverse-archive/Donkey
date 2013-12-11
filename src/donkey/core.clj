@@ -130,7 +130,9 @@
 
 (defn -main
   [& _]
-  (load-configuration-from-zookeeper)
+  (if (config/load-config-from-file?)
+    (load-configuration-from-file)
+    (load-configuration-from-zookeeper))
   (register-specific-queries)
   (log/warn "Listening on" (config/listen-port))
   (start-nrepl)
