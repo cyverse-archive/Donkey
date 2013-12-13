@@ -169,7 +169,7 @@ A client may request the status of the indexer.
 
 ### Endpoint
 
-* Endpoint: `GET /secured/filesystem/index/status`
+* Endpoint: `GET /secured/filesystem/index-status`
 
 ### Request Parameters
 

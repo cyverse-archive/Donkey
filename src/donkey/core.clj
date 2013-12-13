@@ -19,6 +19,7 @@
         [donkey.routes.user-info]
         [donkey.routes.collaborator]
         [donkey.routes.filesystem]
+        [donkey.routes.search]
         [donkey.auth.user-attributes]
         [donkey.util]
         [donkey.util.service]
@@ -66,6 +67,7 @@
    (unsecured-tree-viewer-routes)
    (unsecured-fileio-routes)
    (unsecured-callback-routes)
+   (unsecured-search-routes)
 
    (context "/secured" []
             (cas-store-user (secured-routes) config/cas-server config/server-name))

@@ -103,6 +103,11 @@
   [props config-valid configs]
   "donkey.routes.filesystem" true)
 
+(cc/defprop-optboolean search-routes-enabled
+  "Enables or disables the search related routes."
+  [props config-valid configs]
+  "donkey.routes.search" true)
+
 (cc/defprop-optboolean agave-enabled
   "Enables or disables all features that require connections to Agave."
   [props config-valid configs]
