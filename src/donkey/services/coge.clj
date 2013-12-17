@@ -43,7 +43,7 @@
   [paths]
   (let [sharer      (:shortUsername current-user)
         share-withs [(config/coge-user)]
-        perms       {:read true, :write false, :own false}]
+        perms       {:read true, :write true, :own false}]
     (sharing/share sharer share-withs paths perms)))
 
 (defn- request-coge-genome-url
