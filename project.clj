@@ -42,7 +42,8 @@
   :main donkey.core
   :ring {:handler donkey.core/app
          :init donkey.core/lein-ring-init
-         :port 31325}
+         :port 31325
+         :auto-reload? false}
   :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
                :provides "donkey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "iplant-clavin" "java-1.7.0-openjdk"]
