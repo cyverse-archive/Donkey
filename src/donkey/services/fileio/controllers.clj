@@ -128,12 +128,5 @@
                    :path       dest}))
 
         (with-in-str cont
-          (actions/store cm *in* user dest)
-          {:status "success"
-           :file
-           {:id dest
-            :label         (ft/basename dest)
-            :permissions   (dataobject-perm-map cm user dest)
-            :date-created  (created-date cm dest)
-            :date-modified (lastmod-date cm dest)
-            :file-size     (str (file-size cm dest))}})))))
+          (actions/store cm *in* user dest))
+        (actions/get-file-details cm user dest)))))
