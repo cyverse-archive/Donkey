@@ -47,6 +47,7 @@
 * [GET /secured/edit-workflow/{analysis-id}](endpoints/app-metadata.md#making-a-pipeline-available-for-editing)
 * [PUT /secured/feedback](endpoints/misc.md#submitting-user-feedback)
 * [GET /secured/fileio/download](endpoints/fileio.md#downloading)
+* [POST /secured/fileio/save](endpoints/fileio.md#save)
 * [POST /secured/fileio/saveas](endpoints/fileio.md#save-as)
 * [POST /secured/fileio/urlupload](endpoints/fileio.md#url-uploads)
 * [POST /secured/filesystem/delete](endpoints/filesystem/delete.md#deleting-files-andor-directories-)
