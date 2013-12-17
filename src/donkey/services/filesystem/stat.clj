@@ -77,6 +77,7 @@
     (validate-map params {:user string?})
     (validate-map body {:paths vector?})
     (validate-map body {:paths #(not (empty? %1))})
+    (validate-map body {:paths #(every? (comp not string/blank?) %1)})
     (validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-stat (log-func "do-stat"))
