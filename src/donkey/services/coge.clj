@@ -19,12 +19,17 @@
       {:content-type "application/json; charset=utf-8"}
       (cheshire/encode body))))
 
+(defn- get-error-details
+  "Retrieves the details from an error returned by the COGE service."
+  [error]
+  (cond (nil? error)    "NO_ERROR_DETAILS"
+        (string? error) error
+        :else           (slurp (:body error))))
+
 (defn- coge-genome-service-error
   "Throws an exception indicating that the COGE genome service encountered an error."
   [error]
-  (let [details (if (string? error)
-                  error
-                  (slurp (:body error)))
+  (let [details (get-error-details error)
         body {:action  "coge_genome_viewer"
               :message "unable to parse COGE genome viewer data"
               :details details
