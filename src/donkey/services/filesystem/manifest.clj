@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.manifest
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -18,6 +18,8 @@
             [donkey.services.garnish.irods :as filetypes]
             [ring.util.codec :as cdc])
   (:import [org.apache.tika Tika]))
+
+(def ^:private coge-attr "ipc-coge-link")
 
 (defn- preview-url
   [user path]
@@ -38,6 +40,17 @@
         :tree-urls)
     []))
 
+(defn- extract-coge-view
+  [cm fpath]
+  (if (attribute? cm fpath coge-attr)
+    [{:label "gene_0"
+      :url   ((comp :value first) (get-attribute cm fpath coge-attr))}]
+    []))
+
+(defn- extract-urls
+  [cm fpath]
+  (into [] (concat (extract-tree-urls cm fpath) (extract-coge-view cm fpath))))
+
 (defn- manifest
   [user path data-threshold]
   (let [path (ft/rm-last-slash path)]
@@ -46,10 +59,10 @@
       (validators/path-exists cm path)
       (validators/path-is-file cm path)
       (validators/path-readable cm user path)
-      
+
       {:action       "manifest"
        :content-type (content-type cm path)
-       :tree-urls    (extract-tree-urls cm path)
+       :urls         (extract-urls cm path)
        :info-type    (filetypes/get-types cm user path)
        :mime-type    (.detect (Tika.) (input-stream cm path))
        :preview      (preview-url user path)})))
@@ -63,4 +76,3 @@
     (log/warn "[call][do-manifest]" params)))
 
 (with-post-hook! #'do-manifest (log-func "do-manifest"))
-

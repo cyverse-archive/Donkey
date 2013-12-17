@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.tickets
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -10,6 +10,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
+            [clostache.parser :as stache]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators])
@@ -29,10 +30,17 @@
       new-uuids
       (recur cm user num-uuids)) ))
 
+(defn render-ticket-tmpl
+  [cm ticket-map tmpl]
+  (assoc ticket-map :ticket-id
+         (stache/render tmpl {:url       (kifshare-external-url)
+                              :ticket-id (:ticket-id ticket-map)
+                              :filename  (ft/basename (:path ticket-map))})))
+
 (defn- add-tickets
   [user paths public?]
   (with-jargon (jargon-cfg) [cm]
-    (let [new-uuids (gen-uuids cm user (count paths))] 
+    (let [new-uuids (gen-uuids cm user (count paths))]
       (validators/user-exists cm user)
       (validators/all-paths-exist cm paths)
       (validators/all-paths-writeable cm user paths)
@@ -43,8 +51,12 @@
           (log/warn "[add-tickets] making ticket" uuid "public")
           (doto (ticket-admin-service cm (:username cm))
             (.addTicketGroupRestriction uuid "public"))))
-      
-      {:user user :tickets (mapv #(ticket-map cm (:username cm) %) new-uuids)})))
+      (let [sysuser (:username cm)
+            tmpl    (kifshare-download-template)]
+        {:user    user
+         :tickets (mapv
+                   #(render-ticket-tmpl cm (ticket-map cm sysuser %) tmpl)
+                   new-uuids)}))))
 
 (defn- remove-tickets
   [user ticket-ids]

@@ -37,6 +37,16 @@
   [props config-valid configs]
   "donkey.cas.cas-server")
 
+(cc/defprop-str pgt-callback-base
+  "The base URL to use for proxy granting ticket callbacks from the CAS server."
+  [props config-valid configs]
+  "donkey.cas.pgt-callback-base")
+
+(cc/defprop-str pgt-callback-path
+  "The URL path to use for proxy granting ticket callbacks from the CAS server."
+  [props config-valid configs]
+  "donkey.cas.pgt-callback-path")
+
 (cc/defprop-str server-name
   "The name of the local server."
   [props config-valid configs]
@@ -107,6 +117,11 @@
   "Enables or disables the search related routes."
   [props config-valid configs]
   "donkey.routes.search" true)
+
+(cc/defprop-optboolean coge-enabled
+  "Enables or disables COGE endpoints."
+  [props config-valid configs]
+  "donkey.routes.coge" true)
 
 (cc/defprop-optboolean agave-enabled
   "Enables or disables all features that require connections to Agave."
@@ -449,6 +464,11 @@
   "The old service name for fileio"
   [props config-valid configs fileio-routes-enabled]
   "donkey.fileio.service-name")
+
+(cc/defprop-int fileio-max-edit-file-size
+  "The old service name for fileio"
+  [props config-valid configs fileio-routes-enabled]
+  "donkey.fileio.max-edit-file-size")
 ;;; End File IO configuration
 
 ;;; Filesystem configuration (a.k.a. Nibblonian).
@@ -556,6 +576,26 @@
   "The base URL for receiving job status update callbacks from Agave."
   [props config-valid configs #(and (agave-enabled) (agave-jobs-enabled))]
   "donkey.agave.callback-base")
+
+(cc/defprop-str coge-genome-load-url
+  "The COGE service URL for loading genomes and creating viewer URLs."
+  [props config-valid configs coge-enabled]
+  "donkey.coge.genome-load-url")
+
+(cc/defprop-str coge-user
+  "The COGE user that needs file sharing permissions for genome viewer services."
+  [props config-valid configs coge-enabled]
+  "donkey.coge.user")
+
+(cc/defprop-str kifshare-download-template
+  "The mustache template for the kifshare URL."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.kifshare-download-template")
+
+(cc/defprop-str kifshare-external-url
+  "The external URL for kifshare."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.kifshare-external-url")
 
 (cc/defprop-str default-output-dir
   "The default name of the default job output directory."
