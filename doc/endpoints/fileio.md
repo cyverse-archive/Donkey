@@ -164,6 +164,50 @@ The 'dest' value in the JSON refers to the path to the directory in iRODS that t
 Uploads are staged in a temporary directory in iRODS before being moved to their final location.
 
 
+## Save
+
+__URL Path__: /secured/fileio/save
+
+__HTTP Method__: POST
+
+__Error Codes__:
+
++ ERR_INVALID_JSON (Missing content-type or JSON syntax error)
++ ERR_BAD_OR_MISSING_FIELD (Missing JSON field or invalid JSON field value)
++ ERR_NOT_A_USER (Invalid user specified)
++ ERR_DOES_NOT_EXIST (The destination directory does not exist)
++ ERR_NOT_WRITEABLE (The destination directory is not writable by the user)
++ ERR_FILE_SIZE_TOO_LARGE (The size of the "content" field is larger than the donkey.fileio.max-edit-file-size config setting)
+
+__Request Body__:
+
+    {
+        "content" : "This is the content for the file.",
+        "dest" : "/iplant/home/testuser/savedfile.txt"
+    }
+
+__Response Body__:
+
+    {
+        "success" : true,
+        "file" : {
+            "id" : "<path to the file>",
+            "label" : "<basename of the file path>",
+            "permissions" : {
+                "read" : true,
+                "write" : true,
+                "own" : true|false
+            },
+        "date-created" : "<seconds since the epoch as a string>",
+        "date-modified" : "<seconds since the epoch as a string>",
+        "file-size" : "<size in bytes as a string>"
+    }
+
+__Curl Command__:
+
+    curl -d '{"dest" : "/iplant/home/testuser/savedfile.txt", "content" : "This is the content for the file."}' 'http://127.0.0.1:31370/secured/fileio/save?proxyToken=notReal'
+
+
 ## Save As
 
 __URL Path__: /secured/fileio/saveas
@@ -189,14 +233,14 @@ __Request Body__:
 __Response Body__:
 
     {
-        "action" : "saveas",
-        "status" : "success",
+        "success" : true,
         "file" : {
             "id" : "<path to the file>",
             "label" : "<basename of the file path>",
             "permissions" : {
-                "read" : true|false,
-                "write" : true|false
+                "read" : true,
+                "write" : true,
+                "own" : true
             },
         "date-created" : "<seconds since the epoch as a string>",
         "date-modified" : "<seconds since the epoch as a string>",
@@ -206,5 +250,3 @@ __Response Body__:
 __Curl Command__:
 
     curl -d '{"content" : "This is the content for the file.", "dest" : "/iplant/home/testuser/savedfile.txt"}' 'http://127.0.0.1:31370/secured/fileio/saveas?proxyToken=notReal'
-
-
