@@ -464,6 +464,11 @@
   "The old service name for fileio"
   [props config-valid configs fileio-routes-enabled]
   "donkey.fileio.service-name")
+
+(cc/defprop-int fileio-max-edit-file-size
+  "The old service name for fileio"
+  [props config-valid configs fileio-routes-enabled]
+  "donkey.fileio.max-edit-file-size")
 ;;; End File IO configuration
 
 ;;; Filesystem configuration (a.k.a. Nibblonian).
