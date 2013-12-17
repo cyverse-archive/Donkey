@@ -21,7 +21,7 @@
                  [clj-http "0.7.7"]
                  [clj-time "0.6.0"]
                  [com.cemerick/url "0.0.7"]
-                 [ring "1.2.0"]
+                 [ring "1.2.1"]
                  [compojure "1.1.5"]
                  [heuristomancer "0.1.3-SNAPSHOT"]
                  [clojurewerkz/elastisch "1.2.0"]
@@ -35,7 +35,7 @@
                  [clj-icat-direct "0.0.1"]
                  [dire "0.5.1"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
-            [lein-ring "0.8.7"]
+            [lein-ring "0.8.8"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
   :aot [donkey.core]
