@@ -19,6 +19,8 @@
             [ring.util.codec :as cdc])
   (:import [org.apache.tika Tika]))
 
+(def ^:private coge-attr "ipc-coge-link")
+
 (defn- preview-url
   [user path]
   (str "file/preview?user=" (cdc/url-encode user) "&path=" (cdc/url-encode path)))
@@ -40,9 +42,9 @@
 
 (defn- extract-coge-view
   [cm fpath]
-  (if (attribute? cm fpath "ipc-coge")
+  (if (attribute? cm fpath coge-attr)
     [{:label "gene_0"
-      :url   ((comp :value first) (get-attribute cm fpath "ipc-coge"))}]
+      :url   ((comp :value first) (get-attribute cm fpath coge-attr))}]
     []))
 
 (defn- extract-urls

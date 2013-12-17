@@ -21,7 +21,7 @@
                  [clj-http "0.7.7"]
                  [clj-time "0.6.0"]
                  [com.cemerick/url "0.1.0"]
-                 [ring "1.2.0"]
+                 [ring "1.2.1"]
                  [compojure "1.1.5"]
                  [heuristomancer "0.1.3-SNAPSHOT"]
                  [clojurewerkz/elastisch "1.2.0"]
@@ -36,14 +36,15 @@
                  [de.ubercode.clostache/clostache "1.3.1"]
                  [dire "0.5.1"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
-            [lein-ring "0.8.7"]
+            [lein-ring "0.8.8"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
   :aot [donkey.core]
   :main donkey.core
   :ring {:handler donkey.core/app
          :init donkey.core/lein-ring-init
-         :port 31325}
+         :port 31325
+         :auto-reload? false}
   :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
                :provides "donkey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "iplant-clavin" "java-1.7.0-openjdk"]
