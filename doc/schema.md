@@ -50,17 +50,11 @@ Here are the fields that describe a filesystem entry.
     "userPermissions" : [
         {
             "permission" : "own",
-            "user"       : {
-                "username" : "tedgin",
-                "zone"     : "iplant"
-            }
+            "user"       : "tedgin#iplant"
         },
         {
             "permission" : "own",
-            "user"       : {
-                "username" : "rodsadmin",
-                "zone"     : "iplant"
-            }
+            "user"       : "rodsadmin#iplant"
         }
     ],
     "dateCreated"     : "2013-11-21T01:46:06.001Z",
@@ -76,7 +70,7 @@ describe a file.
 
 | Field    | Type   | Description |
 | -------- | ------ | ----------- |
-| creator  | object | a [user identity record](#user-identity-record) identifying the creator of the file |
+| creator  | string | the identity of the file's creator in name#zone format |
 | fileSize | number | the size of the file in octets |
 | fileType | string | the type of the file, `null` if unknown |
 | metadata | array  | the metadata attached to this file, an array of [AVU records](#avu-record) |
@@ -89,23 +83,14 @@ describe a file.
     "userPermissions" : [
         {
             "permission" : "own",
-            "user"       : {
-                "username" : "tedgin",
-                "zone"     : "iplant"
-            }
+            "user"       : "tedgin#iplant"
         },
         {
             "permission" : "own",
-            "user"       : {
-                "username" : "rodsadmin",
-                "zone"     : "iplant"
-            }
+            "user"       : "rodsadmin#iplant"
         }
     ],
-    "creator"         : {
-        "username" : "tedgin",
-        "zone"     : "iplant"
-    },
+    "creator"         : "tedgin#iplant",
     "dateCreated"     : "2013-11-21T01:46:06.001Z",
     "dateModified"    : "2013-11-21T01:46:06.001Z",
     "fileSize"        : 14016,
@@ -133,7 +118,7 @@ describe a folder.
 
 | Field       | Type   | Description |
 | ----------- | ------ | ----------- |
-| creator     | object | a [user identity record](#user-identity-record) identifying the creator of the folder |
+| creator     | string | the identity of the folder's creator in name#zone format |
 | metadata    | array  | the metadata attached to this folder, an array of [AVU records](#avu-record) |
 
 **Example**
@@ -144,23 +129,14 @@ describe a folder.
     "userPermissions" : [
         {
             "permission" : "own",
-            "user"       : {
-                "username" : "tedgin",
-                "zone"     : "iplant"
-            }
+            "user"       : "tedgin#iplant"
         },
         {
             "permission" : "own",
-            "user"       : {
-                "username" : "rodsadmin",
-                "zone"     : "iplant"
-            }
+            "user"       : "rodsadmin#iplant"
         }
     ],
-    "creator"         : {
-        "username" : "tedgin",
-        "zone"     : "iplant"
-    },
+    "creator"         : "tedgin#iplant",
     "dateCreated"     : "2013-11-21T01:46:06.001Z",
     "dateModified"    : "2013-11-21T01:46:06.001Z",
     "label"           : "a-folder",
@@ -186,7 +162,7 @@ Here are the fields that describe a permission.
 | Field      | Type   | Description |
 | ---------- | ------ | ----------- |
 | permission | string | the access level, `read`, `modify` or `own`\* |
-| user       | object | a [user identity record](#user-identity-record) identifying the user having the given permission |
+| user       | string | the identity of the user having the given permission in name#zone format |
 
 \* The `read` access level means the user can download a file or folder, read it, and read its
 metadata. The `modify` access level gives the user `read` access level plus the ability to create,
@@ -200,38 +176,18 @@ folder.
 ```json
 {
     "permission" : "own",
-    "user" : {
-        "username" : "tedgin",
-        "zone"     : "iplant"
-    }
-}
-```
-
-# User Identity Record
-
-Here are the fields that define a user identity.
-
-| Field    | Type   | Description |
-| -------- | ------ | ----------- |
-| username | string | the authenticated name of the identified user |
-| zone     | string | the iRODS zone where the user has been authenticated |
-
-**Example**
-
-```json
-{
-    "username" : "tedgin",
-    "zone"     : "iplant"
+    "user"       : "tedgin#iplant"
 }
 ```
 
 ## User Details Record
 
-User details extend a [user identity](#user-identity-record). Here are the additional fields that
-define a user's details.
+Here are the fields that describe a user's details.
 
 | Field       | Type   | Description |
 | ----------- | ------ | ----------- |
+| username    | string | the authenticated name of the identified user |
+| zone        | string | the iRODS zone where the user has been authenticated |
 | email       | string | the user's email address |
 | firstName   | string | the given name of the user |
 | lastName    | string | the family name of the user |

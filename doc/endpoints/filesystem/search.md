@@ -86,10 +86,7 @@ $ curl \
     "matches": [
         {
             "entity": {
-                "creator": {
-                    "name": "rods",
-                    "zone": "iplant"
-                },
+                "creator": "rods#iplant",
                 "dateCreated": "2013-10-09T13:27:04.090Z",
                 "dateModified": "2013-11-21T01:46:06.001Z",
                 "fileSize": 13225,
@@ -100,17 +97,11 @@ $ curl \
                 "userPermissions": [
                     {
                         "permission": "read",
-                        "user": {
-                            "username": "rods",
-                            "zone": "iplant"
-                        }
+                        "user": "rods#iplant"
                     },
                     {
                         "permission": "own",
-                        "user": {
-                            "username": "rodsadmin",
-                            "zone": "iplant"
-                        }
+                        "user": "rodsadmin#iplant"
                     }
                 ]
             },
@@ -119,10 +110,7 @@ $ curl \
         },
         {
             "entity": {
-                "creator": {
-                    "name": "rods",
-                    "zone": "iplant"
-                },
+                "creator": "rods#iplant",
                 "dateCreated": "2013-10-09T13:28:05.602Z",
                 "dateModified": "2013-11-21T01:46:06.001Z",
                 "fileSize": 14016,
@@ -139,17 +127,11 @@ $ curl \
                 "userPermissions": [
                     {
                         "permission": "read",
-                        "user": {
-                            "username": "rods",
-                            "zone": "iplant"
-                        }
+                        "user": "rods#iplant"
                     },
                     {
                         "permission": "write",
-                        "user": {
-                            "username": "rodsadmin",
-                            "zone": "iplant"
-                        }
+                        "user": "rodsadmin#iplant"
                     }
                 ]
             },
@@ -258,10 +240,7 @@ $ curl \
     "matches": [
         {
             "entity": {
-                "creator": {
-                    "name": "rods",
-                    "zone": "iplant"
-                },
+                "creator": "rods#iplant",
                 "dateCreated": "2013-10-09T13:27:04.090Z",
                 "dateModified": "2013-10-09T13:27:04.090Z",
                 "fileSize": 13225,
@@ -272,17 +251,11 @@ $ curl \
                 "userPermissions": [
                     {
                         "permission": "read",
-                        "user": {
-                            "username": "rods",
-                            "zone": "iplant"
-                        }
+                        "user": "rods#iplant"
                     },
                     {
                         "permission": "own",
-                        "user": {
-                            "username": "rodsadmin",
-                            "zone": "iplant"
-                        }
+                        "user": "rodsadmin#iplant"
                     }
                 ]
             },
@@ -291,10 +264,7 @@ $ curl \
         },
         {
             "entity": {
-                "creator": {
-                    "name": "rods",
-                    "zone": "iplant"
-                },
+                "creator": "rods#"iplant",
                 "dateCreated": "2013-10-09T13:28:05.602Z",
                 "dateModified": "2013-10-09T13:28:05.602Z",
                 "fileSize": 14016,
@@ -311,17 +281,11 @@ $ curl \
                 "userPermissions": [
                     {
                         "permission": "read",
-                        "user": {
-                            "username": "rods",
-                            "zone": "iplant"
-                        }
+                        "user": "rods#iplant"
                     },
                     {
                         "permission": "write",
-                        "user": {
-                            "username": "rodsadmin",
-                            "zone": "iplant"
-                        }
+                        "user": "rodsadmin#iplant"
                     }
                 ]
             },
