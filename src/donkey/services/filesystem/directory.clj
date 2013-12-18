@@ -13,6 +13,12 @@
             [donkey.services.filesystem.validators :as validators]
             [clj-icat-direct.icat :as icat]))
 
+(defn get-paths-in-folder
+  [user folder]
+  (let [limit   (fs-max-paths-in-request)
+        listing (icat/paged-folder-listing user (irods-zone) folder :base-name :asc limit 0)]
+    (map :full_path listing)))
+
 (defn- filtered-paths
   "Returns a seq of full paths that should not be included in paged listing."
   [user]
