@@ -117,7 +117,7 @@
   [user query opts]
   (let [type   (extract-type opts :any)
         offset (extract-uint opts :offset 0)
-        limit  (extract-uint opts :limit 200)]
+        limit  (extract-uint opts :limit (cfg/default-search-result-limit))]
     (-> (mk-query query user (list-user-groups user))
       (send-request offset limit type)
       (extract-result offset)
