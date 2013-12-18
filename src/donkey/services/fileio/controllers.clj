@@ -11,6 +11,7 @@
   (:require [donkey.services.fileio.actions :as actions]
             [donkey.services.fileio.controllers :as fileio]
             [donkey.services.filesystem.common-paths :as cp]
+            [donkey.services.filesystem.stat :as stat]
             [donkey.util.config :as config]
             [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
@@ -134,7 +135,7 @@
         (with-in-str content
           (actions/store cm *in* user dest))
 
-        (actions/get-file-details cm user dest)))))
+        {:file (stat/path-stat user dest)}))))
 
 (defn saveas
   [req-params req-body]
@@ -164,4 +165,5 @@
 
         (with-in-str cont
           (actions/store cm *in* user dest))
-        (actions/get-file-details cm user dest)))))
+
+        {:file (stat/path-stat user dest)}))))

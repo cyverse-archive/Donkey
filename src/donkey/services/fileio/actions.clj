@@ -15,18 +15,9 @@
             [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clj-http.client :as client]
+            [donkey.services.filesystem.stat :as stat]
             [donkey.services.garnish.irods :as filetype]
             [ring.util.response :as rsp-utils]))
-
-(defn get-file-details
-  [cm user path]
-  {:file
-   {:id path
-    :label         (ft/basename path)
-    :permissions   (dataobject-perm-map cm user path)
-    :date-created  (created-date cm path)
-    :date-modified (lastmod-date cm path)
-    :file-size     (str (file-size cm path))}})
 
 (defn set-meta
   [path attr value unit]
@@ -113,7 +104,7 @@
         (if (exists? cm new-path) (delete cm new-path))
         (move cm tmp-path new-path :user user :admin-users (irods-admins) :skip-source-perms? true)
         (set-owner cm new-path user)
-        (get-file-details cm user new-path)))))
+        {:file (stat/path-stat user new-path)}))))
 
 (defn url-encoded?
   [string-to-check]
