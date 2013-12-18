@@ -37,11 +37,9 @@ dot notation, e.g. `acl.access`.
 ### Endpoints
 
 * `GET /secured/filesystem/index`
-* `GET /secured/filesystem/{folder-path}/index`
 
-These endpoints search the data index and retrieve a set of files and folders matching the terms
-provided in the query string. If a `folder-path` is provided, only the entries belonging to the
-folder with the logical path specified by `folder-path` will be retrieved.
+This endpoint searches the data index and retrieves a set of files and/or folders matching the terms
+provided in the query string.
 
 ### Request Parameters
 
@@ -207,11 +205,9 @@ An administrator can perform any search as a specific user.
 ### Endpoints:
 
 * Admin Endpoint: `GET /admin/filesystem/index`
-* Admin Endpoint: `GET /admin/filesystem/{folder-path}/index`
 
-These endpoints search the data index and retrieve a set of files and folders matching the terms
-provided in the query string. If a `folder-path` is provided, only the entries belonging to the
-folder with the logical path specified by `folder-path` will be retrieved.
+This endpoint searches the data index and retrieves a set of files and/or folders matching the terms
+provided in the query string.
 
 ### Request Parameters
 
