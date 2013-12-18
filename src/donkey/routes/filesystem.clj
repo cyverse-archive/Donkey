@@ -72,6 +72,9 @@
     (POST "/filesystem/download" [:as req]
           (controller req do-download :params :body))
 
+    (POST "/filesystem/download-contents" [:as req]
+          (controller req do-download-contents :params :body))
+
     (GET "/filesystem/display-download" [:as req]
          (controller req do-special-download :params))
 
