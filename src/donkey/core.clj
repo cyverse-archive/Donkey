@@ -64,7 +64,7 @@
 (defn cas-store-user
   [routes]
   (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-user)]
-    (f (secured-routes)
+    (f routes
        config/cas-server
        config/server-name
        config/pgt-callback-base
@@ -127,7 +127,7 @@
 
 (defn site-handler
   [routes-fn]
-  (-> (delayed-handler donkey-routes)
+  (-> (delayed-handler routes-fn)
     (wrap-multipart-params {:store fileio/store-irods})
     trap-handler
     req-logger
