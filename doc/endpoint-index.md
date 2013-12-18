@@ -35,6 +35,7 @@
 * [GET /secured/app-rerun-info/{job-id}](endpoints/app-execution.md#obtaining-information-to-rerun-a-job)
 * [GET /secured/app/{app-id}](endpoints/updated-app-metadata.md#obtaining-app-information-for-job-submission)
 * [GET /secured/bootstrap](endpoints/misc.md#initializing-a-users-workspace)
+* [POST /secured/coge/load-genomes](endpoints/filesystem/coge.md#viewing-a-genome-file-in-coge)
 * [GET /secured/collaborators](endpoints/collaborators.md#listing-collaborators)
 * [POST /secured/collaborators](endpoints/collaborators.md#adding-collaborators)
 * [GET /secured/copy-template/{analysis-id}](endpoints/app-metadata.md#making-a-copy-of-an-analysis-available-for-editing-in-tito)

@@ -14,6 +14,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.services.filesystem.directory :as directory]
             [donkey.services.filesystem.validators :as validators])
   (:import [org.apache.tika Tika]))
 
@@ -80,6 +81,21 @@
     (validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-download (log-func "do-download"))
+
+(defn do-download-contents
+  [{user :user} {path :path}]
+  (let [paths (directory/get-paths-in-folder user path)]
+    (download user paths)))
+
+(with-pre-hook! #'do-download-contents
+  (fn [params body]
+    (log/warn "[call][do-download-contents]" params body)
+    (validate-map params {:user string?})
+    (validate-map body {:path string?})
+    (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))
+    (validators/validate-num-paths-under-folder (:user params) (:path body))))
+
+(with-post-hook! #'do-download-contents (log-func "do-download-contents"))
 
 (defn do-upload
   [{user :user}]
