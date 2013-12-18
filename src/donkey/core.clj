@@ -58,6 +58,7 @@
    (secured-filesystem-routes)
    (secured-coge-routes)
    (secured-admin-routes)
+   (secured-search-routes)
    (route/not-found (unrecognized-path-response))))
 
 (defn cas-store-user
@@ -82,7 +83,6 @@
    (unsecured-tree-viewer-routes)
    (unsecured-fileio-routes)
    (unsecured-callback-routes)
-   (unsecured-search-routes)
 
    (context "/secured" [] secured-handler)
 

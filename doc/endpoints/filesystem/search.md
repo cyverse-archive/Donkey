@@ -52,7 +52,7 @@ The following additional URI parameters are recognized.
 | q         | yes       |         | This parameter holds the search query. See [query string syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax) for a description of the syntax. |
 | type      | no        | any     | This parameter restricts the search to either files or folders. It can take the values `any`, meaning files and folders, `file`, only files, and `folders`, only folders. |
 | offset    | no        | 0       | This parameter indicates the number of matches to skip before including any in the result set. When combined with `limit`, it allows for paging results. |
-| limit     | no        | 0       | This parameter limits the number of matches in the result set to be a most a certain amount. A `0` indicates there is no limit. When combined with `offset`, it allows for paging results. |
+| limit     | no        | 200     | This parameter limits the number of matches in the result set to be a most a certain amount. When combined with `offset`, it allows for paging results. |
 
 ### Response
 
