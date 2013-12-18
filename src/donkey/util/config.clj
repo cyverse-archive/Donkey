@@ -116,7 +116,7 @@
 (cc/defprop-optboolean search-routes-enabled
   "Enables or disables the search related routes."
   [props config-valid configs]
-  "donkey.routes.search" true)
+  "donkey.routes.search" false)
 
 (cc/defprop-optboolean coge-enabled
   "Enables or disables COGE endpoints."
@@ -530,6 +530,11 @@
    search types."
   [props config-valid configs user-info-routes-enabled]
   "donkey.userinfo.default-search-limit")
+
+(cc/defprop-optint default-search-result-limit
+  "This is the default limit for the number of results for a data search."
+  [props config-valid configs search-routes-enabled]
+  "donkey.search.default-limit" 50)
 
 (cc/defprop-str nibblonian-base-url
   "The base URL for the Nibblonian data management services."
