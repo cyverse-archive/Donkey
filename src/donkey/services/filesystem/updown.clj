@@ -92,8 +92,7 @@
     (log/warn "[call][do-download-contents]" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string?})
-    (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))
-    (validators/validate-num-paths-under-folder (:user params) (:path body))))
+    (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))))
 
 (with-post-hook! #'do-download-contents (log-func "do-download-contents"))
 
