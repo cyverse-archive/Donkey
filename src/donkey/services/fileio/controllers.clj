@@ -133,7 +133,7 @@
                    :size       file-size}))
 
         (with-in-str content
-          (actions/store cm *in* user dest))
+          (actions/save cm *in* user dest))
 
         {:file (stat/path-stat user dest)}))))
 
