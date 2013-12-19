@@ -79,9 +79,9 @@ A success will return JSON like this:
                 "read" : true|false,
                 "write" : true|false
             },
-        "date-created" : "<seconds since the epoch as a string>",
-        "date-modified" : "<seconds since the epoch as a string>",
-        "file-size" : "<size in bytes as a string>"
+        "date-created" : <seconds since the epoch>,
+        "date-modified" : <seconds since the epoch>,
+        "file-size" : <size in bytes>
     }
 
 __Curl Command__:
@@ -198,9 +198,9 @@ __Response Body__:
                 "write" : true,
                 "own" : true|false
             },
-        "date-created" : "<seconds since the epoch as a string>",
-        "date-modified" : "<seconds since the epoch as a string>",
-        "file-size" : "<size in bytes as a string>"
+        "date-created" : <seconds since the epoch>,
+        "date-modified" : <seconds since the epoch>,
+        "file-size" : <size in bytes>
     }
 
 __Curl Command__:
@@ -242,9 +242,9 @@ __Response Body__:
                 "write" : true,
                 "own" : true
             },
-        "date-created" : "<seconds since the epoch as a string>",
-        "date-modified" : "<seconds since the epoch as a string>",
-        "file-size" : "<size in bytes as a string>"
+        "date-created" : <seconds since the epoch>,
+        "date-modified" : <seconds since the epoch>,
+        "file-size" : <size in bytes>
     }
 
 __Curl Command__:
