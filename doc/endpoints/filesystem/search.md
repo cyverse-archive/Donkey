@@ -70,10 +70,6 @@ When the search succeeds the response document has these additional fields.
 | type   | string | the entity is this type of filesystem entry, either `"file"` or `"folder"` |
 | entity | object | the [file record](../../schema.md#file-record) or [folder record](../../schema.md#folder-record) matched |
 
-### Error Codes
-
-__TODO__ _Document error codes._
-
 ### Example
 
 ```
@@ -173,10 +169,6 @@ has been completed, `syncState` is transitioned to `"pruning"`. This means that 
 scanned and entries that are no longer in the data store are removed. Finally, when pruning has
 completed, `syncState` is transitioned back to `"idle"`.
 
-### Error Codes
-
-__TODO__ _Document error codes._
-
 ### Example
 
 ```
@@ -221,10 +213,6 @@ reproduce a query the user has complained about. The parameter value takes the f
 ### Response
 
 The response body is the same as a [normal response body](#response-body).
-
-### Error Codes
-
-__TODO__ _Document error codes_
 
 ### Example
 
@@ -316,10 +304,6 @@ parameter is set to `stop`, if a synchronization is currently in progress, it wi
 ### Response
 
 A successful response has no additional fields.
-
-### Error Codes
-
-__TODO__ _Document error codes._
 
 ### Example
 

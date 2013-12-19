@@ -14,13 +14,14 @@
 
 (def ^{:private true :const true} default-zone "iplant")
 
-; TODO move this to a namespace in the client package. Also consider creating an protocol for this so that it may be mocked.
+
+; TODO move this to a namespace in the client package. Also consider creating a protocol for this so that it may be mocked.
 (defn- send-request
   "Sends the search request to Elastic Search.
 
    Throws:  
-     This throws ERR_CONFIG_INVALID when there it fails to connect to ElasticSearch or when it
-     detects that ElasticSearch hasn't been initialized."
+     :invalid-configuration - This is thrown if there is a problem with elasticsearch
+     :invalid-query - This is thrown if the query string is invalid."
   [query from size type]
   (let [index    "data"
         fmt-type (fn [t] (case t
@@ -32,9 +33,13 @@
         (es-doc/search-all-types index :query query :from from :size size)
         (es-doc/search index (fmt-type type) :query query :from from :size size))
       (catch ConnectException _
-        (throw (Exception. "cannot connect to Elastic Search")))  ; TODO make this a server error
+        (throw+ {:type   :invalid-configuration
+                 :reason "cannot connect to elasticsearch"}))
       (catch [:status 404] {:keys []}
-        (throw (Exception. "Elastic Search has not been initialized"))))))  ; TODO make this a server error
+        (throw+ {:type   :invalid-configuration
+                 :reason "elasticsearch has not been initialized"}))
+      (catch [:status 400] {:keys []}
+        (throw+ {:type :invalid-query})))))
 
 
 (defn- extract-result
@@ -97,14 +102,12 @@
       default)))
 
 
-; TODO make this throw an exception if the name is already qualified.
 (defn qualify-name
   "Qualifies a user or group name with the default zone."
   [name]
   (str name \# default-zone))
 
 
-; TODO learn what exceptions can be thrown.
 ; TODO make this work for users that belong to zones other than the default one.
 (defn- list-user-groups
   "Looks up the groups a user belongs to. The result is a set of zone-qualified group names.
@@ -126,4 +129,6 @@
         (extract-result offset)
         svc/success-response))
     (catch [:type :invalid-argument] {:keys [arg val reason]}
-      (svc/invalid-arg-response arg val reason))))
+      (svc/invalid-arg-response arg val reason))
+    (catch [:type :invalid-query] {:keys []}
+      (svc/invalid-arg-response "q" query "This is not a valid elasticsearch query string."))))

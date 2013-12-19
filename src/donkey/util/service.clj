@@ -109,6 +109,14 @@
                                    :val      val})
    :content-type :json})
 
+(defn invalid-cfg-response
+  [reason]
+  {:status       500
+   :body         (cheshire/encode {:success    false
+                                   :error_code ce/ERR_CONFIG_INVALID
+                                   :reason     reason})
+   :content-type :json})
+
 (defn missing-arg-response [arg]
   (log/error "missing required argument:" (name arg))
   {:status       400
