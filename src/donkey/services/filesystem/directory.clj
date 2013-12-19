@@ -42,14 +42,14 @@
                   :label         base_name
                   :filter        (or (should-filter? user full_path)
                                      (should-filter? user base_name))
-                  :file-size     (str data_size)
-                  :date-created  (str (* (Integer/parseInt create_ts) 1000))
-                  :date-modified (str (* (Integer/parseInt modify_ts) 1000))
+                  :file-size     data_size
+                  :date-created  (* (Integer/parseInt create_ts) 1000)
+                  :date-modified (* (Integer/parseInt modify_ts) 1000)
                   :permissions   (perm-map-for (str access_type_id))}]
     (if (= type "dataobject")
       base-map
       (merge base-map {:hasSubDirs true
-                       :file-size  "0"}))))
+                       :file-size  0}))))
 
 (defn- page->map
   "Transforms an entire page of results for a paged listing in a map that
@@ -118,7 +118,7 @@
             :hasSubDirs       true
             :date-created     (:created stat)
             :date-modified    (:modified stat)
-            :file-size        "0")
+            :file-size        0)
           (icat/number-of-items-in-folder user zone path)
           (icat/number-of-filtered-items-in-folder user zone path
                                                    (fs-filter-chars)
@@ -148,7 +148,7 @@
             :hasSubDirs    true
             :date-created  (:created stat)
             :date-modified (:modified stat)
-            :file-size     "0")
+            :file-size     0)
           (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
 
 #_(defn list-dir

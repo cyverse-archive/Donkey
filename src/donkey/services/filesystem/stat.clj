@@ -62,6 +62,7 @@
     (with-jargon (jargon-cfg) [cm]
       (validators/path-exists cm path)
       (-> (stat cm path)
+        (assoc :label (id->label cm user path))
         (merge {:permissions (permissions cm user path)})
         (merge-type-info cm user path)
         (merge-shares cm user path)

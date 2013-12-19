@@ -127,7 +127,7 @@
 
 (defn site-handler
   [routes-fn]
-  (-> (delayed-handler donkey-routes)
+  (-> (delayed-handler routes-fn)
     (wrap-multipart-params {:store fileio/store-irods})
     trap-handler
     req-logger
