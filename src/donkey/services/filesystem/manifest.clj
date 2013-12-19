@@ -43,7 +43,7 @@
 (defn- extract-coge-view
   [cm fpath]
   (if (attribute? cm fpath coge-attr)
-    (mapv (fn [url idx] {:label (str "gene_" idx) :url url})
+    (mapv (fn [{url :value} idx] {:label (str "gene_" idx) :url url})
           (get-attribute cm fpath coge-attr) (range))
     []))
 
