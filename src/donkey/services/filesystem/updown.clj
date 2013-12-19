@@ -78,8 +78,7 @@
   (fn [params body]
     (log/warn "[call][do-download]" params body)
     (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
-    (validate-num-paths (:paths body))))
+    (validate-map body {:paths sequential?})))
 
 (with-post-hook! #'do-download (log-func "do-download"))
 
