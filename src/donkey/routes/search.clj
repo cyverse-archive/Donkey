@@ -4,7 +4,8 @@
   (:require [donkey.auth.user-attributes :as user]
             [donkey.services.search :as search]
             [donkey.util :as util]
-            [donkey.util.config :as config]))
+            [donkey.util.config :as config]
+            [donkey.util.service :as svc]))
 
 
 (defn secured-search-routes
@@ -14,4 +15,6 @@
     [config/search-routes-enabled]
 
     (GET "/filesystem/index" [q & opts]
-      (search/search (search/qualify-user (:shortUsername user/current-user)) q opts))))
+      (if q
+        (search/search (search/qualify-name (:shortUsername user/current-user)) q opts)
+        (svc/missing-arg-response "q")))))
