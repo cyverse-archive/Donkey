@@ -43,8 +43,8 @@
                   :filter        (or (should-filter? user full_path)
                                      (should-filter? user base_name))
                   :file-size     data_size
-                  :date-created  (str (* (Integer/parseInt create_ts) 1000))
-                  :date-modified (str (* (Integer/parseInt modify_ts) 1000))
+                  :date-created  (* (Integer/parseInt create_ts) 1000)
+                  :date-modified (* (Integer/parseInt modify_ts) 1000)
                   :permissions   (perm-map-for (str access_type_id))}]
     (if (= type "dataobject")
       base-map
