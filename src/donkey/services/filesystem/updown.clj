@@ -15,7 +15,8 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.directory :as directory]
-            [donkey.services.filesystem.validators :as validators])
+            [donkey.services.filesystem.validators :as validators]
+            [clj-icat-direct.icat :as icat])
   (:import [org.apache.tika Tika]))
 
 (defn- tika-detect-type
@@ -84,7 +85,8 @@
 
 (defn do-download-contents
   [{user :user} {path :path}]
-  (let [paths (directory/get-paths-in-folder user path)]
+  (let [limit (:total (icat/number-of-items-in-folder user (irods-zone) path)) ;; FIXME this is horrible
+        paths (directory/get-paths-in-folder user path limit)]
     (download user paths)))
 
 (with-pre-hook! #'do-download-contents
