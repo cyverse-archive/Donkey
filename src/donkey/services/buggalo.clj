@@ -180,6 +180,11 @@
        (save-tree-metaurl path metaurl)
        urls)))
 
+(defn tree-urls-response
+  "Formats the response for one of the tree viewer URL services."
+  [resp]
+  (success-response {:urls (:tree-urls resp)}))
+
 (defn tree-viewer-urls-for
   "Obtains the tree viewer URLs for a request body."
   [body]
@@ -189,9 +194,9 @@
           sha1   (save-file body infile)]
       (if-let [tree-urls (get-existing-tree-urls sha1)]
         (do (log/debug "found existing tree URLs for" sha1)
-            (success-response tree-urls))
+            (tree-urls-response tree-urls))
         (do (log/debug "generating new URLs for" sha1)
-            (success-response (get-and-save-tree-viewer-urls dir infile sha1)))))))
+            (tree-urls-response (get-and-save-tree-viewer-urls dir infile sha1)))))))
 
 (defn tree-viewer-urls
   "Obtains the tree viewer URLs for a tree file in iRODS."
@@ -199,7 +204,7 @@
      (tree-viewer-urls path (:shortUsername current-user) {}))
   ([path user {:keys [refresh]}]
      (log/debug "obtaining tree URLs for user" user "and path" path)
-     (success-response
+     (tree-urls-response
       (or (and (not refresh) (get-existing-tree-urls user path))
           (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
             (let [infile (file dir "data.txt")
