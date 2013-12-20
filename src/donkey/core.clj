@@ -4,7 +4,6 @@
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.lazy-listings :only [define-specific-queries delete-specific-queries]]
         [compojure.core]
         [donkey.routes.admin]
         [donkey.routes.callbacks]
@@ -88,12 +87,6 @@
 
    (route/not-found (unrecognized-path-response))))
 
-(defn register-specific-queries
-  []
-  (with-jargon (config/jargon-cfg) [cm]
-    (delete-specific-queries cm)
-    (define-specific-queries cm)))
-
 (defn start-nrepl
   []
   (nrepl/start-server :port 7888))
@@ -107,7 +100,6 @@
 (defn lein-ring-init
   []
   (load-configuration-from-file)
-  (register-specific-queries)
   (messages/messaging-initialization)
   (icat/configure-icat)
   (start-nrepl)
@@ -116,7 +108,6 @@
 (defn repl-init
   []
   (load-configuration-from-file)
-  (register-specific-queries)
   (icat/configure-icat))
 
 (defn load-configuration-from-zookeeper
@@ -143,7 +134,6 @@
   (if (config/load-config-from-file?)
     (load-configuration-from-file)
     (load-configuration-from-zookeeper))
-  (register-specific-queries)
   (log/warn "Listening on" (config/listen-port))
   (start-nrepl)
   (messages/messaging-initialization)
