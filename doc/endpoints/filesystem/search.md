@@ -74,7 +74,7 @@ When the search succeeds the response document has these additional fields.
 
 ```
 $ curl \
-> "http://localhost:8888/secured/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&q=name:?e*&type=file&offset=1&limit=2" \
+> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=label:?e*&type=file&offset=1&limit=2" \
 > | python -mjson.tool
 {
     "matches": [
