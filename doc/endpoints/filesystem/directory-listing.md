@@ -21,13 +21,13 @@ __Request Query Params__:
 __Response Body__:
 
     {
-    "date-created": "1369778522000",
-    "date-modified": "1381177547000",
+    "date-created": 1369778522000,
+    "date-modified": 1381177547000,
     "file-size": 0,
     "folders": [
         {
-            "date-created": "1373927956000",
-            "date-modified": "1374015533000",
+            "date-created": 1373927956000,
+            "date-modified": 1374015533000,
             "file-size": 0,
             "filter": false,
             "hasSubDirs": true,
@@ -41,8 +41,8 @@ __Response Body__:
             }
         },
         {
-            "date-created": "1371157127000",
-            "date-modified": "1380909580000",
+            "date-created": 1371157127000,
+            "date-modified": 1380909580000,
             "file-size": 0,
             "filter": false,
             "hasSubDirs": true,
@@ -56,8 +56,8 @@ __Response Body__:
             }
         },
         {
-            "date-created": "1380814985000",
-            "date-modified": "1380814985000",
+            "date-created": 1380814985000,
+            "date-modified": 1380814985000,
             "file-size": 0,
             "filter": false,
             "hasSubDirs": true,
@@ -121,14 +121,14 @@ __Request Query Params__:
 __Response Body__:
 
     {
-        "date-created": "1369778522000",
-        "date-modified": "1379520049000",
-        "file-size": "0",
+        "date-created": 1369778522000,
+        "date-modified": 1379520049000,
+        "file-size": 0,
         "files": [
             {
-                "date-created": "1379519492000",
-                "date-modified": "1379520049000",
-                "file-size": "196903039",
+                "date-created": 1379519492000,
+                "date-modified": 1379520049000,
+                "file-size": 196903039,
                 "id": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
                 "path": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
                 "label": "centos-5.8-x86-64-minimal.box",
@@ -141,9 +141,9 @@ __Response Body__:
         ],
         "folders": [
             {
-                "date-created": "1374080225000",
-                "date-modified": "1374080225000",
-                "file-size": "0",
+                "date-created": 1374080225000,
+                "date-modified": 1374080225000,
+                "file-size": 0,
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/asdfafa",
                 "path": "/iplant/home/wregglej/asdfafa",
@@ -155,9 +155,9 @@ __Response Body__:
                 }
             },
             {
-                "date-created": "1377814242000",
-                "date-modified": "1377814242000",
-                "file-size": "0",
+                "date-created": 1377814242000,
+                "date-modified": 1377814242000,
+                "file-size": 0,
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/asdf bar",
                 "path": "/iplant/home/wregglej/asdf bar",
@@ -169,9 +169,9 @@ __Response Body__:
                 }
             },
             {
-                "date-created": "1373397344000",
-                "date-modified": "1377558112000",
-                "file-size": "0",
+                "date-created": 1373397344000,
+                "date-modified": 1377558112000,
+                "file-size": 0,
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
                 "path": "/iplant/home/wregglej/Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
@@ -183,9 +183,9 @@ __Response Body__:
                 }
             },
             {
-                "date-created": "1374080529000",
-                "date-modified": "1374080529000",
-                "file-size": "0",
+                "date-created": 1374080529000,
+                "date-modified": 1374080529000,
+                "file-size": 0,
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/zaaaaaaaa",
                 "path": "/iplant/home/wregglej/zaaaaaaaa",

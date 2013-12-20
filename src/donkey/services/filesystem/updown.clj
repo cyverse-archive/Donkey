@@ -14,7 +14,9 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.validators :as validators])
+            [donkey.services.filesystem.directory :as directory]
+            [donkey.services.filesystem.validators :as validators]
+            [clj-icat-direct.icat :as icat])
   (:import [org.apache.tika Tika]))
 
 (defn- tika-detect-type
@@ -76,10 +78,24 @@
   (fn [params body]
     (log/warn "[call][do-download]" params body)
     (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
-    (validate-num-paths (:paths body))))
+    (validate-map body {:paths sequential?})))
 
 (with-post-hook! #'do-download (log-func "do-download"))
+
+(defn do-download-contents
+  [{user :user} {path :path}]
+  (let [limit (:total (icat/number-of-items-in-folder user (irods-zone) path)) ;; FIXME this is horrible
+        paths (directory/get-paths-in-folder user path limit)]
+    (download user paths)))
+
+(with-pre-hook! #'do-download-contents
+  (fn [params body]
+    (log/warn "[call][do-download-contents]" params body)
+    (validate-map params {:user string?})
+    (validate-map body {:path string?})
+    (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))))
+
+(with-post-hook! #'do-download-contents (log-func "do-download-contents"))
 
 (defn do-upload
   [{user :user}]

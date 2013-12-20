@@ -5,8 +5,7 @@
         [donkey.auth.user-attributes]
         [donkey.util])
   (:require [donkey.util.config :as config]
-            [donkey.services.garnish.controllers :as garnish]
-            [donkey.services.search :as search]))
+            [donkey.services.garnish.controllers :as garnish]))
 
 (defn secured-data-routes
   "The routes for data sharing endpoints."
@@ -39,7 +38,4 @@
          (trap #(share req)))
 
    (POST "/unshare" [:as req]
-         (trap #(unshare req)))
-
-   (GET "/search" [:as {params :params}]
-        (trap #(search/search params current-user)))))
+         (trap #(unshare req)))))

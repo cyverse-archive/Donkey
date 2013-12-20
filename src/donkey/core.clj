@@ -19,6 +19,8 @@
         [donkey.routes.user-info]
         [donkey.routes.collaborator]
         [donkey.routes.filesystem]
+        [donkey.routes.search]
+        [donkey.routes.coge]
         [donkey.auth.user-attributes]
         [donkey.util]
         [donkey.util.service]
@@ -35,6 +37,12 @@
             [donkey.util.icat :as icat]
             [clojure.tools.nrepl.server :as nrepl]))
 
+(defn delayed-handler
+  [routes-fn]
+  (fn [req]
+    (let [handler ((memoize routes-fn))]
+      (handler req))))
+
 (defn secured-routes
   []
   (flagged-routes
@@ -48,14 +56,23 @@
    (secured-session-routes)
    (secured-fileio-routes)
    (secured-filesystem-routes)
+   (secured-coge-routes)
    (secured-admin-routes)
+   (secured-search-routes)
    (route/not-found (unrecognized-path-response))))
 
 (defn cas-store-user
-  [routes cas-server server-name]
-  (if (System/getenv "IPLANT_CAS_FAKE")
-    (fake-store-current-user (secured-routes) config/cas-server config/server-name)
-    (store-current-user (secured-routes) config/cas-server config/server-name)))
+  [routes]
+  (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-user)]
+    (f routes
+       config/cas-server
+       config/server-name
+       config/pgt-callback-base
+       config/pgt-callback-path)))
+
+(def secured-handler
+  (-> (delayed-handler secured-routes)
+      (cas-store-user)))
 
 (defn donkey-routes
   []
@@ -67,8 +84,7 @@
    (unsecured-fileio-routes)
    (unsecured-callback-routes)
 
-   (context "/secured" []
-            (cas-store-user (secured-routes) config/cas-server config/server-name))
+   (context "/secured" [] secured-handler)
 
    (route/not-found (unrecognized-path-response))))
 
@@ -109,15 +125,9 @@
   (config/load-config-from-zookeeper)
   (db/define-database))
 
-(defn delayed-handler
-  [routes-fn]
-  (fn [req]
-    (let [handler ((memoize routes-fn))]
-      (handler req))))
-
 (defn site-handler
   [routes-fn]
-  (-> (delayed-handler donkey-routes)
+  (-> (delayed-handler routes-fn)
     (wrap-multipart-params {:store fileio/store-irods})
     trap-handler
     req-logger
@@ -130,7 +140,9 @@
 
 (defn -main
   [& _]
-  (load-configuration-from-zookeeper)
+  (if (config/load-config-from-file?)
+    (load-configuration-from-file)
+    (load-configuration-from-zookeeper))
   (register-specific-queries)
   (log/warn "Listening on" (config/listen-port))
   (start-nrepl)

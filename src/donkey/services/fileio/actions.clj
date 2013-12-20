@@ -15,6 +15,7 @@
             [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clj-http.client :as client]
+            [donkey.services.filesystem.stat :as stat]
             [donkey.services.garnish.irods :as filetype]
             [ring.util.response :as rsp-utils]))
 
@@ -23,8 +24,8 @@
   (with-jargon (jargon-cfg) [cm]
     (set-metadata cm path attr value unit)))
 
-(defn scruffy-copy
-  [cm user istream dest-path]
+(defn- scruffy-copy
+  [cm istream user dest-path]
   (log/warn "In scruffy-copy")
   (let [ostream (output-stream cm dest-path)]
     (try
@@ -32,30 +33,37 @@
       (finally
         (.close istream)
         (.close ostream)
-        (set-owner cm dest-path user)
-        (let [guessed-type (:type (filetype/preview-auto-type user dest-path))]
-          (log/warn "Guessed type" guessed-type)
-          (when-not (or (nil? guessed-type) (empty? guessed-type))
-            (log/warn "Adding type " guessed-type)
-            (filetype/add-type cm user dest-path guessed-type)))))
+        (set-owner cm dest-path user)))
     {:id          dest-path
      :permissions (dataobject-perm-map cm user dest-path)}))
 
-(defn store
+(defn save
   [cm istream user dest-path]
-  (log/info "In store function for " user dest-path)
+  (log/info "In save function for " user dest-path)
   (let [ddir (ft/dirname dest-path)]
     (when-not (exists? cm ddir)
       (mkdirs cm ddir))
 
     (when-not (is-writeable? cm user ddir)
-      (log/error (str "Directory " ddir " is not writeable."))
+      (log/error (str "Directory " ddir " is not writeable by " user))
       (throw+ {:error_code ERR_NOT_WRITEABLE
                :path ddir} ))
 
-    (scruffy-copy cm user istream dest-path)
-    (log/info "store function after copy.")
+    (scruffy-copy cm istream user dest-path)
+    (log/info "save function after copy.")
     dest-path))
+
+(defn store
+  [cm istream user dest-path]
+  (log/info "In store function for " user dest-path)
+  (save cm istream user dest-path)
+  (log/info "store function after save.")
+  (let [guessed-type (:type (filetype/preview-auto-type user dest-path))]
+    (log/warn "Guessed type" guessed-type)
+    (when-not (or (nil? guessed-type) (empty? guessed-type))
+      (log/warn "Adding type " guessed-type)
+      (filetype/add-type cm user dest-path guessed-type)))
+    dest-path)
 
 (defn- get-istream
   [user file-path]
@@ -103,13 +111,7 @@
         (if (exists? cm new-path) (delete cm new-path))
         (move cm tmp-path new-path :user user :admin-users (irods-admins) :skip-source-perms? true)
         (set-owner cm new-path user)
-        {:file 
-         {:id new-path
-          :label         (ft/basename new-path)
-          :permissions   (dataobject-perm-map cm user new-path)
-          :date-created  (created-date cm new-path)
-          :date-modified (lastmod-date cm new-path)
-          :file-size     (str (file-size cm new-path))}}))))
+        {:file (stat/path-stat user new-path)}))))
 
 (defn url-encoded?
   [string-to-check]

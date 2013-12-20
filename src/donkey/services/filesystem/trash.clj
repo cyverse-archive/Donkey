@@ -16,6 +16,7 @@
             [clojure-commons.file-utils :as ft]
             [clj-icat-direct.icat :as icat]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.services.filesystem.directory :as directory]
             [donkey.services.filesystem.validators :as validators]))
 
 (def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
@@ -193,16 +194,10 @@
   (fn [result]
     (log/warn "[result][do-delete]" result)))
 
-(defn- get-paths-in-folder
-  [user folder]
-  (let [limit   (fs-max-paths-in-request)
-        listing (icat/paged-folder-listing user (irods-zone) folder :base-name :asc limit 0)]
-    (map :full_path listing)))
-
 (defn do-delete-contents
   [{user :user} {path :path}]
   (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm path))
-  (let [paths (get-paths-in-folder user path)]
+  (let [paths (directory/get-paths-in-folder user path)]
     (delete-paths user paths)))
 
 (with-pre-hook! #'do-delete-contents
@@ -241,7 +236,7 @@
   (let [trash (user-trash-path user)]
     (restore-path
       {:user       user
-       :paths      (get-paths-in-folder user trash)
+       :paths      (directory/get-paths-in-folder user trash)
        :user-trash trash})))
 
 (with-pre-hook! #'do-restore-all

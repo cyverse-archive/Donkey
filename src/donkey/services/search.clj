@@ -1,58 +1,66 @@
 (ns donkey.services.search
   "provides the functions that forward search requests to Elastic Search"
+  (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.string :as string]
-            [clojure.tools.logging :as log]
             [clojurewerkz.elastisch.query :as es-query]
             [clojurewerkz.elastisch.rest :as es]
             [clojurewerkz.elastisch.rest.document :as es-doc]
             [clojurewerkz.elastisch.rest.response :as es-resp]
-            [slingshot.slingshot :as ss]
-            [clojure-commons.client :as client]
-            [clojure-commons.nibblonian :as nibblonian]
+            [donkey.services.filesystem.users :as users]
             [donkey.util.config :as cfg]
             [donkey.util.service :as svc])
   (:import [java.net ConnectException]))
 
 
-(defn send-request
+(def ^{:private true :const true} default-zone "iplant")
+
+
+; TODO move this to a namespace in the client package. Also consider creating a protocol for this so that it may be mocked.
+(defn- send-request
   "Sends the search request to Elastic Search.
 
    Throws:  
-     This throws ERR_CONFIG_INVALID when there it fails to connect to Elastic 
-     Search or when it detects that Elastic Search hasn't been initialized."
+     :invalid-configuration - This is thrown if there is a problem with elasticsearch
+     :invalid-query - This is thrown if the query string is invalid."
   [query from size type]
-  (let [index "iplant"]
-    (ss/try+ 
+  (let [index    "data"
+        fmt-type (fn [t] (case t
+                           :file   "file"
+                           :folder "folder"))]
+    (try+
       (es/connect! (cfg/es-url))
-      (if type
-        (es-doc/search index type :query query :from from :size size)
-        (es-doc/search-all-types index :query query :from from :size size))
+      (if (= type :any)
+        (es-doc/search-all-types index :query query :from from :size size)
+        (es-doc/search index (fmt-type type) :query query :from from :size size))
       (catch ConnectException _
-        (throw (Exception. "cannot connect to Elastic Search")))
+        (throw+ {:type   :invalid-configuration
+                 :reason "cannot connect to elasticsearch"}))
       (catch [:status 404] {:keys []}
-        (throw (Exception. "Elastic Search has not been initialized"))))))
+        (throw+ {:type   :invalid-configuration
+                 :reason "elasticsearch has not been initialized"}))
+      (catch [:status 400] {:keys []}
+        (throw+ {:type :invalid-query})))))
 
 
 (defn- extract-result
-  "Extracts the result of the Donkey search services from the results returned
-   to us by Elastic Search."
-  [resp]
-  (letfn [(format-hit [hit] (dissoc (merge hit (:_source hit)) :_source))]
-    {:total     (or (es-resp/total-hits resp) 0)
-     :max_score (get-in resp [:hits :max_score])
-     :hits      (map format-hit (es-resp/hits-from resp))}))
+  "Extracts the result of the Donkey search services from the results returned to us by
+   ElasticSearch."
+  [resp offset]
+  (letfn [(format-match [match] {:score  (:_score match)
+                                 :type   (:_type match)
+                                 :entity (:_source match)})]
+    {:total   (or (es-resp/total-hits resp) 0)
+     :offset  offset
+     :matches (map format-match (es-resp/hits-from resp))}))
 
 
 (defn- mk-query
   "Builds a query."
-  [name-glob user user-groups]
-  (let [pattern (string/lower-case
-                 (if (re-find #"[*?]" name-glob)
-                   name-glob
-                   (str name-glob \*)))
-        viewers (conj user-groups user)]
-    (es-query/filtered :query  (es-query/wildcard :name pattern)
-                       :filter (es-query/term :viewers viewers))))
+  [query user user-groups]
+  (let [memberships (conj user-groups user)
+        filter      (es-query/nested :path   "userPermissions"
+                                     :filter (es-query/term "userPermissions.user" memberships))]
+    (es-query/filtered :query (es-query/query-string :query query) :filter filter)))
 
 
 (defn- extract-type
@@ -60,69 +68,67 @@
 
    Throws:
      :invalid-argument - This is thrown if the extracted type isn't valid."
-  [params]
+  [params default]
   (if-let [type-val (:type params)]
-    (let [type (string/lower-case type-val)]
-      (when-not (contains? #{"folder" "file"} type)
-        (ss/throw+ {:error_code :invalid-argument
-                    :reason "must be 'file' or 'folder'"
-                    :arg    :type
-                    :val    type-val}))
-      type)))
+    (case (string/lower-case type-val)
+      "any"    :any
+      "file"   :file
+      "folder" :folder
+               (throw+ {:type   :invalid-argument
+                        :reason "must be 'any', 'file' or 'folder'"
+                        :arg    :type
+                        :val    type-val}))
+    default))
 
 
 (defn- extract-uint
   "Extracts a non-negative integer from the URL parameters
 
    Throws:
-     invalid-argument - This is thrown if the parameter value isn't a
-       non-negative integer."
+     :invalid-argument - This is thrown if the parameter value isn't a non-negative integer."
   [params name-key default]
   (letfn [(mk-exception [val] {:type   :invalid-argument
                                :reason "must be a non-negative integer"
                                :arg    name-key
                                :val    val})]
     (if-let [val-str (name-key params)]
-      (ss/try+
+      (try+
         (let [val (Integer. val-str)]
           (when (neg? val)
-            (ss/throw+ (mk-exception val)))
+            (throw+ (mk-exception val)))
           val)
         (catch NumberFormatException _
-          (ss/throw+ (mk-exception val-str))))
+          (throw+ (mk-exception val-str))))
       default)))
 
 
+(defn qualify-name
+  "Qualifies a user or group name with the default zone."
+  [name]
+  (str name \# default-zone))
+
+
+; TODO make this work for users that belong to zones other than the default one.
+(defn- list-user-groups
+  "Looks up the groups a user belongs to. The result is a set of zone-qualified group names.
+   Unqualified user names are assumed to belong to the default zone."
+  [user]
+  (map qualify-name
+       (users/list-user-groups (string/replace user (str \# default-zone) ""))))
+
+
 (defn search
-  "Performs a search on the Elastic Search repository.  The value of the
-   search-term query-string parameter is used as the name pattern to search for.
-   If search-term contains an asterisk or a question mark then it will be
-   treated as a literal glob pattern.  Otherwise, an asterisk will be added to
-   the end of the search term and that value will be used as a glob pattern.
-
-   Optionally, the type, from and size parameters may be provided in the query
-   string.  The type parameter is the type of entry to search, either file or
-   folder.  If type isn't provided, all entries will be searched.  The from and
-   size parameters are used for paging.  from indicates the number of entries to
-   skip before returns matches.  size indicates the number of matches to return.
-   If from isn't provided, it defaults to 0.  If size isn't provided, it
-   defaults to 10.
-
-   Parameters:
-     params     - the query-string parameters for this service.
-     user-attrs - the attributes of the user performing the search.
-
-   Returns:
-     the response from Elastic Search"
-  [params {user :shortUsername}]
-  (when-not user
-    (throw (Exception. "no user provided for search")))
-  (let [search-term (svc/required-param params :search-term)
-        type        (extract-type params)
-        from        (extract-uint params :from 0)
-        size        (extract-uint params :size 10)
-        groups      (nibblonian/get-user-groups (cfg/nibblonian-base-url) user)]
-    (-> (mk-query search-term user groups)
-      (send-request from size type)
-      extract-result
-      svc/success-response)))
+  "Performs a search on the Elastic Search repository."
+  [user query opts]
+  (try+
+    (let [type   (extract-type opts :any)
+          offset (extract-uint opts :offset 0)
+          limit  (extract-uint opts :limit (cfg/default-search-result-limit))]
+      (-> (mk-query query user (list-user-groups user))
+        (send-request offset limit type)
+        (extract-result offset)
+        svc/success-response))
+    (catch [:type :invalid-argument] {:keys [arg val reason]}
+      (svc/invalid-arg-response arg val reason))
+    (catch [:type :invalid-query] {:keys []}
+      (svc/invalid-arg-response "q" query "This is not a valid elasticsearch query string."))))

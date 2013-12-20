@@ -1,4 +1,3 @@
-
 # _These endpoints have not been implemented yet._
 
 This document describes the endpoints used to performing searches of user data.
@@ -38,11 +37,9 @@ dot notation, e.g. `acl.access`.
 ### Endpoints
 
 * `GET /secured/filesystem/index`
-* `GET /secured/filesystem/{folder-path}/index`
 
-These endpoints search the data index and retrieve a set of files and folders matching the terms
-provided in the query string. If a `folder-path` is provided, only the entries belonging to the
-folder with the logical path specified by `folder-path` will be retrieved.
+This endpoint searches the data index and retrieves a set of files and/or folders matching the terms
+provided in the query string.
 
 ### Request Parameters
 
@@ -53,7 +50,7 @@ The following additional URI parameters are recognized.
 | q         | yes       |         | This parameter holds the search query. See [query string syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax) for a description of the syntax. |
 | type      | no        | any     | This parameter restricts the search to either files or folders. It can take the values `any`, meaning files and folders, `file`, only files, and `folders`, only folders. |
 | offset    | no        | 0       | This parameter indicates the number of matches to skip before including any in the result set. When combined with `limit`, it allows for paging results. |
-| limit     | no        | 0       | This parameter limits the number of matches in the result set to be a most a certain amount. A `0` indicates there is no limit. When combined with `offset`, it allows for paging results. |
+| limit     | no        | 200     | This parameter limits the number of matches in the result set to be a most a certain amount. When combined with `offset`, it allows for paging results. |
 
 ### Response
 
@@ -73,24 +70,17 @@ When the search succeeds the response document has these additional fields.
 | type   | string | the entity is this type of filesystem entry, either `"file"` or `"folder"` |
 | entity | object | the [file record](../../schema.md#file-record) or [folder record](../../schema.md#folder-record) matched |
 
-### Error Codes
-
-__TODO__ _Document error codes._
-
 ### Example
 
 ```
 $ curl \
-> "http://localhost:8888/secured/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&q=name:?e*&type=file&offset=1&limit=2" \
+> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=label:?e*&type=file&offset=1&limit=2" \
 > | python -mjson.tool
 {
     "matches": [
         {
             "entity": {
-                "creator": {
-                    "name": "rods",
-                    "zone": "iplant"
-                },
+                "creator": "rods#iplant",
                 "dateCreated": "2013-10-09T13:27:04.090Z",
                 "dateModified": "2013-11-21T01:46:06.001Z",
                 "fileSize": 13225,
@@ -98,20 +88,14 @@ $ curl \
                 "label": "read1_10k.fq",
                 "fileType": null,
                 "metadata": [],
-                "user-permissions": [
+                "userPermissions": [
                     {
                         "permission": "read",
-                        "user": {
-                            "username": "rods",
-                            "zone": "iplant"
-                        }
+                        "user": "rods#iplant"
                     },
                     {
                         "permission": "own",
-                        "user": {
-                            "username": "rodsadmin",
-                            "zone": "iplant"
-                        }
+                        "user": "rodsadmin#iplant"
                     }
                 ]
             },
@@ -120,10 +104,7 @@ $ curl \
         },
         {
             "entity": {
-                "creator": {
-                    "name": "rods",
-                    "zone": "iplant"
-                },
+                "creator": "rods#iplant",
                 "dateCreated": "2013-10-09T13:28:05.602Z",
                 "dateModified": "2013-11-21T01:46:06.001Z",
                 "fileSize": 14016,
@@ -140,17 +121,11 @@ $ curl \
                 "userPermissions": [
                     {
                         "permission": "read",
-                        "user": {
-                            "username": "rods",
-                            "zone": "iplant"
-                        }
+                        "user": "rods#iplant"
                     },
                     {
                         "permission": "write",
-                        "user": {
-                            "username": "rodsadmin",
-                            "zone": "iplant"
-                        }
+                        "user": "rodsadmin#iplant"
                     }
                 ]
             },
@@ -170,7 +145,7 @@ A client may request the status of the indexer.
 
 ### Endpoint
 
-* Endpoint: `GET /secured/filesystem/index/status`
+* Endpoint: `GET /secured/filesystem/index-status`
 
 ### Request Parameters
 
@@ -193,10 +168,6 @@ data store is being crawled and entries missing from the search index are being 
 has been completed, `syncState` is transitioned to `"pruning"`. This means that the search index is
 scanned and entries that are no longer in the data store are removed. Finally, when pruning has
 completed, `syncState` is transitioned back to `"idle"`.
-
-### Error Codes
-
-__TODO__ _Document error codes._
 
 ### Example
 
@@ -226,11 +197,9 @@ An administrator can perform any search as a specific user.
 ### Endpoints:
 
 * Admin Endpoint: `GET /admin/filesystem/index`
-* Admin Endpoint: `GET /admin/filesystem/{folder-path}/index`
 
-These endpoints search the data index and retrieve a set of files and folders matching the terms
-provided in the query string. If a `folder-path` is provided, only the entries belonging to the
-folder with the logical path specified by `folder-path` will be retrieved.
+This endpoint searches the data index and retrieves a set of files and/or folders matching the terms
+provided in the query string.
 
 ### Request Parameters
 
@@ -245,10 +214,6 @@ reproduce a query the user has complained about. The parameter value takes the f
 
 The response body is the same as a [normal response body](#response-body).
 
-### Error Codes
-
-__TODO__ _Document error codes_
-
 ### Example
 
 ```
@@ -259,10 +224,7 @@ $ curl \
     "matches": [
         {
             "entity": {
-                "creator": {
-                    "name": "rods",
-                    "zone": "iplant"
-                },
+                "creator": "rods#iplant",
                 "dateCreated": "2013-10-09T13:27:04.090Z",
                 "dateModified": "2013-10-09T13:27:04.090Z",
                 "fileSize": 13225,
@@ -273,17 +235,11 @@ $ curl \
                 "userPermissions": [
                     {
                         "permission": "read",
-                        "user": {
-                            "username": "rods",
-                            "zone": "iplant"
-                        }
+                        "user": "rods#iplant"
                     },
                     {
                         "permission": "own",
-                        "user": {
-                            "username": "rodsadmin",
-                            "zone": "iplant"
-                        }
+                        "user": "rodsadmin#iplant"
                     }
                 ]
             },
@@ -292,10 +248,7 @@ $ curl \
         },
         {
             "entity": {
-                "creator": {
-                    "name": "rods",
-                    "zone": "iplant"
-                },
+                "creator": "rods#"iplant",
                 "dateCreated": "2013-10-09T13:28:05.602Z",
                 "dateModified": "2013-10-09T13:28:05.602Z",
                 "fileSize": 14016,
@@ -312,17 +265,11 @@ $ curl \
                 "userPermissions": [
                     {
                         "permission": "read",
-                        "user": {
-                            "username": "rods",
-                            "zone": "iplant"
-                        }
+                        "user": "rods#iplant"
                     },
                     {
                         "permission": "write",
-                        "user": {
-                            "username": "rodsadmin",
-                            "zone": "iplant"
-                        }
+                        "user": "rodsadmin#iplant"
                     }
                 ]
             },
@@ -357,10 +304,6 @@ parameter is set to `stop`, if a synchronization is currently in progress, it wi
 ### Response
 
 A successful response has no additional fields.
-
-### Error Codes
-
-__TODO__ _Document error codes._
 
 ### Example
 

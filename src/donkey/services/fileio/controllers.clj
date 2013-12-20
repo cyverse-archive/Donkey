@@ -11,6 +11,8 @@
   (:require [donkey.services.fileio.actions :as actions]
             [donkey.services.fileio.controllers :as fileio]
             [donkey.services.filesystem.common-paths :as cp]
+            [donkey.services.filesystem.stat :as stat]
+            [donkey.util.config :as config]
             [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
@@ -101,6 +103,40 @@
         (log/warn "connection to" addr "successfully established"))
       (actions/urlimport user addr fname dest))))
 
+(defn save
+  [req-params req-body]
+  (log/info "Detected params: " req-params)
+  (let [params (add-current-user-to-map req-params)
+        body   (parse-body (slurp req-body))]
+    (validate-map params {:user string?})
+    (validate-map body {:dest string? :content string?})
+    (let [user      (:user params)
+          dest      (string/trim (:dest body))
+          content   (:content body)
+          file-size (count (.getBytes content "UTF-8"))]
+      (with-jargon (jargon-cfg) [cm]
+        (when-not (user-exists? cm user)
+          (throw+ {:user       user
+                   :error_code ERR_NOT_A_USER}))
+
+        (when-not (exists? cm (ft/dirname dest))
+          (throw+ {:error_code ERR_DOES_NOT_EXIST
+                   :path       (ft/dirname dest)}))
+
+        (when-not (is-writeable? cm user (ft/dirname dest))
+          (throw+ {:error_code ERR_NOT_WRITEABLE
+                   :path       (ft/dirname dest)}))
+
+        (when (> file-size (config/fileio-max-edit-file-size))
+          (throw+ {:error_code "ERR_FILE_SIZE_TOO_LARGE"
+                   :path       dest
+                   :size       file-size}))
+
+        (with-in-str content
+          (actions/save cm *in* user dest))
+
+        {:file (stat/path-stat user dest)}))))
+
 (defn saveas
   [req-params req-body]
   (let [params (add-current-user-to-map req-params)
@@ -128,12 +164,6 @@
                    :path       dest}))
 
         (with-in-str cont
-          (actions/store cm *in* user dest)
-          {:status "success"
-           :file
-           {:id dest
-            :label         (ft/basename dest)
-            :permissions   (dataobject-perm-map cm user dest)
-            :date-created  (created-date cm dest)
-            :date-modified (lastmod-date cm dest)
-            :file-size     (str (file-size cm dest))}})))))
+          (actions/store cm *in* user dest))
+
+        {:file (stat/path-stat user dest)}))))
