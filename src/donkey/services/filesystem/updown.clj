@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.updown
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -76,7 +76,7 @@
 
 (with-pre-hook! #'do-download
   (fn [params body]
-    (log/warn "[call][do-download]" params body)
+    (log-call "do-download" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})))
 
@@ -90,7 +90,7 @@
 
 (with-pre-hook! #'do-download-contents
   (fn [params body]
-    (log/warn "[call][do-download-contents]" params body)
+    (log-call "do-download-contents" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string?})
     (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))))
@@ -103,7 +103,7 @@
 
 (with-pre-hook! #'do-upload
   (fn [params]
-    (log/warn "[call][do-upload]" params)
+    (log-call "do-upload" params)
     (validate-map params {:user string?})))
 
 (with-post-hook! #'do-upload (log-func "do-upload"))
@@ -119,10 +119,10 @@
   (cond
     (not (contains? params :attachment))
     (str "attachment; filename=\"" (ft/basename (:path params)) "\"")
-    
+
     (not (attachment? params))
     (str "filename=\"" (ft/basename (:path params)) "\"")
-    
+
     :else
     (str "attachment; filename=\"" (ft/basename (:path params)) "\"")))
 
@@ -138,13 +138,13 @@
 
 (with-pre-hook! #'do-special-download
   (fn [params]
-    (log/warn "[call][do-special-download] params")
+    (log-call "do-special-download" params)
     (validate-map params {:user string? :path string?})
     (let [user (:user params)
           path (:path params)]
       (log/info "User for download: " user)
       (log/info "Path to download: " path)
-    
+
       (when (super-user? user)
         (throw+ {:error_code ERR_NOT_AUTHORIZED
                  :user       user})))))

@@ -73,6 +73,6 @@
 
 (with-pre-hook! #'do-manifest
   (fn [params]
-    (log/warn "[call][do-manifest]" params)))
+    (log-call "do-manifest" params)))
 
 (with-post-hook! #'do-manifest (log-func "do-manifest"))

@@ -182,7 +182,7 @@
 
 (with-pre-hook! #'do-delete
   (fn [params body]
-    (log/warn "[call][do-delete]" params body)
+    (log-call "do-delete" params body)
     (validate-map params {:user string?})
     (validate-map body   {:paths sequential?})
     (when (super-user? (:user params))
@@ -190,9 +190,7 @@
                :user       (:user params)}))
     (validators/validate-num-paths-under-paths (:user params) (:paths body))))
 
-(with-post-hook! #'do-delete
-  (fn [result]
-    (log/warn "[result][do-delete]" result)))
+(with-post-hook! #'do-delete (log-func "do-delete"))
 
 (defn do-delete-contents
   [{user :user} {path :path}]
@@ -202,7 +200,7 @@
 
 (with-pre-hook! #'do-delete-contents
   (fn [params body]
-    (log/warn "[call][do-delete-contents]" params body)
+    (log-call "do-delete-contents" params body)
     (validate-map params {:user string?})
     (validate-map body   {:path string?})
 
@@ -220,13 +218,11 @@
      :paths paths
      :user-trash (user-trash-path user)}))
 
-(with-post-hook! #'do-restore
-  (fn [result]
-    (log/warn "[result][do-restore]" result)))
+(with-post-hook! #'do-restore (log-func "do-restore"))
 
 (with-pre-hook! #'do-restore
   (fn [params body]
-    (log/warn "[call][do-restore]" params body)
+    (log-call "do-restore" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (validators/validate-num-paths-under-paths (:user params) (:paths body))))
@@ -241,7 +237,7 @@
 
 (with-pre-hook! #'do-restore-all
   (fn [params]
-    (log/warn "[call][do-restore-all]" params)
+    (log-call "do-restore-all" params)
     (validate-map params {:user string?})
 
     (let [user (:user params)]
@@ -259,22 +255,18 @@
 
 (with-pre-hook! #'do-user-trash
   (fn [params]
-    (log/warn "[call][do-user-trash]" params)
+    (log-call "do-user-trash" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-user-trash
-  (fn [result]
-    (log/warn "[result][do-user-trash]" result)))
+(with-post-hook! #'do-user-trash (log-func "do-user-trash"))
 
 (defn do-delete-trash
   [{user :user}]
   (delete-trash user))
 
-(with-post-hook! #'do-delete-trash
-  (fn [result]
-    (log/warn "[result][do-delete-trash]" result)))
+(with-post-hook! #'do-delete-trash (log-func "do-delete-trash"))
 
 (with-pre-hook! #'do-delete-trash
   (fn [params]
-    (log/warn "[call][do-delete-trash]" params)
+    (log-call "do-delete-trash" params)
     (validate-map params {:user string?})))

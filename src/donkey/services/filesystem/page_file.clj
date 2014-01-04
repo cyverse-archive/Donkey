@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.page-file
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -53,7 +53,7 @@
 
 (with-pre-hook! #'do-read-chunk
   (fn [params body]
-    (log/warn "[call][do-read-chunk]" params body)
+    (log-call "do-read-chunk" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string? :position string? :chunk-size string?})))
 
@@ -66,7 +66,7 @@
 
 (with-pre-hook! #'do-overwrite-chunk
   (fn [params body]
-    (log/warn "[call][do-overwrite-chunk]" params body)
+    (log-call "do-overwrite-chunk" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string? :position string? :update string?})))
 

@@ -90,7 +90,7 @@
 
 (with-pre-hook! #'do-add-tickets
   (fn [params body]
-    (log/warn "[call][do-add-tickets]" params body)
+    (log-call "do-add-tickets" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (validate-num-paths (:paths body))))
@@ -103,7 +103,7 @@
 
 (with-pre-hook! #'do-remove-tickets
   (fn [params body]
-    (log/warn "[call][do-remove-tickets]" params body)
+    (log-call "do-remove-tickets" params body)
     (validate-map params {:user string?})
     (validate-map body {:tickets sequential?})
     (when-not (every? true? (mapv string? (:tickets body)))
@@ -118,7 +118,7 @@
 
 (with-pre-hook! #'do-list-tickets
   (fn [params body]
-    (log/warn "[call][do-list-tickets]" params body)
+    (log-call "do-list-tickets" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))

@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.sharing
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -109,7 +109,7 @@
     (validators/all-users-exist cm share-withs)
     (validators/all-paths-exist cm fpaths)
     (validators/user-owns-paths cm user fpaths)
-    
+
     (let [keyfn      #(if (:skipped %) :skipped :succeeded)
           share-recs (group-by keyfn (share-paths cm user share-withs fpaths perms))
           sharees    (map :user (:succeeded share-recs))
@@ -196,12 +196,12 @@
     (validators/all-users-exist cm unshare-withs)
     (validators/all-paths-exist cm fpaths)
     (validators/user-owns-paths cm user fpaths)
-    
+
     (log/debug "unshare - after validators")
     (log/debug "unshare - user: " user)
     (log/debug "unshare - unshare-withs: " unshare-withs)
     (log/debug "unshare - fpaths: " fpaths)
-    
+
     (let [keyfn        #(if (:skipped %) :skipped :succeeded)
           unshare-recs (group-by keyfn (unshare-paths cm user unshare-withs fpaths))
           unsharees    (map :user (:succeeded unshare-recs))
@@ -231,7 +231,7 @@
 
 (with-pre-hook! #'do-share
   (fn [params body]
-    (log/warn "[call][do-share]" params body)
+    (log-call "do-share" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential? :permissions map?})
     (validate-map (:permissions body) {:read boolean? :write boolean? :own boolean?})
@@ -246,7 +246,7 @@
 
 (with-pre-hook! #'do-unshare
   (fn [params body]
-    (log/warn "[call][do-unshare]" params body)
+    (log-call "do-unshare" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential?})
     (validate-num-paths (:paths body))))

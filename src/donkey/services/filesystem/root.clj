@@ -26,22 +26,22 @@
       (with-jargon (jargon-cfg) [cm]
         (log/warn "in (root-listing)")
         (validators/user-exists cm user)
-        
+
         (when (create-trash-folder? cm user root-path)
           (log/warn "[root-listing] Creating" root-path "for" user)
           (mkdir cm root-path)
           (log/warn "[root-listing] Setting own perms on" root-path "for" user)
           (set-permissions cm user root-path false false true))
-        
+
         (validators/path-exists cm root-path)
-        
+
         (when (and set-own? (not (owns? cm user root-path)))
           (log/warn "[root-listing] set-own? is true and" root-path "is not owned by" user)
           (log/warn "[root-listing] Setting own perms on" root-path "for" user)
           (set-permissions cm user root-path false false true))
-        
+
         (when-let [res (list-dir cm user root-path :include-subdirs false)]
-          (assoc res 
+          (assoc res
                  :label (id->label cm user (:id res))
                  :path  (:id res)
                  :id    (str "/root" (:id res))))))))
@@ -61,9 +61,7 @@
 
 (with-pre-hook! #'do-root-listing
   (fn [params]
-    (log/warn "[call][do-root-listing]" params)
+    (log-call "do-root-listing" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-root-listing
-  (fn [result]
-    (log/warn "[result][do-root-listing]" result)))
+(with-post-hook! #'do-root-listing (log-func "do-root-listing"))

@@ -26,9 +26,7 @@
 
 (with-pre-hook! #'do-homedir
   (fn [params]
-    (log/warn "[call][do-homedir]" params)
+    (log-call "do-homedir" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-homedir
-  (fn [result]
-    (log/warn "[result][do-homedir]" result)))
+(with-post-hook! #'do-homedir (log-func "do-homedir"))

@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.rename
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -21,7 +21,7 @@
       (validators/path-exists cm source)
       (validators/user-owns-path cm user source)
       (validators/path-not-exists cm dest)
-      
+
       (let [result (move cm source dest :user user :admin-users (irods-admins))]
         (when-not (nil? result)
           (throw+ {:error_code ERR_INCOMPLETE_RENAME
@@ -33,13 +33,11 @@
   [{user :user} {source :source dest :dest}]
   (rename-path user source dest))
 
-(with-post-hook! #'do-rename
-  (fn [result]
-    (log/warn "[result][do-rename]" result)))
+(with-post-hook! #'do-rename (log-func "do-rename"))
 
 (with-pre-hook! #'do-rename
   (fn [params body]
-    (log/warn "[call][do-rename]" params body)
+    (log-call "do-rename" params body)
     (validate-map params {:user string?})
     (validate-map body {:source string? :dest string?})
     (when (super-user? (:user params))

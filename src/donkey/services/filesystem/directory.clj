@@ -220,27 +220,21 @@
 
 (with-pre-hook! #'do-directory
   (fn [params]
-    (log/warn "[call][do-directory]" params)
+    (log-call "do-directory" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-directory
-  (fn [result]
-    (log/warn "[result][do-directory]" result)))
+(with-post-hook! #'do-directory (log-func "do-directory"))
 
 (with-pre-hook! #'do-paged-listing
   (fn [params]
-    (log/warn "[call][do-paged-listing]" params)
+    (log-call "do-paged-listing" params)
     (validate-map params {:user string? :path string? :limit string? :offset string?})))
 
-(with-post-hook! #'do-paged-listing
-  (fn [result]
-    (log/warn "[result][do-paged-listing]" result)))
+(with-post-hook! #'do-paged-listing (log-func "do-paged-listing"))
 
 (with-pre-hook! #'do-unsecured-paged-listing
   (fn [params]
-    (log/warn "[call][do-unsecured-paged-listing]" params)
+    (log-call "do-unsecured-paged-listing" params)
     (validate-map params {:path string? :limit string? :offset string?})))
 
-(with-post-hook! #'do-unsecured-paged-listing
-  (fn [result]
-    (log/warn "[result][do-unsecured-paged-listing]" result)))
+(with-post-hook! #'do-unsecured-paged-listing (log-func "do-unsecured-paged-listing"))

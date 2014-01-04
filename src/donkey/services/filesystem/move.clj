@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.move
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -46,7 +46,7 @@
 
 (with-pre-hook! #'do-move
   (fn [params body]
-    (log/warn "[call][do-move]" params body)
+    (log-call "do-move" params body)
     (validate-map params {:user string?})
     (validate-map body {:sources sequential? :dest string?})
     (log/info "Body: " (json/encode body))
@@ -65,7 +65,7 @@
 
 (with-pre-hook! #'do-move-contents
   (fn [params body]
-    (log/warn "[call][do-move-contents]" params body)
+    (log-call "do-move-contents" params body)
     (validate-map params {:user string?})
     (validate-map body {:source string? :dest string?})
     (log/info "Body: " (json/encode body))

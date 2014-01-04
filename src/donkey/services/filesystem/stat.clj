@@ -74,7 +74,7 @@
 
 (with-pre-hook! #'do-stat
   (fn [params body]
-    (log/warn "[call][do-stat]" params body)
+    (log-call "do-stat" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths vector?})
     (validate-map body {:paths #(not (empty? %1))})
