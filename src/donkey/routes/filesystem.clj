@@ -42,8 +42,9 @@
 
 (defn- ctlr
   [req slurp? func & args]
-  (let [req  (pre-process-request req :slurp? slurp?)
-        argv (mapv #(get req %) args)]
+  (let [req     (pre-process-request req :slurp? slurp?)
+        get-arg (fn [arg] (if (keyword? arg) (get req arg) arg))
+        argv    (mapv get-arg args)]
     (trap #(apply func argv))))
 
 (defn controller
@@ -119,13 +120,16 @@
           (controller req do-metadata-set :params :body))
 
     (DELETE "/filesystem/metadata" [:as req]
-            (controller req do-metadata-delete (:params req)))
+            (controller req do-metadata-delete :params))
 
     (POST "/filesystem/metadata-batch" [:as req]
           (controller req do-metadata-batch-set :params :body))
 
     (GET "/filesystem/metadata/templates" [:as req]
-         (controller req do-metadata-template-list :params))
+         (controller req do-metadata-template-list))
+
+    (GET "/filesystem/metadata/template/:id" [id :as req]
+         (controller req do-metadata-template-view id))
 
     (POST "/filesystem/share" [:as req]
           (controller req do-share :params :body))
