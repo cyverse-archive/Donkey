@@ -9,6 +9,7 @@
         [donkey.services.filesystem.move]
         [donkey.services.filesystem.create]
         [donkey.services.filesystem.metadata]
+        [donkey.services.filesystem.metadata-templates]
         [donkey.services.filesystem.sharing]
         [donkey.services.filesystem.preview]
         [donkey.services.filesystem.exists]
@@ -122,6 +123,9 @@
 
     (POST "/filesystem/metadata-batch" [:as req]
           (controller req do-metadata-batch-set :params :body))
+
+    (GET "/filesystem/metadata/templates" [:as req]
+         (controller req do-metadata-template-list :params))
 
     (POST "/filesystem/share" [:as req]
           (controller req do-share :params :body))
