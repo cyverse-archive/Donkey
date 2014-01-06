@@ -24,10 +24,11 @@
   [id]
   (select [:metadata_attributes :attr]
           (join [:metadata_value_types :value_type] {:attr.value_type_id :value_type.id})
-          (fields [:attr.name :name]
+          (fields [:attr.id          :id]
+                  [:attr.name        :name]
                   [:attr.description :description]
-                  [:attr.required :required]
-                  [:value_type.name :type])
+                  [:attr.required    :required]
+                  [:value_type.name  :type])
           (order [:attr.display_order])))
 
 (defn- view-metadata-template

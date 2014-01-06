@@ -183,6 +183,7 @@ __Response__:
         "attributes": [
             {
                 "description": "project name",
+                "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
                 "name": "project",
                 "required": true,
                 "type": "String"
