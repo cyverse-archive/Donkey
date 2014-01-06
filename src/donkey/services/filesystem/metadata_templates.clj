@@ -24,9 +24,9 @@
   [id]
   (select [:metadata_attributes :attr]
           (join [:metadata_value_types :value_type] {:attr.value_type_id :value_type.id})
-          (fields [:attr.value_type_id :id]
-                  [:attr.name :name]
+          (fields [:attr.name :name]
                   [:attr.description :description]
+                  [:attr.required :required]
                   [:value_type.name :type])
           (order [:attr.display_order])))
 
