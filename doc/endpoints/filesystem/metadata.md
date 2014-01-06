@@ -146,3 +146,54 @@ __Curl Command__:
     curl -X DELETE 'http://127.0.0.1:3000/secured/filesystem/metadata?proxyToken=notReal&path=/iplant/home/johnw/LICENSE.txt&attr=avu_name'
 
 
+Listing Metadata Templates
+--------------------------
+__URL Path__: /secured/filesystem/metadata/templates
+
+__HTTP Method__: GET
+
+__Response__:
+
+    {
+        "metadata_templates": [
+            {
+                "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
+                "name": "iDS Genome Sequences"
+            }
+        ],
+        "success": true
+    }
+
+__Curl Command__:
+
+    curl -s "http://services-2:31325/secured/filesystem/metadata/templates?proxyToken=notReal"
+
+
+Viewing a Metadata Template
+---------------------------
+__URL Path__: /secured/filesystem/metadata/template/:template_id
+
+__HTTP Method__: GET
+
+__Error Codes__: ERR_NOT_FOUND
+
+__Response__:
+
+    {
+        "attributes": [
+            {
+                "description": "project name",
+                "id": "c29b0b10-d660-4582-9eb7-40c4f1699dd6",
+                "name": "project",
+                "type": "String"
+            },
+            ...
+        ],
+        "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
+        "name": "iDS Genome Sequences",
+        "success": true
+    }
+
+__Curl Command__:
+
+    curl -s "http://services-2:31325/secured/filesystem/metadata/template/59bd3d26-34d5-4e75-99f5-840a20089caf?proxyToken=notReal"
