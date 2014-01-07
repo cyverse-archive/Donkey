@@ -141,7 +141,7 @@
 
 (with-pre-hook! #'do-read-csv-chunk
   (fn [params body]
-    (log/warn "[call][do-read-csv-chunk]" params body)
+    (log-call "do-read-csv-chunk" params body)
     (validate-map params {:user string?})
     (validate-map body {:path        string?
                         :page        string?
@@ -150,7 +150,7 @@
 
 (with-post-hook! #'do-read-csv-chunk
   (fn [result]
-    (log/warn "[result][do-read-csv-chunk]") (dissoc result :csv)))
+    (log-result "do-read-csv-chunk" (dissoc result :csv))))
 
 ;;; Make sure that page exists
 ;;; Make sure that integer

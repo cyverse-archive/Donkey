@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.preview
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -52,7 +52,7 @@
 
 (with-pre-hook! #'do-preview
   (fn [params]
-    (log/warn "[call][do-preview]" params)
+    (log-call "do-preview" params)
     (validate-map params {:user string? :path string?})
     (when (super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED

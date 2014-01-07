@@ -9,10 +9,29 @@
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
 
-(defn log-func
-  [func-name]
+(defn trace-log
+  [trace-type func-name namespace params]
+  (let [log-ns (str "trace." namespace)
+        desc   (str "[" trace-type "][" func-name "]")
+        msg    (apply print-str desc params)]
+    (log/log log-ns :trace nil msg)))
+
+(defmacro log-call
+  [func-name & params]
+  `(trace-log "call" ~func-name ~*ns* [~@params]))
+
+(defn log-func*
+  [func-name namespace]
   (fn [result]
-    (log/warn (str "[result][" func-name "]") result))) 
+    (trace-log "result" func-name namespace result)))
+
+(defmacro log-func
+  [func-name]
+  `(log-func* ~func-name ~*ns*))
+
+(defmacro log-result
+  [func-name & result]
+  `(trace-log "result" ~func-name ~*ns* [~@result]))
 
 (defn super-user?
   [username]

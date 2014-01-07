@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.users
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -54,7 +54,7 @@
 
 (with-pre-hook! #'do-groups
   (fn [params]
-    (log/warn "[call][do-groups]" params)
+    (log-call "do-groups" params)
     (validate-map params {:user string?})))
 
 (with-post-hook! #'do-groups (log-func "do-groups"))
@@ -65,7 +65,7 @@
 
 (with-pre-hook! #'do-quota
   (fn [params]
-    (log/warn "[call][do-quota]" params)
+    (log-call "do-quota" params)
     (validate-map params {:user string?})))
 
 (with-post-hook! #'do-quota (log-func "do-quota"))
@@ -76,13 +76,9 @@
 
 (with-pre-hook! #'do-user-permissions
   (fn [params body]
-    (log/warn "[call][do-user-permissions]" params body)    
+    (log-call "do-user-permissions" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-user-permissions (log-func "do-user-permissions"))
-
-
-
-

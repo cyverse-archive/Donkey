@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.space-handling
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -93,7 +93,7 @@
                :character new-char}))
     (let [parent-dirs (all-parent-dirs user paths)]
       (validators/user-owns-paths cm user parent-dirs)
-      
+
       (let [mv-base         #(move-spacey-path cm user %1 new-char :parent false)
             mv-parent       #(move-spacey-path cm user %1 new-char :parent true)
             basename-merges (apply merge (map mv-base paths))
@@ -106,7 +106,7 @@
 
 (with-pre-hook! #'do-paths-contain-space
   (fn [params body]
-    (log/warn "[call][do-path-contain-space]" params body)
+    (log-call "do-path-contain-space" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
@@ -122,7 +122,7 @@
 
 (with-pre-hook! #'do-replace-spaces
   (fn [params body]
-    (log/warn "[call][do-substitute-spaces]" params body)
+    (log-call "do-substitute-spaces" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))

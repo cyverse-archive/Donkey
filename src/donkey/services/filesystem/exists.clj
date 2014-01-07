@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.exists
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -42,10 +42,9 @@
 
 (with-pre-hook! #'do-exists
   (fn [params body]
-    (log/warn "[call][do-exists]" params)
+    (log-call "do-exists" params)
     (validate-map params {:user string?})
     (validate-map body {:paths vector?})
     (validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-exists (log-func "do-exists"))
-

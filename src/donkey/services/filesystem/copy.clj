@@ -1,5 +1,5 @@
 (ns donkey.services.filesystem.copy
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
@@ -29,11 +29,11 @@
        (validators/path-writeable cm user to)
        (validators/path-is-dir cm to)
        (validators/no-paths-exist cm (mapv #(ft/path-join to (ft/basename %)) from))
-       
+
        (when (some true? (mapv #(= to %1) from))
          (throw+ {:error_code ERR_INVALID_COPY
                   :paths (filterv #(= to %1) from)}))
-       
+
        (doseq [fr from]
          (let [metapath (ft/rm-last-slash (ft/path-join to (ft/basename fr)))]
            (copy cm fr to)
@@ -52,7 +52,7 @@
 
 (with-pre-hook! #'do-copy
   (fn [params body]
-    (log/warn "[call][do-copy]" params body)
+    (log-call "do-copy" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :destination string?})
     (validate-num-paths (:paths body))))

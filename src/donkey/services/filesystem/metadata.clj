@@ -133,7 +133,7 @@
 
 (with-pre-hook! #'do-metadata-get
   (fn [params]
-    (log/warn "[call][do-metadata-get]" params)
+    (log-call "do-metadata-get" params)
     (validate-map params {:user string? :path string?})))
 
 (with-post-hook! #'do-metadata-get (log-func "do-metadata-get"))
@@ -144,7 +144,7 @@
 
 (with-pre-hook! #'do-metadata-set
   (fn [params body]
-    (log/warn "[call][do-metadata-set]" params body)
+    (log-call "do-metadata-set" params body)
     (validate-map params {:user string? :path string?})
     (validate-map body {:attr string? :value string? :unit string?})))
 
@@ -156,7 +156,7 @@
 
 (with-pre-hook! #'do-metadata-batch-set
   (fn [params body]
-    (log/warn "[call][do-metadata-batch-set]" params body)
+    (log-call "do-metadata-batch-set" params body)
     (validate-map params {:user string? :path string?})
     (validate-map body {:add sequential? :delete sequential?})
     (let [user (:user params)
@@ -178,7 +178,7 @@
 
 (with-pre-hook! #'do-metadata-delete
   (fn [params]
-    (log/warn "[call][do-metadata-delete]" params)
+    (log-call "do-metadata-delete" params)
     (validate-map params {:user string? :path string? :attr string?})))
 
 (with-post-hook! #'do-metadata-delete (log-func "do-metadata-delete"))
