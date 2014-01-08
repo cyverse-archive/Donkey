@@ -30,10 +30,10 @@ __Response Body__:
         "user" : "<username>",
         "tickets" : [
             {
-                "path" : "/path/to/file/or/directory",
-                "ticket-id" : "<ticket-id>",
-                "expiry" : "<expiration date>",
-                "uses-limit" : "<uses-limit",
+                "path"              : "/path/to/file/or/directory",
+                "ticket-id"         : "<ticket-id>",
+                "download-url"      : "http://127.0.0.1:8080/d/<ticket-id>",
+                "download-page-url" : "http://127.0.0.1:8080/<ticket-id>"
             }
         ]
     }
@@ -66,18 +66,18 @@ __Response Body__:
         "tickets" : {
             "/path/to/file" : [
                 {
-                    "path" : "/path/to/file",
-                    "ticket-id" : "<ticket-id>",
-                    "expiry" : "<expiration date>",
-                    "uses-limit" : "<uses-limit",
+                    "path"              : "/path/to/file",
+                    "ticket-id"         : "<ticket-id>",
+                    "download-url"      : "http://127.0.0.1:8080/d/<ticket-id>",
+                    "download-page-url" : "http://127.0.0.1:8080/<ticket-id>"
                 }
             ],
             "/path/to/dir"  : [
                 {
-                    "path" : "/path/to/dir",
-                    "ticket-id" : "<ticket-id>",
-                    "expiry" : "<expiration date>",
-                    "uses-limit" : "<uses-limit",
+                    "path"              : "/path/to/dir",
+                    "ticket-id"         : "<ticket-id>",
+                    "download-url"      : "http://127.0.0.1:8080/d/<ticket-id>",
+                    "download-page-url" : "http://127.0.0.1:8080/<ticket-id>"
                 }
             ]
         }
@@ -114,4 +114,3 @@ __Response Body__:
 __Curl Command__:
 
     curl -H "Content-Type:application/json" -d '{"tickets":["ticket-id1","ticket-id2"]}' http://127.0.0.1:4000/secured/filesystem/delete-tickets?proxyToken=notReal
-

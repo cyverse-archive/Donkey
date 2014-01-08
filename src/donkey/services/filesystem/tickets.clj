@@ -32,10 +32,21 @@
 
 (defn render-ticket-tmpl
   [cm ticket-map tmpl]
-  (assoc ticket-map :ticket-id
-         (stache/render tmpl {:url       (kifshare-external-url)
-                              :ticket-id (:ticket-id ticket-map)
-                              :filename  (ft/basename (:path ticket-map))})))
+  (stache/render tmpl {:url       (kifshare-external-url)
+                       :ticket-id (:ticket-id ticket-map)
+                       :filename  (ft/basename (:path ticket-map))}))
+(defn- ticket-kifshare-url
+  [cm user path]
+  (mapv #(ft/path-join (kifshare-external-url) %)
+        (ticket-ids-for-path cm (:username cm) path)))
+
+(defn- returnable-ticket-map
+  [cm ticket-id]
+  (let [tm (ticket-map cm (:username cm) ticket-id)]
+    {:download-url      (render-ticket-tmpl cm tm (kifshare-download-template))
+     :download-page-url (ft/path-join (kifshare-external-url) (:ticket-id tm))
+     :path              (:path tm)
+     :ticket-id         (:ticket-id tm)}))
 
 (defn- add-tickets
   [user paths public?]
@@ -51,12 +62,8 @@
           (log/warn "[add-tickets] making ticket" uuid "public")
           (doto (ticket-admin-service cm (:username cm))
             (.addTicketGroupRestriction uuid "public"))))
-      (let [sysuser (:username cm)
-            tmpl    (kifshare-download-template)]
-        {:user    user
-         :tickets (mapv
-                   #(render-ticket-tmpl cm (ticket-map cm sysuser %) tmpl)
-                   new-uuids)}))))
+      {:user    user
+       :tickets (mapv (partial returnable-ticket-map cm) new-uuids)})))
 
 (defn- remove-tickets
   [user ticket-ids]
@@ -69,6 +76,14 @@
         (delete-ticket cm (:username cm) ticket-id))
       {:user user :tickets ticket-ids})))
 
+(defn- tickets-for-path
+  [cm path]
+  (map :ticket-id (ticket-ids-for-path cm (:username cm) path)))
+
+(defn- returnable-tickets-for-path
+  [cm path]
+  (map (partial returnable-ticket-map cm) (tickets-for-path cm path)))
+
 (defn- list-tickets-for-paths
   [user paths]
   (with-jargon (jargon-cfg) [cm]
@@ -76,7 +91,7 @@
     (validators/all-paths-exist cm paths)
     (validators/all-paths-readable cm user paths)
     {:tickets
-     (apply merge (mapv #(hash-map %1 (ticket-ids-for-path cm (:username cm) %1)) paths))}))
+     (apply merge (mapv #(hash-map %1 (returnable-tickets-for-path cm %1)) paths))}))
 
 (defn- check-tickets
   [tickets]
