@@ -40,7 +40,7 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"paths":"/path/to/file/or/directory","/path/to/another/file/or/directory"]}' 'http://127.0.0.1:3000/secured/filesystem/tickets?proxyToken=notReal&public=1'
+    curl -d '{"paths":"/path/to/file/or/directory","/path/to/another/file/or/directory"]}' 'http://127.0.0.1:3000/secured/filesystem/tickets?proxyToken=notReal&public=1'
 
 
 Listing Tickets
@@ -85,7 +85,7 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"paths":["/path/to/file","/path/to/dir"]}' http://127.0.0.1:3000/secured/filesystem/list-tickets?proxyToken=notReal
+    curl -d '{"paths":["/path/to/file","/path/to/dir"]}' http://127.0.0.1:3000/secured/filesystem/list-tickets?proxyToken=notReal
 
 
 Deleting Tickets
@@ -113,4 +113,4 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"tickets":["ticket-id1","ticket-id2"]}' http://127.0.0.1:4000/secured/filesystem/delete-tickets?proxyToken=notReal
+    curl -d '{"tickets":["ticket-id1","ticket-id2"]}' http://127.0.0.1:4000/secured/filesystem/delete-tickets?proxyToken=notReal
