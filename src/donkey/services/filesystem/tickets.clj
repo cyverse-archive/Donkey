@@ -40,11 +40,17 @@
   (mapv #(ft/path-join (kifshare-external-url) %)
         (ticket-ids-for-path cm (:username cm) path)))
 
+(defn url-join
+  [url path]
+  (let [url  (ft/rm-last-slash url)
+        path (string/replace-first path "/" "")]
+    (str url "/" path)))
+
 (defn- returnable-ticket-map
   [cm ticket-id]
   (let [tm (ticket-map cm (:username cm) ticket-id)]
     {:download-url      (render-ticket-tmpl cm tm (kifshare-download-template))
-     :download-page-url (ft/path-join (kifshare-external-url) (:ticket-id tm))
+     :download-page-url (url-join (kifshare-external-url) (:ticket-id tm))
      :path              (:path tm)
      :ticket-id         (:ticket-id tm)}))
 
