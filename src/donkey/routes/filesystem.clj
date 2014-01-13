@@ -30,30 +30,6 @@
             [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook!]]))
 
-(defn- pre-process-request
-  [req & {:keys [slurp?] :or {slurp? false}}]
-  (if-not (contains? (:params req) :proxytoken)
-      (throw+ {:error_code "ERR_MISSING_PARAM"
-               :param "proxyToken"}))
-  (let [req (assoc req :params (add-current-user-to-map (:params req)))]
-    (if slurp?
-      (assoc req :body (parse-body (slurp (:body req))))
-      req)))
-
-(defn- ctlr
-  [req slurp? func & args]
-  (let [req     (pre-process-request req :slurp? slurp?)
-        get-arg (fn [arg] (if (keyword? arg) (get req arg) arg))
-        argv    (mapv get-arg args)]
-    (trap #(apply func argv))))
-
-(defn controller
-  [req func & args]
-  (let [p (if (contains? (set args) :body)
-            (partial ctlr req true func)
-            (partial ctlr req false func))]
-      (apply p args)))
-
 (defn secured-filesystem-routes
   "The routes for file IO endpoints."
   []

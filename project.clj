@@ -27,6 +27,8 @@
                  [clojurewerkz/elastisch "1.2.0"]
                  [hoot "0.1.0-SNAPSHOT"]
                  [com.novemberain/validateur "1.5.0"]
+                 [com.novemberain/welle "2.0.0-beta1"]
+                 [byte-streams "0.1.7"]
                  [xerces/xercesImpl "2.11.0"]
                  [commons-net "3.3"]
                  [org.clojure/tools.nrepl "0.2.3"]

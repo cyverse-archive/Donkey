@@ -1,9 +1,17 @@
 (ns donkey.services.user-info
   (:use [cemerick.url :only [url]]
         [clojure.string :only [split]]
-        [donkey.util.config])
+        [donkey.services.filesystem.common-paths]
+        [donkey.services.filesystem.validators]
+        [donkey.util.config]
+        [donkey.util.validators]
+        [byte-streams]
+        [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
+            [clojurewerkz.welle.core :as wc]
+            [clojurewerkz.welle.kv :as kv]
+            [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clojure.tools.logging :as log]))
 
 (defn- user-search-url
@@ -133,3 +141,38 @@
     {:status       200
      :body         (cheshire/encode body)
      :content-type :json}))
+
+(defn upsert-kv-to-bucket
+  [user bucket key params req]
+  (let [cl          (wc/connect (riak-base-url))
+        body        (to-byte-array (:body req))
+        bucket-name (str user "-" bucket)]
+    (wc/with-client cl
+      (kv/store bucket-name key body :content-type "application/octet-stream"))))
+
+(with-pre-hook! #'upsert-kv-to-bucket
+  (fn [user bucket key params req]
+    (log-call "upsert-kv-to-bucket" user bucket key params req)
+    (validate-map params {:user string?})
+    (when-not (= user (:user params))
+      (throw+ {:error_code "ERR_NOT_OWNER"
+               :user user}))))
+
+(with-post-hook! #'upsert-kv-to-bucket (log-func "upsert-kv-to-bucket"))
+
+(defn get-kv-in-bucket
+  [user bucket key params]
+  (let [cl          (wc/connect (riak-base-url))
+        bucket-name (str user "-" bucket)]
+    (wc/with-client cl
+      (-> (kv/fetch bucket-name key) :result first :value (String.)))))
+
+(with-pre-hook! #'get-kv-in-bucket
+  (fn [user bucket key params]
+    (log-call "get-kv-in-bucket" user bucket key params)
+    (validate-map params {:user string?})
+    (when-not (= user (:user params))
+      (throw+ {:error_code "ERR_NOT_OWNER"
+               :user user}))))
+
+(with-post-hook! #'get-kv-in-bucket (log-func "get-kv-in-bucket"))
