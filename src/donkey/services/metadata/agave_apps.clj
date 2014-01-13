@@ -3,6 +3,9 @@
         [donkey.util.validators :only [validate-map]]
         [slingshot.slingshot :only [try+]])
   (:require [cemerick.url :as curl]
+            [clj-jargon.item-info :as jargon-info]
+            [clj-jargon.init :as jargon-init]
+            [clj-jargon.permissions :as jargon-perms]
             [clojure.string :as string]
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
@@ -101,3 +104,37 @@
 (defn get-agave-job-params
   [agave job-id]
   (.getJobParams agave job-id))
+
+(defn- is-readable?
+  [cm path]
+  (and (jargon-info/exists? cm path)
+       (jargon-perms/is-readable? cm (:shortUsername current-user) path)))
+
+(defn- is-input-property
+  [{property-type :type}]
+  (re-matches #".*Input" property-type))
+
+(defn- filter-default-input
+  [cm prop]
+  (let [property-type (:type prop)
+        default-value (:defaultValue prop)]
+    (cond
+     (not (is-input-property prop))  prop
+     (string/blank? default-value)   prop
+     (is-readable? cm default-value) prop
+     :else                           (dissoc prop :defaultValue))))
+
+(defn- filter-default-inputs-in-group
+  [cm group]
+  (letfn [(update-prop [prop] (filter-default-input cm prop))
+          (update-props [props] (doall (map update-prop props)))]
+    (if (some is-input-property (:properties group))
+      (update-in group [:properties] update-props)
+      group)))
+
+(defn filter-default-inputs
+  [app]
+  (jargon-init/with-jargon (config/jargon-cfg) [cm]
+    (letfn [(update-group [group] (filter-default-inputs-in-group cm group))
+            (update-groups [groups] (doall (map update-group groups)))]
+     (update-in app [:groups] update-groups))))

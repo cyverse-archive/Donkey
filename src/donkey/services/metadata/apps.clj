@@ -156,7 +156,7 @@
   (getApp [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-app app-id)
-      (.getApp agave-client app-id)))
+      (aa/filter-default-inputs (.getApp agave-client app-id))))
 
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
