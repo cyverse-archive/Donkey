@@ -1,18 +1,20 @@
 (ns donkey.services.user-info
   (:use [cemerick.url :only [url]]
         [clojure.string :only [split]]
+        [clojure-commons.error-codes]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [donkey.util.config]
         [donkey.util.validators]
         [byte-streams]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojurewerkz.welle.core :as wc]
             [clojurewerkz.welle.kv :as kv]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [ring.util.response :as rsp]))
 
 (defn- user-search-url
   "Builds a URL that can be used to perform a specific type of user search."
@@ -147,8 +149,13 @@
   (let [cl          (wc/connect (riak-base-url))
         body        (to-byte-array (:body req))
         bucket-name (str user "-" bucket)]
-    (wc/with-client cl
-      (kv/store bucket-name key body :content-type "application/octet-stream"))))
+    (try
+      (wc/with-client cl
+        (kv/store bucket-name key body :content-type "application/octet-stream"))
+      {}
+      (catch Exception e
+        (throw+ {:error_code ERR_REQUEST_FAILED
+                 :message    (str e)})))))
 
 (with-pre-hook! #'upsert-kv-to-bucket
   (fn [user bucket key params req]
@@ -160,12 +167,21 @@
 
 (with-post-hook! #'upsert-kv-to-bucket (log-func "upsert-kv-to-bucket"))
 
+(defn- get-riak-value
+  [bucket key]
+  (let [cl (wc/connect (riak-base-url))
+        res (:result (wc/with-client cl (kv/fetch bucket key)))]
+    [res (-> res first :value (String.))]))
+
 (defn get-kv-in-bucket
   [user bucket key params]
-  (let [cl          (wc/connect (riak-base-url))
-        bucket-name (str user "-" bucket)]
-    (wc/with-client cl
-      (-> (kv/fetch bucket-name key) :result first :value (String.)))))
+  (let [bucket-name (str user "-" bucket)]
+    (try
+      (let [[response value] (get-riak-value bucket-name key)]
+        value)
+      (catch Exception e
+        (throw+ {:error_code ERR_REQUEST_FAILED
+                 :message (str e)})))))
 
 (with-pre-hook! #'get-kv-in-bucket
   (fn [user bucket key params]
