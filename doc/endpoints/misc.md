@@ -343,3 +343,54 @@ $ curl -XPUT -s "http://by-tor:8888/secured/feedback?proxyToken=$(cas-ticket)" -
     "success": true
 }
 ```
+
+
+## Adding data to a user's bucket
+
+Secured Endpoint: POST /secured/bucket/<username>/<bucket>/<key>
+
+The body should be anything that can be returned as a string, though there's no
+checking in place to prevent the caller from uploading binary data.
+
+The username, bucket, and key in the URL should be URL encoded.
+
+Internally, the data is stored in Riak. The Riak bucket name is formed from a
+combination of the username and the bucket name, such as "testuser-testbucket".
+The content type stored in Riak should be "application/octet-stream".
+
+Buckets and keys are automatically created if they don't already exist.
+
+Example:
+
+```
+$ curl -d "THIS-IS-A-TEST" "http://by-tor:8888/secured/buckets/ipctest/test-bucket/test-key?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "success": true
+}
+```
+
+Errors will return either a ERR_REQUESTED_FAILED or an ERR_UNCHECKED_EXCEPTION
+error code with a 500 status code.
+
+
+## Getting data from a user's bucket
+
+Secured Endpoint: GET /secured/bucket/<username>/<bucket>/<key>
+
+Returns data associated with the key in the user's bucket. The body is returned
+as a string. The data does NOT have to be JSON, it can be a normal string.
+
+The username, bucket, and key in the URL should be URL encoded.
+
+The data that is retrieved comes from Riak. The bucket is a combination of the
+username and the bucket name, i.e. ipctest-testbuck.
+
+Example:
+
+```
+$ curl "http://by-tor:8888/secured/buckets/ipctest/test-bucket/test-key?proxyToken=$(cas-ticket)" | python -mjson.tool
+THIS-IS-A-TEST
+```
+
+Error will return either a ERR_REQUESTED_FAILED or an ERR_UNCHECKED_EXCEPTION
+error code with a 500 status code.
