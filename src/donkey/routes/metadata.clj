@@ -52,8 +52,8 @@
    (POST "/delete-rating" [:as req]
          (trap #(delete-rating req)))
 
-   (GET "/search-analyses" [:as req]
-        (trap #(search-apps req)))
+   (GET "/search-analyses" [:as {params :params}]
+        (trap #(apps/search-apps params)))
 
    (GET "/app-groups" []
         (trap #(apps/get-only-app-groups)))

@@ -79,6 +79,7 @@
   "Used to list apps available to the Discovery Environment."
   (listAppGroups [_])
   (listApps [_ group-id])
+  (searchApps [_ search-term])
   (getApp [_ app-id])
   (getAppDeployedComponents [_ app-id])
   (getAppDetails [_ app-id])
@@ -101,6 +102,9 @@
 
   (listApps [_ group-id]
     (metadactyl/apps-in-group group-id))
+
+  (searchApps [_ search-term]
+    (metadactyl/search-apps search-term))
 
   (getApp [_ app-id]
     (metadactyl/get-app app-id))
@@ -152,6 +156,12 @@
     (if (= group-id (:id (.publicAppGroup agave-client)))
       (.listPublicApps agave-client)
       (metadactyl/apps-in-group group-id)))
+
+  (searchApps [_ search-term]
+    (let [de-apps  (metadactyl/search-apps search-term)
+          hpc-apps (.searchPublicApps agave-client search-term)]
+      {:template_count (apply + (map :template_count [de-apps hpc-apps]))
+       :templates      (mapcat :templates [de-apps hpc-apps])}))
 
   (getApp [_ app-id]
     (if (is-uuid? app-id)
@@ -235,6 +245,13 @@
 (defn apps-in-group
   [group-id]
   (service/success-response (.listApps (get-app-lister) group-id)))
+
+(defn search-apps
+  [{search-term :search}]
+  (when (string/blank? search-term)
+    (throw+ {:error_code ce/ERR_MISSING_QUERY_PARAMETER
+             :param      :search}))
+  (service/success-response (.searchApps (get-app-lister) search-term)))
 
 (defn get-app
   [app-id]

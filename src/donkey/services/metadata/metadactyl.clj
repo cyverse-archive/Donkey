@@ -400,12 +400,6 @@
   (let [url (build-metadactyl-secured-url req "delete-rating")]
     (forward-post url req)))
 
-(defn search-apps
-  "This service searches for apps based on a search term."
-  [req]
-  (let [url (build-metadactyl-secured-url req "search-analyses")]
-    (forward-get url req)))
-
 (defn list-apps-in-group
   "This service lists all of the apps in an app group and all of its
    descendents."
