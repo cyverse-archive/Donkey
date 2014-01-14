@@ -7,7 +7,8 @@
   (formatter (default-time-zone)
              "EEE MMM dd YYYY HH:mm:ss 'GMT'Z"
              "YYYY MMM dd HH:mm:ss"
-             "YYYY-MM-dd-HH-mm-ss.SSS"))
+             "YYYY-MM-dd-HH-mm-ss.SSS"
+             "YYYY-MM-dd HH:mm:ss.SSS"))
 
 (defn- strip-time-zone
   "Removes the time zone abbreviation from a date timestamp."

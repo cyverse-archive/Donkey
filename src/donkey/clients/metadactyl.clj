@@ -36,6 +36,14 @@
       (:body)
       (service/decode-json)))
 
+(defn search-apps
+  [search-term]
+  (-> (client/get (secured-url "search-analyses")
+                  {:query-params (secured-params {:search search-term})
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
 (defn get-app
   [app-id]
   (-> (client/get (secured-url "app" app-id)
