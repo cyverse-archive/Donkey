@@ -347,7 +347,7 @@ $ curl -XPUT -s "http://by-tor:8888/secured/feedback?proxyToken=$(cas-ticket)" -
 
 ## Adding data to a user's bucket
 
-Secured Endpoint: POST /secured/bucket/<username>/<bucket>/<key>
+Secured Endpoint: POST /secured/buckets/:username/:bucket/:key
 
 The body should be anything that can be returned as a string, though there's no
 checking in place to prevent the caller from uploading binary data.
@@ -375,7 +375,7 @@ error code with a 500 status code.
 
 ## Getting data from a user's bucket
 
-Secured Endpoint: GET /secured/bucket/<username>/<bucket>/<key>
+Secured Endpoint: GET /secured/buckets/:username/:bucket/:key
 
 Returns data associated with the key in the user's bucket. The body is returned
 as a string. The data does NOT have to be JSON, it can be a normal string.
