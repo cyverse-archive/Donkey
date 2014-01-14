@@ -149,13 +149,9 @@
   (let [cl          (wc/connect (riak-base-url))
         body        (to-byte-array (:body req))
         bucket-name (str user "-" bucket)]
-    (try
-      (wc/with-client cl
-        (kv/store bucket-name key body :content-type "application/octet-stream"))
-      {}
-      (catch Exception e
-        (throw+ {:error_code ERR_REQUEST_FAILED
-                 :message    (str e)})))))
+    (wc/with-client cl
+      (kv/store bucket-name key body :content-type "application/octet-stream"))
+    {}))
 
 (with-pre-hook! #'upsert-kv-to-bucket
   (fn [user bucket key params req]
@@ -169,16 +165,17 @@
 
 (defn- get-riak-value
   [bucket key]
-  (let [cl (wc/connect (riak-base-url))
-        res (:result (wc/with-client cl (kv/fetch bucket key)))]
-    [res (-> res first :value (String.))]))
+  (let [cl  (wc/connect (riak-base-url))
+        res (first (:result (wc/with-client cl (kv/fetch bucket key))))]
+    [res (-> res :value to-byte-array (java.io.ByteArrayInputStream.))]))
 
 (defn get-kv-in-bucket
   [user bucket key params]
   (let [bucket-name (str user "-" bucket)]
     (try
       (let [[response value] (get-riak-value bucket-name key)]
-        value)
+        (log/warn "Oh SHIIIIIIIT")
+        (rsp/content-type (rsp/response value) (:content-type response)))
       (catch Exception e
         (throw+ {:error_code ERR_REQUEST_FAILED
                  :message (str e)})))))
