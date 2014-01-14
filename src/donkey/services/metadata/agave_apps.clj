@@ -11,6 +11,7 @@
             [donkey.persistence.jobs :as jp]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
+            [donkey.util.time :as time-utils]
             [donkey.util.service :as service])
   (:import [java.util UUID]))
 
@@ -37,7 +38,11 @@
         cb-url (str (curl/url (config/agave-callback-base) (str id)))
         job    (.submitJob agave-client (assoc-in submission [:config :callbackUrl] cb-url))]
     (store-agave-job agave-client id job)
-    (dn/send-agave-job-status-update (:shortUsername current-user) job)))
+    (dn/send-agave-job-status-update (:shortUsername current-user) job)
+    {:id id
+     :name (:name job)
+     :status (:status job)
+     :start-date (time-utils/millis-from-str (str (:startdate job)))}))
 
 (defn format-agave-job
   [job state]
