@@ -356,7 +356,7 @@ The username, bucket, and key in the URL should be URL encoded.
 
 Internally, the data is stored in Riak. The Riak bucket name is formed from a
 combination of the username and the bucket name, such as "testuser-testbucket".
-The content type stored in Riak should be "application/octet-stream".
+The content type stored in Riak will be "application/octet-stream"..
 
 Buckets and keys are automatically created if they don't already exist.
 
@@ -383,7 +383,8 @@ as a string. The data does NOT have to be JSON, it can be a normal string.
 The username, bucket, and key in the URL should be URL encoded.
 
 The data that is retrieved comes from Riak. The bucket is a combination of the
-username and the bucket name, i.e. ipctest-testbuck.
+username and the bucket name, i.e. ipctest-testbuck. The content-type that is
+returned will be "application/octet-stream".
 
 Example:
 
