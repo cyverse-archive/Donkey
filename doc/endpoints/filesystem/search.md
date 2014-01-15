@@ -1,5 +1,3 @@
-# _These endpoints have not been implemented yet._
-
 This document describes the endpoints used to performing searches of user data.
 
 # Table of Contents
