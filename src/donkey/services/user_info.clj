@@ -158,23 +158,25 @@
     (log-call "upsert-kv-to-bucket" user bucket key params req)
     (validate-map params {:user string?})
     (when-not (= user (:user params))
-      (throw+ {:error_code "ERR_NOT_OWNER"
+      (throw+ {:error_code ERR_NOT_OWNER
                :user user}))))
 
 (with-post-hook! #'upsert-kv-to-bucket (log-func "upsert-kv-to-bucket"))
 
 (defn- get-riak-value
   [bucket key]
-  (let [cl  (wc/connect (riak-base-url))
-        res (first (:result (wc/with-client cl (kv/fetch bucket key))))]
-    [res (-> res :value to-byte-array (java.io.ByteArrayInputStream.))]))
+  (let [cl    (wc/connect (riak-base-url))
+        res   (first (:result (wc/with-client cl (kv/fetch bucket key))))
+        value (:value res)]
+    (if (nil? value)
+      [res ""]
+      [res (-> value to-byte-array (java.io.ByteArrayInputStream.))])))
 
 (defn get-kv-in-bucket
   [user bucket key params]
   (let [bucket-name (str user "-" bucket)]
     (try
       (let [[response value] (get-riak-value bucket-name key)]
-        (log/warn "Oh SHIIIIIIIT")
         (rsp/content-type (rsp/response value) (:content-type response)))
       (catch Exception e
         (throw+ {:error_code ERR_REQUEST_FAILED
