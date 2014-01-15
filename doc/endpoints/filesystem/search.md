@@ -139,6 +139,8 @@ $ curl \
 
 ## Index Status Request
 
+__NOT IMPLEMETED YET__
+
 A client may request the status of the indexer.
 
 ### Endpoint
@@ -184,6 +186,8 @@ $ curl http://localhost:8888/secured/filesystem/index/status?proxyToken=$(cas-ti
 ```
 
 # Administration
+
+__NOT IMPLEMENTED YET__
 
 For clients with administrative privileges, Donkey provides additional endpoints for performing
 search requests as a specific user and controlling the indexer.
