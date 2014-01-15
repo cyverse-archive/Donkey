@@ -22,14 +22,16 @@
 
 (defn- list-metadata-template-attributes
   [id]
-  (select [:metadata_attributes :attr]
+  (select [:metadata_template_attrs :mta]
+          (join [:metadata_attributes :attr] {:mta.attribute_id :attr.id})
           (join [:metadata_value_types :value_type] {:attr.value_type_id :value_type.id})
           (fields [:attr.id          :id]
                   [:attr.name        :name]
                   [:attr.description :description]
                   [:attr.required    :required]
                   [:value_type.name  :type])
-          (order [:attr.display_order])))
+          (where {:mta.template_id id})
+          (order [:mta.display_order])))
 
 (defn- view-metadata-template
   [id]
