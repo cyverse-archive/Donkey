@@ -107,6 +107,9 @@
     (GET "/filesystem/metadata/template/:id" [id :as req]
          (controller req do-metadata-template-view id))
 
+    (GET "/filesystem/metadata/template/attr/:id" [id :as req]
+         (controller req do-metadata-attribute-view id))
+
     (POST "/filesystem/share" [:as req]
           (controller req do-share :params :body))
 

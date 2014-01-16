@@ -186,6 +186,7 @@ __Response__:
                 "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
                 "name": "project",
                 "required": true,
+                "synonyms": [],
                 "type": "String"
             },
             ...
@@ -198,3 +199,27 @@ __Response__:
 __Curl Command__:
 
     curl -s "http://services-2:31325/secured/filesystem/metadata/template/59bd3d26-34d5-4e75-99f5-840a20089caf?proxyToken=notReal"
+
+Viewing a Metadata Attribute
+----------------------------
+__URL Path__: /secured/filesystem/metadata/template/attr/:attribute_id
+
+__HTTP Method__: GET
+
+__Error Codes__: ERR_NOT_FOUND
+
+__Response__:
+
+    {
+        "description": "project name",
+        "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
+        "name": "project",
+        "required": true,
+        "success": true,
+        "synonyms": [],
+        "type": "String"
+    }
+
+__Curl Command__:
+
+    curl -s "http://localhost:31325/secured/filesystem/metadata/template/attr/33e3e3d8-cd48-4572-8b16-89207b1609ec?proxyToken=notReal"
