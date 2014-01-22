@@ -407,12 +407,6 @@
   (let [url (build-metadactyl-secured-url req "get-analyses-in-group" app-group-id)]
     (forward-get url req)))
 
-(defn update-favorites
-  "This service adds apps to or removes apps from a user's favorites list."
-  [req]
-  (let [url (build-metadactyl-secured-url req "update-favorites")]
-    (forward-post url req)))
-
 (defn edit-app
   "This service makes an app available in Tito for editing."
   [req app-id]

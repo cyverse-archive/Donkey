@@ -67,8 +67,8 @@
    (GET "/get-components-in-analysis/:app-id" [app-id]
         (trap #(apps/get-deployed-components-in-app app-id)))
 
-   (POST "/update-favorites" [:as req]
-         (trap #(update-favorites req)))
+   (POST "/update-favorites" [:as {body :body}]
+         (trap #(apps/update-favorites body)))
 
    (GET "/edit-template/:app-id" [app-id :as req]
         (trap #(edit-app req app-id)))

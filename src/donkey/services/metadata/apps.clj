@@ -80,6 +80,7 @@
   (listAppGroups [_])
   (listApps [_ group-id])
   (searchApps [_ search-term])
+  (updateFavorites [_ app-id favorite?])
   (getApp [_ app-id])
   (getAppDeployedComponents [_ app-id])
   (getAppDetails [_ app-id])
@@ -105,6 +106,9 @@
 
   (searchApps [_ search-term]
     (metadactyl/search-apps search-term))
+
+  (updateFavorites [_ app-id favorite?]
+    (metadactyl/update-favorites app-id favorite?))
 
   (getApp [_ app-id]
     (metadactyl/get-app app-id))
@@ -162,6 +166,12 @@
           hpc-apps (.searchPublicApps agave-client search-term)]
       {:template_count (apply + (map :template_count [de-apps hpc-apps]))
        :templates      (mapcat :templates [de-apps hpc-apps])}))
+
+  (updateFavorites [_ app-id favorite?]
+    (if (is-uuid? app-id)
+      (metadactyl/update-favorites app-id favorite?)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC apps cannot be marked as favorites"})))
 
   (getApp [_ app-id]
     (if (is-uuid? app-id)
@@ -252,6 +262,13 @@
     (throw+ {:error_code ce/ERR_MISSING_QUERY_PARAMETER
              :param      :search}))
   (service/success-response (.searchApps (get-app-lister) search-term)))
+
+(defn update-favorites
+  [body]
+  (let [request (service/decode-json body)]
+    (.updateFavorites (get-app-lister)
+                      (service/required-field request :analysis_id)
+                      (service/required-field request :user_favorite))))
 
 (defn get-app
   [app-id]

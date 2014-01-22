@@ -147,15 +147,24 @@
   (log/error ce/format-exception exception)
   (ce/err-resp (:object exception)))
 
-(defn required-param
-  "Retrieves a required parameter from a map.  The may may contain either query-
-   string parameters or a map that has been generated from a JSON request body."
-  [params k]
-  (let [v (params k)]
-    (when (blank? v)
-      (throw+ {:type :missing-argument
-               :arg  k}))
+(def ^:private param-type-descriptions
+  {ce/ERR_MISSING_FORM_FIELD      "request body field"
+   ce/ERR_MISSING_QUERY_PARAMETER "query string parameter"})
+
+(defn- required-argument-missing-reason
+  [err-code k]
+  (str "required " (param-type-descriptions err-code) ", " (name k) ", missing"))
+
+(defn- required-argument
+  [err-code m k]
+  (let [v (m k)]
+    (when (or (nil? v) (and (string? v) (blank? v)))
+      (throw+ {:error_code err-code
+               :reason     (required-argument-missing-reason err-code k)}))
     v))
+
+(def required-param (partial required-argument ce/ERR_MISSING_QUERY_PARAMETER))
+(def required-field (partial required-argument ce/ERR_MISSING_FORM_FIELD))
 
 (defn unrecognized-path-response
   "Builds the response to send for an unrecognized service path."

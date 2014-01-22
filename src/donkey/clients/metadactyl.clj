@@ -109,3 +109,17 @@
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn- update-favorites-request
+  [app-id favorite?]
+  {:analysis_id   app-id
+   :user_favorite favorite?})
+
+(defn update-favorites
+  [app-id favorite?]
+  (-> (client/post (secured-url "update-favorites")
+                   {:query-params (secured-params)
+                    :body         (cheshire/encode (update-favorites-request app-id favorite?))
+                    :as           :stream})
+      (:body)
+      (service/decode-json)))
