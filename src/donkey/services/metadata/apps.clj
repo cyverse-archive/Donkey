@@ -81,6 +81,8 @@
   (listApps [_ group-id])
   (searchApps [_ search-term])
   (updateFavorites [_ app-id favorite?])
+  (rateApp [_ app-id rating comment-id])
+  (deleteRating [_ app-id])
   (getApp [_ app-id])
   (getAppDeployedComponents [_ app-id])
   (getAppDetails [_ app-id])
@@ -109,6 +111,12 @@
 
   (updateFavorites [_ app-id favorite?]
     (metadactyl/update-favorites app-id favorite?))
+
+  (rateApp [_ app-id rating comment-id]
+    (metadactyl/rate-app app-id rating comment-id))
+
+  (deleteRating [_ app-id]
+    (metadactyl/delete-rating app-id))
 
   (getApp [_ app-id]
     (metadactyl/get-app app-id))
@@ -172,6 +180,18 @@
       (metadactyl/update-favorites app-id favorite?)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "HPC apps cannot be marked as favorites"})))
+
+  (rateApp [_ app-id rating comment-id]
+    (if (is-uuid? app-id)
+      (metadactyl/rate-app app-id rating comment-id)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC apps cannot be rated"})))
+
+  (deleteRating [_ app-id]
+    (if (is-uuid? app-id)
+      (metadactyl/delete-rating app-id)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC apps cannot be rated"})))
 
   (getApp [_ app-id]
     (if (is-uuid? app-id)
@@ -269,6 +289,19 @@
     (.updateFavorites (get-app-lister)
                       (service/required-field request :analysis_id)
                       (service/required-field request :user_favorite))))
+
+(defn rate-app
+  [body]
+  (let [request (service/decode-json body)]
+    (.rateApp (get-app-lister)
+              (service/required-field request :analysis_id)
+              (service/required-field request :comment_id)
+              (service/required-field request :comment_id))))
+
+(defn delete-rating
+  [body]
+  (let [request (service/decode-json body)]
+    (.deleteRating (get-app-lister) (service/required-field request :analysis_id))))
 
 (defn get-app
   [app-id]

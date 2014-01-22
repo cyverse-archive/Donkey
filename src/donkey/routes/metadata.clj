@@ -46,11 +46,11 @@
    (DELETE "/stop-analysis/:uuid" [uuid :as req]
            (trap #(jex/stop-analysis req uuid)))
 
-   (POST "/rate-analysis" [:as req]
-         (trap #(rate-app req)))
+   (POST "/rate-analysis" [:as {body :body}]
+         (trap #(apps/rate-app body)))
 
-   (POST "/delete-rating" [:as req]
-         (trap #(delete-rating req)))
+   (POST "/delete-rating" [:as {body :body}]
+         (trap #(apps/delete-rating body)))
 
    (GET "/search-analyses" [:as {params :params}]
         (trap #(apps/search-apps params)))

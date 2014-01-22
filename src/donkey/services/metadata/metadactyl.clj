@@ -388,18 +388,6 @@
   [req uuid]
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
-(defn rate-app
-  "This service adds a user's rating to an app."
-  [req]
-  (let [url (build-metadactyl-secured-url req "rate-analysis")]
-    (forward-post url req)))
-
-(defn delete-rating
-  "This service removes a user's rating from an app."
-  [req]
-  (let [url (build-metadactyl-secured-url req "delete-rating")]
-    (forward-post url req)))
-
 (defn list-apps-in-group
   "This service lists all of the apps in an app group and all of its
    descendents."
