@@ -109,11 +109,13 @@
   [name]
   (str name \# default-zone))
 
+
 (defn add-timing
   [result start]
   (let [curr-time  (l/local-now)
         t-interval (t/in-millis (t/interval start curr-time))]
-    (assoc result :execution-time (str (float (/ t-interval 1000))))))
+    (assoc result :execution-time t-interval)))
+
 
 ; TODO make this work for users that belong to zones other than the default one.
 (defn- list-user-groups

@@ -59,6 +59,7 @@ When the search succeeds the response document has these additional fields.
 | total   | number  | This is the total number of matches found, not the number of elements in the `matches` array. |
 | offset  | number  | This is the value of the `offset` parameter in the query string. |
 | matches | array   | This is the set or partial set of matches found, each entry being a **match record**. It contains at most `limit` entries and is sorted by descending score. |
+| execution-time | number | This is the number of milliseconds that it took to perform the query and get a response from elasticsearch. |
 
 **Match Record**
 
@@ -131,6 +132,7 @@ $ curl \
             "type": "file"
         }
     ],
+    "execution-time" : 300,
     "offset": 1,
     "success": true,
     "total": 7
