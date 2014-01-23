@@ -2,6 +2,8 @@
   "provides the functions that forward search requests to Elastic Search"
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.string :as string]
+            [clj-time.core :as t]
+            [clj-time.local :as l]
             [clojurewerkz.elastisch.query :as es-query]
             [clojurewerkz.elastisch.rest :as es]
             [clojurewerkz.elastisch.rest.document :as es-doc]
@@ -19,7 +21,7 @@
 (defn- send-request
   "Sends the search request to Elastic Search.
 
-   Throws:  
+   Throws:
      :invalid-configuration - This is thrown if there is a problem with elasticsearch
      :invalid-query - This is thrown if the query string is invalid."
   [query from size type]
@@ -107,6 +109,11 @@
   [name]
   (str name \# default-zone))
 
+(defn add-timing
+  [result start]
+  (let [curr-time  (l/local-now)
+        t-interval (t/in-millis (t/interval start curr-time))]
+    (assoc result :execution-time (str (float (/ t-interval 1000))))))
 
 ; TODO make this work for users that belong to zones other than the default one.
 (defn- list-user-groups
@@ -122,11 +129,13 @@
   [user query opts]
   (try+
     (let [type   (extract-type opts :any)
+          start  (l/local-now)
           offset (extract-uint opts :offset 0)
           limit  (extract-uint opts :limit (cfg/default-search-result-limit))]
       (-> (mk-query query user (list-user-groups user))
         (send-request offset limit type)
         (extract-result offset)
+        (add-timing start)
         svc/success-response))
     (catch [:type :invalid-argument] {:keys [arg val reason]}
       (svc/invalid-arg-response arg val reason))
