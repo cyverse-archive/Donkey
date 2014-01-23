@@ -24,9 +24,9 @@ and for checking the status of the indexer.
 ## Search Requests
 
 Donkey provides search endpoints that allow callers to search the data by name and various pieces of
-system metadata. It supports the full [ElasticSearch query string DSL]
-(http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax)
-for searching.
+system and user metadata. It supports the all the queries in the [ElasticSearch query DSL]
+(http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for
+searching.
 
 Each field in an indexed document may be explicitly used in a search query. If the field is an
 object, i.e. an aggregate of fields, the object's fields may be explicitly referenced as well using
@@ -45,7 +45,7 @@ The following additional URI parameters are recognized.
 
 | Parameter | Required? | Default | Description |
 | --------- | --------- | ------- | ----------- |
-| q         | yes       |         | This parameter holds the search query. See [query string syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax) for a description of the syntax. |
+| q         | yes       |         | This parameter holds a JSON encoded search query. See [query syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for a description of the syntax. |
 | type      | no        | any     | This parameter restricts the search to either files or folders. It can take the values `any`, meaning files and folders, `file`, only files, and `folders`, only folders. |
 | offset    | no        | 0       | This parameter indicates the number of matches to skip before including any in the result set. When combined with `limit`, it allows for paging results. |
 | limit     | no        | 200     | This parameter limits the number of matches in the result set to be a most a certain amount. When combined with `offset`, it allows for paging results. |
@@ -72,7 +72,7 @@ When the search succeeds the response document has these additional fields.
 
 ```
 $ curl \
-> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=label:?e*&type=file&offset=1&limit=2" \
+> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2" \
 > | python -mjson.tool
 {
     "matches": [
@@ -205,12 +205,11 @@ provided in the query string.
 
 ### Request Parameters
 
-The request is encoded as a query string. It supports all of the parameters of a
+The request is encoded as a JSON query. It supports all of the parameters of a
 [normal search request](#search-request) with one additional parameter. The  `as-user` parameter
 identifies the user the administrator is performing the search as. This allows the administrator to
 reproduce a query the user has complained about. The parameter value takes the form
-`{username}#{zone}` where `username` and `zone` are the fields from the
-[user's identity record](../../schema.md#user-identity-record).
+`{username}#{zone}` where `username` is the user identity and `zone` is the authentication zone.
 
 ### Response
 
@@ -220,7 +219,7 @@ The response body is the same as a [normal response body](#response-body).
 
 ```
 $ curl \
-> "http://localhost:8888/admin/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&as-user=rods#iplant&q=name:?e*&type=file&offset=1&limit=2" \
+> "http://localhost:8888/admin/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&as-user=rods#iplant&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2" \
 > | python -mjson.tool
 {
     "matches": [

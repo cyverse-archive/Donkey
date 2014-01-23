@@ -60,7 +60,7 @@
   (let [memberships (conj user-groups user)
         filter      (es-query/nested :path   "userPermissions"
                                      :filter (es-query/term "userPermissions.user" memberships))]
-    (es-query/filtered :query (es-query/query-string :query query) :filter filter)))
+    (es-query/filtered :query query :filter filter)))
 
 
 (defn- extract-type
@@ -131,4 +131,4 @@
     (catch [:type :invalid-argument] {:keys [arg val reason]}
       (svc/invalid-arg-response arg val reason))
     (catch [:type :invalid-query] {:keys []}
-      (svc/invalid-arg-response "q" query "This is not a valid elasticsearch query string."))))
+      (svc/invalid-arg-response "q" query "This is not a valid elasticsearch query."))))
