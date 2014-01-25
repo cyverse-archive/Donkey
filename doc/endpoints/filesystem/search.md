@@ -43,22 +43,24 @@ provided in the query string.
 
 The following additional URI parameters are recognized.
 
-| Parameter | Required? | Default | Description |
-| --------- | --------- | ------- | ----------- |
-| q         | yes       |         | This parameter holds a JSON encoded search query. See [query syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for a description of the syntax. |
-| type      | no        | any     | This parameter restricts the search to either files or folders. It can take the values `any`, meaning files and folders, `file`, only files, and `folders`, only folders. |
-| offset    | no        | 0       | This parameter indicates the number of matches to skip before including any in the result set. When combined with `limit`, it allows for paging results. |
-| limit     | no        | 200     | This parameter limits the number of matches in the result set to be a most a certain amount. When combined with `offset`, it allows for paging results. |
+| Parameter  | Required? | Default | Description |
+| ---------- | --------- | ------- | ----------- |
+| q          | yes       |         | This parameter holds a JSON encoded search query. See [query syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for a description of the syntax. |
+| type       | no        | any     | This parameter restricts the search to either files or folders. It can take the values `any`, meaning files and folders, `file`, only files, and `folders`, only folders. |
+| offset     | no        | 0       | This parameter indicates the number of matches to skip before including any in the result set. When combined with `limit`, it allows for paging results. |
+| limit      | no        | 200     | This parameter limits the number of matches in the result set to be a most a certain amount. When combined with `offset`, it allows for paging results. |
+| sort-col   | no        | score   | This parameter indicates the field of the match record used to sort the result set. Dot notation used to access `entity` fields. e.q. `entity.label`. |
+| sort-order | no        | desc    | This parameter indicates the direction of the result set, either `asc` or `desc`. |
 
 ### Response
 
 When the search succeeds the response document has these additional fields.
 
-| Field   | Type    | Description |
-| ------- | ------- | ----------- |
-| total   | number  | This is the total number of matches found, not the number of elements in the `matches` array. |
-| offset  | number  | This is the value of the `offset` parameter in the query string. |
-| matches | array   | This is the set or partial set of matches found, each entry being a **match record**. It contains at most `limit` entries and is sorted by descending score. |
+| Field          | Type   | Description |
+| -------------- | ------ | ----------- |
+| total          | number | This is the total number of matches found, not the number of elements in the `matches` array. |
+| offset         | number | This is the value of the `offset` parameter in the query string. |
+| matches        | array  | This is the set or partial set of matches found, each entry being a **match record**. It contains at most `limit` entries and is sorted by descending score. |
 | execution-time | number | This is the number of milliseconds that it took to perform the query and get a response from elasticsearch. |
 
 **Match Record**
@@ -73,7 +75,7 @@ When the search succeeds the response document has these additional fields.
 
 ```
 $ curl \
-> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2" \
+> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2&sort-col=score&sort-order=desc" \
 > | python -mjson.tool
 {
     "matches": [
@@ -221,7 +223,7 @@ The response body is the same as a [normal response body](#response-body).
 
 ```
 $ curl \
-> "http://localhost:8888/admin/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&as-user=rods#iplant&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2" \
+> "http://localhost:8888/admin/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&as-user=rods#iplant&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2&sort-col=score&sort-order=desc" \
 > | python -mjson.tool
 {
     "matches": [
