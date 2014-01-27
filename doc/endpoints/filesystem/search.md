@@ -89,8 +89,8 @@ $ curl \
         {
             "entity": {
                 "creator": "rods#iplant",
-                "dateCreated": "2013-10-09T13:27:04.090Z",
-                "dateModified": "2013-11-21T01:46:06.001Z",
+                "dateCreated": 1381325224090,
+                "dateModified": 1384998366001,
                 "fileSize": 13225,
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "label": "read1_10k.fq",
@@ -113,8 +113,8 @@ $ curl \
         {
             "entity": {
                 "creator": "rods#iplant",
-                "dateCreated": "2013-10-09T13:28:05.602Z",
-                "dateModified": "2013-11-21T01:46:06.001Z",
+                "dateCreated": 1381325285602,
+                "dateModified": 1384998366001,
                 "fileSize": 14016,
                 "fileType": null,
                 "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
@@ -237,8 +237,8 @@ $ curl \
         {
             "entity": {
                 "creator": "rods#iplant",
-                "dateCreated": "2013-10-09T13:27:04.090Z",
-                "dateModified": "2013-10-09T13:27:04.090Z",
+                "dateCreated": 1381325224090,
+                "dateModified": 1381325224090,
                 "fileSize": 13225,
                 "fileType": null,
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
@@ -261,8 +261,8 @@ $ curl \
         {
             "entity": {
                 "creator": "rods#"iplant",
-                "dateCreated": "2013-10-09T13:28:05.602Z",
-                "dateModified": "2013-10-09T13:28:05.602Z",
+                "dateCreated": 1381325285000,
+                "dateModified": 1381325285000,
                 "fileSize": 14016,
                 "fileType": null,
                 "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
