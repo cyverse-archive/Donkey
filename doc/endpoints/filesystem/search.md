@@ -58,6 +58,7 @@ The `sort` request parameter can be used to change the sort order.  Its value ha
 `field:direction` where `field` is one of the fields of a **match record** and `direction` is either
 `asc` for ascending or `desc` for descending.  Use dot notation to sort by one of the nested fields
 of the match records, e.g., `entity.label` will sort by the `label` field of the matched entities.
+If no `:direction` is provided, the search direction will default to `desc`.
 
 ### Response
 
