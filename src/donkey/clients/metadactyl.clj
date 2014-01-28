@@ -36,6 +36,14 @@
       (:body)
       (service/decode-json)))
 
+(defn search-apps
+  [search-term]
+  (-> (client/get (secured-url "search-analyses")
+                  {:query-params (secured-params {:search search-term})
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
 (defn get-app
   [app-id]
   (-> (client/get (secured-url "app" app-id)
@@ -99,5 +107,43 @@
   (-> (client/get (unsecured-url "app-rerun-info" job-id)
                   {:query-params (secured-params)
                    :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn- update-favorites-request
+  [app-id favorite?]
+  {:analysis_id   app-id
+   :user_favorite favorite?})
+
+(defn update-favorites
+  [app-id favorite?]
+  (-> (client/post (secured-url "update-favorites")
+                   {:query-params (secured-params)
+                    :body         (cheshire/encode (update-favorites-request app-id favorite?))
+                    :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn- rate-app-request
+  [app-id rating comment-id]
+  {:analysis_id app-id
+   :rating      rating
+   :comment_id  comment-id})
+
+(defn rate-app
+  [app-id rating comment-id]
+  (-> (client/post (secured-url "rate-analysis")
+                   {:query-params (secured-params)
+                    :body         (cheshire/encode (rate-app-request app-id rating comment-id))
+                    :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn delete-rating
+  [app-id]
+  (-> (client/post (secured-url "delete-rating")
+                   {:query-params (secured-params)
+                    :body         (cheshire/encode {:analysis_id app-id})
+                    :as           :stream})
       (:body)
       (service/decode-json)))

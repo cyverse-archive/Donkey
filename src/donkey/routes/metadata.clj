@@ -46,14 +46,14 @@
    (DELETE "/stop-analysis/:uuid" [uuid :as req]
            (trap #(jex/stop-analysis req uuid)))
 
-   (POST "/rate-analysis" [:as req]
-         (trap #(rate-app req)))
+   (POST "/rate-analysis" [:as {body :body}]
+         (trap #(apps/rate-app body)))
 
-   (POST "/delete-rating" [:as req]
-         (trap #(delete-rating req)))
+   (POST "/delete-rating" [:as {body :body}]
+         (trap #(apps/delete-rating body)))
 
-   (GET "/search-analyses" [:as req]
-        (trap #(search-apps req)))
+   (GET "/search-analyses" [:as {params :params}]
+        (trap #(apps/search-apps params)))
 
    (GET "/app-groups" []
         (trap #(apps/get-only-app-groups)))
@@ -67,8 +67,8 @@
    (GET "/get-components-in-analysis/:app-id" [app-id]
         (trap #(apps/get-deployed-components-in-app app-id)))
 
-   (POST "/update-favorites" [:as req]
-         (trap #(update-favorites req)))
+   (POST "/update-favorites" [:as {body :body}]
+         (trap #(apps/update-favorites body)))
 
    (GET "/edit-template/:app-id" [app-id :as req]
         (trap #(edit-app req app-id)))

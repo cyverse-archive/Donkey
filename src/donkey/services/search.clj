@@ -2,6 +2,8 @@
   "provides the functions that forward search requests to Elastic Search"
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.string :as string]
+            [clj-time.core :as t]
+            [clj-time.local :as l]
             [clojurewerkz.elastisch.query :as es-query]
             [clojurewerkz.elastisch.rest :as es]
             [clojurewerkz.elastisch.rest.document :as es-doc]
@@ -19,19 +21,18 @@
 (defn- send-request
   "Sends the search request to Elastic Search.
 
-   Throws:  
+   Throws:
      :invalid-configuration - This is thrown if there is a problem with elasticsearch
      :invalid-query - This is thrown if the query string is invalid."
-  [query from size type]
-  (let [index    "data"
-        fmt-type (fn [t] (case t
-                           :file   "file"
-                           :folder "folder"))]
+  [type query from size sort]
+  (let [index "data"]
     (try+
       (es/connect! (cfg/es-url))
       (if (= type :any)
-        (es-doc/search-all-types index :query query :from from :size size)
-        (es-doc/search index (fmt-type type) :query query :from from :size size))
+        (es-doc/search-all-types index
+          :query query :from from :size size :sort sort :track_scores true)
+        (es-doc/search index (name type)
+          :query query :from from :size size :sort sort :track_scores true))
       (catch ConnectException _
         (throw+ {:type   :invalid-configuration
                  :reason "cannot connect to elasticsearch"}))
@@ -60,7 +61,67 @@
   (let [memberships (conj user-groups user)
         filter      (es-query/nested :path   "userPermissions"
                                      :filter (es-query/term "userPermissions.user" memberships))]
-    (es-query/filtered :query (es-query/query-string :query query) :filter filter)))
+    (es-query/filtered :query query :filter filter)))
+
+
+(defn- mk-sort
+  "Builds a sort request."
+  [sort]
+  (let [field (case (ffirst sort)
+                :entity (second (first sort))
+                :score  :_score
+                :type   :_type)]
+    [{field {:order           (name (second sort))
+             :missing         "_last"
+             :ignore_unmapped true}}]))
+
+
+(defn- extract-direction
+  "Extracts the direction portion of the sort parameter"
+  [dir-str default]
+  (if (or (nil? dir-str) (= "" dir-str))
+    default
+    (case dir-str
+      "asc"  :asc
+      "desc" :desc
+             (throw+ {:type   :invalid-argument
+                      :reason "direction must be 'asc' or 'desc'"
+                      :arg    :sort
+                      :val    dir-str}))))
+
+
+(defn- extract-field
+  "Extracts the field portion of the sort parameter."
+  [field-str]
+  (case (string/lower-case field-str)
+    "score"                             [:score]
+    "type"                              [:type]
+    "entity.creator"                    [:entity :creator]
+    "entity.datecreated"                [:entity :dateCreated]
+    "entity.datemodified"               [:entity :dateModified]
+    "entity.filesize"                   [:entity :fileSize]
+    "entity.filetype"                   [:entity :fileType]
+    "entity.id"                         [:entity :id]
+    "entity.label"                      [:entity :label]
+    "entity.path"                       [:entity :path]
+    "entity.metadata.attribute"         [:entity :metadata.attribute]
+    "entity.metadata.unit"              [:entity :metadata.unit]
+    "entity.metadata.value"             [:entity :metadta.value]
+    "entity.userpermissions.permission" [:entity :userPermissions.permission]
+    "entity.userpermissions.user"       [:entity :userPermissions.user]
+                                        (throw+ {:type   :invalid-argument
+                                                 :reason "invalid match record field"
+                                                 :arg    :sort
+                                                 :val    field-str})))
+
+
+(defn- extract-sort
+  "Extracts the sort field and direction from the URL parameters"
+  [params default]
+  (if-let [sort-val (:sort params)]
+    (let [[field-str dir-str] (string/split sort-val #":")]
+      [(extract-field field-str) (extract-direction dir-str (last default))])
+    default))
 
 
 (defn- extract-type
@@ -108,6 +169,13 @@
   (str name \# default-zone))
 
 
+(defn add-timing
+  [result start]
+  (let [curr-time  (l/local-now)
+        t-interval (t/in-millis (t/interval start curr-time))]
+    (assoc result :execution-time t-interval)))
+
+
 ; TODO make this work for users that belong to zones other than the default one.
 (defn- list-user-groups
   "Looks up the groups a user belongs to. The result is a set of zone-qualified group names.
@@ -121,14 +189,18 @@
   "Performs a search on the Elastic Search repository."
   [user query opts]
   (try+
-    (let [type   (extract-type opts :any)
-          offset (extract-uint opts :offset 0)
-          limit  (extract-uint opts :limit (cfg/default-search-result-limit))]
-      (-> (mk-query query user (list-user-groups user))
-        (send-request offset limit type)
+    (let [start     (l/local-now)
+          type      (extract-type opts :any)
+          offset    (extract-uint opts :offset 0)
+          limit     (extract-uint opts :limit (cfg/default-search-result-limit))
+          sort      (extract-sort opts [[:score] :desc])
+          query-req (mk-query query user (list-user-groups user))
+          sort-req  (mk-sort sort)]
+      (-> (send-request type query-req offset limit sort-req)
         (extract-result offset)
+        (add-timing start)
         svc/success-response))
     (catch [:type :invalid-argument] {:keys [arg val reason]}
       (svc/invalid-arg-response arg val reason))
     (catch [:type :invalid-query] {:keys []}
-      (svc/invalid-arg-response "q" query "This is not a valid elasticsearch query string."))))
+      (svc/invalid-arg-response "q" query "This is not a valid elasticsearch query."))))

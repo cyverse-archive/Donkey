@@ -1,5 +1,3 @@
-# _These endpoints have not been implemented yet._
-
 This document describes the endpoints used to performing searches of user data.
 
 # Table of Contents
@@ -26,9 +24,9 @@ and for checking the status of the indexer.
 ## Search Requests
 
 Donkey provides search endpoints that allow callers to search the data by name and various pieces of
-system metadata. It supports the full [ElasticSearch query string DSL]
-(http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax)
-for searching.
+system and user metadata. It supports the all the queries in the [ElasticSearch query DSL]
+(http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for
+searching.
 
 Each field in an indexed document may be explicitly used in a search query. If the field is an
 object, i.e. an aggregate of fields, the object's fields may be explicitly referenced as well using
@@ -45,22 +43,33 @@ provided in the query string.
 
 The following additional URI parameters are recognized.
 
-| Parameter | Required? | Default | Description |
-| --------- | --------- | ------- | ----------- |
-| q         | yes       |         | This parameter holds the search query. See [query string syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax) for a description of the syntax. |
-| type      | no        | any     | This parameter restricts the search to either files or folders. It can take the values `any`, meaning files and folders, `file`, only files, and `folders`, only folders. |
-| offset    | no        | 0       | This parameter indicates the number of matches to skip before including any in the result set. When combined with `limit`, it allows for paging results. |
-| limit     | no        | 200     | This parameter limits the number of matches in the result set to be a most a certain amount. When combined with `offset`, it allows for paging results. |
+| Parameter | Required? | Default    | Description |
+| --------- | --------- | ---------- | ----------- |
+| q         | yes       |            | This parameter holds a JSON encoded search query. See [query syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for a description of the syntax. |
+| type      | no        | any        | This parameter restricts the search to either files or folders. It can take the values `any`, meaning files and folders, `file`, only files, and `folders`, only folders. |
+| offset    | no        | 0          | This parameter indicates the number of matches to skip before including any in the result set. When combined with `limit`, it allows for paging results. |
+| limit     | no        | 200        | This parameter limits the number of matches in the result set to be a most a certain amount. When combined with `offset`, it allows for paging results. |
+| sort      | no        | score:desc | See [sorting](#sorting) |
+
+#### Sorting
+
+The result set is sorted. By default the sort is performed on the `score` field in descending order.
+The `sort` request parameter can be used to change the sort order.  Its value has the form
+`field:direction` where `field` is one of the fields of a **match record** and `direction` is either
+`asc` for ascending or `desc` for descending.  Use dot notation to sort by one of the nested fields
+of the match records, e.g., `entity.label` will sort by the `label` field of the matched entities.
+If no `:direction` is provided, the search direction will default to `desc`.
 
 ### Response
 
 When the search succeeds the response document has these additional fields.
 
-| Field   | Type    | Description |
-| ------- | ------- | ----------- |
-| total   | number  | This is the total number of matches found, not the number of elements in the `matches` array. |
-| offset  | number  | This is the value of the `offset` parameter in the query string. |
-| matches | array   | This is the set or partial set of matches found, each entry being a **match record**. It contains at most `limit` entries and is sorted by descending score. |
+| Field          | Type   | Description |
+| -------------- | ------ | ----------- |
+| total          | number | This is the total number of matches found, not the number of elements in the `matches` array. |
+| offset         | number | This is the value of the `offset` parameter in the query string. |
+| matches        | array  | This is the set or partial set of matches found, each entry being a **match record**. It contains at most `limit` entries and is sorted by descending score. |
+| execution-time | number | This is the number of milliseconds that it took to perform the query and get a response from elasticsearch. |
 
 **Match Record**
 
@@ -74,15 +83,15 @@ When the search succeeds the response document has these additional fields.
 
 ```
 $ curl \
-> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=label:?e*&type=file&offset=1&limit=2" \
+> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2&sort:desc" \
 > | python -mjson.tool
 {
     "matches": [
         {
             "entity": {
                 "creator": "rods#iplant",
-                "dateCreated": "2013-10-09T13:27:04.090Z",
-                "dateModified": "2013-11-21T01:46:06.001Z",
+                "dateCreated": 1381325224090,
+                "dateModified": 1384998366001,
                 "fileSize": 13225,
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "label": "read1_10k.fq",
@@ -105,8 +114,8 @@ $ curl \
         {
             "entity": {
                 "creator": "rods#iplant",
-                "dateCreated": "2013-10-09T13:28:05.602Z",
-                "dateModified": "2013-11-21T01:46:06.001Z",
+                "dateCreated": 1381325285602,
+                "dateModified": 1384998366001,
                 "fileSize": 14016,
                 "fileType": null,
                 "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
@@ -133,6 +142,7 @@ $ curl \
             "type": "file"
         }
     ],
+    "execution-time" : 300,
     "offset": 1,
     "success": true,
     "total": 7
@@ -140,6 +150,8 @@ $ curl \
 ```
 
 ## Index Status Request
+
+__NOT IMPLEMETED YET__
 
 A client may request the status of the indexer.
 
@@ -187,6 +199,8 @@ $ curl http://localhost:8888/secured/filesystem/index/status?proxyToken=$(cas-ti
 
 # Administration
 
+__NOT IMPLEMENTED YET__
+
 For clients with administrative privileges, Donkey provides additional endpoints for performing
 search requests as a specific user and controlling the indexer.
 
@@ -203,12 +217,11 @@ provided in the query string.
 
 ### Request Parameters
 
-The request is encoded as a query string. It supports all of the parameters of a
+The request is encoded as a JSON query. It supports all of the parameters of a
 [normal search request](#search-request) with one additional parameter. The  `as-user` parameter
 identifies the user the administrator is performing the search as. This allows the administrator to
 reproduce a query the user has complained about. The parameter value takes the form
-`{username}#{zone}` where `username` and `zone` are the fields from the
-[user's identity record](../../schema.md#user-identity-record).
+`{username}#{zone}` where `username` is the user identity and `zone` is the authentication zone.
 
 ### Response
 
@@ -218,15 +231,15 @@ The response body is the same as a [normal response body](#response-body).
 
 ```
 $ curl \
-> "http://localhost:8888/admin/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&as-user=rods#iplant&q=name:?e*&type=file&offset=1&limit=2" \
+> "http://localhost:8888/admin/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&as-user=rods#iplant&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2&sort=score:desc" \
 > | python -mjson.tool
 {
     "matches": [
         {
             "entity": {
                 "creator": "rods#iplant",
-                "dateCreated": "2013-10-09T13:27:04.090Z",
-                "dateModified": "2013-10-09T13:27:04.090Z",
+                "dateCreated": 1381325224090,
+                "dateModified": 1381325224090,
                 "fileSize": 13225,
                 "fileType": null,
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
@@ -249,8 +262,8 @@ $ curl \
         {
             "entity": {
                 "creator": "rods#"iplant",
-                "dateCreated": "2013-10-09T13:28:05.602Z",
-                "dateModified": "2013-10-09T13:28:05.602Z",
+                "dateCreated": 1381325285000,
+                "dateModified": 1381325285000,
                 "fileSize": 14016,
                 "fileType": null,
                 "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",

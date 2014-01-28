@@ -388,36 +388,12 @@
   [req uuid]
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
-(defn rate-app
-  "This service adds a user's rating to an app."
-  [req]
-  (let [url (build-metadactyl-secured-url req "rate-analysis")]
-    (forward-post url req)))
-
-(defn delete-rating
-  "This service removes a user's rating from an app."
-  [req]
-  (let [url (build-metadactyl-secured-url req "delete-rating")]
-    (forward-post url req)))
-
-(defn search-apps
-  "This service searches for apps based on a search term."
-  [req]
-  (let [url (build-metadactyl-secured-url req "search-analyses")]
-    (forward-get url req)))
-
 (defn list-apps-in-group
   "This service lists all of the apps in an app group and all of its
    descendents."
   [req app-group-id]
   (let [url (build-metadactyl-secured-url req "get-analyses-in-group" app-group-id)]
     (forward-get url req)))
-
-(defn update-favorites
-  "This service adds apps to or removes apps from a user's favorites list."
-  [req]
-  (let [url (build-metadactyl-secured-url req "update-favorites")]
-    (forward-post url req)))
 
 (defn edit-app
   "This service makes an app available in Tito for editing."

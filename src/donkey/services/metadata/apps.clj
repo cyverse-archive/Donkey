@@ -79,6 +79,10 @@
   "Used to list apps available to the Discovery Environment."
   (listAppGroups [_])
   (listApps [_ group-id])
+  (searchApps [_ search-term])
+  (updateFavorites [_ app-id favorite?])
+  (rateApp [_ app-id rating comment-id])
+  (deleteRating [_ app-id])
   (getApp [_ app-id])
   (getAppDeployedComponents [_ app-id])
   (getAppDetails [_ app-id])
@@ -101,6 +105,18 @@
 
   (listApps [_ group-id]
     (metadactyl/apps-in-group group-id))
+
+  (searchApps [_ search-term]
+    (metadactyl/search-apps search-term))
+
+  (updateFavorites [_ app-id favorite?]
+    (metadactyl/update-favorites app-id favorite?))
+
+  (rateApp [_ app-id rating comment-id]
+    (metadactyl/rate-app app-id rating comment-id))
+
+  (deleteRating [_ app-id]
+    (metadactyl/delete-rating app-id))
 
   (getApp [_ app-id]
     (metadactyl/get-app app-id))
@@ -153,10 +169,34 @@
       (.listPublicApps agave-client)
       (metadactyl/apps-in-group group-id)))
 
+  (searchApps [_ search-term]
+    (let [de-apps  (metadactyl/search-apps search-term)
+          hpc-apps (.searchPublicApps agave-client search-term)]
+      {:template_count (apply + (map :template_count [de-apps hpc-apps]))
+       :templates      (mapcat :templates [de-apps hpc-apps])}))
+
+  (updateFavorites [_ app-id favorite?]
+    (if (is-uuid? app-id)
+      (metadactyl/update-favorites app-id favorite?)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC apps cannot be marked as favorites"})))
+
+  (rateApp [_ app-id rating comment-id]
+    (if (is-uuid? app-id)
+      (metadactyl/rate-app app-id rating comment-id)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC apps cannot be rated"})))
+
+  (deleteRating [_ app-id]
+    (if (is-uuid? app-id)
+      (metadactyl/delete-rating app-id)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC apps cannot be rated"})))
+
   (getApp [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-app app-id)
-      (.getApp agave-client app-id)))
+      (aa/filter-default-inputs (.getApp agave-client app-id))))
 
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
@@ -235,6 +275,33 @@
 (defn apps-in-group
   [group-id]
   (service/success-response (.listApps (get-app-lister) group-id)))
+
+(defn search-apps
+  [{search-term :search}]
+  (when (string/blank? search-term)
+    (throw+ {:error_code ce/ERR_MISSING_QUERY_PARAMETER
+             :param      :search}))
+  (service/success-response (.searchApps (get-app-lister) search-term)))
+
+(defn update-favorites
+  [body]
+  (let [request (service/decode-json body)]
+    (.updateFavorites (get-app-lister)
+                      (service/required-field request :analysis_id)
+                      (service/required-field request :user_favorite))))
+
+(defn rate-app
+  [body]
+  (let [request (service/decode-json body)]
+    (.rateApp (get-app-lister)
+              (service/required-field request :analysis_id)
+              (service/required-field request :comment_id)
+              (service/required-field request :comment_id))))
+
+(defn delete-rating
+  [body]
+  (let [request (service/decode-json body)]
+    (.deleteRating (get-app-lister) (service/required-field request :analysis_id))))
 
 (defn get-app
   [app-id]

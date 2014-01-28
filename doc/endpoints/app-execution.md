@@ -256,9 +256,26 @@ $ curl -s http://by-tor:8888/app-rerun-info/D3AE0C5C-CC74-4A98-8D26-224D6366F9D6
 Secured Endpoint: PUT /secured/workspaces/{workspace-id}/newexperiment
 
 Delegates to metadactyl: PUT /secured/workspaces/{workspace-id}/newexperiment
+Or submits a job to Foundation API.
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+path, or submits a job to Foundation API.
+
+The response body for this service is in the following format:
+
+```json
+{
+    "success": true,
+    "id": "job-id",
+    "name": "Job Name",
+    "status": "Submitted",
+    "start-date": start-date-as-milliseconds-since-epoch
+}
+```
+
+Please see the
+[metadactyl documentation](http://github.com/iPlantCollaborativeOpenSource/metadactyl-clj/blob/master/doc/endpoints/app-execution.md#submitting-a-job-for-execution)
+for more information, including the request format.
 
 ## Listing Jobs
 

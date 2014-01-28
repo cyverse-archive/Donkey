@@ -45,7 +45,11 @@
                         :status      status
                         :deleted     deleted
                         :job_type_id job-type-id
-                        :user_id     user-id}))))))
+                        :user_id     user-id})))))
+  {:id job-id
+   :name job-name
+   :status status
+   :start-date (db/millis-from-timestamp start-date)})
 
 (defn- count-jobs-base
   "The base query for counting the number of jobs in the database for a user."
