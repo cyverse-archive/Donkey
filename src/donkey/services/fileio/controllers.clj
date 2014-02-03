@@ -14,6 +14,7 @@
             [donkey.services.filesystem.stat :as stat]
             [donkey.util.config :as config]
             [cheshire.core :as json]
+            [clj-jargon.item-ops :as jargon-ops]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
             [donkey.util.ssl :as ssl]
@@ -112,6 +113,7 @@
     (validate-map body {:dest string? :content string?})
     (let [user      (:user params)
           dest      (string/trim (:dest body))
+          tmp-file  (str dest "." (gen-uuid))
           content   (:content body)
           file-size (count (.getBytes content "UTF-8"))]
       (with-jargon (jargon-cfg) [cm]
@@ -119,21 +121,30 @@
           (throw+ {:user       user
                    :error_code ERR_NOT_A_USER}))
 
-        (when-not (exists? cm (ft/dirname dest))
+        (when-not (exists? cm dest)
           (throw+ {:error_code ERR_DOES_NOT_EXIST
-                   :path       (ft/dirname dest)}))
+                   :path       dest}))
 
-        (when-not (is-writeable? cm user (ft/dirname dest))
+        (when-not (is-writeable? cm user dest)
           (throw+ {:error_code ERR_NOT_WRITEABLE
-                   :path       (ft/dirname dest)}))
+                   :path       dest}))
 
         (when (> file-size (config/fileio-max-edit-file-size))
           (throw+ {:error_code "ERR_FILE_SIZE_TOO_LARGE"
                    :path       dest
                    :size       file-size}))
 
-        (with-in-str content
-          (actions/save cm *in* user dest))
+        ;; Jargon will delete dest before writing its new contents, which will cause the old version
+        ;; of the file to be put into the Trash. So rename dest to tmp-file, then force-delete
+        ;; tmp-file after a successful save of the new contents.
+        (jargon-ops/move cm dest tmp-file :user user :admin-users (irods-admins))
+        (try+
+          (with-in-str content
+            (actions/save cm *in* user dest))
+          (jargon-ops/delete cm tmp-file true)
+          (catch Object _
+            (jargon-ops/move cm tmp-file dest :user user :admin-users (irods-admins))
+            (throw+)))
 
         {:file (stat/path-stat user dest)}))))
 

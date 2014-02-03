@@ -44,11 +44,6 @@
     (when-not (exists? cm ddir)
       (mkdirs cm ddir))
 
-    (when-not (is-writeable? cm user ddir)
-      (log/error (str "Directory " ddir " is not writeable by " user))
-      (throw+ {:error_code ERR_NOT_WRITEABLE
-               :path ddir} ))
-
     (scruffy-copy cm istream user dest-path)
     (log/info "save function after copy.")
     dest-path))
@@ -56,6 +51,12 @@
 (defn store
   [cm istream user dest-path]
   (log/info "In store function for " user dest-path)
+  (let [ddir (ft/dirname dest-path)]
+    (when-not (is-writeable? cm user ddir)
+      (log/error (str "Directory " ddir " is not writeable by " user))
+      (throw+ {:error_code ERR_NOT_WRITEABLE
+               :path ddir} )))
+
   (save cm istream user dest-path)
   (log/info "store function after save.")
   (let [guessed-type (:type (filetype/preview-auto-type user dest-path))]
