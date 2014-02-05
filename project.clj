@@ -43,10 +43,10 @@
                  [org.clojure/tools.nrepl "0.2.3"]
                  [net.sf.opencsv/opencsv "2.3"]
                  [com.novemberain/langohr "2.2.1"]
-                 [org.iplantc/clj-icat-direct "0.0.2"]
+                 [org.iplantc/clj-icat-direct "0.0.2-SNAPSHOT"]
                  [de.ubercode.clostache/clostache "1.3.1"]
                  [dire "0.5.2"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "1.4.3"]
+  :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
             [lein-ring "0.8.8"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
@@ -65,11 +65,11 @@
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]
-                 ["sonatype-nexus-staging"
-                  {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]
                  ["biojava"
                   {:url "http://www.biojava.org/download/maven"}]
                  ["nexml"
                   {:url "http://nexml-dev.nescent.org/.m2/repository"
                    :checksum :ignore
-                   :update :daily}]])
+                   :update :daily}]]
+  :deploy-repositories [["sonatype-nexus-staging"
+                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
