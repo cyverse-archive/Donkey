@@ -1,16 +1,25 @@
-(defproject donkey "2.0.0-SNAPSHOT"
+(defproject org.iplantc/donkey "2.0.1-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
+  :url "https://github.com/iPlantCollaborativeOpenSource/Donkey"
+  :license {:name "BSD Standard License"
+            :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
+  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kameleon.git"
+        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kameleon.git"
+        :url "git@github.com:iPlantCollaborativeOpenSource/kameleon.git"}
+  :pom-addition [:developers
+                 [:developer
+                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/data.codec "0.1.0"]
                  [org.clojure/java.classpath "0.2.2"]
                  [org.apache.tika/tika-core "1.4"]
-                 [org.iplantc/clj-cas "1.2.0-SNAPSHOT"]
-                 [org.iplantc/clj-jargon "0.4.1"
+                 [org.iplantc/clj-cas "1.8.4-SNAPSHOT"]
+                 [org.iplantc/clj-jargon "0.4.2-SNAPSHOT"
                   :exclusions [[xerces/xmlParserAPIs]
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
-                 [org.iplantc/clojure-commons "1.4.7"]
+                 [org.iplantc/clojure-commons "1.4.8-SNAPSHOT"]
                  [org.iplantc/deliminator "0.1.0-SNAPSHOT"]
                  [org.iplantc/mescal "0.1.0-SNAPSHOT"]
                  [org.iplantc/kameleon "1.8.4-SNAPSHOT"]
@@ -23,9 +32,9 @@
                  [com.cemerick/url "0.1.0"]
                  [ring "1.2.1"]
                  [compojure "1.1.6"]
-                 [heuristomancer "0.1.3-SNAPSHOT"]
+                 [org.iplantc/heuristomancer "0.1.3-SNAPSHOT"]
                  [clojurewerkz/elastisch "1.4.0"]
-                 [hoot "0.1.0-SNAPSHOT"]
+                 [org.iplantc/hoot "0.1.0-SNAPSHOT"]
                  [com.novemberain/validateur "1.7.0"]
                  [com.novemberain/welle "2.0.0-beta1"]
                  [byte-streams "0.1.7"]
@@ -34,7 +43,7 @@
                  [org.clojure/tools.nrepl "0.2.3"]
                  [net.sf.opencsv/opencsv "2.3"]
                  [com.novemberain/langohr "2.2.1"]
-                 [clj-icat-direct "0.0.1"]
+                 [org.iplantc/clj-icat-direct "0.0.2-SNAPSHOT"]
                  [de.ubercode.clostache/clostache "1.3.1"]
                  [dire "0.5.2"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3-SNAPSHOT"]
@@ -54,11 +63,13 @@
                :config-files ["log4j.properties"]
                :config-path "conf/main"}
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"]
-  :repositories [["iplantCollaborative"
-                  "http://projects.iplantcollaborative.org/archiva/repository/internal/"]
+  :repositories [["sonatype-nexus-snapshots"
+                  {:url "https://oss.sonatype.org/content/repositories/snapshots"}]
                  ["biojava"
-                  "http://www.biojava.org/download/maven"]
+                  {:url "http://www.biojava.org/download/maven"}]
                  ["nexml"
                   {:url "http://nexml-dev.nescent.org/.m2/repository"
                    :checksum :ignore
-                   :update :daily}]])
+                   :update :daily}]]
+  :deploy-repositories [["sonatype-nexus-staging"
+                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
