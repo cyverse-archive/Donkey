@@ -33,7 +33,4 @@
 
     (POST "/fileio/upload" [:as req]
           (do (log/info "Request: " req)
-            (trap #(fio/upload (:params req) (:multipart-params req)))))
-
-    (GET "/filesystem/paged-directory" [:as req]
-         (trap #(d/do-unsecured-paged-listing (:params req))))))
+            (trap #(fio/upload (:params req) (:multipart-params req)))))))
