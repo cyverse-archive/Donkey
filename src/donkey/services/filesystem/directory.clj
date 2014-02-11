@@ -192,6 +192,7 @@
     (list-directories user path)))
 
 (defn do-paged-listing
+  "Entrypoint for the API that calls (paged-dir-listing)."
   [{user       :user
     path       :path
     limit      :limit
@@ -206,6 +207,7 @@
     (paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
 
 (defn do-unsecured-paged-listing
+  "Entrypoint for the API that calls (paged-dir-listing)."
   [{path       :path
     limit      :limit
     offset     :offset
