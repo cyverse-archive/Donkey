@@ -1,4 +1,3 @@
-donkey.iml
 /pom.xml
 *jar
 /bin
@@ -7,7 +6,6 @@ donkey.iml
 /native
 /.lein-failures
 /checkouts
-.idea/
 .lein-deps-sum
 .lein-plugins
 .nrepl-port

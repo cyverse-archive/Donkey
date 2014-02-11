@@ -83,7 +83,7 @@ When the search succeeds the response document has these additional fields.
 
 ```
 $ curl \
-> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2&sort:desc" \
+> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=\\{\"wildcard\":\\{\"label\":\"?e*\"\\}\\}&type=file&offset=1&limit=2&sort:desc" \
 > | python -mjson.tool
 {
     "matches": [
@@ -231,7 +231,7 @@ The response body is the same as a [normal response body](#response-body).
 
 ```
 $ curl \
-> "http://localhost:8888/admin/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&as-user=rods#iplant&q=\\{\"wildcard\":\"label\":\"?e*\"\\}&type=file&offset=1&limit=2&sort=score:desc" \
+> "http://localhost:8888/admin/filesystem/search/iplant/home?proxyToken=$(cas-ticket)&as-user=rods#iplant&q=\\{\"wildcard\":\\{\"label\":\"?e*\"\\}\\}&type=file&offset=1&limit=2&sort=score:desc" \
 > | python -mjson.tool
 {
     "matches": [
