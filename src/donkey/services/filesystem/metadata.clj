@@ -16,12 +16,15 @@
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- fix-unit
+  "Used to replace the IPCRESERVED unit with an empty string."
   [avu]
   (if (= (:unit avu) IPCRESERVED)
     (assoc avu :unit "")
     avu))
 
 (defn- list-path-metadata
+  "Returns the metadata for a path. Passes all AVUs to (fix-unit).
+   AVUs with a unit matching IPCSYSTEM are filtered out."
   [cm path]
   (filterv
    #(not= (:unit %) IPCSYSTEM)
@@ -35,6 +38,8 @@
     (:unit avu-map)))
 
 (defn metadata-get
+  "Returns the metadata for a path. Filters out system AVUs and replaces
+   units set to ipc-reserved with an empty string."
   [user path]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
@@ -43,6 +48,14 @@
     {:metadata (list-path-metadata cm path)}))
 
 (defn- common-metadata-set
+  "Adds an AVU to 'path'. The AVU is passed in as a map in the format:
+   {
+      :attr attr-string
+      :value value-string
+      :unit unit-string
+   }
+   It's a no-op if an AVU with the same attribute and value is already
+   associated with the path."
   [cm path avu-map]
   (let [fixed-path (ft/rm-last-slash path)
         new-unit   (reserved-unit avu-map)
@@ -56,6 +69,14 @@
     fixed-path))
 
 (defn metadata-set
+  "Allows user to set metadata on a path. The user must exist in iRODS
+   and have write permissions on the path. The path must exist. The
+   avu-map parameter must be in this format:
+   {
+      :attr attr-string
+      :value value-string
+      :unit unit-string
+   }"
   [user path avu-map]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
@@ -67,6 +88,8 @@
      :user user}))
 
 (defn admin-metadata-set
+  "Adds the AVU to path, bypassing user permission checks. See (metadata-set)
+   for the AVU map format."
   [path avu-map]
   (with-jargon (jargon-cfg) [cm]
     (when (= "failure" (:status avu-map))
@@ -76,6 +99,7 @@
     (common-metadata-set cm path avu-map)))
 
 (defn- encode-str
+  "Returns str-to-encode as a base 64 encoded string."
   [str-to-encode]
   (String. (b64/encode (.getBytes str-to-encode))))
 
@@ -91,6 +115,13 @@
     new-val))
 
 (defn- metadata-batch-set
+  "Adds and deletes metadata on path for a user. add-dels should be in the
+   following format:
+   {
+      :delete [{:attr :value :unit}]
+      :add [{:attr :value :unit}]
+   }
+   All value in the maps should be strings, just like with (metadata-set)."
   [user path adds-dels]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
@@ -111,6 +142,7 @@
       {:path new-path :user user})))
 
 (defn metadata-delete
+  "Deletes an AVU from path on behalf of a user. attr and value should be strings."
   [user path attr value]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
@@ -119,15 +151,13 @@
     (delete-metadata cm path attr value)
     {:path path :user user}))
 
-(defn- check-adds
+(defn- check-avus
   [adds]
   (mapv #(= (set (keys %)) (set [:attr :value :unit])) adds))
 
-(defn- check-dels
-  [dels]
-  (mapv #(= (set (keys %)) (set [:attr :value :unit])) dels))
-
 (defn do-metadata-get
+  "Entrypoint for the API. Calls (metadata-get). Parameter should be a map
+   with :user and :path as keys. Values are strings."
   [{user :user path :path}]
   (metadata-get user path))
 
@@ -139,6 +169,8 @@
 (with-post-hook! #'do-metadata-get (log-func "do-metadata-get"))
 
 (defn do-metadata-set
+  "Entrypoint for the API. Calls (metadata-set). Parameter should be a map
+   with :user and :path as keys. Values are strings."
   [{user :user path :path} body]
   (metadata-set user path body))
 
@@ -151,6 +183,8 @@
 (with-post-hook! #'do-metadata-set (log-func "do-metadata-set"))
 
 (defn do-metadata-batch-set
+  "Entrypoint for the API that calls (metadata-batch-set). Parameter is a map
+   with :user and :path as keys. Values are strings."
   [{user :user path :path} body]
   (metadata-batch-set user path body))
 
@@ -165,15 +199,17 @@
           dels (:delete body)]
       (log/warn (jargon-cfg))
       (when (pos? (count adds))
-        (if (not (every? true? (check-adds adds)))
+        (if (not (every? true? (check-avus adds)))
           (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "add"})))
       (when (pos? (count dels))
-        (if-not (every? true? (check-dels dels))
+        (if-not (every? true? (check-avus dels))
           (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "delete"}))))))
 
 (with-post-hook! #'do-metadata-batch-set (log-func "do-metadata-batch-set"))
 
 (defn do-metadata-delete
+  "Entrypoint for the API that calls (metadata-delete). Parameter is a map
+   with :user, :path, :attr, :value as keys. Values are strings."
   [{user :user path :path attr :attr value :value}]
   (metadata-delete user path attr value))
 
