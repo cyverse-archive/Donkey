@@ -39,8 +39,8 @@ Here are the fields that describe a filesystem entry.
 | id              | string | the logical path to the entry |
 | path            | string | the logical path to the entry |
 | userPermissions | array  | an array of [permission records](#permission-record) identifying the permissions users have on this entry |
-| dateCreated     | string | the time when the file was created in ISO 8601 format |
-| dateModified    | string | the time when the file was last modified in ISO 8601 format |
+| dateCreated     | number | the time when the file was created in milliseconds since the POSIX epoch |
+| dateModified    | number | the time when the file was last modified in milliseconds since the POSIX epoch |
 | label           | string | the logical name of the entry |
 
 **Example**
