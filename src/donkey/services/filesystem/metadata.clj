@@ -153,7 +153,12 @@
 
 (defn- check-avus
   [adds]
-  (mapv #(= (set (keys %)) (set [:attr :value :unit])) adds))
+  (mapv
+   #(and (map? %1)
+         (contains? %1 :attr)
+         (contains? %1 :value)
+         (contains? %1 :unit))
+   adds))
 
 (defn do-metadata-get
   "Entrypoint for the API. Calls (metadata-get). Parameter should be a map
@@ -199,7 +204,7 @@
           dels (:delete body)]
       (log/warn (jargon-cfg))
       (when (pos? (count adds))
-        (if (not (every? true? (check-avus adds)))
+        (if-not (every? true? (check-avus adds))
           (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "add"})))
       (when (pos? (count dels))
         (if-not (every? true? (check-avus dels))
