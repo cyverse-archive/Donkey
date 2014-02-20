@@ -9,7 +9,7 @@
         [clj-jargon.validations]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
-  (:require [cheshire.core :as json] 
+  (:require [cheshire.core :as json]
             [hoot.rdf :as rdf]
             [hoot.csv :as csv]
             [heuristomancer.core :as hm]
@@ -45,23 +45,23 @@
   ([user path type]
     (with-jargon (jargon-cfg) [cm]
       (add-type cm user path type)))
-  
+
   ([cm user path type]
     (log/info "in add-type")
-    
+
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
-    
+
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
-    
+
     (when-not (owns? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    
+
     (set-metadata cm path (garnish-type-attribute) type "")
     (log/info "Added type " type " to " path " for " user ".")
     {:path path
@@ -72,23 +72,23 @@
   ([user path]
     (with-jargon (jargon-cfg) [cm]
       (auto-add-type cm user path)))
-  
+
   ([cm user path]
     (log/info "in auto-add-type")
-    
+
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
-    
+
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
-    
+
     (when-not (owns? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    
+
     (let [type (content-type cm path)]
       (add-metadata cm path (garnish-type-attribute) type "")
       (log/info "Auto-added type " type " to " path " for " user ".")
@@ -99,21 +99,21 @@
   "Returns the auto-type that (auto-add-type) would have associated with the file."
   [user path]
   (log/info "in preview-auto-type")
-  
+
   (with-jargon (jargon-cfg) [cm]
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
-    
+
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
-    
+
     (when-not (owns? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    
+
     (let [ct (content-type cm path)]
       (log/info "Preview type of " path " for " user " is " ct ".")
       {:path path
@@ -123,10 +123,10 @@
   "Returns a list of avu maps for set of attributes associated with dir-path"
   [cm dir-path attr val]
   (log/info "in get-avus")
-  
+
   (validate-path-lengths dir-path)
   (filter
-    #(and (= (:attr %1) attr) 
+    #(and (= (:attr %1) attr)
           (= (:value %1) val))
     (get-metadata cm dir-path)))
 
@@ -134,40 +134,63 @@
   "Removes the association of type with path for the specified user."
   [user path type]
   (log/info "in delete-type")
-  
+
   (with-jargon (jargon-cfg) [cm]
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
-    
+
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
-    
+
     (when-not (owns? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    
+
     (delete-avus cm path (get-avus cm path (garnish-type-attribute) type))
     (log/info "Deleted type " type " from " path " for " user ".")
     {:path path
      :type type
      :user user}))
 
+(defn unset-types
+  "Removes all info-type associations from a path."
+  [user path]
+  (log/info "in unset-type")
+
+  (with-jargon (jargon-cfg) [cm]
+    (when-not (exists? cm path)
+      (throw+ {:error_code ERR_DOES_NOT_EXIST
+               :path path}))
+
+    (when-not (user-exists? cm user)
+      (throw+ {:error_code ERR_NOT_A_USER
+               :user user}))
+
+    (when-not (owns? cm user path)
+      (throw+ {:error_code ERR_NOT_OWNER
+               :user user
+               :path path}))
+
+    (delete-metadata cm path (garnish-type-attribute))
+    (log/info "Deleted types from" path "for" user)
+    {:path path :user user}))
+
 (defn get-types
   "Gets all of the filetypes associated with path."
   ([cm user path]
     (log/info "in get-types")
-    
+
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
-    
+
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
-    
+
     (when-not (is-readable? cm user path)
       (throw+ {:error_code ERR_NOT_READABLE
                :user user
@@ -175,7 +198,7 @@
     (let [path-types (get-attribute cm path (garnish-type-attribute))]
       (log/info "Retrieved types " path-types " from " path " for " user ".")
       (or (:value (first path-types) ""))))
-  
+
   ([user path]
     (with-jargon (jargon-cfg) [cm]
       (get-types cm user path))))
@@ -185,20 +208,20 @@
   [cm user]
   (log/info "in home-dir")
   (ft/path-join "/" (:zone cm) "home" user))
-  
+
 (defn find-paths-with-type
   "Returns all of the paths under the user's home directory that have the specified type
    associated with it."
   [user type]
   (log/info "in find-paths-with-type")
-  
+
   (with-jargon (jargon-cfg) [cm]
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user       user}))
-    
-    (let [paths-with-type (list-everything-in-tree-with-attr cm 
-                            (home-dir cm user) 
+
+    (let [paths-with-type (list-everything-in-tree-with-attr cm
+                            (home-dir cm user)
                             {:name (garnish-type-attribute) :value type})]
       (log/info "Looked up all paths with a type of " type " for " user "\n" paths-with-type)
       paths-with-type)))

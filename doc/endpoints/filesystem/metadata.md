@@ -22,9 +22,9 @@ __Request Query Parameters__:
 __Request Body__:
 
     {
-        "attr" : "avu_name",
+        "attr"  : "avu_name",
         "value" : "avu_value",
-        "unit" : "avu_unit"
+        "unit"  : "avu_unit"
     }
 
 __Response__:
@@ -37,7 +37,7 @@ __Response__:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"attr" : "avu_name", "value" : "avu_value", "unit" : "avu_unit"}' 'http://127.0.0.1:3000/secured/filesystem/metadata?proxyToken=notReal&path=/iplant/home/johnw/LICENSE.txt'
+    curl -d '{"attr" : "avu_name", "value" : "avu_value", "unit" : "avu_unit"}' 'http://127.0.0.1:3000/secured/filesystem/metadata?proxyToken=notReal&path=/iplant/home/johnw/LICENSE.txt'
 
 
 Setting Metadata as a Batch Operation
@@ -58,19 +58,27 @@ __Request Body__:
     {
         "add": [
             {
-                "attr": "attr",
-                "value": "value",
-                "unit": "unit"
+                "attr"  : "attr",
+                "value" : "value",
+                "unit"  : "unit"
             },
             {
-                "attr": "attr1",
-                "value": "value",
-                "unit": "unit"
+                "attr"  : "attr1",
+                "value" : "value",
+                "unit"  : "unit"
             }
         ],
         "delete": [
-            "del1",
-            "del2"
+            {
+                "attr"  : "del1",
+                "value" : "del1value",
+                "unit"  : "del1unit"
+            },
+            {
+                "attr"  : "del2",
+                "value" : "del2value",
+                "unit"  : "del2unit"
+            }
         ]
     }
 
@@ -86,7 +94,7 @@ __Response__:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"add" : [{"attr" : "attr", "value" : "value", "unit" : "unit"}], "delete" : ["del1", "del2"]}' 'http://127.0.0.1:3000/secured/filesystem/metadata-batch?proxyToken=notReal&path=/iplant/home/johnw/LICENSE.txt'
+    curl -d '{"add" : [{"attr" : "attr", "value" : "value", "unit" : "unit"}], "delete" : ["del1", "del2"]}' 'http://127.0.0.1:3000/secured/filesystem/metadata-batch?proxyToken=notReal&path=/iplant/home/johnw/LICENSE.txt'
 
 
 Getting Metadata
