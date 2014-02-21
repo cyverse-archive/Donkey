@@ -20,5 +20,5 @@ Request and response bodies are in JSON format unless otherwise noted.
 * [Collaborator List Management Endpoints](endpoints/collaborators.md)
 * [Sharing Endpoints](endpoints/sharing.md)
 * [Reference Genome Endpoints](endpoints/reference-genomes.md)
-* [Data Search Endpoints](endpoints/data-search.md)
+* [Data Search Endpoints](endpoints/filesystem/search.md)
 * [Callback Endpoints](endpoints/callbacks.md)
