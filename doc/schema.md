@@ -37,6 +37,7 @@ Here are the fields that describe a filesystem entry.
 | Field           | Type   | Description |
 | --------------- | ------ | ----------- |
 | id              | string | the logical path to the entry |
+| path            | string | the logical path to the entry |
 | userPermissions | array  | an array of [permission records](#permission-record) identifying the permissions users have on this entry |
 | dateCreated     | string | the time when the file was created in ISO 8601 format |
 | dateModified    | string | the time when the file was last modified in ISO 8601 format |
@@ -47,6 +48,7 @@ Here are the fields that describe a filesystem entry.
 ```json
 {
     "id"              : "/iplant/home/tedgin/an-entry",
+    "path"            : "/iplant/home/tedgin/an-entry",
     "userPermissions" : [
         {
             "permission" : "own",
@@ -57,8 +59,8 @@ Here are the fields that describe a filesystem entry.
             "user"       : "rodsadmin#iplant"
         }
     ],
-    "dateCreated"     : "2013-11-21T01:46:06.001Z",
-    "dateModified"    : "2013-11-21T01:46:06.001Z",
+    "dateCreated"     : 1410399966001,
+    "dateModified"    : 1410399966001,
     "label"           : "an-entry"
 }
 ```
@@ -80,6 +82,7 @@ describe a file.
 ```json
 {
     "id"              : "/iplant/home/tedgin/a.file",
+    "path"            : "/iplant/home/tedgin/an.file",
     "userPermissions" : [
         {
             "permission" : "own",
@@ -91,8 +94,8 @@ describe a file.
         }
     ],
     "creator"         : "tedgin#iplant",
-    "dateCreated"     : "2013-11-21T01:46:06.001Z",
-    "dateModified"    : "2013-11-21T01:46:06.001Z",
+    "dateCreated"     : 1410399966001,
+    "dateModified"    : 1410399966001,
     "fileSize"        : 14016,
     "label"           : "a.file",
     "fileType"        : null,
@@ -126,6 +129,7 @@ describe a folder.
 ```json
 {
     "id"              : "/iplant/home/tedgin/a-folder",
+    "path"            : "/iplant/home/tedgin/a-folder",
     "userPermissions" : [
         {
             "permission" : "own",
@@ -137,8 +141,8 @@ describe a folder.
         }
     ],
     "creator"         : "tedgin#iplant",
-    "dateCreated"     : "2013-11-21T01:46:06.001Z",
-    "dateModified"    : "2013-11-21T01:46:06.001Z",
+    "dateCreated"     : 1410399966001,
+    "dateModified"    : 1410399966001,
     "label"           : "a-folder",
     "metadata"        : [
         {
