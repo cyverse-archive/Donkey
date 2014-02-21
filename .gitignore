@@ -6,6 +6,8 @@
 /native
 /.lein-failures
 /checkouts
+.idea/
+.lein-repl-history
 .lein-deps-sum
 .lein-plugins
 .nrepl-port
@@ -17,5 +19,6 @@
 /donkey
 /donkey.spec
 /donkey*.tar.gz
+donkey.iml
 *~
 \#*
