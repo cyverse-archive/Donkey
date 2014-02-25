@@ -15,19 +15,24 @@
   "High-level file renaming. Calls rename-func, passing it file-rename as the mv-func param."
   [user source dest]
   (with-jargon (jargon-cfg) [cm]
-    (let [source (ft/rm-last-slash source)
-           dest   (ft/rm-last-slash dest)]
-      (validators/user-exists cm user)
-      (validators/path-exists cm source)
-      (validators/user-owns-path cm user source)
-      (validators/path-not-exists cm dest)
+    (let [source    (ft/rm-last-slash source)
+          dest      (ft/rm-last-slash dest)
+          src-base  (ft/basename source)
+          dest-base (ft/basename dest)]
+      (if (= src-base dest-base)
+        {:source source :dest dest :user user}
+        (do
+          (validators/user-exists cm user)
+          (validators/path-exists cm source)
+          (validators/user-owns-path cm user source)
+          (validators/path-not-exists cm dest)
 
-      (let [result (move cm source dest :user user :admin-users (irods-admins))]
-        (when-not (nil? result)
-          (throw+ {:error_code ERR_INCOMPLETE_RENAME
-                   :paths result
-                   :user user}))
-        {:source source :dest dest :user user}))))
+          (let [result (move cm source dest :user user :admin-users (irods-admins))]
+            (when-not (nil? result)
+              (throw+ {:error_code ERR_INCOMPLETE_RENAME
+                       :paths result
+                       :user user}))
+            {:source source :dest dest :user user}))))))
 
 (defn do-rename
   [{user :user} {source :source dest :dest}]
