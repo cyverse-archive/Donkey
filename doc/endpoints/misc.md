@@ -5,7 +5,7 @@
     * [Initializing a User's Workspace](#initializing-a-users-workspace)
     * [Saving User Session Data](#saving-user-session-data)
     * [Retrieving User Session Data](#retrieving-user-session-data)
-    * [Removing User Seession Data](#removing-user-seession-data)
+    * [Removing User Session Data](#removing-user-seession-data)
     * [Saving User Preferences](#saving-user-preferences)
     * [Retrieving User Preferences](#retrieving-user-preferences)
     * [Removing User Preferences](#removing-user-preferences)
@@ -115,7 +115,7 @@ $ curl "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)"
 data
 ```
 
-## Removing User Seession Data
+## Removing User Session Data
 
 Secured Endpoint: DELETE /secured/sessions
 
@@ -140,9 +140,11 @@ ignored.
 
 Secured Endpoint: POST /secured/preferences
 
-This service can be used to save arbitrary user preferences. The POST body is
-stored without modification and can be retrieved by sending a GET request to the
-same URL.
+This service can be used to save arbitrary user preferences. The body must contain
+all of the preferences for the user; any key-value pairs that are missing will be
+removed from the preferences. Please note that the "defaultOutputDir" and the 
+"systemDefaultOutputDir" will always be present, even if not included in the
+JSON passed in.
 
 Example:
 
@@ -168,7 +170,10 @@ data
 
 Secured Endpoint: DELETE /secured/preferences
 
-This service can be used to remove a user's preferences.
+This service can be used to remove a user's preferences. 
+
+Please note that the "defaultOutputDir" and the "systemDefaultOutputDir" will 
+still be present in the preferences after a deletion.
 
 Example:
 
