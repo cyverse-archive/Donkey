@@ -66,9 +66,9 @@
                 (ap/load-app-details ids))))
 
 (defn list-de-jobs
-  [limit offset sort-field sort-order]
+  [limit offset sort-field sort-order filter]
   (let [user    (:username current-user)
-        jobs    (jp/list-jobs-of-types user limit offset sort-field sort-order [jp/de-job-type])
+        jobs    (jp/list-jobs-of-types user limit offset sort-field sort-order filter [jp/de-job-type])
         states  (load-de-job-states jobs)
         de-apps (load-app-details (map :analysis_id states))]
     (mapv (partial format-de-job states de-apps) jobs)))

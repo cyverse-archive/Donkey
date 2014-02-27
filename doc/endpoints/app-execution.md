@@ -317,46 +317,13 @@ as deleted in descending order by start time (that is, the `startdate` field in
 the result). Several query-string parameters are available to alter the way this
 service behaves:
 
-<table border="1">
-     <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Default</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>limit</td>
-            <td>
-                The maximum number of results to return.  If this value is zero
-                or negative then all results will be returned.
-            </td>
-            <td>0</td>
-        </tr>
-        <tr>
-            <td>offset</td>
-            <td>The index of the first result to return.</td>
-            <td>0</td>
-        </tr>
-        <tr>
-            <td>sort-field</td>
-            <td>
-                The name of the field that results are sorted by. Valid values
-                for this parameter are `name`, `analysis_name`, `startdate`,
-                `enddate`, and `status`.
-            </td>
-            <td>startdate</td>
-        </tr>
-        <tr>
-            <td>sort-order</td>
-            <td>
-                `asc` or `ASC` for ascending and `desc` or `DESC` for descending.
-            </td>
-            <td>desc</td>
-        </tr>
-    </tbody>
-</table>
+| Name | Description | Default |
+| ---- | ----------- | ------- |
+| limit | The maximum number of results to return. If this value is zero or negative then all results will be returned. | 0 |
+| offset | The index of the first result to return. | 0 |
+| sort-field | The name of the field that results are sorted by. Valid values for this parameter are `name`, `analysis_name`, `startdate`, `enddate`, and `status`. | startdate |
+| sort-order | `asc` or `ASC` for ascending and `desc` or `DESC` for descending. | desc |
+| filter | Allows results to be filtered based on the value of some result field.  The format of this parameter is `[{"field":"some_field", "value":"search-term"}, ...]`, where `field` is the name of the field on which the filter is based and `value` is the search value. If `field` is `name` or `analysis_name`, then `value` can be contained anywhere, case-insensitive, in the corresponding field. For example, to obtain the list of all jobs that were executed using an application with `CACE` anywhere in its name, the parameter value can be `[{"field":"analysis_name","value":"cace"}]`. To find a job with a specific `id`, the parameter value can be `[{"field":"id","value":"C09F5907-B2A2-4429-A11E-5B96F421C3C1"}]`. Additional filters may be provided in the query array, and any analysis that matches any filter will be returned. | No filtering |
 
 Here's an example using no parameters:
 
