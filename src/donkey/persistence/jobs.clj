@@ -27,6 +27,38 @@
                :job-type   job-type}))
     id))
 
+(defn- filter-value->where-value
+  "Returns a value for use in a job query where-clause map, based on the given filter field and
+   value pair."
+  [field value]
+  (case field
+    "analysis_name" ['like (sqlfn :lower (str "%" value "%"))]
+    "name" ['like (sqlfn :lower (str "%" value "%"))]
+    "id" (sqlfn :lower value)
+    value))
+
+(defn- filter-field->where-field
+  "Returns a field key for use in a job query where-clause map, based on the given filter field."
+  [field]
+  (case field
+    "analysis_name" (sqlfn :lower :j.app_name)
+    "name" (sqlfn :lower :j.job_name)
+    "id" (sqlfn :lower :j.external_id)
+    (keyword (str "j." field))))
+
+(defn- filter-map->where-clause
+  "Returns a map for use in a where-clause for filtering job query results."
+  [{:keys [field value]}]
+  {(filter-field->where-field field) (filter-value->where-value field value)})
+
+(defn- add-job-query-filter-clause
+  "Filters results returned by the given job query by adding a (where (or ...)) clause based on the
+   given filter map."
+  [query filter]
+  (if (nil? filter)
+    query
+    (where query (apply or (map filter-map->where-clause filter)))))
+
 (defn save-job
   "Saves information about a job in the database."
   [job-id job-name job-type username status & {:keys [id app-name start-date end-date deleted]}]
@@ -67,10 +99,10 @@
 
 (defn count-jobs
   "Counts the number of undeleted jobs in the database for a user."
-  [username job-types]
+  [username job-types filter]
   (with-db db/de
     ((comp :count first)
-     (select (count-jobs-base username)
+     (select (add-job-query-filter-clause (count-jobs-base username) filter)
              (join [:job_types :jt] {:j.job_type_id :jt.id})
              (where {:jt.name   [in job-types]
                      :j.deleted false})))))
@@ -100,11 +132,11 @@
               [:jt.name       :job_type]
               [:u.username    :username])))
 
-(defn get-jobs
+(defn- get-jobs
   "Gets a list of jobs satisfying a query."
-  [username row-limit row-offset sort-field sort-order job-types]
+  [username row-limit row-offset sort-field sort-order filter job-types]
   (with-db db/de
-    (select (job-base-query)
+    (select (add-job-query-filter-clause (job-base-query) filter)
             (where {:j.deleted  false
                     :u.username username
                     :jt.name    [in job-types]})
@@ -113,8 +145,8 @@
             (limit (nil-if-zero row-limit)))))
 
 (defn list-jobs-of-types
-  [username limit offset sort-field sort-order job-types]
-  (get-jobs username limit offset sort-field sort-order job-types))
+  [username limit offset sort-field sort-order filter job-types]
+  (get-jobs username limit offset sort-field sort-order filter job-types))
 
 (defn- add-job-type-clause
   "Adds a where clause for a set of job types if the set of job types provided is not nil

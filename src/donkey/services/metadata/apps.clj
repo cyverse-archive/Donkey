@@ -26,8 +26,8 @@
   (some #(re-find % id) uuid-regexes))
 
 (defn- count-jobs-of-types
-  [job-types]
-  (jp/count-jobs (:username current-user) job-types))
+  [job-types filter]
+  (jp/count-jobs (:username current-user) job-types filter))
 
 (defn- agave-job-id?
   [id]
@@ -40,10 +40,10 @@
     (da/format-de-job de-states de-apps job)))
 
 (defn- list-all-jobs
-  [agave limit offset sort-field sort-order]
+  [agave limit offset sort-field sort-order filter]
   (let [username     (:username current-user)
         types        [jp/de-job-type jp/agave-job-type]
-        jobs         (jp/list-jobs-of-types username limit offset sort-field sort-order types)
+        jobs         (jp/list-jobs-of-types username limit offset sort-field sort-order filter types)
         grouped-jobs (group-by :job_type jobs)
         de-states    (da/load-de-job-states (grouped-jobs jp/de-job-type []))
         de-apps      (da/load-app-details (map :analysis_id de-states))
@@ -87,8 +87,8 @@
   (getAppDeployedComponents [_ app-id])
   (getAppDetails [_ app-id])
   (submitJob [_ workspace-id submission])
-  (countJobs [_])
-  (listJobs [_ limit offset sort-field sort-order])
+  (countJobs [_ filter])
+  (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
   (populateJobsTable [_])
   (removeDeletedJobs [_])
@@ -130,11 +130,11 @@
   (submitJob [_ workspace-id submission]
     (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission)))
 
-  (countJobs [_]
-    (count-jobs-of-types [jp/de-job-type]))
+  (countJobs [_ filter]
+    (count-jobs-of-types [jp/de-job-type] filter))
 
-  (listJobs [_ limit offset sort-field sort-order]
-    (da/list-de-jobs limit offset sort-field sort-order))
+  (listJobs [_ limit offset sort-field sort-order filter]
+    (da/list-de-jobs limit offset sort-field sort-order filter))
 
   (syncJobStatus [_ job]
     (when (= (:job_type job) jp/de-job-type)
@@ -213,11 +213,11 @@
       (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission))
       (aa/submit-agave-job agave-client submission)))
 
-  (countJobs [_]
-    (count-jobs-of-types [jp/de-job-type jp/agave-job-type]))
+  (countJobs [_ filter]
+    (count-jobs-of-types [jp/de-job-type jp/agave-job-type] filter))
 
-  (listJobs [_ limit offset sort-field sort-order]
-    (list-all-jobs agave-client limit offset sort-field sort-order))
+  (listJobs [_ limit offset sort-field sort-order filter]
+    (list-all-jobs agave-client limit offset sort-field sort-order filter))
 
   (syncJobStatus [_ job]
     (process-job agave-client (:id job) job
@@ -321,7 +321,7 @@
    (.submitJob (get-app-lister) workspace-id (service/decode-json body))))
 
 (defn list-jobs
-  [{:keys [limit offset sort-field sort-order]
+  [{:keys [limit offset sort-field sort-order filter]
     :or   {limit      "0"
            offset     "0"
            sort-field :startdate
@@ -330,13 +330,14 @@
         offset     (Long/parseLong offset)
         sort-field (keyword sort-field)
         sort-order (keyword sort-order)
-        app-lister (get-app-lister)]
+        app-lister (get-app-lister)
+        filter     (when-not (nil? filter) (service/decode-json filter))]
     (populate-jobs-table app-lister)
     (.removeDeletedJobs app-lister)
     (service/success-response
-     {:analyses  (.listJobs app-lister limit offset sort-field sort-order)
+     {:analyses  (.listJobs app-lister limit offset sort-field sort-order filter)
       :timestamp (str (System/currentTimeMillis))
-      :total     (.countJobs app-lister)})))
+      :total     (.countJobs app-lister filter)})))
 
 (defn update-de-job-status
   [id status end-date]
