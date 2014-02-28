@@ -57,7 +57,7 @@
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
 
-    (when-not (owns? cm user path)
+    (when-not (is-writeable? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
@@ -84,7 +84,7 @@
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
 
-    (when-not (owns? cm user path)
+    (when-not (is-writeable? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
@@ -144,7 +144,7 @@
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
 
-    (when-not (owns? cm user path)
+    (when-not (is-writeable? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
@@ -169,7 +169,7 @@
       (throw+ {:error_code ERR_NOT_A_USER
                :user user}))
 
-    (when-not (owns? cm user path)
+    (when-not (is-writeable? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
