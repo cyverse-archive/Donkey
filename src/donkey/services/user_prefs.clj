@@ -47,7 +47,9 @@
        (log/debug "settings: POST" url new-settings)
        (let [resp (cl/post
                    url
-                   {:content-type :json :body new-settings}
+                   {:content-type :json
+                    :body         new-settings
+                    :query-params {:dw (riak-prefs-dw)}}
                    {:throw-exceptions false})]
          (cond
           (= 200 (:status resp)) (:body resp)
