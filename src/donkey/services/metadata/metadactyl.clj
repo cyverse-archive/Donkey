@@ -553,7 +553,12 @@
 (defn admin-list-tool-requests
   "Lists the tool requests that were submitted by any user."
   [params]
-  (success-response (dm/admin-list-tool-requests (dissoc params :proxyToken))))
+  (success-response (dm/admin-list-tool-requests params)))
+
+(defn list-tool-request-status-codes
+  "Lists the known tool request status codes."
+  [params]
+  (success-response (dm/list-tool-request-status-codes params)))
 
 (defn update-tool-request
   "Updates a tool request with comments and possibly a new status."

@@ -225,5 +225,8 @@
    (GET "/tool-requests" [:as {params :params}]
         (trap #(admin-list-tool-requests params)))
 
+   (GET "/tool-request-status-codes" [:as {params :params}]
+        (trap #(list-tool-request-status-codes params)))
+
    (POST "/arg-preview" [:as req]
          (trap #(preview-args req)))))
