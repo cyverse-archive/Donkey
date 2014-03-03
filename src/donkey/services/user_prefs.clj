@@ -2,7 +2,7 @@
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-ops :only [mkdir]]
+        [clj-jargon.item-ops :only [mkdir mkdirs]]
         [clj-jargon.permissions :only [set-owner]]
         [donkey.clients.nibblonian]
         [donkey.util.config]
@@ -108,17 +108,33 @@
       (:path out-dir)
       out-dir)))
 
+(defn- create-dir
+  [cm user out-dir]
+  (log/warn "creating " out-dir)
+  (mkdirs cm out-dir)
+  (set-owner cm out-dir user))
+
 (defn- create-system-default-output-dir
-  "Creates the system defaultm output dir."
+  "Creates the system default output dir."
   [prefs]
   (let [sys-output-dir (ft/rm-last-slash (sysdefoutdir prefs))
-        output-dir     (ft/rm-last-slash (extract-default-output-dir prefs))]
+        output-dir     (ft/rm-last-slash (extract-default-output-dir prefs))
+        user           (:shortUsername current-user)]
+    (log/warn "sys-output-dir" sys-output-dir)
+    (log/warn "output-dir" output-dir)
     (with-jargon (jargon-cfg) [cm]
-      (when (and (not (string/blank? sys-output-dir))
-               (= sys-output-dir output-dir)
-               (not (jinfo/exists? cm sys-output-dir)))
-        (mkdir cm sys-output-dir)
-        (set-owner cm sys-output-dir (:shortUsername current-user))))
+      (cond
+       (and (string/blank? output-dir)
+            (not (string/blank? sys-output-dir))
+            (not (jinfo/exists? cm sys-output-dir)))
+       (create-dir cm user sys-output-dir)
+
+       (and (not (string/blank? output-dir))
+            (not (jinfo/exists? cm output-dir)))
+       (create-dir cm user output-dir)
+
+       :else
+       (log/warn "Not creating default output directory for " user)))
     prefs))
 
 (defn handle-blank-default-output-dir
@@ -138,6 +154,7 @@
 
 (defn- get-user-prefs
   [prefs]
+  (log/warn "get-user-prefs")
   (-> prefs
       (handle-blank-default-output-dir)
       (handle-string-default-output-dir)
@@ -157,6 +174,7 @@
   "Retrieves or saves the user's preferences."
   ([]
      (let [prefs (cheshire/decode (settings riak-prefs-bucket) true)]
+       (log/warn "Getting user prefs")
        (get-user-prefs prefs)))
   ([req-prefs-string]
     (let [prefs (cheshire/decode req-prefs-string true)]
@@ -175,7 +193,18 @@
       (cheshire/encode)
       (user-prefs)))
 
+(defn- create-output-dir
+  [user path]
+  (with-jargon (jargon-cfg) [cm]
+    (when-not (jinfo/exists? cm path)
+      (log/warn "Creating output dir")
+      (mkdirs cm path)
+      (set-owner cm user path))))
+
 (defn get-default-output-dir
   "Gets the path to the user's default output folder from the user's preferences."
   []
-  (extract-default-output-dir (cheshire/decode (user-prefs) true)))
+  (let [user (:username current-user)
+        retv (extract-default-output-dir (cheshire/decode (user-prefs) true))
+        dpth (:path retv)]
+    retv))
