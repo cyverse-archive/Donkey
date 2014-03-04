@@ -3,9 +3,9 @@
   :url "https://github.com/iPlantCollaborativeOpenSource/Donkey"
   :license {:name "BSD Standard License"
             :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kameleon.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kameleon.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/kameleon.git"}
+  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Donkey.git"
+        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Donkey.git"
+        :url "git@github.com:iPlantCollaborativeOpenSource/Donkey.git"}
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
@@ -24,7 +24,7 @@
                  [org.iplantc/clojure-commons "1.4.8"]
                  [org.iplantc/deliminator "0.1.0"]
                  [org.iplantc/mescal "0.1.0"]
-                 [org.iplantc/kameleon "1.8.4"]
+                 [org.iplantc/kameleon "1.8.5"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
@@ -34,7 +34,7 @@
                  [com.cemerick/url "0.1.0"]
                  [ring "1.2.1"]
                  [compojure "1.1.6"]
-                 [org.iplantc/heuristomancer "0.1.3"]
+                 [org.iplantc/heuristomancer "0.1.4"]
                  [clojurewerkz/elastisch "1.4.0"]
                  [org.iplantc/hoot "0.1.0"]
                  [com.novemberain/validateur "1.7.0"]
@@ -45,7 +45,7 @@
                  [org.clojure/tools.nrepl "0.2.3"]
                  [net.sf.opencsv/opencsv "2.3"]
                  [com.novemberain/langohr "2.2.1"]
-                 [org.iplantc/clj-icat-direct "0.0.2"]
+                 [org.iplantc/clj-icat-direct "0.0.3"]
                  [de.ubercode.clostache/clostache "1.3.1"]
                  [dire "0.5.2"]]
   :plugins [[org.iplantc/lein-iplant-rpm "1.4.3"]
