@@ -1,7 +1,7 @@
 (ns donkey.services.filesystem.rename
   (:use [clojure-commons.error-codes]
+        [clojure-commons.validators]
         [donkey.util.config]
-        [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [move]]

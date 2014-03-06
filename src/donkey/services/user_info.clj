@@ -2,10 +2,10 @@
   (:use [cemerick.url :only [url]]
         [clojure.string :only [split]]
         [clojure-commons.error-codes]
+        [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [donkey.util.config]
-        [donkey.util.validators]
         [byte-streams]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]

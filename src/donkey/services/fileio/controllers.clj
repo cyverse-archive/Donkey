@@ -4,6 +4,7 @@
         [clj-jargon.permissions]
         [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
+        [clojure-commons.validators]
         [donkey.util.config]
         [donkey.util.validators]
         [donkey.util.transformers :only [add-current-user-to-map]]

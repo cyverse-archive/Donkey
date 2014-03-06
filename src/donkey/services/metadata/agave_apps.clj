@@ -1,6 +1,6 @@
 (ns donkey.services.metadata.agave-apps
-  (:use [donkey.auth.user-attributes :only [current-user]]
-        [donkey.util.validators :only [validate-map]]
+  (:use [clojure-commons.validators :only [validate-map]]
+        [donkey.auth.user-attributes :only [current-user]]
         [slingshot.slingshot :only [try+]])
   (:require [cemerick.url :as curl]
             [clj-jargon.item-info :as jargon-info]

@@ -1,6 +1,6 @@
 (ns donkey.services.metadata.apps
-  (:use [donkey.auth.user-attributes :only [current-user]]
-        [donkey.util.validators :only [validate-map]]
+  (:use [clojure-commons.validators :only [validate-map]]
+        [donkey.auth.user-attributes :only [current-user]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.string :as string]

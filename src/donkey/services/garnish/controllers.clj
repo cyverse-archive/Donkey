@@ -1,6 +1,7 @@
 (ns donkey.services.garnish.controllers
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
+        [clojure-commons.validators]
         [donkey.util.validators]
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as json]
