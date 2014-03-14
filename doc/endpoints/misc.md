@@ -40,10 +40,10 @@ Welcome to Donkey!  I've mastered the stairs!
 
 Secured Endpoint: GET /secured/bootstrap
 
-Delegates to metadactyl: GET /secured/bootstrap
-
-This endpoint is a passthrough to the metadactyl endpoint using the same path.
-Please see the metadactyl documentation for more information.
+This endpoint gets user information from the metadactyl endpoint using the same
+path, and adds the user's home path, the user's trash path, and the base trash
+path to the response.
+Please see the [metadactyl documentation](https://github.com/iPlantCollaborativeOpenSource/metadactyl-clj/blob/master/doc/endpoints/misc.md#initializing-a-users-workspace) for more information.
 
 Note that the `ip-address` query parameter that has to be passed to the
 metadactyl service cannot be obtained automatically in most cases. Because of
@@ -61,7 +61,10 @@ $ curl "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)&ip-address
     "username": "snow-dog",
     "email": "sd@example.org",
     "firstName": "Snow",
-    "lastName": "Dog"
+    "lastName": "Dog",
+    "userHomePath": "/iplant/home/snow-dog",
+    "userTrashPath": "/iplant/trash/snow-dog",
+    "baseTrashPath": "/iplant/trash"
 }
 ```
 

@@ -12,7 +12,8 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [donkey.clients.metadactyl :as dm]
-            [donkey.clients.notifications :as dn]))
+            [donkey.clients.notifications :as dn]
+            [donkey.services.filesystem.common-paths :as filesys]))
 
 (defn- secured-notification-url
   [req & components]
@@ -233,8 +234,14 @@
   "This service obtains information about and initializes the workspace for
    the authenticated user. It also records the fact that the user logged in."
   [req]
-  (let [url (build-metadactyl-secured-url req "bootstrap")]
-    (forward-get url req)))
+  (let [url (build-metadactyl-secured-url req "bootstrap")
+        resp (forward-get url req)
+        boot (decode-stream (:body resp))
+        user (:shortUsername current-user)]
+    (cheshire/encode (assoc boot
+                            :userHomePath (filesys/user-home-dir user)
+                            :userTrashPath (filesys/user-trash-path user)
+                            :baseTrashPath (filesys/base-trash-path)))))
 
 (defn logout
   "This service records the fact that the user logged out."
