@@ -69,7 +69,7 @@
           ;;; otherwise, do a hard delete.
           (if-not (.startsWith p (user-trash-path cm user))
             (move-to-trash cm p user)
-            (delete cm p)))
+            (delete cm p true))) ;;; Force a delete to bypass proxy user's trash.
 
          {:paths paths}))))
 
