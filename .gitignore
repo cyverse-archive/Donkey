@@ -22,3 +22,7 @@
 donkey.iml
 *~
 \#*
+.DS_Store
+.env
+.vagrant/
+*.swp
