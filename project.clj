@@ -1,4 +1,4 @@
-(defproject org.iplantc/donkey "2.0.1"
+(defproject org.iplantc/donkey "2.0.1-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :url "https://github.com/iPlantCollaborativeOpenSource/Donkey"
   :license {:name "BSD Standard License"
