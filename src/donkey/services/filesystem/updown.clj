@@ -1,7 +1,7 @@
 (ns donkey.services.filesystem.updown
   (:use [clojure-commons.error-codes]
+        [clojure-commons.validators]
         [donkey.util.config]
-        [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]

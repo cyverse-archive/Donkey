@@ -18,7 +18,7 @@
             [donkey.util.nibblonian :as nibblonian]
             [donkey.util.scruffian :as scruffian])
   (:import [java.security MessageDigest DigestInputStream]
-           [org.forester.io.parsers.util ParserUtils]
+           [org.forester.io.parsers.util ParserUtils PhylogenyParserException]
            [org.forester.io.writers PhylogenyWriter]
            [org.forester.phylogeny PhylogenyMethods]))
 
@@ -158,7 +158,11 @@
   "Obtains the tree viewer URLs for the contents of a tree file."
   [dir infile]
   (log/debug "getting new tree URLs")
-  (mapv get-tree-viewer-url (extract-trees dir infile)))
+  (try
+    (mapv get-tree-viewer-url (extract-trees dir infile))
+    (catch PhylogenyParserException e
+      (log/warn e "assuming that the given file contains no trees")
+      [])))
 
 (defn- build-response-map
   "Builds the map to use when formatting the response body."
@@ -187,12 +191,12 @@
 
 (defn tree-viewer-urls-for
   "Obtains the tree viewer URLs for a request body."
-  [body]
+  [body {:keys [refresh]}]
   (log/info "getting tree viewer URLs for a request body")
   (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
     (let [infile (file dir "data.txt")
           sha1   (save-file body infile)]
-      (if-let [tree-urls (get-existing-tree-urls sha1)]
+      (if-let [tree-urls (when-not refresh (get-existing-tree-urls sha1))]
         (do (log/debug "found existing tree URLs for" sha1)
             (tree-urls-response tree-urls))
         (do (log/debug "generating new URLs for" sha1)

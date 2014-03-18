@@ -199,6 +199,12 @@
   [props config-valid configs pref-routes-enabled]
   "donkey.preferences.bucket")
 
+(cc/defprop-int riak-prefs-dw
+  "The durable write quorum for Riak that should be used when writing
+   storing preferences."
+  [props config-valid configs pref-routes-enabled]
+  "donkey.preferences.dw")
+
 (cc/defprop-str riak-search-hist-bucket
   "The bucket in Riak to use for the storage of user search history."
   [props config-valid configs pref-routes-enabled]

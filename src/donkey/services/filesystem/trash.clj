@@ -1,7 +1,7 @@
 (ns donkey.services.filesystem.trash
   (:use [clojure-commons.error-codes]
+        [clojure-commons.validators]
         [donkey.util.config]
-        [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -51,6 +51,7 @@
         (validators/all-paths-exist cm paths)
         (validators/user-owns-paths cm user paths)
 
+        ;;; Not allowed to delete the user's home directory.
         (when (some true? (mapv home-matcher paths))
           (throw+ {:error_code ERR_NOT_AUTHORIZED
                    :paths (filterv home-matcher paths)}))
@@ -59,13 +60,16 @@
           (log/debug "path" p)
           (log/debug "readable?" user (owns? cm user p))
 
+          ;;; Delete all of the tickets associated with the file.
           (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
             (doseq [path-ticket path-tickets]
               (delete-ticket cm (:username cm) path-ticket)))
 
+          ;;; If the file isn't already in the user's trash, move it there
+          ;;; otherwise, do a hard delete.
           (if-not (.startsWith p (user-trash-path cm user))
             (move-to-trash cm p user)
-            (delete cm p)))
+            (delete cm p true))) ;;; Force a delete to bypass proxy user's trash.
 
          {:paths paths}))))
 

@@ -20,5 +20,5 @@
   (optional-routes
    [config/tree-viewer-routes-enabled]
 
-   (POST "/tree-viewer-urls" [:as {body :body}]
-         (trap #(tree-viewer-urls-for body)))))
+   (POST "/tree-viewer-urls" [:as {body :body params :params}]
+         (trap #(tree-viewer-urls-for body params)))))

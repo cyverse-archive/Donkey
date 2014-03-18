@@ -60,6 +60,11 @@
 
 (defn community? [abs] (= (fs-community-data) abs))
 
+(defn base-trash-path
+  []
+     (with-jargon (jargon-cfg) [cm]
+       (trash-base-dir cm)))
+
 (defn user-trash-path
   ([user]
      (with-jargon (jargon-cfg) [cm]

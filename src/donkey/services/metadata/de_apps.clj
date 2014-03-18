@@ -1,6 +1,6 @@
 (ns donkey.services.metadata.de-apps
-  (:use [donkey.auth.user-attributes :only [current-user]]
-        [donkey.util.validators :only [validate-map]])
+  (:use [clojure-commons.validators :only [validate-map]]
+        [donkey.auth.user-attributes :only [current-user]])
   (:require [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]

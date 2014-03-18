@@ -1,6 +1,6 @@
 (ns donkey.services.metadata.apps
-  (:use [donkey.auth.user-attributes :only [current-user]]
-        [donkey.util.validators :only [validate-map]]
+  (:use [clojure-commons.validators :only [validate-map]]
+        [donkey.auth.user-attributes :only [current-user]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.string :as string]
@@ -78,7 +78,7 @@
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
   (listAppGroups [_])
-  (listApps [_ group-id])
+  (listApps [_ group-id params])
   (searchApps [_ search-term])
   (updateFavorites [_ app-id favorite?])
   (rateApp [_ app-id rating comment-id])
@@ -103,8 +103,8 @@
   (listAppGroups [_]
     (metadactyl/get-only-app-groups))
 
-  (listApps [_ group-id]
-    (metadactyl/apps-in-group group-id))
+  (listApps [_ group-id params]
+    (metadactyl/apps-in-group group-id params))
 
   (searchApps [_ search-term]
     (metadactyl/search-apps search-term))
@@ -164,10 +164,10 @@
     (-> (metadactyl/get-only-app-groups)
         (update-in [:groups] conj (.publicAppGroup agave-client))))
 
-  (listApps [_ group-id]
+  (listApps [_ group-id params]
     (if (= group-id (:id (.publicAppGroup agave-client)))
-      (.listPublicApps agave-client)
-      (metadactyl/apps-in-group group-id)))
+      (.listPublicApps agave-client params)
+      (metadactyl/apps-in-group group-id params)))
 
   (searchApps [_ search-term]
     (let [de-apps  (metadactyl/search-apps search-term)
@@ -273,8 +273,8 @@
   (service/success-response (.listAppGroups (get-app-lister))))
 
 (defn apps-in-group
-  [group-id]
-  (service/success-response (.listApps (get-app-lister) group-id)))
+  [group-id params]
+  (service/success-response (.listApps (get-app-lister) group-id params)))
 
 (defn search-apps
   [{search-term :search}]

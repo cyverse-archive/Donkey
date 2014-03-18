@@ -1,4 +1,4 @@
-(defproject org.iplantc/donkey "2.0.1-SNAPSHOT"
+(defproject org.iplantc/donkey "2.0.1"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :url "https://github.com/iPlantCollaborativeOpenSource/Donkey"
   :license {:name "BSD Standard License"
@@ -21,10 +21,10 @@
                  [org.iplantc/clj-jargon "0.4.2"
                   :exclusions [[xerces/xmlParserAPIs]
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
-                 [org.iplantc/clojure-commons "1.4.8"]
+                 [org.iplantc/clojure-commons "1.4.9"]
                  [org.iplantc/deliminator "0.1.0"]
-                 [org.iplantc/mescal "0.1.0"]
-                 [org.iplantc/kameleon "1.8.5"]
+                 [org.iplantc/mescal "0.1.1"]
+                 [org.iplantc/kameleon "1.8.6"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]

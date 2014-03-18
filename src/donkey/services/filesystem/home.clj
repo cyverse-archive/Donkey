@@ -1,6 +1,6 @@
 (ns donkey.services.filesystem.home
-  (:use [donkey.util.config]
-        [donkey.util.validators]
+  (:use [clojure-commons.validators]
+        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]

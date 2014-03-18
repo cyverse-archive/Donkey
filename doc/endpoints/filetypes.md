@@ -127,6 +127,12 @@ __Request Body__:
         "path" : "/path/to/irods/file",
         "type" : "csv"
     }
+If you want to reset the type so that it's blank, pass in a empty string for the type, like in the following:
+
+    {
+        "path" : "/path/to/irods/file",
+        "type" : ""
+    }
 
 __Response Body__:
 

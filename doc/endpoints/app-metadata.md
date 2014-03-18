@@ -49,6 +49,7 @@
     * [Updating a Tool Installation Request (Administrator)](#updating-a-tool-installation-request-(administrator))
     * [Listing Tool Installation Requests](#listing-tool-installation-requests)
     * [Listing Tool Installation Request Details](#listing-tool-installation-request-details)
+    * [Listing Tool Request Status Codes](#listing-tool-request-status-codes)
 
 # Application Metadata Endpoints
 
@@ -733,6 +734,13 @@ Please see the metadactyl documentation for more details.
 Unsecured Endpoint: GET /tool-request/{tool-request-id}
 
 Delegates to metadactyl: GET /tool-request/{tool-request-id}
+
+This service is a passthrough to the metadactyl endpoint using the same
+path. Please see the metadactyl documentation for more details.
+
+## Listing Tool Request Status Codes
+
+Unsecured Endpoint: GET /tool-request-status-codes
 
 This service is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more details.

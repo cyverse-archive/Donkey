@@ -29,9 +29,9 @@
       (service/decode-json)))
 
 (defn apps-in-group
-  [group-id]
+  [group-id & [params]]
   (-> (client/get (secured-url "get-analyses-in-group" group-id)
-                  {:query-params (secured-params)
+                  {:query-params (secured-params params)
                    :as           :stream})
       (:body)
       (service/decode-json)))
@@ -55,7 +55,15 @@
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (unsecured-url "tool-requests")
-                  {:query-params (secured-params params)
+                  {:query-params params
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn list-tool-request-status-codes
+  [params]
+  (-> (client/get (unsecured-url "tool-request-status-codes")
+                  {:query-params params
                    :as           :stream})
       (:body)
       (service/decode-json)))

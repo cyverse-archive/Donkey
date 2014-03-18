@@ -1,7 +1,7 @@
 (ns donkey.services.filesystem.create
   (:use [clojure-commons.error-codes]
+        [clojure-commons.validators]
         [donkey.util.config]
-        [donkey.util.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -16,6 +16,8 @@
             [donkey.services.filesystem.validators :as validators]))
 
 (defn create
+  "Creates a directory at path on behalf of a user. The user
+   becomes the owner of the new directory."
   [user path]
   (log/debug (str "create " user " " path))
   (with-jargon (jargon-cfg) [cm]
@@ -31,6 +33,7 @@
       {:path fixed-path :permissions (collection-perm-map cm user fixed-path)})))
 
 (defn do-create
+  "Entrypoint for the API that calls (create)."
   [{user :user} {path :path}]
   (create user path))
 
