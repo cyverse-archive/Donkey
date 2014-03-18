@@ -58,8 +58,8 @@
    (GET "/app-groups" []
         (trap #(apps/get-only-app-groups)))
 
-   (GET "/get-analyses-in-group/:app-group-id" [app-group-id]
-        (trap #(apps/apps-in-group app-group-id)))
+   (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as {params :params}]
+        (trap #(apps/apps-in-group app-group-id params)))
 
    (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
         (trap #(apps/apps-in-group app-group-id)))

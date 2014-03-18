@@ -29,9 +29,9 @@
       (service/decode-json)))
 
 (defn apps-in-group
-  [group-id]
+  [group-id & [params]]
   (-> (client/get (secured-url "get-analyses-in-group" group-id)
-                  {:query-params (secured-params)
+                  {:query-params (secured-params params)
                    :as           :stream})
       (:body)
       (service/decode-json)))
