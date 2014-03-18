@@ -23,7 +23,7 @@
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
                  [org.iplantc/clojure-commons "1.4.9-SNAPSHOT"]
                  [org.iplantc/deliminator "0.1.0"]
-                 [org.iplantc/mescal "0.1.0"]
+                 [org.iplantc/mescal "0.1.1-SNAPSHOT"]
                  [org.iplantc/kameleon "1.8.6-SNAPSHOT"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]

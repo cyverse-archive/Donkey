@@ -166,7 +166,7 @@
 
   (listApps [_ group-id params]
     (if (= group-id (:id (.publicAppGroup agave-client)))
-      (.listPublicApps agave-client)
+      (.listPublicApps agave-client params)
       (metadactyl/apps-in-group group-id params)))
 
   (searchApps [_ search-term]
